@@ -28,8 +28,6 @@ if !isdirectory(g:vim_plugins)
   PlugInstall
 endif
 
-" Settings
-
 set background=dark
 colorscheme solarized
 
