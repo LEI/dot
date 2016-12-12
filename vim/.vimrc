@@ -28,12 +28,18 @@ if !isdirectory(g:vim_plugins)
   PlugInstall
 endif
 
+" Settings
+
 set background=dark
 colorscheme solarized
 
 if has('mouse')
   set mouse+=a
 endif
+
+" Show invisible characters
+set list
+set listchars=tab:>\ ,trail:-,extends:>,precedes:<,nbsp:+
 
 " Do not capture all global options
 set sessionoptions-=options
@@ -57,3 +63,15 @@ if has('persistent_undo')
   let &undodir = g:vim_backups
   set undofile
 endif
+
+function! RestoreCursor()
+  if line("'\"") > 0 && line("'\"") <= line("$")
+    normal! g`"
+    return 1
+  endif
+endfunction
+
+augroup RestoreCursor
+  autocmd!
+  autocmd BufReadPost * call RestoreCursor()
+augroup END
