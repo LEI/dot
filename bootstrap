@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+# Usage: source bootstrap
+
+TERMUX_CFG="$HOME/storage/shared/termux-config"
+
+# Install packages
+apt_packages() {
+  local pkg="${1:-$TERMUX_CFG/apt}"
+
+  if [[ -r "$pkg" ]]
+  then pkg="$(cat "$pkg")"
+  else >&2 printf "%s\n" "$pkg: not found"
+    return 1
+  fi
+
+  apt update && apt install $pkg
+}
+
+# Symlink dotfiles
+stow_packages() {
+  local dir="${1:-$TERMUX_CFG}"
+  local target="${2:-$HOME}"
+
+  # printf "%s\n" "Source: $path" "Target: $dest"
+  local d
+  for d in $(find "$dir" -type d \
+    -mindepth 1 -maxdepth 1)
+  do local pkg="$(basename $d)"
+    printf "%s\n" "Stowing $pkg..."
+    stow -d "$dir" -t "$target" "$pkg"
+  done
+}
+
+main() {
+  if hash apt 2>/dev/null
+  then apt_packages
+  fi
+
+  if hash stow 2>/dev/null
+  then stow_packages
+  fi
+
+  printf "%s\n" "Done."
+}
+
+main "$@"
+
+unset apt_packages
+unset stow_packages
+unset main

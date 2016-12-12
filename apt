@@ -1,0 +1,17 @@
+apt
+bash
+bash-completion
+busybox
+ca-certificates
+coreutils
+curl
+git
+less
+man
+openssh
+openssl
+readline
+stow
+tmux
+tree
+vim
