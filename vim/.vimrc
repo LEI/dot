@@ -48,6 +48,15 @@ if has('mouse')
   set mouse+=a
 endif
 
+if !has('nvim')
+  " Fix mouse inside screen and tmux
+  if &term =~# '^screen' || strlen($TMUX) > 0
+    set ttymouse=xterm2
+  endif
+  " Fast terminal connection
+  set ttyfast
+endif
+
 " Current mode in status line
 set showmode
 
@@ -84,6 +93,8 @@ augroup RestoreCursor
   autocmd!
   autocmd BufReadPost * call RestoreCursor()
 augroup END
+
+" let g:mapleader = "\<Space>"
 
 " Yank from the cursor to the end of the line
 map Y y$
