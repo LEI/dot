@@ -1,14 +1,43 @@
 " ~/.vimrc
 
+" Auto download Vim Plug
+let g:vim_plug = expand('~/.vim/autoload/plug.vim')
+let g:vim_plug_url = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+if !filereadable(g:vim_plug)
+  execute '!curl -sfLo ' . g:vim_plug
+    \ . ' --create-dirs '
+    \ . g:vim_plug_url
+endif
+
+let g:vim_plugins = expand('~/.vim/plugged')
+call plug#begin(g:vim_plugins)
+
+Plug 'altercation/vim-colors-solarized'
+" kien/ctrlp.vim
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-sensible'
+Plug 'tpope/vim-sleuth'
+Plug 'tpope/vim-surround'
+
+" Add plugins to &runtimepath
+call plug#end()
+
+" Install plugins
+if !isdirectory(g:vim_plugins)
+  PlugInstall
+endif
+
+set background=dark
+colorscheme solarized
+
+if has('mouse')
+  set mouse+=a
+endif
+
 " Do not capture all global options
 set sessionoptions-=options
 
-" Tell vim to remember certain things when we exit
-"  '10  :  marks will be remembered for up to 10 previously edited files
-"  "100 :  will save up to 100 lines for each register
-"  :20  :  up to 20 lines of command-line history will be remembered
-"  %    :  saves and restores the buffer list
-"  n... :  where to save the viminfo files
 "set viminfo='10,\"100,:20,%,n~/.viminfo
 if !empty(&viminfo)
   set viminfo^=!
@@ -19,7 +48,7 @@ set noswapfile
 set nobackup
 set nowritebackup
 
-" Keep undo history across sessions, by storing in file.
+" Keep undo history across sessions
 if has('persistent_undo')
   let g:vim_backups = expand('~/.vim/backups')
   if !isdirectory(g:vim_backups)
@@ -28,15 +57,3 @@ if has('persistent_undo')
   let &undodir = g:vim_backups
   set undofile
 endif
-
-if has('mouse')
-  set mouse+=a
-endif
-
-call plug#begin('~/.vim/plugged')
-
-Plug 'tpope/vim-sensible'
-Plug 'tpope/vim-sleuth'
-
-" Add plugins to &runtimepath
-call plug#end()
