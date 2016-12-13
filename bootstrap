@@ -26,8 +26,33 @@ stow_packages() {
   for d in $(find "$dir" -type d -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     printf "%s\n" "Stowing $pkg..."
-    stow -d "$dir" -t "$target" "$pkg"
+    stow --ignore=".*.tpl" \
+      -d "$dir" -t "$target" "$pkg"
   done
+}
+
+git_install() {
+  local tpl="${1:-$TERMUX_CFG/git/.gitconfig.local.tpl}"
+  if [[ ! -f "$tpl" ]] && [[ ! -L "$tpl" ]]
+  then >&2 printf "%s\n" "$tpl: not found"
+    return 1
+  fi
+  local dst="${2:-$HOME}/.gitconfig.local"
+  if [[ -f "$dst" ]] || [[ -L "$dst" ]]
+  then >&2 printf "%s\n" "${dst/$HOME/\~}: already exists"
+    return
+  fi
+  local git_name git_user git_email
+  printf "%s\n" "What is your github full name?"
+  read -e git_name
+  printf "%s\n" "What is your github username?"
+  read -e git_user
+  printf "%s\n" "What is your github email?"
+  read -e git_email
+  sed -e "s/GIT_NAME/$git_name/g" \
+    -e "s/GIT_USERNAME/$git_username/g" \
+    -e "s/GIT_EMAIL/$git_email/g" \
+    "$tpl" > "$dst"
 }
 
 main() {
@@ -37,6 +62,10 @@ main() {
 
   if hash stow 2>/dev/null
   then stow_packages
+  fi
+
+  if hash git 2>/dev/null
+  then git_install
   fi
 
   printf "%s\n" "Done."
