@@ -21,7 +21,7 @@ apt_packages() {
 stow_packages() {
   local dir="${1:-$TERMUX_CFG}"
   local target="${2:-$HOME}"
-  local pkg ignore_dirs=""
+  local ignore_dirs=""
 
   # local d
   # for d in {.vim,.tmux}
@@ -32,12 +32,14 @@ stow_packages() {
   local d dirs="$(find "$dir" -type d \
     -mindepth 1 -maxdepth 1)"
   for d in $dirs
-  do pkg="$(basename $d)"
-    [[ "$ignore_dirs" == *"$pkg"* ]] && continue
-    printf "%s\n" "Stowing $pkg..."
-    stow --verbose --ignore=".*.tpl" \
-      --dir "$dir" --target \
-      "$target" "$pkg"
+  do local pkg="$(basename $d)"
+    if [[ "$ignore_dirs" != *"$pkg"* ]]
+    then
+      printf "%s\n" "Stowing $pkg..."
+      stow --verbose --ignore=".*.tpl" \
+        --dir "$dir" --target \
+        "$target" "$pkg"
+    fi
   done
 }
 

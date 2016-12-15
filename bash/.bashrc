@@ -1,6 +1,7 @@
 # ~/.bashrc
 
 TERMUX_CFG="$HOME/storage/shared/termux-config"
+TERMUX_GIT="$HOME/termux-config.git"
 
 export EDITOR="vim -f"
 

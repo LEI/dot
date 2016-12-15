@@ -26,11 +26,11 @@ reload() {
 }
 
 tgit() {
-  git --git-dir="$HOME/termux-config.git" --work-tree="$TERMUX_CFG" "$@"
+  git --git-dir="$TERMUX_GIT" --work-tree="$TERMUX_CFG" "$@"
 }
 
 tstow() {
-  stow -d "$TERMUX_CFV" -t "$HOME" "$@"
+  stow -d "$TERMUX_CFG" -t "$HOME" "$@"
 }
 
 ttpm() {
