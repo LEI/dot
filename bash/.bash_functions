@@ -7,7 +7,7 @@ e() {
   fi
   if [[ $# -ne 0 ]]
   then $EDITOR "$@"
-  else $EDITOR
+  else $EDITOR .
   fi
 }
 
