@@ -29,12 +29,15 @@ stow_packages() {
   #   [[ -d "$d" ]] || mkdir "$d"
   # done
 
-  local d dirs="$(find "$dir" -type d -mindepth 1 -maxdepth 1)"
+  local d dirs="$(find "$dir" -type d \
+    -mindepth 1 -maxdepth 1)"
   for d in $dirs
   do pkg="$(basename $d)"
     [[ "$ignore_dirs" == *"$pkg"* ]] && continue
     printf "%s\n" "Stowing $pkg..."
-    stow --verbose --dir "$dir" --target "$target" "$pkg" --ignore=".*.tpl"
+    stow --verbose --ignore=".*.tpl" \
+      --dir "$dir" --target \
+      "$target" "$pkg"
   done
 }
 
