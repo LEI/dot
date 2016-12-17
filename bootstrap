@@ -90,7 +90,7 @@ main() {
     android) has apt && apt update -qq -y && [[ -f "$pkg" ]] && apt install -qq -y $(cat "$pkg") ;;
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     linux)
-      if has apk && apk update && apk add git make
+      if has apk && apk update && apk add git automake
       then # http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL.md
         mkdir -p $HOME/src
         local stowsrc="$HOME/src/stow"
