@@ -4,13 +4,12 @@ PS1='\w\$ '
 
 # https://termux.com/storage.html
 
-# Work tree path
+# Git work tree path
 TERMUX_CFG="$HOME/storage/shared/termux-config"
-# Git directory
-TERMUX_GIT="$HOME/termux-config.git"
+# TERMUX_GIT="$HOME/termux-config.git"
 
 termux-git() {
-  git --git-dir="$TERMUX_GIT" --work-tree="$TERMUX_CFG" "$@"
+  git --git-dir="$TERMUX_CFG/.git" --work-tree="$TERMUX_CFG" "$@"
 }
 
 termux-stow() {
