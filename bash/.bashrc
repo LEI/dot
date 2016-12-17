@@ -21,12 +21,13 @@ main() {
   done
   unset option
 
+  load $HOME/.bash{_aliases,_exports,_functions,rc.local}
+
   case "$(uname -o 2>/dev/null)" in
     Android) OS="android" ;;
     *) OS="$(uname -s | to lower)" ;;
   esac
 
-  load $HOME/.bash{_aliases,_exports,_functions,rc.local}
   load $HOME/.$OS.d/*.bash
   load $HOME/.bashrc.local
 }
