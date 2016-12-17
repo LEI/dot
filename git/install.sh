@@ -5,4 +5,9 @@ case "$OS" in
       "GIT_USERNAME:What is your github username?" \
       "GIT_EMAIL:What is your github email?"
     ;;
+  linux)
+    if has apk
+    then apk add -q git
+    fi
+    ;;
 esac
