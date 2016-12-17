@@ -26,17 +26,8 @@ has() {
 
 # Install packages
 apt_packages() {
-  local pkg #="${1:-$BOOTSTRAP/apt}"
-
-  # if [[ -r "$pkg" ]]
-  # then pkg="$(cat "$pkg")"
-  # else err "$pkg: not found"
-  #   return 1
-  # fi
-
   log "Updating available packages..."
-  apt update
-  [[ $# -ne 0 ]] && apt install "$@"
+  apt update && [[ $# -ne 0 ]] && apt install "$@"
   # while read -r pkg; do apt install $pkg; done
 }
 
@@ -77,6 +68,7 @@ gituser() {
   fi
   local dst="${2:-$HOME}/.gitconfig.local"
   if [[ -f "$dst" ]] || [[ -L "$dst" ]]
+  # TODO check symlink target
   then err "${dst/$HOME/\~}: already exists"
     return
   fi
@@ -101,6 +93,8 @@ main() {
 
   case "$OS" in
     android) has apt && apt_packages $(cat "$BOOTSTRAP/apt") ;;
+    # darwin) has brew || brew_install && brew_packages ;;
+    # linux) ;;
   esac
 
   if has stow
