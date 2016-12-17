@@ -85,17 +85,20 @@ template() {
 main() {
   log "Bootstrapping ${OS##*/}:"
   local pkg="$BOOTSTRAP/os_${OS##*/}/packages"
+  local pcmd pfile
   case "$OS" in
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     android|*linux)
-      if has apt 2>/dev/null
-      then apt update -qq -y \
-        && [[ -f "$pkg.apt" ]] && apt install -qq -y $(cat "$pkg.apt")
+      if has apt-get 2>/dev/null
+      then pcmd="apt-get"; pfile="apt"
       elif has apt-get 2>/dev/null
-      then apt-get update -y \
-        && [[ -f "$pkg.apt" ]] && apt-get install -y $(cat "$pkg.apt")
+      then pcmd="apt"
       else "$OS: unknown package manager"
+        return 1
       fi
+      $pcmd update -qq -y \
+        && [[ -f "$pkg.${pfile:-$pcmd}" ]] \
+        && $pcmd install -qq -y $(cat "$pkg.${pfile:-$pcmd}")
       # if has apk && apk update && apk add git perl make automake=1.13.4 autoconf
       # then # http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL.md
       #   mkdir -p $HOME/src
