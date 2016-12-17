@@ -5,7 +5,7 @@
 BOOTSTRAP="$(dirname "${BASH_SOURCE}")"
 
 log() {
-  printf "%s" "${0##*/}:"
+  # printf "%s" "${0##*/}: "
   printf "%s\n" "$@"
 }
 
@@ -38,7 +38,7 @@ apt_packages() {
 
 # Symlink dotfiles
 stow_packages() {
-  local dir="${1:-{$BOOTSTRAP,$BOOTSTRAP/os_*}"
+  local dir="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
 
   # local d
@@ -50,6 +50,9 @@ stow_packages() {
   # local ignore_dirs=
   # [[ "$ignore_dirs" != *"$pkg"* ]]
 
+  if [[ -d "$dir/os_$OS" ]]
+  then dir={$dir,$dir/os_*}
+  fi
   local d
   for d in $(find "$dir" -type d ! -name "os_*" \
     -mindepth 1 -maxdepth 1)
@@ -86,6 +89,11 @@ git_install() {
 }
 
 main() {
+  case "$(uname -o 2>/dev/null)" in
+    Android) OS="android" ;;
+    *) OS="$(uname -s | to lower)" ;;
+  esac
+
   if has apt
   then apt_packages
   fi
