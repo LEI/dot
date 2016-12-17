@@ -7,5 +7,5 @@ RUN apt-get update -y
 RUN apt-get install -y git-core
 RUN git clone https://github.com/LEI/termux-config.git "$HOME/.dotfiles"
 ENV BOOTSTRAP /root/.dotfiles
-ENTRYPOINT ["/bin/bash", "-c", "cd $BOOTSTRAP", "git pull origin master"]
+ENTRYPOINT ["/bin/bash", "-c", "cd $BOOTSTRAP"]
 # "-c", "source $HOME/.dotfiles/bootstrap"
