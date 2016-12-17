@@ -86,7 +86,7 @@ template() {
   done
 
   echo "$cmd" "$src"
-  $cmd "$src" > "$dst"
+  "$cmd" "$src" > "$dst"
 }
 
 gituser() {
