@@ -6,5 +6,6 @@ RUN apt-get update -y
 # ENV LANG en_GB.utf8
 RUN apt-get install -y git-core
 RUN git clone https://github.com/LEI/termux-config.git "$HOME/.dotfiles"
-RUN cd "$HOME/.dotfiles" && git pull origin master
+ENV BOOTSTRAP $HOME/.dotfiles
+RUN cd "$BOOTSTRAP" && git pull origin master
 ENTRYPOINT ["/bin/bash", "-c", "source $HOME/.dotfiles/bootstrap"]
