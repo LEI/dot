@@ -7,6 +7,5 @@ RUN apt-get update -y
 RUN apt-get install -y git-core
 RUN git clone https://github.com/LEI/termux-config.git "$HOME/.dotfiles"
 ENV BOOTSTRAP /root/.dotfiles
-RUN cd $BOOTSTRAP
 ENTRYPOINT ["/bin/bash"]
 # "-c", "source $HOME/.dotfiles/bootstrap"

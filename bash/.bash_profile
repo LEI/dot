@@ -1,4 +1,4 @@
-# ~/.bashrc
+# ~/.bash_profile
 
 load() {
   local path

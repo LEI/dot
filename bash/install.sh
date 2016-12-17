@@ -14,3 +14,8 @@ esac
 for p in $HOME/{bin}
 do [[ -d "$p" ]] || mkdir -p "$p"
 done
+
+p='[[ -n "$PS1" ]] && source ~/.bash_profile'
+if ! fgrep -x "$p"
+then printf "%s\n" "$p" >> ~/.bashrc
+fi
