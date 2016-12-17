@@ -50,9 +50,9 @@ stow_packages() {
   # local ignore_dirs=
   # [[ "$ignore_dirs" != *"$pkg"* ]]
 
-  if [[ -d "$path/os_$OS" ]]
-  then path+=" $path/os_$OS"
-  fi
+  # if [[ -d "$path/os_$OS" ]]
+  # then path+=" $path/os_$OS"
+  # fi
 
   local d
   for d in $(find {$path,$path/os_$OS} -type d ! -name 'os_*' \
