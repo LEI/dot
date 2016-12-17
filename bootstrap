@@ -57,6 +57,8 @@ stow_packages() {
   local find_cmd="find $paths -type d ! -name "os_*" \
     -mindepth 1 -maxdepth 1"
 
+
+  echo "OS: $OS, $paths"
   echo >&2 $cmd
 
   local d

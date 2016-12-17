@@ -26,8 +26,6 @@ main() {
     *) OS="$(uname -s | to lower)" ;;
   esac
 
-  echo >&2  "OS: $OS"
-
   load $HOME/.bash{_aliases,_exports,_functions,rc.local}
   load $HOME/.$OS.d/*.bash 2>/dev/null
   load $HOME/.bashrc.local 2>/dev/null
