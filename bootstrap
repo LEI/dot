@@ -82,11 +82,13 @@ template() {
 }
 
 main() {
+  log "Bootstrapping $OS:"
+  local pkg="$BOOTSTRAP/os_$OS/packages"
   case "$OS" in
-    android) has apt && apt update -qq -y && apt install -qq -y \
-      busybox ca-certificates coreutils curl less man openssh openssl readline stow tree ;;
+    android) has apt && apt update -qq -y && [[ -f "$pkg" ]] && apt install -qq -y $(cat "$pkg") ;;
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     # linux) ;;
+    *) err "$OS: unknown operating system" ;;
   esac
 
   if has stow
