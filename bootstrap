@@ -35,7 +35,7 @@ apt_packages() {
   # fi
 
   log "Updating available packages..."
-  apt update && while read -r pkg
+  apt update && while IFS= read -r pkg
   do apt install $pkg
   done
 }
