@@ -53,8 +53,9 @@ stow_packages() {
   if [[ -d "$dir/os_$OS" ]]
   then dir={$dir,$dir/os_*}
   fi
+
   local d
-  for d in $(find "$dir" -type d ! -name "os_*" \
+  for d in $(find $dir -type d ! -name "os_*" \
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     log "Stowing $pkg..."
