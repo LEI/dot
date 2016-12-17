@@ -6,7 +6,7 @@ case "$OS" in
     if has apk
     then apk add -q $bash_pkg
     elif has apt-get
-    then echo apt-get install -y $bash_pkg
+    then apt-get install -y $bash_pkg
     fi
     ;;
 esac

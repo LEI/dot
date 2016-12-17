@@ -13,7 +13,7 @@ for p in $HOME/.vim
 do [[ -d "$p" ]] || mkdir -p "$p"
 done
 
-if has nvim
+if has nvim 2>/dev/null
 then
   for p in $HOME/.config/nvim
   do [[ -d "$p" ]] || mkdir -p "$p"
