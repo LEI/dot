@@ -102,7 +102,7 @@ main() {
   esac
 
   case "$OS" in
-    android) has apt && apt_packages $(cat "$BOOTSTRAP/apt") ;;
+    android) has apt && apt_packages @- < "$BOOTSTRAP/apt" ;;
   esac
 
   if has stow
