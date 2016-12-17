@@ -38,7 +38,7 @@ apt_packages() {
 
 # Symlink dotfiles
 stow_packages() {
-  local dir="${1:-$BOOTSTRAP}"
+  local paths="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
 
   # local d
@@ -50,7 +50,6 @@ stow_packages() {
   # local ignore_dirs=
   # [[ "$ignore_dirs" != *"$pkg"* ]]
 
-  local paths="$dir"
   if [[ -d "$dir/os_$OS" ]]
   then paths+=" $dir/os_*"
   fi
@@ -59,6 +58,7 @@ stow_packages() {
   for d in $(find $paths -type d ! -name "os_*" \
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
+    local dir="$(dirname $d)"
     log "Stowing $pkg..."
     stow --verbose --ignore=".*.tpl" \
       --dir "$dir" --target \
