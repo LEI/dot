@@ -5,7 +5,8 @@
 BOOTSTRAP="$(dirname "${BASH_SOURCE}")"
 
 log() {
-  printf "${0##*/}: %s\n" "$@"
+  printf "%s" "${0##*/}:"
+  printf "%s\n" "$@"
 }
 
 err() {
