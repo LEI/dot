@@ -38,7 +38,7 @@ apt_packages() {
 
 # Symlink dotfiles
 stow_packages() {
-  local paths="${1:-$BOOTSTRAP}"
+  local path="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
 
   # local d
@@ -50,19 +50,15 @@ stow_packages() {
   # local ignore_dirs=
   # [[ "$ignore_dirs" != *"$pkg"* ]]
 
-  if [[ -d "$dir/os_$OS" ]]
-  then paths+=" $dir/os_*"
+  if [[ -d "$path/os_$OS" ]]
+  then path+=" $path/os_*"
   fi
 
-  local find_cmd="find $paths -type d ! -name "os_*" \
-    -mindepth 1 -maxdepth 1"
-
-
-  echo "OS: $OS, $paths"
-  echo >&2 $cmd
+  local packages="$(find $path -type d ! -name "os_*" \
+    -mindepth 1 -maxdepth 1)"
 
   local d
-  for d in $($find_cmd)
+  for d in $packages
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     log "Stowing $pkg..."
