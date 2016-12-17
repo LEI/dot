@@ -38,7 +38,7 @@ apt_packages() {
 
 # Symlink dotfiles
 stow_packages() {
-  local path="${1:-$BOOTSTRAP}"
+  local path="${1:-$BOOTSTRAP/*}"
   local target="${2:-$HOME}"
 
   # local d
