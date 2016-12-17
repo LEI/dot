@@ -1,6 +1,6 @@
 case "$OS" in
   android)
-    apt install git
+    has git || apt install git
     if [[ ! -e "$HOME/.gitconfig.local" ]]
     then > "$HOME/.gitconfig.local" \
         template "$BOOTSTRAP/git/.gitconfig.local.tpl" \
