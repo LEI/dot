@@ -64,22 +64,28 @@ template() {
   local cmd="sed"
   local src="$1"
   shift
+  local dst="$1"
+  shift
   if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]
   then err "$src: not found"
     return 1
   fi
-
+  if [[ -f "$dst" ]] || [[ -L "$dst" ]]
+  # TODO check symlink target
+  then err "${dst/$HOME/\~}: already exists"
+    return
+  fi
   local var v
   for var in "$@"
   do v="TPL_${var%%:*}"
     declare $v=
     while [[ -z "${!v}" ]]
-    do >&3 log "${var#*:}"; read -e "$v"
+    do log "${var#*:}"; read -e "$v"
     done
     cmd+=" -e s/${var%%:*}/${!v}/g"
   done
 
-  $cmd "$src"
+  $cmd "$src" > "$dst"
 }
 
 gituser() {
