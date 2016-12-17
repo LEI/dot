@@ -72,6 +72,7 @@ template() {
   local var v
   for var in "$@"
   do v="TPL_${var%%:*}"
+    declare $v=
     while [[ -z "${!v}" ]]
     do >&3 log "${var#*:}"; read -e "$v"
     done
