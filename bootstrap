@@ -26,16 +26,18 @@ has() {
 
 # Install packages
 apt_packages() {
-  local pkg="${1:-$BOOTSTRAP/apt}"
+  local pkg #="${1:-$BOOTSTRAP/apt}"
 
-  if [[ -r "$pkg" ]]
-  then pkg="$(cat "$pkg")"
-  else err "$pkg: not found"
-    return 1
-  fi
+  # if [[ -r "$pkg" ]]
+  # then pkg="$(cat "$pkg")"
+  # else err "$pkg: not found"
+  #   return 1
+  # fi
 
   log "Updating available packages..."
-  apt update && apt install $pkg
+  apt update && while read -r pkg
+  do apt install $pkg
+  done
 }
 
 # Symlink dotfiles
@@ -49,9 +51,6 @@ symlink() {
   #   [[ -d "$d" ]] || mkdir "$d"
   # done
 
-  # local ignore_dirs=
-  # [[ "$ignore_dirs" != *"$pkg"* ]]
-
   if [[ -d "$path/os_$OS" ]]
   then path+=" $path/os_$OS"
   fi
@@ -62,9 +61,7 @@ symlink() {
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
-    if [[ -f  "$d/install.sh" ]]
-    then source "$d/install.sh"
-    fi
+    [[ -f  "$d/install.sh" ]] && source "$d/install.sh"
     log "Stowing $pkg..."
     stow --verbose --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target \
@@ -103,7 +100,7 @@ main() {
   esac
 
   case "$OS" in
-    android) has apt && apt_packages ;;
+    android) has apt && apt_packages < "$BOOTSTRAP/apt" ;;
   esac
 
   if has stow
