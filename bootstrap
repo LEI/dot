@@ -39,7 +39,7 @@ apt_packages() {
 }
 
 # Symlink dotfiles
-stow_packages() {
+symlink() {
   local path="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
 
@@ -72,7 +72,7 @@ stow_packages() {
   done
 }
 
-git_install() {
+gituser() {
   local tpl="${1:-$BOOTSTRAP/git/.gitconfig.local.tpl}"
   if [[ ! -f "$tpl" ]] && [[ ! -L "$tpl" ]]
   then err "$tpl: not found"
@@ -102,16 +102,16 @@ main() {
     *) OS="$(uname -s | to lower)" ;;
   esac
 
-  if has apt
-  then apt_packages
-  fi
+  case "$OS" in
+    android) has apt && apt_packages ;;
+  esac
 
   if has stow
-  then stow_packages
+  then symlink
   fi
 
   if has git
-  then git_install
+  then gituser
   fi
 
   log "Done."
@@ -123,6 +123,6 @@ unset log
 unset err
 unset has
 unset apt_packages
-unset stow_packages
-unset git_install
+unset symlink
+unset gituser
 unset main
