@@ -6,7 +6,7 @@
 # BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
-OS="$($(uname -o 2>/dev/null || uname -s) | tr '[:upper:]' '[:lower:]')"
+OS="$(echo $(uname -o 2>/dev/null || uname -s) | tr '[:upper:]' '[:lower:]')"
 
 log() {
   # printf "%s" "${0##*/}: "
