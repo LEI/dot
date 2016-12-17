@@ -3,7 +3,8 @@
 # Usage: source bootstrap
 
 # BOOTSTRAP="$(dirname "${BASH_SOURCE}")"
-BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
+# BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
+BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
 log() {
   # printf "%s" "${0##*/}: "
