@@ -85,8 +85,8 @@ template() {
     cmd+=" -e s/${var%%:*}/${!v}/g"
   done
 
-  echo exec "$cmd" "$src"
-  exec "$cmd" "$src" > "$dst"
+  echo "$cmd" "$src"
+  $cmd "$src" > "$dst"
 }
 
 gituser() {
