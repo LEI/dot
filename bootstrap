@@ -72,7 +72,7 @@ template() {
     if [[ -z "${!v}" ]]
     then err "Empty value for $v"
     fi
-    opts+=" -e "s/${var%%:*}/${!v}""
+    opts+=" -e \"s/${var%%:*}/${!v}/g\""
   done
 
   sed $opts "$tpl"
