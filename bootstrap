@@ -72,11 +72,9 @@ template() {
   local var v
   for var in "$@"
   do v="TPL_${var%%:*}"
-    log "${var#*:}"
-    read -e "$v"
-    if [[ -z "${!v}" ]]
-    then err "Empty value for $v"
-    fi
+    while [[ -z "${!v}" ]]
+    do >&3 log "${var#*:}"; read -e "$v"
+    done
     cmd+=" -e s/${var%%:*}/${!v}/g"
   done
 
