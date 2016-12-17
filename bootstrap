@@ -48,7 +48,8 @@ symlink() {
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     local name="$pkg" #$(basename "${d%/*}")
-    [[ "${d##*/}" != "${BOOTSTRAP##*/}" ]] && name="${dirname##*/}/$pkg"
+    echo "dir: $dir, d: $d"
+    [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && name="${dir##*/}/$pkg"
     log "Installing $name..."
     [[ -f  "$d/install.sh" ]] && source "$d/install.sh"
     stow --verbose --ignore=".*.tpl" --ignore="install.sh" \
