@@ -90,7 +90,7 @@ main() {
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     *linux)
       if has apt-get
-      then apt-get update -y && apt-get install stow
+      then apt-get update -y && apt-get install -y stow
       fi
       # if has apk && apk update && apk add git perl make automake=1.13.4 autoconf
       # then # http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL.md
