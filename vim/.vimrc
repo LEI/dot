@@ -4,7 +4,7 @@
 let g:vim_plug = expand('~/.vim/autoload/plug.vim')
 let g:vim_plug_url = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 if !filereadable(g:vim_plug)
-  execute '!curl -sfLo ' . g:vim_plug
+  execute 'silent !curl -sfLo ' . g:vim_plug
     \ . ' --create-dirs '
     \ . g:vim_plug_url
 endif
