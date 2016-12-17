@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-# mkd() {
-#   mkdir -p "$@" && cd "$_"
-# }
+# mkd() { mkdir -p "$@" && cd "$_" }
 
 tre() {
   tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
