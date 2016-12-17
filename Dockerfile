@@ -5,6 +5,6 @@ RUN apt-get update -y
 # && localedef -i en_GB -c -f UTF-8 -A /usr/share/locale/locale.alias en_GB.UTF-8
 # ENV LANG en_GB.utf8
 RUN apt-get install -y git-core
-RUN git clone https://github.com/LEI/termux-config.git .dotfiles
-RUN echo "source $HOME/.dotfiles/bootstrap" >> $HOME/.bashrc
+RUN git clone https://github.com/LEI/termux-config.git "$HOME/.dotfiles"
+# RUN echo "source $HOME/.dotfiles/bootstrap" >> $HOME/.bashrc
 ENTRYPOINT ["/bin/bash"]
