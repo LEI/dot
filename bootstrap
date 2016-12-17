@@ -89,7 +89,7 @@ main() {
   case "$OS" in
     android) has apt && apt update -qq -y && [[ -f "$pkg" ]] && apt install -qq -y $(cat "$pkg") ;;
     # darwin) has brew || brew_install && brew update && brew install ... ;;
-    # linux) ;;
+    linux) has apk && apk --update-cache --quiet install stow ;;
     *) err "$OS: unknown operating system" ;;
   esac
 
