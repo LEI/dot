@@ -56,8 +56,7 @@ stow_packages() {
 
   local d
   for d in find {$path,$path/os_$OS} -type d ! -name 'os_*' \
-    -mindepth 1 -maxdepth 1"
-
+    -mindepth 1 -maxdepth 1
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     log "Stowing $pkg..."
