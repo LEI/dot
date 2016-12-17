@@ -3,6 +3,8 @@ case "$OS" in
   linux)
     if has apk
     then apk add -q tmux
+    elif has apt-get
+    then apt-get install -y tmux
     fi
     ;;
 esac
