@@ -63,7 +63,7 @@ symlink() {
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     if [[ -f  "$d/install.sh" ]]
-    then $d/install.sh
+    then source "$d/install.sh"
     fi
     log "Stowing $pkg..."
     stow --verbose --ignore=".*.tpl" --ignore="install.sh" \
