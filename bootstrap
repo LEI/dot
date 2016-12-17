@@ -60,6 +60,24 @@ symlink() {
   done
 }
 
+template() {
+  local tpl="$1"; shift
+  local opts=
+
+  local var v
+  for var in "$@"
+  do v="TPL_${var%%:*}"
+    log "${var#*:}"
+    read -e "$v"
+    if [[ -z "${!v}" ]]
+    then err "Empty value for $v"
+    fi
+    opts+=" -e 's/$v/${!v}'"
+  done
+
+  sed $opts "$tpl"
+}
+
 gituser() {
   local tpl="${1:-$BOOTSTRAP/git/.gitconfig.local.tpl}"
   if [[ ! -f "$tpl" ]] && [[ ! -L "$tpl" ]]
@@ -101,10 +119,6 @@ main() {
   then symlink
   fi
 
-  if has git
-  then gituser
-  fi
-
   log "Done."
 }
 
@@ -115,5 +129,6 @@ unset err
 unset has
 unset apt_packages
 unset symlink
+unset template
 unset gituser
 unset main
