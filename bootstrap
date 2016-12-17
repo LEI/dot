@@ -62,6 +62,9 @@ stow_packages() {
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
+    if [[ -f  "$dir/install" ]]
+    then source $dir/install
+    fi
     log "Stowing $pkg..."
     stow --verbose --ignore=".*.tpl" \
       --dir "$dir" --target \
