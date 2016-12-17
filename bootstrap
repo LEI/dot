@@ -51,7 +51,7 @@ stow_packages() {
   # [[ "$ignore_dirs" != *"$pkg"* ]]
 
   if [[ -d "$dir/os_$OS" ]]
-  then dir={$dir,$dir/os_*}
+  then dir+=" $dir/os_*"
   fi
 
   local d
