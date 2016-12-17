@@ -8,6 +8,8 @@ case "$OS" in
   linux)
     if has apk
     then apk add -q git
+    elif has apt-get
+    then apt-get install -y git-core
     fi
     ;;
 esac
