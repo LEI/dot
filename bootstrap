@@ -54,11 +54,11 @@ stow_packages() {
   then path+=" $path/os_*"
   fi
 
-  local fcmd="find $path -type d ! -name "os_*" \
+  local fcmd="find $path -type d ! -name 'os_*' \
     -mindepth 1 -maxdepth 1"
-  local packages="$(fcmd)"
+  local packages="$($fcmd)"
 
-  echo "$fcmd = $packages"
+  echo "FIND: $fcmd => $packages"
 
   local d
   for d in $packages
