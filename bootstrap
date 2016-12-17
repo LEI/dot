@@ -2,15 +2,32 @@
 
 # Usage: source bootstrap
 
-TERMUX_CFG="$HOME/storage/shared/termux-config"
+BOOTSTRAP="$(dirname "${BASH_SOURCE}")"
+
+log() {
+  printf "%s\n" "$@"
+}
+
+err() {
+  local ret=$?
+  >&2 log "$@"
+  return $ret
+}
+
+has() {
+  if ! hash "$1" 2>/dev/null
+  then err "$1: command not found"
+    return 127
+  fi
+}
 
 # Install packages
 apt_packages() {
-  local pkg="${1:-$TERMUX_CFG/apt}"
+  local pkg="${1:-$BOOTSTRAP/apt}"
 
   if [[ -r "$pkg" ]]
   then pkg="$(cat "$pkg")"
-  else >&2 printf "%s\n" "$pkg: not found"
+  else err "$pkg: not found"
     return 1
   fi
 
@@ -19,7 +36,7 @@ apt_packages() {
 
 # Symlink dotfiles
 stow_packages() {
-  local dir="${1:-$TERMUX_CFG}"
+  local dir="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
   local ignore_dirs=""
 
@@ -35,7 +52,7 @@ stow_packages() {
   do local pkg="$(basename $d)"
     if [[ "$ignore_dirs" != *"$pkg"* ]]
     then
-      printf "%s\n" "Stowing $pkg..."
+      log "Stowing $pkg..."
       stow --verbose --ignore=".*.tpl" \
         --dir "$dir" --target \
         "$target" "$pkg"
@@ -44,22 +61,22 @@ stow_packages() {
 }
 
 git_install() {
-  local tpl="${1:-$TERMUX_CFG/git/.gitconfig.local.tpl}"
+  local tpl="${1:-$BOOTSTRAP/git/.gitconfig.local.tpl}"
   if [[ ! -f "$tpl" ]] && [[ ! -L "$tpl" ]]
-  then >&2 printf "%s\n" "$tpl: not found"
+  then err "$tpl: not found"
     return 1
   fi
   local dst="${2:-$HOME}/.gitconfig.local"
   if [[ -f "$dst" ]] || [[ -L "$dst" ]]
-  then >&2 printf "%s\n" "${dst/$HOME/\~}: already exists"
+  then err "${dst/$HOME/\~}: already exists"
     return
   fi
   local git_name git_user git_email
-  printf "%s\n" "What is your github full name?"
+  log "What is your github full name?"
   read -e git_name
-  printf "%s\n" "What is your github username?"
+  log "What is your github username?"
   read -e git_user
-  printf "%s\n" "What is your github email?"
+  log "What is your github email?"
   read -e git_email
   sed -e "s/GIT_NAME/$git_name/g" \
     -e "s/GIT_USERNAME/$git_username/g" \
@@ -68,23 +85,29 @@ git_install() {
 }
 
 main() {
-  if hash apt 2>/dev/null
+  # log "${BOOTSTRAP/$HOME/\~}"
+
+  if has apt
   then apt_packages
   fi
 
-  if hash stow 2>/dev/null
+  if has stow
   then stow_packages
   fi
 
-  if hash git 2>/dev/null
+  if has git
   then git_install
   fi
 
-  printf "%s\n" "Done."
+  log "Done."
 }
 
 main "$@"
 
+unset log
+unset err
+unset has
 unset apt_packages
 unset stow_packages
+unset git_install
 unset main
