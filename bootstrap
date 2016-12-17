@@ -6,6 +6,8 @@
 # BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
+OS="$($(uname -o 2>/dev/null || uname -s) | tr '[:upper:]' '[:lower:]')"
+
 log() {
   # printf "%s" "${0##*/}: "
   printf "%s\n" "$@"
@@ -45,7 +47,7 @@ symlink() {
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
-    log "Installing $pkg..." # $(basename "${d%/*}")
+    log "Bootstraping $pkg..." # $(basename "${d%/*}")
     [[ -f  "$d/install.sh" ]] && source "$d/install.sh"
     stow --verbose --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target "$target" "$pkg"
@@ -76,16 +78,10 @@ template() {
     done
     cmd+=" -e \"s/${var%%:*}/${!v}/g\""
   done
-
   eval $cmd "$src" > "$dst"
 }
 
 main() {
-  case "$(uname -o 2>/dev/null)" in
-    Android) OS="android" ;;
-    *) OS="$(uname -s | to lower)" ;;
-  esac
-
   case "$OS" in
     android) has apt && apt update -qq -y && apt install -qq -y \
       busybox ca-certificates coreutils curl less man openssh openssl readline stow tree ;;
