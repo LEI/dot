@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 
-log "Installing Android packages"
+# https://termux.com/storage.html
+if [[ ! -d "$HOME/storage" ]]
+then log "Setup storage symlink"
+  termux-setup-storage
+fi
