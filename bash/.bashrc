@@ -8,7 +8,7 @@ load() {
     then load $path/*
     elif [[ -r "$path" ]] && [[ -f "$path" ]] # || [[ -L "$f" ]]
     then source "$path"
-    else >&2 printf "%s\n" "$path: No such file or directory"
+    # else >&2 printf "%s\n" "$path: No such file or directory"
     fi
   done
 }
@@ -27,8 +27,8 @@ main() {
   esac
 
   load $HOME/.bash{_aliases,_exports,_functions,rc.local}
-  load $HOME/.$OS.d/*.bash 2>/dev/null
-  load $HOME/.bashrc.local 2>/dev/null
+  load $HOME/.$OS.d/*.bash
+  load $HOME/.bashrc.local
 }
 
 main "$@"

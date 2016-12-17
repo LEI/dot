@@ -52,12 +52,12 @@ stow_packages() {
   # local ignore_dirs=
   # [[ "$ignore_dirs" != *"$pkg"* ]]
 
-  # if [[ -d "$path/os_$OS" ]]
-  # then path+=" $path/os_$OS"
-  # fi
+  if [[ -d "$path/os_$OS" ]]
+  then path+=" $path/os_$OS"
+  fi
 
   local d
-  for d in $(find {$path,$path/os_$OS} -type d ! -name 'os_*' \
+  for d in $(find $path -type d ! -name 'os_*' \
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"

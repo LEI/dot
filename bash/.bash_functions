@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-# mkd() {
-#   mkdir -p "$@" && cd "$_"
-# }
+mkd() {
+  mkdir -p "$@" && cd "$_"
+}
 
-# tre() {
-#   tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
-# }
+tre() {
+  tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
+}
 
-# to() {
-#   case "$1" in
-#     lower) tr "[:upper:]" "[:lower:]" ;;
-#     upper) tr "[:lower:]" "[:upper:]" ;;
-#     *) >&2 printf "%s\n" "to: $1: illegal option"; return 1 ;;
-#   esac
-# }
+to() {
+  case "$1" in
+    lower) tr "[:upper:]" "[:lower:]" ;;
+    upper) tr "[:lower:]" "[:upper:]" ;;
+    *) >&2 printf "%s\n" "to: $1: illegal option"; return 1 ;;
+  esac
+}
 
 e() {
   if [[ -z "$EDITOR" ]]
