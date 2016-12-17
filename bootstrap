@@ -2,7 +2,8 @@
 
 # Usage: source bootstrap
 
-BOOTSTRAP="$(dirname "${BASH_SOURCE}")"
+# BOOTSTRAP="$(dirname "${BASH_SOURCE}")"
+BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 
 log() {
   # printf "%s" "${0##*/}: "
