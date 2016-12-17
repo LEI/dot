@@ -75,6 +75,7 @@ template() {
     opts+=" -e s/${var%%:*}/${!v}/g"
   done
 
+  echo sed $opts "$tpl"
   sed $opts "$tpl"
 }
 
