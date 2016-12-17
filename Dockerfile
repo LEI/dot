@@ -12,5 +12,5 @@ ENV BOOTSTRAP /root/.dotfiles
 
 ENTRYPOINT ["bash"]
 # ARG CACHEBUST=1
-CMD ["-c", "cd $BOOTSTRAP; git pull origin master"]
+# CMD ["-c", "cd $BOOTSTRAP; git pull origin master"]
 # "-c", "source $HOME/.dotfiles/bootstrap"
