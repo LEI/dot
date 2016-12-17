@@ -57,7 +57,8 @@ stow_packages() {
   fi
 
   local d
-  for d in $(find $path -type d ! -name 'os_*' \
+  for d in $(find $path -type d \
+    ! -name '.git' ! -name 'os_*' \
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
