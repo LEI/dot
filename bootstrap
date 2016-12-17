@@ -58,6 +58,8 @@ stow_packages() {
     -mindepth 1 -maxdepth 1"
   local packages="$(fcmd)"
 
+  echo "$fcmd = $packages"
+
   local d
   for d in $packages
   do local pkg="$(basename $d)"
