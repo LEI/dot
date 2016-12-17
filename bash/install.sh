@@ -15,7 +15,7 @@ for p in $HOME/{bin}
 do [[ -d "$p" ]] || mkdir -p "$p"
 done
 
-p='[[ -n "$PS1" ]] && source ~/.bash_profile'
-if ! fgrep -x "$p"
-then printf "%s\n" "$p" >> ~/.bashrc
+p='[[ -n "$PS1" ]] && source $HOME/.bash_profile'
+if ! fgrep -x "$p" "$HOME/.bashrc" &>/dev/null
+then printf "%s\n" "$p" >> "$HOME/.bashrc"
 fi
