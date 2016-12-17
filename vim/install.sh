@@ -9,7 +9,7 @@ case "$OS" in
     ;;
 esac
 
-for p in $HOME/{.vim}
+for p in $HOME/.vim
 do [[ -d "$p" ]] || mkdir -p "$p"
 done
 

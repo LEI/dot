@@ -9,6 +9,6 @@ case "$OS" in
     ;;
 esac
 
-for p in $HOME/{.tmux}
+for p in $HOME/.tmux
 do [[ -d "$p" ]] || mkdir -p "$p"
 done

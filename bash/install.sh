@@ -11,11 +11,11 @@ case "$OS" in
     ;;
 esac
 
-for p in $HOME/{bin}
+for p in $HOME/bin
 do [[ -d "$p" ]] || mkdir -p "$p"
 done
 
-p='[[ -n "$PS1" ]] && source $HOME/.bash_profile'
+p='[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'
 if ! fgrep -x "$p" "$HOME/.bashrc" &>/dev/null
 then printf "%s\n" "$p" >> "$HOME/.bashrc"
 fi
