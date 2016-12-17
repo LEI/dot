@@ -62,7 +62,7 @@ stow_packages() {
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     log "Stowing $pkg..."
-    echo stow --verbose --ignore=".*.tpl" \
+    stow --verbose --ignore=".*.tpl" \
       --dir "$dir" --target \
       "$target" "$pkg"
   done
