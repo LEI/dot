@@ -1,11 +1,11 @@
-bash_pkg="bash bash-completion"
+bash_pkg="bash bash-completion tree"
 
 case "$OS" in
   android) apt install -qq -y $bash_pkg ;;
   *linux)
-    if has apk
+    if has apk 2>/dev/null
     then apk add -q $bash_pkg
-    elif has apt-get
+    elif has apt-get 2>/dev/null
     then apt-get install -y $bash_pkg
     fi
     ;;

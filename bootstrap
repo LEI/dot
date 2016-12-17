@@ -37,8 +37,8 @@ symlink() {
   #   [[ -d "$d" ]] || mkdir "$d"
   # done
 
-  if [[ -d "$path/os_$OS" ]]
-  then path+=" $path/os_$OS"
+  if [[ -d "$path/os_${OS##*/}" ]]
+  then path+=" $path/os_${OS##*/}"
   fi
 
   local d
@@ -83,14 +83,18 @@ template() {
 }
 
 main() {
-  log "Bootstrapping $OS:"
-  local pkg="$BOOTSTRAP/os_$OS/packages"
+  log "Bootstrapping ${OS##*/}:"
+  local pkg="$BOOTSTRAP/os_${OS##*/}/packages"
   case "$OS" in
-    android) has apt && apt update -qq -y && [[ -f "$pkg" ]] && apt install -qq -y $(cat "$pkg") ;;
     # darwin) has brew || brew_install && brew update && brew install ... ;;
-    *linux)
-      if has apt-get
-      then apt-get update -y && apt-get install -y stow
+    android|*linux)
+      if has apt 2>/dev/null
+      then apt update -qq -y \
+        && [[ -f "$pkg.apt" ]] && apt install -qq -y $(cat "$pkg.apt")
+      elif has apt-get 2>/dev/null
+      then apt-get update -y \
+        && [[ -f "$pkg.apt" ]] && apt-get install -y $(cat "$pkg.apt")
+      else "$OS: unknown package manager"
       fi
       # if has apk && apk update && apk add git perl make automake=1.13.4 autoconf
       # then # http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL.md
@@ -101,7 +105,8 @@ main() {
       #   ./configure && make install && make clean
       # fi
       ;;
-    *) err "$OS: unknown operating system" ;;
+    *) err "$OS: unknown operating system"
+      return 1;;
   esac
 
   if has stow

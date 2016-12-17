@@ -1,0 +1,6 @@
+ca-certificates
+coreutils
+curl
+less
+man
+stow

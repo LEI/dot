@@ -1,9 +1,9 @@
 case "$OS" in
   android) apt install -qq -y git ;;
   *linux)
-    if has apk
+    if has apk 2>/dev/null
     then apk add -q git
-    elif has apt-get
+    elif has apt-get 2>/dev/null
     then apt-get install -y git-core
     fi
     ;;
