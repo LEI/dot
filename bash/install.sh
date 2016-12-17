@@ -6,7 +6,7 @@ case "$OS" in
     if has apk
     then apk add -q $bash_pkg
     elif has apt-get
-    then apt-get install -y $bash_pkg
+    then echo apt-get install -y $bash_pkg
     fi
     ;;
 esac
@@ -17,5 +17,5 @@ done
 
 p='[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'
 if ! fgrep -x "$p" "$HOME/.bashrc" &>/dev/null
-then printf "%s\n" "$p" >> "$HOME/.bashrc"
+then printf "%s\n" "" "$p" >> "$HOME/.bashrc"
 fi
