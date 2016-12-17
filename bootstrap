@@ -54,9 +54,13 @@ stow_packages() {
   then paths+=" $dir/os_*"
   fi
 
+  local cmd="$(find $paths -type d ! -name "os_*" \
+    -mindepth 1 -maxdepth 1)"
+
+  echo >&2 $cmd
+
   local d
-  for d in $(find $paths -type d ! -name "os_*" \
-    -mindepth 1 -maxdepth 1)
+  for d in $cmd
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     log "Stowing $pkg..."
