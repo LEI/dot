@@ -82,11 +82,10 @@ template() {
     while [[ -z "${!v}" ]]
     do log "${var#*:}"; read -e "$v"
     done
-    cmd+=" -e "s/${var%%:*}/${!v}/g""
+    cmd+=" -e \"s/${var%%:*}/${!v}/g\""
   done
 
-  echo "$cmd" "$src"
-  "$cmd" "$src" > "$dst"
+  eval $cmd "$src" > "$dst"
 }
 
 gituser() {
