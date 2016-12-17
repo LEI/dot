@@ -49,7 +49,7 @@ symlink() {
     local p="$pkg"
     [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && p="${dir##*/}/$pkg"
     log "Installing $p..."
-    [[ -f  "$d/install.sh" ]] && source "$d/install.sh"
+    [[ -f "$d/install.sh" ]] && source "$d/install.sh"
     stow --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target "$target" "$pkg" # --verbose
   done

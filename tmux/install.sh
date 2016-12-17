@@ -1,6 +1,6 @@
 case "$OS" in
   android) apt install tmux -qq -y ;;
-  linux)
+  *linux)
     if has apk
     then apk add -q tmux
     elif has apt-get

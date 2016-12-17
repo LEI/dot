@@ -2,7 +2,7 @@ bash_pkg="bash bash-completion"
 
 case "$OS" in
   android) apt install -qq -y $bash_pkg ;;
-  linux)
+  *linux)
     if has apk
     then apk add -q $bash_pkg
     elif has apt-get

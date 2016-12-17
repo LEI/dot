@@ -1,6 +1,6 @@
 case "$OS" in
   android) apt install -qq -y vim neovim ;;
-  linux)
+  *linux)
     if has apk
     then apk add -q vim
     elif has apt-get
