@@ -42,8 +42,8 @@ symlink() {
   fi
 
   local d
-  for d in $(find $path -mindepth 1 -maxdepth 1 -type d \
-    ! -name '.git' ! -name 'os_*')
+  for d in $(find $path -mindepth 1 -maxdepth 1 \
+    ! -name '.git' ! -name 'os_*' -type d)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
     local p="$pkg"
