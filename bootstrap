@@ -45,7 +45,7 @@ symlink() {
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
     local dir="$(dirname $d)"
-    log "Installing $(basename "${d%/*}")/$pkg..."
+    log "Installing $pkg..." # $(basename "${d%/*}")
     [[ -f  "$d/install.sh" ]] && source "$d/install.sh"
     stow --verbose --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target "$target" "$pkg"
