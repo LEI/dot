@@ -24,14 +24,7 @@ has() {
   fi
 }
 
-# Install packages
-apt_packages() {
-  log "Updating available packages..."
-  apt update && [[ $# -ne 0 ]] && apt install "$@"
-  # while read -r pkg; do apt install $pkg; done
-}
-
-# Symlink dotfiles
+# Stow
 symlink() {
   local path="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
@@ -64,7 +57,7 @@ template() {
   local cmd="sed"
   local src="$1"
   shift
-  local dst="$1"
+  local dst="$1" # ${1:-$HOME/$(basename "${1%.tpl}")}
   shift
   if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]
   then err "$src: not found"
@@ -88,31 +81,6 @@ template() {
   eval $cmd "$src" > "$dst"
 }
 
-gituser() {
-  local tpl="${1:-$BOOTSTRAP/git/.gitconfig.local.tpl}"
-  if [[ ! -f "$tpl" ]] && [[ ! -L "$tpl" ]]
-  then err "$tpl: not found"
-    return 1
-  fi
-  local dst="${2:-$HOME}/.gitconfig.local"
-  if [[ -f "$dst" ]] || [[ -L "$dst" ]]
-  # TODO check symlink target
-  then err "${dst/$HOME/\~}: already exists"
-    return
-  fi
-  local git_name git_user git_email
-  log "What is your github full name?"
-  read -e git_name
-  log "What is your github username?"
-  read -e git_user
-  log "What is your github email?"
-  read -e git_email
-  sed -e "s/GIT_NAME/$git_name/g" \
-    -e "s/GIT_USERNAME/$git_username/g" \
-    -e "s/GIT_EMAIL/$git_email/g" \
-    "$tpl" > "$dst"
-}
-
 main() {
   case "$(uname -o 2>/dev/null)" in
     Android) OS="android" ;;
@@ -120,7 +88,7 @@ main() {
   esac
 
   case "$OS" in
-    android) has apt && apt_packages $(cat "$BOOTSTRAP/apt") ;;
+    android) has apt && apt update && apt install $(cat "$BOOTSTRAP/apt") ;;
     # darwin) has brew || brew_install && brew_packages ;;
     # linux) ;;
   esac
@@ -137,8 +105,6 @@ main "$@"
 unset log
 unset err
 unset has
-unset apt_packages
 unset symlink
 unset template
-unset gituser
 unset main
