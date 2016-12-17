@@ -1,5 +1,5 @@
 case "$OS" in
-  android) apt install -qq -y vim nvim ;;
+  android) apt install -qq -y vim neovim ;;
 esac
 
 for p in $HOME/{.vim,.config/nvim}
