@@ -44,11 +44,10 @@ symlink() {
     ! -name '.git' ! -name 'os_*' \
     -mindepth 1 -maxdepth 1)
   do local pkg="$(basename $d)"
-    local dir="$(dirname $d)"
+    log "Installing $pkg..."
     [[ -f  "$d/install.sh" ]] && source "$d/install.sh"
-    log "Stowing $pkg..."
     stow --verbose --ignore=".*.tpl" --ignore="install.sh" \
-      --dir "$dir" --target \
+      --dir "$(dirname $d)" --target \
       "$target" "$pkg"
   done
 }
