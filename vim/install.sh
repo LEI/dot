@@ -1,3 +1,3 @@
 case "$OS" in
-  android) apt install vim ;;
+  android) apt install -qq -y vim ;;
 esac

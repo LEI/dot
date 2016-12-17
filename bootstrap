@@ -87,7 +87,7 @@ main() {
   esac
 
   case "$OS" in
-    android) has apt && apt update && apt install \
+    android) has apt && apt update -qq -y && apt install -y \
       busybox ca-certificates coreutils curl less man openssh openssl readline stow tree ;;
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     # linux) ;;

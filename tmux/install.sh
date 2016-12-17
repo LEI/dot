@@ -1,3 +1,3 @@
 case "$OS" in
-  android) apt install tmux ;;
+  android) apt install tmux -qq -y ;;
 esac

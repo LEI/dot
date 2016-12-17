@@ -1,3 +1,3 @@
 case "$OS" in
-  android) apt install bash bash-completion ;;
+  android) apt install -qq -y bash bash-completion ;;
 esac
