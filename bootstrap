@@ -85,6 +85,7 @@ template() {
     cmd+=" -e s/${var%%:*}/${!v}/g"
   done
 
+  echo $cmd "$src"
   $cmd "$src" > "$dst"
 }
 
