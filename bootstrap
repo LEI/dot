@@ -35,8 +35,7 @@ apt_packages() {
   # fi
 
   log "Updating available packages..."
-  apt update
-  while read pkg
+  apt update && while read -r pkg
   do apt install $pkg
   done
 }
@@ -101,7 +100,7 @@ main() {
   esac
 
   case "$OS" in
-    android) has apt && apt_packages < "$BOOTSTRAP/apt" ;;
+    android) has apt && apt_packages <<< $(cat "$BOOTSTRAP/apt") ;;
   esac
 
   if has stow
