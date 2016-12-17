@@ -37,9 +37,7 @@ apt_packages() {
   log "Updating available packages..."
   apt update
   [[ $# -ne 0 ]] && apt install "$@"
-  # while read -r pkg
-  # do apt install $pkg
-  # done
+  # while read -r pkg; do apt install $pkg; done
 }
 
 # Symlink dotfiles
@@ -102,7 +100,7 @@ main() {
   esac
 
   case "$OS" in
-    android) has apt && apt_packages @- < "$BOOTSTRAP/apt" ;;
+    android) has apt && apt_packages $(cat "$BOOTSTRAP/apt") ;;
   esac
 
   if has stow
