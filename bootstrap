@@ -61,8 +61,13 @@ symlink() {
 }
 
 template() {
-  local tpl="$1"; shift
-  local opts=
+  local cmd="sed"
+  local src="$1"
+  shift
+  if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]
+  then err "$src: not found"
+    return 1
+  fi
 
   local var v
   for var in "$@"
@@ -72,11 +77,10 @@ template() {
     if [[ -z "${!v}" ]]
     then err "Empty value for $v"
     fi
-    opts+=" -e s/${var%%:*}/${!v}/g"
+    cmd+=" -e s/${var%%:*}/${!v}/g"
   done
 
-  echo sed $opts "$tpl"
-  sed $opts "$tpl"
+  $cmd "$src"
 }
 
 gituser() {
