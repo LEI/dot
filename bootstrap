@@ -106,20 +106,18 @@ template() {
   then err "${dst/$HOME/\~}: already exists"
     return
   fi
-  local val opts=()
+  local opts=()
   while [[ $# -ne 0 ]]
   do
     local var="${1%%:*}"
-    # while [[ -z "${!var}" ]]
-    # do log "${1#*:}"; read -e "$var"
-    # done
+    local val="${!var}"
+    opts+=("-e" "'s/$var/$val/g'")
+    shift
     # read -p "${1#*:}" -i "${!var}" -e val
-    echo read -p "${1#*:} (default: ${!var})" -r val
-    read -p "${1#*:} (default: ${!var})" -r val
-    if [[ -n "$val" ]] || [[ -n "${!var}" ]]
-    then opts+=("-e" "'s/$var/${val:-${!var}}/g'"); shift
-    else sleep 0.1
-    fi
+    # if [[ -n "$val" ]] || [[ -n "${!var}" ]]
+    # then opts+=("-e" "'s/$var/${val:-${!var}}/g'")
+    # else sleep 0.1
+    # fi
   # local v opts=()
   # for v in "${vars[@]}"
   # do local g="${v%%:*}"
@@ -136,7 +134,6 @@ template() {
   #   opts+=("-e" "'s/$g/$val/g'")
   #   unset $var
   done
-  echo sed "${opts[@]}" "$src"
   eval sed "${opts[@]}" "$src" > "$dst"
 }
 
