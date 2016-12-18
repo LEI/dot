@@ -128,7 +128,7 @@ pkg_stow() {
     # install) --stow ;;
     delete) stow_opts+=" --delete" ;;
   esac
-  [[ -d "$path/os_${OS##*/}" ]] && path+="$path/os_${OS##*/}"
+  [[ -d "$path/os_${OS##*/}" ]] && path+=" $path/os_${OS##*/}"
   local d find_opts=
   for d in "$@"
   do [[ -n "$d" ]] && find_opts+=" -name '$d'"
