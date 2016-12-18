@@ -68,7 +68,6 @@ rmdirs() {
   done
 }
 
-# ACTION="install"
 symlink() {
   local path="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
@@ -101,7 +100,7 @@ symlink() {
       delete) log "Removing $p:" ;;
     esac
     if [[ -f "$d/install.sh" ]]
-    then unset _install _delete
+    then unset _install _delete _post_install _post_delete
       source "$d/install.sh"
       case "$ACTION" in
         install) hash _install 2>/dev/null && _install ;;
@@ -154,6 +153,7 @@ template() {
 }
 
 main() {
+  ACTION="${ACTION:-install}"
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
