@@ -35,7 +35,7 @@ directory() {
   do
     case "$state" in
       present) [[ -d "$dir" ]] || mkdir -p "$dir" ;;
-      absent)  [[ -d "$dir" ]] && rmdir "$dir" ;;
+      absent) [[ -d "$dir" ]] && rmdir "$dir" ;;
     esac
   done
 }
@@ -76,45 +76,6 @@ prompt() {
   fi
 }
 
-stow_package() {
-  local a="${1:-install}"
-  local path="${2:-$BOOTSTRAP}"
-  local target="${3:-$HOME}"
-  local opts="${4:-${STOW_OPTS:---verbose}}"
-  case "$a" in
-    # install) --stow ;;
-    delete) opts+=" --delete" ;;
-  esac
-  if [[ -d "$path/os_${OS##*/}" ]]
-  then path+=" $path/os_${OS##*/}"
-  fi
-  local d
-  for d in $(find $path -mindepth 1 -maxdepth 1 \
-    ! -name '.git' ! -name 'os_*' -type d)
-  do local pkg="$(basename $d)"
-    local dir="$(dirname $d)"
-    local p="$pkg"
-    [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && p="${dir##*/}/$pkg"
-    case "$a" in
-      install) log "Installing $p:" ;;
-      delete) log "Removing $p:" ;;
-    esac
-    unset packages _post_$a
-    if [[ -f "$d/$a.sh" ]]
-    then source "$d/$a.sh"
-      if [[ -n "$packages" ]]
-      then echo pkg_$action $packages
-        pkg_$action $packages
-      fi
-    fi
-    echo stow $opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
-      --dir "$dir" --target "$target" "$pkg"
-    stow $opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
-      --dir "$dir" --target "$target" "$pkg"
-    hash _post_$a 2>/dev/null && _post_$a && unset _post_$a
-  done
-}
-
 template() {
   # TODO state
   local cmd="sed"
@@ -144,21 +105,67 @@ template() {
 }
 
 pkg_install() {
+  echo $PKG_CMD $PKG_UPD / $PKG_CMD $PKG_ADD "$@"
   $PKG_CMD $PKG_UPD && [[ $# -ne 0 ]] && $PKG_CMD $PKG_ADD "$@"
 }
 
 pkg_delete() {
+  echo $PKG_CMD $PKG_DEL
   [[ $# -ne 0 ]] && $PKG_CMD $PKG_DEL "$@"
+}
+
+pkg_stow() {
+  local action state="${1:-present}"
+  case "$state" in
+    present) action="install" ;;
+    absent) action="delete" ;;
+  esac
+  shift
+  local pkg="$@"
+  local path="$BOOTSTRAP" # "${2:-$BOOTSTRAP}"
+  local target="$HOME" # "${3:-$HOME}"
+  local stow_opts="${STOW_OPTS:---verbose}"
+  case "$action" in
+    # install) --stow ;;
+    delete) stow_opts+=" --delete" ;;
+  esac
+  [[ -d "$path/os_${OS##*/}" ]] && path+=" $path/os_${OS##*/}"
+  local d find_opts="-mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*'"
+  for d in "${pkg[@]}"
+  do find_opts+=" -name '$d'"
+  done
+  echo ">>>>>>>>>> find $path $find_opts"
+  for d in $(find $path $find_opts)
+  do local p="$(basename $d)"
+    local dir="$(dirname $d)"
+    local name="$p"
+    [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && name="${dir##*/}/$p"
+    log "$name: $action..."
+    unset packages _post_$action
+    if [[ -f "$d/$action.sh" ]]
+    then source "$d/$action.sh"
+      if [[ -n "$packages" ]]
+      then pkg_$action $packages
+      fi
+    fi
+    echo stow $stow_opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
+      --dir "$dir" --target "$target" "$p"
+    stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete).sh' \
+      --dir "$dir" --target "$target" "$p"
+    hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
+  done
 }
 
 main() {
   local action="install"
+  local pkg=()
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
       -I|--install|'') action="install"; shift ;;
       -D|--delete) action="delete"; shift ;;
-      *) err "$1: invalid argument"; return 1 ;;
+      -*) err "$1: illegal option"; return 1 ;;
+      *) pkg+=("$1"); shift ;;
     esac
   done
 
@@ -176,13 +183,17 @@ main() {
   esac
 
   log "Bootstrap: ${OS##*/}"
-  local pkg="$(cat "$BOOTSTRAP/os_${OS##*/}/packages.${PKG_CMD%%-*}")"
+  local path="$BOOTSTRAP/os_${OS##*/}/packages.${PKG_CMD%%-*}"
   case "$OSTYPE" in
-    linux*) pkg_$action $pkg ;;
+    linux*) pkg_$action $(cat "$path") ;;
   esac
 
   if has stow
-  then stow_package $action
+  then
+    case "$action" in
+      install) pkg_stow present "${pkg[@]}" ;;
+      delete) pkg_stow absent "${pkg[@]}" ;;
+    esac
   fi
 
   log "Done."
@@ -190,12 +201,8 @@ main() {
 
 main "$@"
 
-unset log
-unset err
-unset has
-unset directory
-unset lineinfile
-unset prompt
-unset stow_package
-unset template
+unset log err has
+unset directory lineinfile
+unset prompt template
+unset pkg_install pkg_delete pkg_stow
 unset main
