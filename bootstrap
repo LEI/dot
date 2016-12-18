@@ -115,31 +115,32 @@ pkg_delete() {
 }
 
 pkg_stow() {
-  local action state="${1:-present}"
+  local state="$1"
+  shift
+  local action="install"
   case "$state" in
     present) action="install" ;;
     absent) action="delete" ;;
   esac
-  shift
-  local path="$BOOTSTRAP" # "${2:-$BOOTSTRAP}"
-  local target="$HOME" # "${3:-$HOME}"
   local stow_opts="${STOW_OPTS:---verbose}"
   case "$action" in
     # install) --stow ;;
     delete) stow_opts+=" --delete" ;;
   esac
-  [[ -d "$path/os_${OS##*/}" ]] && path+=" $path/os_${OS##*/}"
-  local find_args="$path -mindepth 1 -maxdepth 1 -type d ! ( -name '.git' -o -name 'os_*' )"
-  local find_opts=
+  local path="$BOOTSTRAP"
+  local target="$HOME"
+  local find_args=("$path")
+  [[ -d "$path/os_${OS##*/}" ]] && find_args+=("$path/os_${OS##*/}")
+  find_args+=("-mindepth" "1" "-maxdepth" "1" "-type" "d" \
+    "!" "(" "-name" ".git" "-o" "-name" "os_*" ")")
+  local find_opts=()
   while [[ $# -ne 0 ]]
-  do [[ -z "$find_opts" ]] && find_opts+=" (" || find_opts+=" -o"
-    [[ -n "$1" ]] && find_opts+=" -name '$1'"
-    [[ $# -eq 1 ]] && find_opts+=" )"
+  do [[ -z "$find_opts" ]] && find_opts+=("(") || find_opts+=("-o")
+    [[ -n "$1" ]] && find_opts+=("-name" "$1")
+    [[ $# -eq 1 ]] && find_opts+=(")")
     shift
   done
-  [[ -n "$find_opts" ]] && find_args+=" -a $find_opts"
-  echo "FIND >>>" find $find_args -print
-  echo "FIND ===" $(find $find_args -print)
+  [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
   local d
   while read -d '' -r d
   do local p="$(basename $d)"
@@ -154,7 +155,7 @@ pkg_stow() {
     stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
       --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
-  done < <(find $find_args -print0)
+  done < <(find "${find_args[@]}" -print0)
 }
 
 main() {
