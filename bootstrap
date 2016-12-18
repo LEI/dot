@@ -79,6 +79,17 @@ lineinfile () {
 #     sleep 0.1
 #   done
 # }
+# prompt() {
+#   local q="$1" # Question
+#   local d="$2" # Default
+#   [[ -n "$d" ]] && q+=" (default: $d) "
+#   local reply
+#   read -p "$q" -i "$d" -e reply
+#   if [[ -z "$reply" ]] && [[ -z "$d" ]]
+#   then prompt "$1" "$2"
+#   else log "${reply:-$d}"
+#   fi
+# }
 
 template() {
   local src="$1"
@@ -95,24 +106,35 @@ template() {
   then err "${dst/$HOME/\~}: already exists"
     return
   fi
-  local v opts=()
-  for v in "${vars[@]}"
-  do local g="${v%%:*}"
-    local val=
-    local var="TPL_$g"
-    # prompt "${v#*:}" "${!var}" # read -r val
-    while [[ -z "$val" ]]
-    do
-      echo prompt "${v#*:}" "${!g}" "($val)"
-      echo "read -p "${v#*:} " -i "${!g}" -e "$var""
-      # (default: ${!g})
-      read -p "${v#*:} " -i "${!g}" -e "$var"
-      [[ -n "${!var}" ]] && val="${!var}" || val="${!g}"
-      echo ">>>>>>>>" $g="$val"
-    done
-    # declare $var="$val"
-    opts+=("-e" "'s/$g/$val/g'")
-    unset $var
+  local val opts=()
+  while [[ $# -ne 0 ]]
+  do
+    local var="${1%%:*}"
+    # while [[ -z "${!var}" ]]
+    # do log "${1#*:}"; read -e "$var"
+    # done
+    # read -p "${1#*:}" -i "${!var}" -e val
+    echo read -p "${1#*:} (default: ${!var})" -r val
+    read -p "${1#*:} (default: ${!var})" -r val
+    if [[ -n "$val" ]] || [[ -n "${!var}" ]]
+    then opts+=("-e" "'s/$var/${val:-${!var}}/g'"); shift
+    else sleep 0.1
+    fi
+  # local v opts=()
+  # for v in "${vars[@]}"
+  # do local g="${v%%:*}"
+  #   local val=
+  #   local var="TPL_$g"
+  #   # prompt "${v#*:}" "${!var}" # read -r val
+  #   while [[ -z "$val" ]]
+  #   do printf "%s" "${v#*:} (default: ${!g}) "
+  #     read -r "$var" # -p "" -i "${!g}"
+  #     [[ -n "${!var}" ]] && val="${!var}" # || val="${!g}"
+  #     echo ">>>>>>>>" $g="$val"
+  #   done
+  #   # declare $var="$val"
+  #   opts+=("-e" "'s/$g/$val/g'")
+  #   unset $var
   done
   echo sed "${opts[@]}" "$src"
   eval sed "${opts[@]}" "$src" > "$dst"
