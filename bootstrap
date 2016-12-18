@@ -47,8 +47,9 @@ erase() {
   if ! has fgrep
   then return 1
   elif [[ -z "$(fgrep -Lx "$line" "$dest" 2>/dev/null)" ]]
-  then echo sed -e "s/$line//" "$dest"
-  sed -e "s/$line//" "$dest"
+  then
+    echo sed -n '/'"$line"'/!p' "$dest ::::::::"
+    sed -n '/'"$line"'/!p' "$dest"
     # > "$dest"
   fi
 }
