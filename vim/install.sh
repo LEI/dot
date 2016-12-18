@@ -27,11 +27,8 @@ _install() {
 _delete() {
   erase "$HOME/.vimrc" 'source ~/.vim/init.vim'
 
-  if has nvim
-  then
-    [[ -L "$HOME/.config/nvim" ]] && rm $HOME/.config/nvim
-    rmdirs $HOME/.config/nvim
-  fi
+  # [[ -L "$HOME/.config/nvim" ]] && rm $HOME/.config/nvim
+  [[ -d "$HOME/.config/nvim" ]] && rmdirs $HOME/.config/nvim
 
   case "$OS" in
     android) apt remove -qqy vim neovim ;;
