@@ -86,8 +86,7 @@ template() {
     read -p "${1#*:}" -i "${!var}" -e val
     if [[ -n "$val" ]]
     then opts+=("-e" "'s/$var/$val/g'")
-    else err "$var: empty value"
-      return 1
+    else err "$var: undefined variable"
     fi
     shift
   done
@@ -95,12 +94,13 @@ template() {
 }
 
 pkg_install() {
-  log "$PKG_CMD: $PKG_UPD and $PKG_ADD $@"
+  local msg
+  log "$PKG_CMD: update $update install $*"
   $PKG_CMD $PKG_UPD && [[ $# -ne 0 ]] && $PKG_CMD $PKG_ADD "$@"
 }
 
 pkg_delete() {
-  log "$PKG_CMD: $PKG_DEL $@"
+  log "$PKG_CMD: delete $*"
   [[ $# -ne 0 ]] && $PKG_CMD $PKG_DEL "$@"
 }
 
