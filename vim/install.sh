@@ -1,8 +1,3 @@
-packages="vim"
-case "$OSTYPE" in
-  linux-android) packages+="neovim" ;;
-esac
-
 # if !filereadable(expand("~/.vim/init.vim"))
 lineinfile present "$HOME/.vimrc" 'source ~/.vim/init.vim'
 

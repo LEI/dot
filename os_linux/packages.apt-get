@@ -1,0 +1,10 @@
+apt-utils
+ca-certificates
+coreutils
+curl
+grep
+less
+man
+readline-common
+silversearcher-ag
+stow
