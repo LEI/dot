@@ -130,11 +130,12 @@ pkg_stow() {
     delete) stow_opts+=" --delete" ;;
   esac
   [[ -d "${path[0]}/os_${OS##*/}" ]] && path+=("${path[0]}/os_${OS##*/}")
-  local d find_opts="! -name '.git' ! -name 'os_*'"
+  local d find_cmd="find "${path[@]}" -type d -mindepth 1 -maxdepth 1 ! -name '.git' ! -name 'os_*'"
   for d in "${pkg[@]}"
-  do [[ -n "$d" ]] && find_opts+=" -name '$d'"
+  do [[ -n "$d" ]] && find_cmd+=" -name '$d'"
   done
-  for d in $(find "${path[@]}" -mindepth 1 -maxdepth 1 $find_opts -type d)
+  echo "FIND $find_cmd ---> $($find_cmd)"
+  for d in $($find_cmd)
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
     declare -u name="$p"
@@ -180,10 +181,13 @@ main() {
   esac
 
   log "Bootstrap: ${OS##*/}"
-  local path="$BOOTSTRAP/os_${OS##*/}/packages.${PKG_CMD}" # ${PKG_CMD%%-*}
-  case "$OSTYPE" in
-    linux*) pkg_$action $(cat "$path") ;;
-  esac
+
+  if [[ "$update" -ne 0 ]]
+  then local path="$BOOTSTRAP/os_${OS##*/}/packages.${PKG_CMD}" # ${PKG_CMD%%-*}
+    case "$OSTYPE" in
+      linux*) pkg_$action $(cat "$path") ;;
+    esac
+  fi
 
   if has stow
   then
