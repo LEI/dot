@@ -129,25 +129,20 @@ pkg_stow() {
     delete) stow_opts+=" --delete" ;;
   esac
   [[ -d "$path/os_${OS##*/}" ]] && path+=" $path/os_${OS##*/}"
-  local d find_opts="-mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*'"
+  local d find_opts="-mindepth 1 -maxdepth 1 ! -name '.git' ! -name 'os_*' -type d"
   for d in "$@"
   do [[ -n "$d" ]] && find_opts+=" -name '$d'"
   done
+  echo ">>>>>>>>>> find $path $find_opts"
   for d in $(find $path $find_opts)
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
-    local name="$p"
+    declare -u name="$p"
     [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && name="${dir##*/}/$p"
     log "$name: $action..."
     unset packages _post_$action
-    if [[ -f "$d/$action.sh" ]]
-    then source "$d/$action.sh"
-      if [[ -n "$packages" ]]
-      then pkg_$action $packages
-      fi
-    fi
-    echo stow $stow_opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
-      --dir "$dir" --target "$target" "$p"
+    [[ -f "$d/$action.sh" ]] && source "$d/$action.sh" \
+      && [[ -n "$packages" ]] && pkg_$action $packages
     stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete).sh' \
       --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
