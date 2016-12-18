@@ -29,7 +29,9 @@ has() {
 }
 
 append() {
-  [[ -n "$(fgrep -Lx "$2" "$1")" ]] && printf "%s\n" "$2" >> "$1"
+  if [[ -z "$(fgrep -lx "$2" "$1" 2>/dev/null)" ]]
+  then printf "%s\n" "$2" >> "$1"
+  fi
   # if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
   # then printf "%s\n" "$line" >> "$dest"
   # fi
