@@ -28,89 +28,41 @@ has() {
   fi
 }
 
-append() {
-  local file="$1"
-  local line="$2"
-  if ! has fgrep
-  then return 1
-  elif [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-  then printf "%s\n" "$line" >> "$file"
-  fi
-  # if [[ ! -e "$file" ]] || [[ -f "$file" ]]
-  # then printf "%s\n" "$line" >> "$file"
-  # fi
-}
-
-erase() {
-  local file="$1"
-  local line="$2"
-  if ! has fgrep
-  then return 1
-  elif [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
-  then
-    local tmp="/tmp/${file##*/}.grep"
-    eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
-    # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
-  fi
-}
-
-mkdirs() {
+directory() {
+  local state="$1"
+  shift
   local dir
   for dir in "$@"
-  do [[ -d "$dir" ]] || mkdir -p "$dir"
-  done
-}
-
-rmdirs() {
-  local dir
-  for dir in "$@"
-  do [[ -d "$dir" ]] && rmdir "$dir"
-  done
-}
-
-symlink() {
-  local path="${1:-$BOOTSTRAP}"
-  local target="${2:-$HOME}"
-  local opts="${3:-${STOW_OPTS:---verbose}}"
-
-  case "$ACTION" in
-    # ''|install) --stow ;;
-    delete) opts+=" --delete" ;;
-  esac
-
-  # local d
-  # for d in {.vim,.tmux}
-  # do d="$TARGET/$d"
-  #   [[ -d "$d" ]] || mkdir "$d"
-  # done
-
-  if [[ -d "$path/os_${OS##*/}" ]]
-  then path+=" $path/os_${OS##*/}"
-  fi
-
-  local d
-  for d in $(find $path -mindepth 1 -maxdepth 1 \
-    ! -name '.git' ! -name 'os_*' -type d)
-  do local pkg="$(basename $d)"
-    local dir="$(dirname $d)"
-    local p="$pkg"
-    [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && p="${dir##*/}/$pkg"
-    case "$ACTION" in
-      install) log "Installing $p:" ;;
-      delete) log "Removing $p:" ;;
+  do
+    case "$state" in
+      present) [[ -d "$dir" ]] || mkdir -p "$dir" ;;
+      absent)  [[ -d "$dir" ]] && rmdir "$dir" ;;
     esac
-    if [[ -f "$d/install.sh" ]]
-    then unset _install _delete _post_install _post_delete
-      source "$d/install.sh"
-      case "$ACTION" in
-        install) hash _install 2>/dev/null && _install ;;
-        delete) hash _delete 2>/dev/null && _delete ;;
-      esac
-    fi
-    stow $opts --ignore=".*.tpl" --ignore="install.sh" \
-      --dir "$dir" --target "$target" "$pkg"
-    hash _post_$action 2>/dev/null && _post_$action
   done
+}
+
+lineinfile () {
+  local state="$1"
+  local file="$2"
+  local line="$3"
+  if ! has fgrep
+  then return 1
+  else
+    case "$state" in
+      present)
+        if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
+        then printf "%s\n" "$line" >> "$file"
+        fi
+        ;;
+      absent)
+        if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
+        then local tmp="/tmp/${file##*/}.grep"
+          eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
+          # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
+        fi
+        ;;
+    esac
+  fi
 }
 
 prompt() {
@@ -125,7 +77,43 @@ prompt() {
   fi
 }
 
+stow_package() {
+  local a="${1:-install}"
+  local path="${2:-$BOOTSTRAP}"
+  local target="${3:-$HOME}"
+  local opts="${4:-${STOW_OPTS:---verbose}}"
+  case "$a" in
+    # install) --stow ;;
+    delete) opts+=" --delete" ;;
+  esac
+  if [[ -d "$path/os_${OS##*/}" ]]
+  then path+=" $path/os_${OS##*/}"
+  fi
+  local d
+  for d in $(find $path -mindepth 1 -maxdepth 1 \
+    ! -name '.git' ! -name 'os_*' -type d)
+  do local pkg="$(basename $d)"
+    local dir="$(dirname $d)"
+    local p="$pkg"
+    [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && p="${dir##*/}/$pkg"
+    case "$a" in
+      install) log "Installing $p:" ;;
+      delete) log "Removing $p:" ;;
+    esac
+    unset _post_$a
+    if [[ -f "$d/$a.sh" ]]
+    then source "$d/$a.sh"
+    fi
+    echo stow $opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
+      --dir "$dir" --target "$target" "$pkg"
+    stow $opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
+      --dir "$dir" --target "$target" "$pkg"
+    hash _post_$a 2>/dev/null && _post_$a && unset _post_$a
+  done
+}
+
 template() {
+  # TODO state
   local cmd="sed"
   local src="$1"
   shift
@@ -153,12 +141,12 @@ template() {
 }
 
 main() {
-  ACTION="${ACTION:-install}"
+  local action="install"
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
-      -I|--install|'') ACTION="install"; shift ;;
-      -D|--delete) ACTION="delete"; shift ;;
+      -I|--install|'') action="install"; shift ;;
+      -D|--delete) action="delete"; shift ;;
       *) err "$1: invalid argument"; return 1 ;;
     esac
   done
@@ -167,7 +155,7 @@ main() {
   case "$OS" in
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     android|*linux)
-      case "$ACTION" in
+      case "$action" in
         install)
           if has apt-get 2>/dev/null
           then apt-get update -qqy && apt-get install -qqy $(cat "$pkg.apt")
@@ -193,7 +181,7 @@ main() {
   esac
 
   if has stow
-  then symlink
+  then stow_package $action
   fi
 
   log "Done."
@@ -204,13 +192,9 @@ main "$@"
 unset log
 unset err
 unset has
-unset append
-unset erase
-unset mkdirs
-unset rmdirs
-unset symlink
+unset directory
+unset lineinfile
+unset prompt
+unset stow_package
 unset template
-unset ACTION
-unset _install
-unset _delete
 unset main

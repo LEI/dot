@@ -1,16 +1,14 @@
-_install() {
-  case "$OS" in
-    android) apt install tmux -qq -y ;;
-    *linux)
-      if has apk 2>/dev/null
-      then apk add -q tmux
-      elif has apt-get 2>/dev/null
-      then apt-get install -qq -y tmux
-      fi
-      ;;
-  esac
+case "$OS" in
+  android) apt install tmux -qqy ;;
+  *linux)
+    if has apt-get 2>/dev/null
+    then apt-get install -qqy tmux
+    elif has apt 2>/dev/null
+    then apt install -qqy tmux
+    fi
+    ;;
+esac
 
-  append "$HOME/.tmux.conf" 'source $HOME/.tmux/tmux.conf'
+lineinfile present "$HOME/.tmux.conf" 'source $HOME/.tmux/tmux.conf'
 
-  mkdirs $HOME/.tmux
-}
+directory present $HOME/.tmux
