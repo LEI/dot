@@ -17,5 +17,5 @@ termux-stow() {
 }
 
 termux-fix-tpm() {
-  termux-fix-shebang ~/.tmux/plugins/**/*.{sh,tmux}
+  termux-fix-shebang ~/.tmux/plugins/{tpm/tpm,tpm/bin/*,tpm/bindings/*,tpm/scripts/**/*.sh,tmux-sensible/sensible.tmux}
 }
