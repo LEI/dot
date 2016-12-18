@@ -17,6 +17,7 @@ termux-stow() {
 }
 
 termux-fix-tpm() {
-  echo ~/.tmux/plugins/{tpm/tpm,tpm/bin/*,tpm/bindings/*,tpm/scripts/**/*.sh,tmux-sensible/sensible.tmux}
-  termux-fix-shebang ~/.tmux/plugins/{tpm/tpm,tpm/bin/*,tpm/bindings/*,tpm/scripts/**/*.sh,tmux-sensible/sensible.tmux}
+  find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \;
+  # echo ~/.tmux/plugins/{tpm/tpm,tpm/bin/*,tpm/bindings/*,tpm/scripts/**/*.sh,tmux-sensible/sensible.tmux}
+  # termux-fix-shebang ~/.tmux/plugins/{tpm/tpm,tpm/bin/*,tpm/bindings/*,tpm/scripts/**/*.sh,tmux-sensible/sensible.tmux}
 }
