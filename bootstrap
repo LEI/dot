@@ -84,12 +84,12 @@ symlink() {
 prompt() {
   local q="$1" # Question
   local d="$2" # Default
-  [[ -n "$d" ]] && q+=" (default: $d)"
+  [[ -n "$d" ]] && q+=" (default: $d) "
   local reply
-  read -p "$q" -e reply
+  read -p "$q" -i "$d" -e reply
   if [[ -z "$reply" ]] && [[ -z "$d" ]]
   then prompt "$1" "$2"
-  else log "${reply:-d}"
+  else log "${reply:-$d}"
   fi
 }
 
@@ -117,6 +117,7 @@ template() {
     # done
     cmd+=" -e \"s/$v/${!v}/g\""
   done
+  echo $cmd "$src" 
   eval $cmd "$src" > "$dst"
 }
 

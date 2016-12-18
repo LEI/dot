@@ -7,7 +7,18 @@ if &term =~# '256color'
   set t_ut=
 endif
 
-set synmaxcol=500
+if !has('nvim')
+  " Fix mouse inside screen and tmux
+  if &term =~# '^screen' || strlen($TMUX) > 0
+    set ttymouse=xterm2
+  endif
+  " Fast terminal connection
+  set ttyfast
+endif
+
+if has('mouse')
+  set mouse+=a
+endif
 
 " Relative to textwidth
 if exists('+colorcolumn')
@@ -19,18 +30,8 @@ if exists('&relativenumber')
   set relativenumber
 endif
 
-if has('mouse')
-  set mouse+=a
-endif
-
-if !has('nvim')
-  " Fix mouse inside screen and tmux
-  if &term =~# '^screen' || strlen($TMUX) > 0
-    set ttymouse=xterm2
-  endif
-  " Fast terminal connection
-  set ttyfast
-endif
+" Syntax highlight limit
+set synmaxcol=500
 
 " Allow modified buffers in the background
 set hidden

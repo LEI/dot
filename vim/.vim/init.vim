@@ -15,7 +15,7 @@ endif
 let g:vim_plugins = expand('~/.vim/plugged')
 call plug#begin(g:vim_plugins)
 
-Plug 'altercation/vim-colors-solarized'
+" Plug 'altercation/vim-colors-solarized'
 Plug 'kien/ctrlp.vim'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-repeat'
@@ -31,13 +31,13 @@ if !isdirectory(g:vim_plugins)
   PlugInstall
 endif
 
-try
-  set background=dark
-  colorscheme solarized
-  call togglebg#map('<F5>')
-catch /E185:/
-  colorscheme default
-endtry
+" try
+"   set background=dark
+"   colorscheme solarized
+"   call togglebg#map('<F5>')
+" catch /E185:/
+"   colorscheme default
+" endtry
 
 if filereadable(expand('~/.vimrc.local'))
   source ~/.vimrc.local
