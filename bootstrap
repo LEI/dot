@@ -41,18 +41,42 @@ append() {
   # fi
 }
 
-create_dirs() {
+erase() {
+  local dest="$1"
+  local line="$2"
+  if ! has fgrep
+  then return 1
+  elif [[ -z "$(fgrep -Lx "$line" "$dest" 2>/dev/null)" ]]
+  then echo sed -e "s/$line//" "$dest"
+  sed -e "s/$line//" "$dest"
+    # > "$dest"
+  fi
+}
+
+mkdirs() {
   local dir
   for dir in "$@"
   do [[ -d "$dir" ]] || mkdir -p "$dir"
   done
 }
 
-STOW_OPTS= # --verbose
+rmdirs() {
+  local dir
+  for dir in "$@"
+  do [[ -d "$dir" ]] && rmdir "$dir"
+  done
+}
+
+# ACTION="install"
 symlink() {
   local path="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
-  local opts="${3:-$STOW_OPTS}"
+  local opts="${3:-${STOW_OPTS:---verbose}}"
+
+  case "$ACTION" in
+    # ''|install) --stow ;;
+    delete) opts+=" --delete" ;;
+  esac
 
   # local d
   # for d in {.vim,.tmux}
@@ -71,14 +95,21 @@ symlink() {
     local dir="$(dirname $d)"
     local p="$pkg"
     [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && p="${dir##*/}/$pkg"
-    log "Installing $p..."
+    case "$ACTION" in
+      install) log "Installing $p:" ;;
+      delete) log "Removing $p:" ;;
+    esac
     if [[ -f "$d/install.sh" ]]
-    then unset postow
+    then unset _install _delete
       source "$d/install.sh"
-      hash postow 2>/dev/null && postow
+      case "$ACTION" in
+        install) hash _install 2>/dev/null && _install ;;
+        delete) hash _delete 2>/dev/null && _delete ;;
+      esac
     fi
     stow $opts --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target "$target" "$pkg"
+    # [[ "$action" == "install" ]] && hash _post 2>/dev/null && _post
   done
 }
 
@@ -122,12 +153,11 @@ template() {
 }
 
 main() {
-  local action
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
-      -I|--install|'') action="add"; shift ;;
-      -D|--delete) action="del"; shift ;;
+      -I|--install|'') ACTION="install"; shift ;;
+      -D|--delete) ACTION="delete"; shift ;;
       *) err "$1: invalid argument"; return 1 ;;
     esac
   done
@@ -136,31 +166,33 @@ main() {
   case "$OS" in
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     android|*linux)
-      if has apt-get 2>/dev/null
-      then apt-get update -qqy && apt-get install -qqy $(cat "$pkg.apt")
-      elif has apt 2>/dev/null
-      then apt update -qqy && apt install -qqy $(cat "$pkg.apt")
-      else "$OS: unknown package manager"
-        return 1
-      fi
-      # if has apk && apk update && apk add git perl make automake=1.13.4 autoconf
-      # then # http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL.md
-      #   mkdir -p $HOME/src
-      #   local stowsrc="$HOME/src/stow"
-      #   git clone git://git.savannah.gnu.org/stow.git "$stowsrc"
-      #   cd "$stowsrc"
-      #   ./configure && make install && make clean
-      # fi
+      case "$ACTION" in
+        install)
+          if has apt-get 2>/dev/null
+          then apt-get update -qqy && apt-get install -qqy $(cat "$pkg.apt")
+          elif has apt 2>/dev/null
+          then apt update -qqy && apt install -qqy $(cat "$pkg.apt")
+          else "$OS: unknown package manager"
+            return 1
+          fi
+          ;;
+        # delete)
+        #   if has apt-get 2>/dev/null
+        #   then apt-get remove -qqy $(cat "$pkg.apt")
+        #   elif has apt 2>/dev/null
+        #   then apt remove -qqy $(cat "$pkg.apt")
+        #   else "$OS: unknown package manager"
+        #     return 1
+        #   fi
+        #   ;;
+      esac
       ;;
     *) err "$OS: unknown operating system"
       return 1;;
   esac
 
   if has stow
-  then case "$action" in
-      add) symlink ;;
-      del) STOW_OPTS="--delete"; symlink ;;
-    esac
+  then symlink
   fi
 
   log "Done."
@@ -172,7 +204,12 @@ unset log
 unset err
 unset has
 unset append
-unset create_dirs
+unset erase
+unset mkdirs
+unset rmdirs
 unset symlink
 unset template
+unset ACTION
+unset _install
+unset _delete
 unset main
