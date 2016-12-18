@@ -81,7 +81,7 @@ template() {
   fi
   local opts=()
   while [[ $# -ne 0 ]]
-  do local val= # "${!var}"
+  do local val="${!var}"
     local var="${1%%:*}"
     read -p "${1#*:}" -i "${!var}" -e val
     if [[ -n "$val" ]]
@@ -131,8 +131,7 @@ pkg_stow() {
     shift
   done
   [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
-  echo find "${find_args[@]}" -print
-  echo "=>" $(find "${find_args[@]}" -print)
+  # echo "find ${find_args[@]} -print =>" $(find "${find_args[@]}" -print)
   local d
   while read -d '' -r d
   do local p="$(basename $d)"
