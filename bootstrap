@@ -64,33 +64,6 @@ lineinfile () {
   fi
 }
 
-# prompt() {
-#   local q="$1" # Question
-#   local d="$2" # Default
-#   local reply
-#   >&2 echo read -p "$q" -i "$d" -e reply
-#   while read -p "$q" -i "$d" -e reply
-#   do
-#     if [[ -n "$reply" ]]
-#     then log "$reply" \
-#     else err "A value is required"
-#       return 1
-#     fi
-#     sleep 0.1
-#   done
-# }
-# prompt() {
-#   local q="$1" # Question
-#   local d="$2" # Default
-#   [[ -n "$d" ]] && q+=" (default: $d) "
-#   local reply
-#   read -p "$q" -i "$d" -e reply
-#   if [[ -z "$reply" ]] && [[ -z "$d" ]]
-#   then prompt "$1" "$2"
-#   else log "${reply:-$d}"
-#   fi
-# }
-
 template() {
   local src="$1"
   shift
@@ -108,31 +81,15 @@ template() {
   fi
   local opts=()
   while [[ $# -ne 0 ]]
-  do
+  do local val= # "${!var}"
     local var="${1%%:*}"
-    local val="${!var}"
-    opts+=("-e" "'s/$var/$val/g'")
+    read -p "${1#*:}" -i "${!var}" -e val
+    if [[ -n "$val" ]]
+    then opts+=("-e" "'s/$var/$val/g'")
+    else err "$var: empty value"
+      return 1
+    fi
     shift
-    # read -p "${1#*:}" -i "${!var}" -e val
-    # if [[ -n "$val" ]] || [[ -n "${!var}" ]]
-    # then opts+=("-e" "'s/$var/${val:-${!var}}/g'")
-    # else sleep 0.1
-    # fi
-  # local v opts=()
-  # for v in "${vars[@]}"
-  # do local g="${v%%:*}"
-  #   local val=
-  #   local var="TPL_$g"
-  #   # prompt "${v#*:}" "${!var}" # read -r val
-  #   while [[ -z "$val" ]]
-  #   do printf "%s" "${v#*:} (default: ${!g}) "
-  #     read -r "$var" # -p "" -i "${!g}"
-  #     [[ -n "${!var}" ]] && val="${!var}" # || val="${!g}"
-  #     echo ">>>>>>>>" $g="$val"
-  #   done
-  #   # declare $var="$val"
-  #   opts+=("-e" "'s/$g/$val/g'")
-  #   unset $var
   done
   eval sed "${opts[@]}" "$src" > "$dst"
 }
