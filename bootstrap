@@ -81,32 +81,36 @@ template() {
   fi
   local opts=()
   while [[ $# -ne 0 ]]
-  do local val="${!var}"
+  do
     local var="${1%%:*}"
-    read -p "${1#*:}" -i "${!var}" -e val
+    local val="${!var}"
+    # read -p "${1#*:}" -i "${!var}" -e val
     if [[ -n "$val" ]]
     then opts+=("-e" "'s/$var/$val/g'")
     else err "$var: undefined variable"
     fi
     shift
   done
+  echo sed "${opts[@]}" "$src"
   eval sed "${opts[@]}" "$src" > "$dst"
 }
 
 pkg_install() {
+  declare -u p="$PKG_CMD"
   if [[ "$update" -ne 0 ]]
-  then log "$PKG_CMD: update"
-    $PKG_CMD $PKG_UPD
+  then log "$p: update"
+    $PKG_CMD $PKG_UPD && update=0
   fi
   if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: install $*"
+  then log "$p: install $*"
     $PKG_CMD $PKG_ADD "$@"
   fi
 }
 
 pkg_delete() {
+  declare -u p="$PKG_CMD"
   if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: delete $*"
+  then log "$p: delete $*"
     $PKG_CMD $PKG_DEL "$@"
   fi
 }
