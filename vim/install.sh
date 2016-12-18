@@ -9,13 +9,17 @@ case "$OS" in
     ;;
 esac
 
-for p in $HOME/{.config,.vim}
+for p in $HOME/.vim
 do [[ -d "$p" ]] || mkdir -p "$p"
 done
 
 postow() {
   if has nvim
-  then ln -s $HOME/{.vim,.config/nvim}
-    ln -s $HOME/{.vimrc,.config/nvim/init.vim}
+  then
+    for p in $HOME/.config
+    do [[ -d "$p" ]] || mkdir -p "$p"
+    done
+    [[ -d "$HOME/.vim" ]] && ln -s $HOME/{.vim,.config/nvim}
+    [[ -f "$HOME/.vimrc" ]] && ln -s $HOME/{.vimrc,.config/nvim/init.vim}
   fi
 }
