@@ -9,7 +9,7 @@ case "$OS" in
     ;;
 esac
 
-create_dirs $HOME/.vim
+create_dirs $HOME/.vim/{plugin,settings}
 
 # if !filereadable(expand("~/.vim/init.vim"))
 append "$HOME/.vimrc" 'source ~/.vim/init.vim'

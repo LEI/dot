@@ -6,4 +6,5 @@ grep
 less
 man
 readline-common
+silversearcher-ag
 stow
