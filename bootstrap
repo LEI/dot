@@ -6,7 +6,6 @@
 # BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
-# OS="$(echo $(uname -o 2>/dev/null || uname -s) | tr '[:upper:]' '[:lower:]')"
 declare -l OS
 OS="$(uname -o 2>/dev/null || uname -s)"
 
@@ -100,9 +99,13 @@ stow_package() {
       install) log "Installing $p:" ;;
       delete) log "Removing $p:" ;;
     esac
-    unset _post_$a
+    unset packages _post_$a
     if [[ -f "$d/$a.sh" ]]
     then source "$d/$a.sh"
+      if [[ -n "$packages" ]]
+      then echo pkg_$action $packages
+        pkg_$action $packages
+      fi
     fi
     echo stow $opts --ignore=".*.tpl" --ignore="(install|delete).sh" \
       --dir "$dir" --target "$target" "$pkg"
@@ -140,6 +143,14 @@ template() {
   eval $cmd "$src" > "$dst"
 }
 
+pkg_install() {
+  $PKG_CMD $PKG_UPD && [[ $# -ne 0 ]] && $PKG_CMD $PKG_ADD "$@"
+}
+
+pkg_delete() {
+  [[ $# -ne 0 ]] && $PKG_CMD $PKG_DEL "$@"
+}
+
 main() {
   local action="install"
   while [[ $# -ne 0 ]]
@@ -150,34 +161,24 @@ main() {
       *) err "$1: invalid argument"; return 1 ;;
     esac
   done
-  log "Bootstrap: ${OS##*/}"
-  local pkg="$BOOTSTRAP/os_${OS##*/}/packages"
-  case "$OS" in
-    # darwin) has brew || brew_install && brew update && brew install ... ;;
-    android|*linux)
-      case "$action" in
-        install)
-          if has apt-get 2>/dev/null
-          then apt-get update -qqy && apt-get install -qqy $(cat "$pkg.apt")
-          elif has apt 2>/dev/null
-          then apt update -qqy && apt install -qqy $(cat "$pkg.apt")
-          else "$OS: unknown package manager"
-            return 1
-          fi
-          ;;
-        # delete)
-        #   if has apt-get 2>/dev/null
-        #   then apt-get remove -qqy $(cat "$pkg.apt")
-        #   elif has apt 2>/dev/null
-        #   then apt remove -qqy $(cat "$pkg.apt")
-        #   else "$OS: unknown package manager"
-        #     return 1
-        #   fi
-        #   ;;
-      esac
+
+  case "$OSTYPE" in
+    # darwin*) ${OSTYPE//[0-9.]/} ;;
+    linux*)
+      if has apt-get 2>/dev/null
+      then PKG_CMD="apt-get"; PKG_ADD="install -qqy"; PKG_DEL="remove -qqy"; PKG_UPD="update -qqy"
+      elif has apt 2>/dev/null
+      then PKG_CMD="apt"; PKG_ADD="install -qqy"; PKG_DEL="remove -qqy"; PKG_UPD="update -qqy"
+      else "$OSTYPE ($OS): unknown package manager"
+      fi
       ;;
-    *) err "$OS: unknown operating system"
-      return 1;;
+    *) err "$OSTYPE: unknown operating system"
+  esac
+
+  log "Bootstrap: ${OS##*/}"
+  local pkg="$(cat "$BOOTSTRAP/os_${OS##*/}/packages.${PKG_CMD%%-*}")"
+  case "$OSTYPE" in
+    linux*) pkg_$action $pkg ;;
   esac
 
   if has stow
