@@ -29,28 +29,30 @@ has() {
 }
 
 append() {
-  local dest="$1"
+  local file="$1"
   local line="$2"
   if ! has fgrep
   then return 1
-  elif [[ -z "$(fgrep -lx "$line" "$dest" 2>/dev/null)" ]]
-  then printf "%s\n" "$line" >> "$dest"
+  elif [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
+  then printf "%s\n" "$line" >> "$file"
   fi
-  # if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
-  # then printf "%s\n" "$line" >> "$dest"
+  # if [[ ! -e "$file" ]] || [[ -f "$file" ]]
+  # then printf "%s\n" "$line" >> "$file"
   # fi
 }
 
 erase() {
-  local dest="$1"
+  local file="$1"
   local line="$2"
   if ! has fgrep
   then return 1
-  elif [[ -z "$(fgrep -Lx "$line" "$dest" 2>/dev/null)" ]]
+  elif [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
   then
-    echo sed --in-place "/${line//\//\\\/}/d" "$dest"
-    eval sed --in-place "/${line//\//\\\/}/d" "$dest"
-    # > "$dest"
+    # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
+    local tmp="/tmp/${file##*/}.grep"
+    echo grep -v "${line}" "$file" > "$tmp" && mv "$tmp" "$file"
+    echo grep -v "${line}" "$file"
+    # grep -v "${line}" "$file" > "$tmp" && mv "$tmp" "$file"
   fi
 }
 

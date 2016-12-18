@@ -14,9 +14,9 @@ _install() {
 
   mkdirs $HOME/bin
 
-  append "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'
+  append "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profile ]] && source ~/.bash_profile'
 }
 
 _delete() {
-  erase "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'
+  erase "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profile ]] && source ~/.bash_profile'
 }
