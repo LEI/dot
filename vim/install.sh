@@ -18,7 +18,8 @@ postow() {
   if has nvim
   then
     create_dirs $HOME/.config
-    [[ -d "$HOME/.vim" ]] && ln -s $HOME/{.vim,.config/nvim}
+    # [[ -d "$HOME/.vim" ]]
+    ln -s $HOME/{.vim,.config/nvim}
     # [[ -f "$HOME/.vimrc" ]] && ln -s $HOME/{.vimrc,.config/nvim/init.vim}
   fi
 }
