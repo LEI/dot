@@ -94,14 +94,21 @@ template() {
 }
 
 pkg_install() {
-  local msg
-  log "$PKG_CMD: update $update install $*"
-  $PKG_CMD $PKG_UPD && [[ $# -ne 0 ]] && $PKG_CMD $PKG_ADD "$@"
+  if [[ "$update" -ne 0 ]]
+  then log "$PKG_CMD: update"
+    $PKG_CMD $PKG_UPD
+  fi
+  if [[ $# -ne 0 ]]
+  then log "$PKG_CMD: install $*"
+    $PKG_CMD $PKG_ADD "$@"
+  fi
 }
 
 pkg_delete() {
-  log "$PKG_CMD: delete $*"
-  [[ $# -ne 0 ]] && $PKG_CMD $PKG_DEL "$@"
+  if [[ $# -ne 0 ]]
+  then log "$PKG_CMD: delete $*"
+    $PKG_CMD $PKG_DEL "$@"
+  fi
 }
 
 pkg_stow() {
