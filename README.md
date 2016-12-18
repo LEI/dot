@@ -1,4 +1,4 @@
-# Dotfiles
+# dotstrap
 
 ### bash
 

@@ -48,10 +48,11 @@ create_dirs() {
   done
 }
 
-# Stow
+STOW_OPTS= # --verbose
 symlink() {
   local path="${1:-$BOOTSTRAP}"
   local target="${2:-$HOME}"
+  local opts="${3:-$STOW_OPTS}"
 
   # local d
   # for d in {.vim,.tmux}
@@ -76,8 +77,8 @@ symlink() {
       source "$d/install.sh"
       hash postow 2>/dev/null && postow
     fi
-    stow --ignore=".*.tpl" --ignore="install.sh" \
-      --dir "$dir" --target "$target" "$pkg" # --verbose
+    stow $opts --ignore=".*.tpl" --ignore="install.sh" \
+      --dir "$dir" --target "$target" "$pkg"
   done
 }
 
@@ -121,22 +122,27 @@ template() {
 }
 
 main() {
-  log "Bootstrapping ${OS##*/}:"
+  local action
+  while [[ $# -ne 0 ]]
+  do case "$1" in
+      --) break ;;
+      -I|--install|'') action="add"; shift ;;
+      -D|--delete) action="del"; shift ;;
+      *) err "$1: invalid argument"; return 1 ;;
+    esac
+  done
+  log "Bootstrap: ${OS##*/}"
   local pkg="$BOOTSTRAP/os_${OS##*/}/packages"
-  local pcmd pfile
   case "$OS" in
     # darwin) has brew || brew_install && brew update && brew install ... ;;
     android|*linux)
       if has apt-get 2>/dev/null
-      then pcmd="apt-get"; pfile="apt"
-      elif has apt-get 2>/dev/null
-      then pcmd="apt"
+      then apt-get update -qqy && apt-get install -qqy $(cat "$pkg.apt")
+      elif has apt 2>/dev/null
+      then apt update -qqy && apt install -qqy $(cat "$pkg.apt")
       else "$OS: unknown package manager"
         return 1
       fi
-      $pcmd update -qq -y \
-        && [[ -f "$pkg.${pfile:-$pcmd}" ]] \
-        && $pcmd install -qq -y $(cat "$pkg.${pfile:-$pcmd}")
       # if has apk && apk update && apk add git perl make automake=1.13.4 autoconf
       # then # http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL.md
       #   mkdir -p $HOME/src
@@ -151,7 +157,10 @@ main() {
   esac
 
   if has stow
-  then symlink
+  then case "$action" in
+      add) symlink ;;
+      del) STOW_OPTS="--delete"; symlink ;;
+    esac
   fi
 
   log "Done."
