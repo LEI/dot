@@ -32,6 +32,9 @@ if !has('nvim')
   set ttyfast
 endif
 
+" Allow modified buffers in the background
+set hidden
+
 " Current mode in status line
 set showmode
 
