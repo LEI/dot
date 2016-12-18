@@ -101,6 +101,7 @@ template() {
     # done
     cmd+=" -e \'s/$v/${!v}/g\'"
   done
+  echo $cmd "$src" > "$dst"
   eval $cmd "$src" > "$dst"
 }
 
