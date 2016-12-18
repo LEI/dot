@@ -95,12 +95,12 @@ template() {
 }
 
 pkg_install() {
-  echo $PKG_CMD $PKG_UPD / $PKG_CMD $PKG_ADD "$@"
+  log "$PKG_CMD: $PKG_UPD and $PKG_ADD $@"
   $PKG_CMD $PKG_UPD && [[ $# -ne 0 ]] && $PKG_CMD $PKG_ADD "$@"
 }
 
 pkg_delete() {
-  echo $PKG_CMD $PKG_DEL
+  log "$PKG_CMD: $PKG_DEL $@"
   [[ $# -ne 0 ]] && $PKG_CMD $PKG_DEL "$@"
 }
 
@@ -131,11 +131,12 @@ pkg_stow() {
     shift
   done
   [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
+  echo find "${find_args[@]}" -print
+  echo "=>" $(find "${find_args[@]}" -print)
   local d
   while read -d '' -r d
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
-    echo "FOUND $dir $p"
     declare -u name="$p"
     [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && name="${dir##*/}/$p"
     log "$name: $action..."

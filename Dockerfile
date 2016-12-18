@@ -13,4 +13,4 @@ ENV GIT_AUTHOR_EMAIL "j@d.c"
 COPY . $BOOTSTRAP
 ENTRYPOINT ["/bin/bash"]
 RUN echo "alias dot='source $BOOTSTRAP/bootstrap'" >> ~/.bashrc
-CMD ["-l", "-c", "dot --install; bash -l"]
+# CMD ["-l", "-c", "source", "$BOOTSTRAP/bootstrap"]
