@@ -1,5 +1,5 @@
 # if !filereadable(expand("~/.vim/init.vim"))
-lineinfile present "$HOME/.vimrc" 'source ~/.vim/init.vim'
+lineinfile present "$HOME/.vimrc" "source ~/.vim/init.vim"
 
 directory present $HOME/.vim/{plugin,settings}
 

@@ -69,16 +69,19 @@ prompt() {
   local d="$2" # Default
   [[ -n "$d" ]] && q+=" (default: $d) "
   local reply
-  read -p "$q" -i "$d" -e reply
-  if [[ -z "$reply" ]] && [[ -z "$d" ]]
-  then prompt "$1" "$2"
-  else log "${reply:-$d}"
-  fi
+  while [[ -z "$reply" ]]
+  do read -p "$q" -i "$d" -e reply
+    if [[ -z "$reply" ]] && [[ -n "$d" ]]
+    then reply="$d"
+    else err "A value is required." # prompt "$1" "$2"
+    fi
+    sleep 0.1
+  done
+  log "$reply"
 }
 
 template() {
   # TODO state
-  local cmd="sed"
   local src="$1"
   shift
   local dst="$1" # ${1:-$HOME/$(basename "${1%.tpl}")}
@@ -92,17 +95,19 @@ template() {
   then err "${dst/$HOME/\~}: already exists"
     return
   fi
-  local var
-  for var in "$@"
-  do local v="${var%%:*}"
-    declare $v="$(prompt "${var#*:}" "${!v}")"
-    # while [[ -z "${!v}" ]]
-    # do log "${var#*:}"; read -e "$v"
+  local v var val opts=()
+  for v in "$@"
+  do var="${v%%:*}"
+    val="$(prompt "${v#*:}" "${!var}")"
+    echo declare $var="$val"
+    declare $var="$val"
+    # while [[ -z "${!var}" ]]
+    # do log "${v#*:}"; read -e "$var"
     # done
-    cmd+=" -e \'s/$v/${!v}/g\'"
+    opts+=("-e" "'s/$var/${!var}/g'")
   done
-  echo $cmd "$src" > "$dst"
-  eval $cmd "$src" > "$dst"
+  echo sed "${opts[@]}" "$src"
+  eval sed "${opts[@]}" "$src" > "$dst"
 }
 
 pkg_install() {
