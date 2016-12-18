@@ -133,6 +133,8 @@ pkg_stow() {
   for d in "$@"
   do [[ -n "$d" ]] && find_opts+=" -name '$d'"
   done
+  echo "FIND >>>" find $path -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*' $find_opts -print0
+  echo "FIND ===" $(find $path -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*' $find_opts -print0)
   find $path -mindepth 1 -maxdepth 1 -type d \
     ! -name '.git' ! -name 'os_*' $find_opts -print0 | while read -d '' -r d
   do local p="$(basename $d)"
