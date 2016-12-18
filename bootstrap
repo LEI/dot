@@ -29,10 +29,7 @@ has() {
 }
 
 append() {
-  local path
-  for path in $(fgrep -Lx "$2" "$1")
-  do printf "%s\n" "$2" >> "$1"
-  done
+  [[ -n "$(fgrep -Lx "$2" "$1")" ]] && printf "%s\n" "$2" >> "$1"
   # if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
   # then printf "%s\n" "$line" >> "$dest"
   # fi
