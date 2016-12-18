@@ -1,5 +1,3 @@
-" ~/.vimrc
-
 " Auto download Vim Plug
 let g:vim_plug = expand('~/.vim/autoload/plug.vim')
 let g:vim_plug_url = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'

@@ -4,11 +4,11 @@ case "$OS" in
     if has apk 2>/dev/null
     then apk add -q tmux
     elif has apt-get 2>/dev/null
-    then apt-get install -y tmux
+    then apt-get install -qq -y tmux
     fi
     ;;
 esac
 
-for p in $HOME/.tmux
-do [[ -d "$p" ]] || mkdir -p "$p"
-done
+create_dirs $HOME/.tmux
+
+append "$HOME/.tmux.conf" 'source $HOME/.tmux/tmux.conf'

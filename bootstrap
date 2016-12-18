@@ -34,7 +34,7 @@ append() {
   if ! fgrep -x "$line" "$dest" &>/dev/null
   then
     if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
-    then printf "%s\n" "" "$line" >> "$dest"
+    then printf "%s\n" "$line" >> "$dest"
     fi
   fi
 }

@@ -11,9 +11,10 @@ esac
 
 create_dirs $HOME/.vim
 
-postow() {
-  append "$HOME/.vimrc" "if !filereadable(expand('~/.vim/init.vim')) | source ~/.vim/init.vim | endif"
+# if !filereadable(expand("~/.vim/init.vim"))
+append "$HOME/.vimrc" 'source ~/.vim/init.vim'
 
+postow() {
   if has nvim
   then
     create_dirs $HOME/.config
