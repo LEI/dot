@@ -12,5 +12,5 @@ _install() {
 
   append "$HOME/.tmux.conf" 'source $HOME/.tmux/tmux.conf'
 
-  create_dirs $HOME/.tmux
+  mkdirs $HOME/.tmux
 }

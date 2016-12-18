@@ -12,7 +12,11 @@ _install() {
       ;;
   esac
 
-  create_dirs $HOME/bin
+  mkdirs $HOME/bin
 
   append "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'
+}
+
+_delete() {
+  erase "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'
 }
