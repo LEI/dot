@@ -28,6 +28,17 @@ has() {
   fi
 }
 
+append() {
+  local dest="$1"
+  local line="$2"
+  if ! fgrep -x "$line" "$dest" &>/dev/null
+  then
+    if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
+    then printf "%s\n" "" "$line" >> "$dest"
+    fi
+  fi
+}
+
 # Stow
 symlink() {
   local path="${1:-$BOOTSTRAP}"
@@ -54,7 +65,7 @@ symlink() {
     if [[ -f "$d/install.sh" ]]
     then unset postow
       source "$d/install.sh"
-      has postow 2>/dev/null && postow
+      hash postow 2>/dev/null && postow
     fi
     stow --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target "$target" "$pkg" # --verbose
