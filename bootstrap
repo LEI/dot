@@ -121,21 +121,20 @@ pkg_stow() {
     absent) action="delete" ;;
   esac
   shift
-  local pkg=("$@")
-  local path=("$BOOTSTRAP") # "${2:-$BOOTSTRAP}"
+  local path="$BOOTSTRAP" # "${2:-$BOOTSTRAP}"
   local target="$HOME" # "${3:-$HOME}"
   local stow_opts="${STOW_OPTS:---verbose}"
   case "$action" in
     # install) --stow ;;
     delete) stow_opts+=" --delete" ;;
   esac
-  [[ -d "${path[0]}/os_${OS##*/}" ]] && path+=("${path[0]}/os_${OS##*/}")
-  local d cmd="find ${path[@]} -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*'"
-  for d in "${pkg[@]}"
-  do [[ -n "$d" ]] && cmd+=" -name '$d'"
+  [[ -d "$path/os_${OS##*/}" ]] && path+="$path/os_${OS##*/}"
+  local d find_opts=
+  for d in "$@"
+  do [[ -n "$d" ]] && find_opts+=" -name '$d'"
   done
-  echo "FIND $cmd ---> $($cmd)"
-  for d in $($cmd)
+  find $path -mindepth 1 -maxdepth 1 -type d \
+    ! -name '.git' ! -name 'os_*' $find_opts -print0 | while read -d '' -r d
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
     declare -u name="$p"
