@@ -48,8 +48,8 @@ erase() {
   then return 1
   elif [[ -z "$(fgrep -Lx "$line" "$dest" 2>/dev/null)" ]]
   then
-    echo sed -e ','"${line//,/\\,}"',d' "$dest ::::::::"
-    sed -e ','"${line//,/\\,}"',d' "$dest"
+    echo sed -e "d,${line//,/\\,}" "$dest ::::::::"
+    sed -e "d,${line//,/\\,}" "$dest"
     # > "$dest"
   fi
 }
@@ -110,7 +110,7 @@ symlink() {
     fi
     stow $opts --ignore=".*.tpl" --ignore="install.sh" \
       --dir "$dir" --target "$target" "$pkg"
-    # [[ "$action" == "install" ]] && hash _post 2>/dev/null && _post
+    hash _post_$action 2>/dev/null && _post_$action
   done
 }
 

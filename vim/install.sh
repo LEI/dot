@@ -33,8 +33,6 @@ _delete() {
     rmdirs $HOME/.config/nvim
   fi
 
-  rmdirs $HOME/.vim/{plugin,settings}
-
   case "$OS" in
     android) apt remove -qqy vim neovim ;;
     *linux)
@@ -45,4 +43,8 @@ _delete() {
       fi
       ;;
   esac
+}
+
+_post_delete() {
+  rmdirs $HOME/.vim/{plugin,settings}
 }
