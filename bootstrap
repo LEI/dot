@@ -152,13 +152,16 @@ pkg_stow() {
 
 main() {
   local action="install"
+  local update=0
   local pkg=()
+  [[ $# -eq 0 ]] && update=1
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
-      -I|--install|'') action="install"; shift ;;
+      -I|--install) action="install"; shift ;;
       -D|--delete) action="delete"; shift ;;
-      -*) err "$1: illegal option"; return 1 ;;
+      -U|--update) action="install"; update=1; shift ;;
+      -*|'') err "$1: illegal option"; return 1 ;;
       *) pkg+=("$1"); shift ;;
     esac
   done
