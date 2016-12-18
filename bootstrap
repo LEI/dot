@@ -130,11 +130,11 @@ pkg_stow() {
     delete) stow_opts+=" --delete" ;;
   esac
   [[ -d "${path[0]}/os_${OS##*/}" ]] && path+=("${path[0]}/os_${OS##*/}")
-  local d find_cmd="find "${path[@]}" -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*'"
+  local d find_cmd="find ${path[@]} -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*'"
   for d in "${pkg[@]}"
   do [[ -n "$d" ]] && find_cmd+=" -name '$d'"
   done
-  echo "FIND $find_cmd ---> $($find_cmd)"
+  # echo "FIND $find_cmd ---> $($find_cmd)"
   for d in $($find_cmd)
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
