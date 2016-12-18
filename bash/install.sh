@@ -11,8 +11,6 @@ case "$OS" in
     ;;
 esac
 
-for p in $HOME/bin
-do [[ -d "$p" ]] || mkdir -p "$p"
-done
+create_dirs $HOME/bin
 
 append "$HOME/.bashrc" '[[ -n "$PS1" ]] && [[ -f ~/.bash_profle ]] && source ~/.bash_profile'

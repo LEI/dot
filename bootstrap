@@ -31,12 +31,13 @@ has() {
 append() {
   local dest="$1"
   local line="$2"
-  if ! fgrep -x "$line" "$dest" &>/dev/null
-  then
-    if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
-    then printf "%s\n" "$line" >> "$dest"
-    fi
-  fi
+  local dir
+  for dir in $(fgrep -x "$line" -L "$dest" &>/dev/null)
+  do printf "%s\n" "$line" >> "$dest"
+  done
+  # if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
+  # then printf "%s\n" "$line" >> "$dest"
+  # fi
 }
 
 create_dirs() {
