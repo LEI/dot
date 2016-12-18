@@ -48,11 +48,9 @@ erase() {
   then return 1
   elif [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
   then
-    # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
     local tmp="/tmp/${file##*/}.grep"
-    echo grep -v "${line}" "$file" > "$tmp" && mv "$tmp" "$file"
-    echo grep -v "${line}" "$file"
-    # grep -v "${line}" "$file" > "$tmp" && mv "$tmp" "$file"
+    eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
+    # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
   fi
 }
 
@@ -149,7 +147,7 @@ template() {
     # while [[ -z "${!v}" ]]
     # do log "${var#*:}"; read -e "$v"
     # done
-    cmd+=" -e \"s/$v/${!v}/g\""
+    cmd+=" -e \'s/$v/${!v}/g\'"
   done
   eval $cmd "$src" > "$dst"
 }
