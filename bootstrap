@@ -67,25 +67,20 @@ lineinfile () {
 prompt() {
   local q="$1" # Question
   local d="$2" # Default
-  [[ -n "$d" ]] && q+=" (default: $d) "
   local reply
-  while [[ -z "$reply" ]]
-  do read -p "$q" -i "$d" -e reply
-    if [[ -z "$reply" ]] && [[ -n "$d" ]]
-    then reply="$d"
-    else err "A value is required." # prompt "$1" "$2"
-    fi
-    sleep 0.1
-  done
-  log "$reply"
+  read -p "$q" -i "$d" -e reply
+  if [[ -n "$reply" ]]
+  then log "$reply"
+  else prompt "$q" "$d"
+  fi
 }
 
 template() {
-  # TODO state
   local src="$1"
   shift
   local dst="$1" # ${1:-$HOME/$(basename "${1%.tpl}")}
   shift
+  local vars=("$@")
   if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]
   then err "$src: not found"
     return 1
@@ -96,8 +91,9 @@ template() {
     return
   fi
   local v var val opts=()
-  for v in "$@"
+  for v in "${vars[@]}"
   do var="${v%%:*}"
+    echo prompt "${v#*:}" "${!var}"
     val="$(prompt "${v#*:}" "${!var}")"
     echo declare $var="$val"
     declare $var="$val"
@@ -151,6 +147,7 @@ pkg_stow() {
   while read -d '' -r d
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
+    echo "FOUND $dir $p"
     declare -u name="$p"
     [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && name="${dir##*/}/$p"
     log "$name: $action..."
