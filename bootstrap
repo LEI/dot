@@ -130,14 +130,10 @@ pkg_stow() {
   esac
   [[ -d "$path/os_${OS##*/}" ]] && path+=" $path/os_${OS##*/}"
   local find_args="$path -mindepth 1 -maxdepth 1 -type d ! ( -name '.git' -o -name 'os_*' )"
-  local find_opts
+  local find_opts=
   while [[ $# -ne 0 ]]
-  do [[ -z "$find_opts" ]] && find_opts+=" ("
-    if [[ -n "$1" ]]
-    then
-      [[ -n "$find_opts" ]] && find_opts+=" -o"
-      find_opts+=" -name '$1'"
-    fi
+  do [[ -z "$find_opts" ]] && find_opts+=" (" || find_opts+=" -o"
+    [[ -n "$1" ]] && find_opts+=" -name '$1'"
     [[ $# -eq 1 ]] && find_opts+=" )"
     shift
   done
