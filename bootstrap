@@ -68,6 +68,7 @@ prompt() {
   local q="$1" # Question
   local d="$2" # Default
   local reply
+  echo read -p "$q" -i "$d" -e reply
   read -p "$q" -i "$d" -e reply
   if [[ -n "$reply" ]]
   then log "$reply"
