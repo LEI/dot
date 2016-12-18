@@ -81,6 +81,18 @@ symlink() {
   done
 }
 
+prompt() {
+  local q="$1" # Question
+  local d="$2" # Default
+  [[ -n "$d" ]] && q+=" (default: $d)"
+  local reply
+  read -p "$q" -e reply
+  if [[ -z "$reply" ]] && [[ -z "$d" ]]
+  then prompt "$1" "$2"
+  else log "${reply:-d}"
+  fi
+}
+
 template() {
   local cmd="sed"
   local src="$1"
@@ -96,14 +108,14 @@ template() {
   then err "${dst/$HOME/\~}: already exists"
     return
   fi
-  local var v
+  local var
   for var in "$@"
-  do v="TPL_${var%%:*}"
-    declare $v=
-    while [[ -z "${!v}" ]]
-    do log "${var#*:}"; read -e "$v"
-    done
-    cmd+=" -e \"s/${var%%:*}/${!v}/g\""
+  do local v="${var%%:*}"
+    declare $v="$(prompt "${var#*:}" "${!v}")"
+    # while [[ -z "${!v}" ]]
+    # do log "${var#*:}"; read -e "$v"
+    # done
+    cmd+=" -e \"s/$v/${!v}/g\""
   done
   eval $cmd "$src" > "$dst"
 }

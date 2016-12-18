@@ -1,4 +1,4 @@
 [user]
-  name = GIT_NAME
-  username = GIT_USERNAME
-  email = GIT_EMAIL
+  name = GIT_AUTHOR_NAME
+  username = GIT_AUTHOR_USERNAME
+  email = GIT_AUTHOR_EMAIL
