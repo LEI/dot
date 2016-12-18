@@ -39,6 +39,13 @@ append() {
   fi
 }
 
+create_dirs() {
+  local dir
+  for dir in "$@"
+  do [[ -d "$dir" ]] || mkdir -p "$dir"
+  done
+}
+
 # Stow
 symlink() {
   local path="${1:-$BOOTSTRAP}"
@@ -141,6 +148,8 @@ main "$@"
 unset log
 unset err
 unset has
+unset append
+unset create_dirs
 unset symlink
 unset template
 unset main
