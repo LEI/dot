@@ -29,12 +29,8 @@ has() {
 }
 
 append() {
-  local dest="$1"
-  local line="$2"
-  local dir
-  for dir in $(fgrep -x "$line" -L "$dest" &>/dev/null)
-  do printf "%s\n" "$line" >> "$dest"
-  done
+  local match="$(fgrep -lx "$2" "$1")"
+  [[ -z "$match" ]] && printf "%s\n" "$2" >> "$1"
   # if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
   # then printf "%s\n" "$line" >> "$dest"
   # fi
