@@ -16,4 +16,6 @@ termux-stow() {
   stow -d "$TERMUX_CFG" -t "$HOME" "$@"
 }
 
-# termux-fix-tpm() { termux-fix-shebang ~/.tmux/plugged/**/* }
+termux-fix-tpm() {
+  termux-fix-shebang ~/.tmux/plugged/**/*.{sh,tmux}
+}
