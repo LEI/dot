@@ -6,7 +6,9 @@
 # BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
-OS="$(echo $(uname -o 2>/dev/null || uname -s) | tr '[:upper:]' '[:lower:]')"
+# OS="$(echo $(uname -o 2>/dev/null || uname -s) | tr '[:upper:]' '[:lower:]')"
+declare -l OS
+OS="$(uname -o 2>/dev/null || uname -s)"
 
 log() {
   # printf "%s" "${0##*/}: "
@@ -50,7 +52,7 @@ symlink() {
     [[ "${dir##*/}" != "${BOOTSTRAP##*/}" ]] && p="${dir##*/}/$pkg"
     log "Installing $p..."
     if [[ -f "$d/install.sh" ]]
-    then declare -f postow
+    then unset postow
       source "$d/install.sh"
       has postow 2>/dev/null && postow
     fi
