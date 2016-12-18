@@ -133,10 +133,9 @@ pkg_stow() {
   for d in "$@"
   do [[ -n "$d" ]] && find_opts+=" -name '$d'"
   done
-  echo "FIND >>>" find $path -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*' $find_opts -print0
-  echo "FIND ===" $(find $path -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*' $find_opts -print0)
-  find $path -mindepth 1 -maxdepth 1 -type d \
-    ! -name '.git' ! -name 'os_*' $find_opts -print0 | while read -d '' -r d
+  echo "FIND >>>" find $path -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*' $find_opts -print
+  echo "FIND ===" $(find $path -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name 'os_*' $find_opts -print)
+  while read -d '' -r d
   do local p="$(basename $d)"
     local dir="$(dirname $d)"
     declare -u name="$p"
@@ -149,7 +148,8 @@ pkg_stow() {
     stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
       --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
-  done
+  done < <(find $path -mindepth 1 -maxdepth 1 -type d \
+    ! -name '.git' ! -name 'os_*' $find_opts -print0)
 }
 
 main() {
