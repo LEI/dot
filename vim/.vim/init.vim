@@ -1,10 +1,15 @@
+" Vim configuration
+
+if filereadable(expand('~/.vim/before.vim'))
+  source ~/.vim/before.vim
+endif
+
 " Auto download Vim Plug
 let g:vim_plug = expand('~/.vim/autoload/plug.vim')
 let g:vim_plug_url = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-if !filereadable(g:vim_plug)
-  execute 'silent !curl -sfLo ' . g:vim_plug
-    \ . ' --create-dirs '
-    \ . g:vim_plug_url
+if filereadable(g:vim_plug)
+  execute '!curl -sfLo --create-dirs "' . g:vim_plug . '"'
+    \ . ' "' . g:vim_plug_url . '"'
 endif
 
 let g:vim_plugins = expand('~/.vim/plugged')
@@ -26,15 +31,24 @@ if !isdirectory(g:vim_plugins)
   PlugInstall
 endif
 
-" if &t_Co == 256
-"   let g:solarized_termcolors = 256
-" endif
+if &term =~# '256color'
+  " Disable Background Color Erase (BCE) so that color schemes
+  " work properly when Vim is used inside tmux and GNU screen.
+  " See also http://snk.tuxfamily.org/log/vim-256color-bce.html
+  set t_ut=
+endif
 
-set background=dark
-colorscheme solarized
+try
+  set background=dark
+  colorscheme solarized
+  call togglebg#map('<F5>')
+catch /E185:/
+  colorscheme default
+endtry
 
 set synmaxcol=500
 
+" Relative to textwidth
 if exists('+colorcolumn')
   set colorcolumn=+1
 endif
@@ -63,9 +77,31 @@ set showmode
 " Display incomplete commands
 set showcmd
 
+" Highlight previous matches
+set hlsearch
+
+" Ignore case in search patterns
+set ignorecase
+
+" Do not ignore when the pattern containes upper case characters
+set smartcase
+
+if !exists('g:loaded_sleuth')
+  set expandtab
+  set shiftwidth=4
+  set softtabstop=4
+  set tabstop=4
+endif
+
 " Show invisible characters
 set list
-set listchars=tab:>\ ,trail:-,extends:>,precedes:<,nbsp:+
+" set listchars=tab:>\ ,trail:-,extends:>,precedes:<,nbsp:+
+let &listchars = 'tab:' . nr2char(0x25B8) . ' '
+  \ . ',trail:' . nr2char(0x00B7)
+  \ . ',extends:' . nr2char(0x276F)
+  \ . ',precedes:' . nr2char(0x276E)
+  \ . ',nbsp:' . nr2char(0x005F)
+  \ . ',eol:' . nr2char(0x00AC)
 
 " Disable swapfiles and backups
 set noswapfile
@@ -94,7 +130,8 @@ augroup RestoreCursor
   autocmd BufReadPost * call RestoreCursor()
 augroup END
 
-" let g:mapleader = "\<Space>"
+" Change leader
+let g:mapleader = "\<Space>"
 
 " Yank from the cursor to the end of the line
 map Y y$
@@ -111,3 +148,7 @@ nnoremap <C-l> <C-w>l
 
 " Clear highlighted search results
 nnoremap <Space> :nohlsearch<CR>
+
+" command W :execute ':silent w !sudo tee % > /dev/null' | :edit!
+command Write :w !sudo tee % > /dev/null
+" noremap <Leader>W :w !sudo tee % > /dev/null<CR>

@@ -29,8 +29,12 @@ has() {
 }
 
 append() {
-  if [[ -z "$(fgrep -lx "$2" "$1" 2>/dev/null)" ]]
-  then printf "%s\n" "$2" >> "$1"
+  local dest="$1"
+  local line="$2"
+  if ! has fgrep
+  then return 1
+  elif [[ -z "$(fgrep -lx "$line" "$dest" 2>/dev/null)" ]]
+  then printf "%s\n" "$line" >> "$dest"
   fi
   # if [[ ! -e "$dest" ]] || [[ -f "$dest" ]]
   # then printf "%s\n" "$line" >> "$dest"
