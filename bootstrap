@@ -6,6 +6,10 @@
 # BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
+# declare -l OS
+OS="$(uname -o 2>/dev/null || uname -s)"
+OS="$(echo "$OS" | tr '[:upper:]' '[:lower:]')"
+
 log() {
   # printf "%s" "${0##*/}: "
   printf "%s\n" "$@"
@@ -24,6 +28,14 @@ has() {
   fi
 }
 
+exe() {
+  local cmd="$@"
+  if [[ -z "$dryrun" ]] || [[ "$dryrun" -ne 0 ]]
+  then $cmd
+  else log "DRY-RUN: $cmd"
+  fi
+}
+
 directory() {
   local state="$1"
   shift
@@ -31,8 +43,8 @@ directory() {
   for dir in "$@"
   do
     case "$state" in
-      present) [[ -d "$dir" ]] || mkdir -p "$dir" ;;
-      absent) [[ -d "$dir" ]] && rmdir "$dir" ;;
+      present) [[ -d "$dir" ]] || exe mkdir -p "$dir" ;;
+      absent) [[ -d "$dir" ]] && exe rmdir "$dir" ;;
     esac
   done
 }
@@ -47,13 +59,13 @@ lineinfile () {
     case "$state" in
       present)
         if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-        then printf "%s\n" "$line" >> "$file"
+        then exe "printf "%s\n" "$line" >> "$file""
         fi
         ;;
       absent)
         if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
         then local tmp="/tmp/${file##*/}.grep"
-          eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
+          exe "eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
           # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
         fi
         ;;
@@ -88,7 +100,7 @@ template() {
     fi
     shift
   done
-  eval sed "${opts[@]}" "$src" > "$dst" \
+  eval exe "sed "${opts[@]}" "$src" > "$dst"" \
    || err "template: sed "${opts[@]}" "$src""
 }
 
@@ -129,11 +141,11 @@ pkg_install() {
   declare -u p="$PKG_CMD"
   if [[ "$update" -ne 0 ]]
   then log "$p: update"
-    $PKG_CMD $PKG_UPD && update=0
+    exe $PKG_CMD $PKG_UPD && update=0
   fi
   if [[ $# -ne 0 ]]
   then log "$p: install $*"
-    $PKG_CMD $PKG_ADD "$@"
+    exe $PKG_CMD $PKG_ADD "$@"
   fi
 }
 
@@ -141,7 +153,7 @@ pkg_delete() {
   declare -u p="$PKG_CMD"
   if [[ $# -ne 0 ]]
   then log "$p: delete $*"
-    $PKG_CMD $PKG_DEL "$@"
+    exe $PKG_CMD $PKG_DEL "$@"
   fi
 }
 
@@ -184,7 +196,7 @@ pkg_stow() {
     [[ -f "$d/$action.sh" ]] && source "$d/$action.sh"
     [[ -f "$d/packages.sh" ]] && source "$d/packages.sh" \
       && [[ -n "$packages" ]] && pkg_$action $packages
-    stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
+    exe stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
       --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
   done < <(find "${find_args[@]}" -print0)
@@ -192,6 +204,7 @@ pkg_stow() {
 
 main() {
   local action="install"
+  local dryrun=0
   local update=0
   local pkg=()
   [[ $# -eq 0 ]] && update=1
@@ -201,6 +214,7 @@ main() {
       -I|--install) action="install" ;;
       -D|--delete) action="delete" ;;
       -U|--update) action="install"; update=1 ;;
+      -d|--dry-run) dryrun=1 ;;
       -*|'') err "$1: illegal option"; return 1 ;;
       *) pkg+=("$1") ;;
     esac
@@ -230,7 +244,7 @@ main() {
 
 main "$@"
 
-unset log err has
+unset log err has exe
 unset directory lineinfile
 unset prompt template
 unset pkg_install pkg_delete pkg_stow
