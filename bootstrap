@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$BASH_SOURCE")"; pwd -P)"
 # OS="$(echo "$OS" | tr '[:upper:]' '[:lower:]')"
 
 for f in $ROOT/lib/*.bash
-do echo "$f" &&  source "$f"
+do source "$f"
 done
 
 check() {
@@ -18,23 +18,32 @@ check() {
   fi
 }
 
+prompt() {
+  local q="$1"
+  local d="$2"
+  >&2 log "$q"
+  local reply
+  read -r reply
+  # read -p "$q" -i "$d" -e vareply
+  log "${reply:-$d}"
+}
+
 main() {
   detect_os || return 1
-  local a=("install" "delete")
-  local action=
-  local dryrun=0
-  local update=1
+  RUN="${RUN:-1}"
+  local a action="install"
+  local update=0
   local pkg=()
-  local choices="IDUd"
+  [[ $# -eq 0 ]] && update=1
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
-      -I|--install) check "$action" && action="install" || return 1 ;;
-      -D|--delete) check "$action" && action="delete" || return 1 ;;
-      -d|--dry-run) dryrun="$(($dryrun + 1))" ;;
-      -n|--no-update) update=0 ;;
+      -I|--install) check "$a" && a="install" || return 1 ;;
+      -D|--delete) check "$a" && a="delete" || return 1 ;;
+      -d|--dry-run) RUN=0 ;;
+      -u|--update) update="$(($update + 1))" ;;
       --*|'') err "$1: illegal option"; return 1 ;;
-      -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "$choices" == *"${1:1:1}"* ]]
+      -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "${1:1:1}" =~ [IDdu] ]]
         then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
         else err "${1:0:2}: illegal option"; return 1
         fi
@@ -43,7 +52,17 @@ main() {
     esac
     shift
   done
-  [[ -z "$action" ]] && action="install"
+
+  local v var val
+  if [[ " ${pkg[@]} " == " git " ]]
+  then
+    for v in "GIT_AUTHOR_NAME:What is your github full name?" \
+      "GIT_AUTHOR_USERNAME:What is your github username?" \
+      "GIT_AUTHOR_EMAIL:What is your github email?"
+    do var="${v%%:*}"; val="$(prompt "${v#*:} (default: ${!var}) " "${!var}")"
+      declare $var="$val" && export $var
+    done
+  fi
 
   log "Bootstrap: $OS"
   [[ "$update" -ne 0 ]] && pkg_update
@@ -54,11 +73,11 @@ main() {
   fi
 
   if has stow
-  then
-    case "$action" in
-      install) find_stow present "${pkg[@]}" ;;
-      delete) find_stow absent "${pkg[@]}" ;;
+  then case "$action" in
+      install) state="present" ;;
+      delete) state="absent" ;;
     esac
+   find_stow "$state" "${pkg[@]}"
   fi
 
   log "Done."
@@ -66,4 +85,3 @@ main() {
 
 # [[ "$0" == "$BASH_SOURCE" ]]
 main "$@"
-# unset log err has dry_run directory lineinfile prompt template pkg_install pkg_delete pkg_stow main ROOT

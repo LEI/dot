@@ -67,7 +67,7 @@ find_stow() {
     [[ -f "$d/$action.sh" ]] && "$d/$action.sh" "$ROOT"
     [[ -f "$d/packages.sh" ]] && "$d/packages.sh" "$ROOT" \
       && [[ -n "$packages" ]] && pkg_$action $packages
-    dry_run stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
+    dry_run stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).(bash|sh)' \
       --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
   done < <(find "${find_args[@]}" -print0)

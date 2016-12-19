@@ -3,6 +3,13 @@
 LIB="$(dirname "$BASH_SOURCE")"
 source $LIB/utils.bash
 
+dry_run() {
+  if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
+  then "$@"
+  else log "$*"
+  fi
+}
+
 brew_pkg() {
   # if ! has brew
   # then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"

@@ -5,9 +5,9 @@ FROM debian:jessie
 RUN apt-get update -qy && apt-get install -qy apt-utils dialog git-core stow
 # RUN git clone https://github.com/LEI/termux-config.git "$HOME/.dotfiles"
 # ENV ROOT /root/.dotfiles
-# ENV GIT_AUTHOR_NAME "John Doe"
-# ENV GIT_AUTHOR_USERNAME "JD"
-# ENV GIT_AUTHOR_EMAIL "j@d.c"
+ENV GIT_AUTHOR_NAME "John Doe"
+ENV GIT_AUTHOR_USERNAME "JD"
+ENV GIT_AUTHOR_EMAIL "j@d.c"
 # ARG CACHEBUST=1
 # COPY . /root/.dotfiles
 RUN echo "alias dot='source /root/.dotfiles/bootstrap'" >> ~/.bashrc

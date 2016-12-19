@@ -1,6 +1,5 @@
 source $1/lib/{directory,lineinfile}.bash
 
-type lineinfile
 lineinfile absent "$HOME/.vimrc" "source ~/.vim/init.vim"
 
 _post_delete() {

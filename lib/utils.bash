@@ -25,17 +25,3 @@ has() {
     return 127
   fi
 }
-
-dry_run() {
-  [[ "$dryrun" -ne 0 ]] && log "DRY-RUN: $*" || "$@"
-}
-
-prompt() {
-  local q="$1"
-  local d="$2"
-  >&2 log "$q"
-  local reply
-  read -r reply
-  # read -p "$q" -i "$d" -e vareply
-  log "${reply:-$d}"
-}

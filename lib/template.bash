@@ -25,19 +25,18 @@ template() {
   do
     local var="${1%%:*}"
     local val="${!var}"
-    val="$(prompt "${1#*:} (default: $val) " "$val")"
     if [[ -n "$val" ]]
     then opts+=("-e" "'s/$var/$val/g'")
-    else err "$var: empty variable"
+    else err "$var: undefined variable"
     fi
     shift
   done
 
   if [[ "${#opts[@]}" -ne 0 ]]
   then
-    if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
-    then eval sed "${opts[@]}" "$src" > "$dst"
-    else log "DRY-RUN: sed "${opts[@]}" "$src""
+    if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
+    then  sed "${opts[*]}" "$src" > "$dst"
+    else log "sed ${opts[*]} $src > $dst"
     fi
   else err "template: no options"; return 1
   fi

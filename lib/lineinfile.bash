@@ -14,18 +14,18 @@ lineinfile() {
     present)
       if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
       then
-        if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
+        if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
         then printf "%s\n" "$line" >> "$file"
-        else log "DRY-RUN: $line >> $file"
+        else log "lineinfile: $line >> $file"
         fi
       fi
       ;;
     absent)
       if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
       then local tmp="/tmp/${file##*/}.grep"
-        if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
+        if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
         then eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
-        else log "DRY-RUN: grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
+        else log "lineinfile: $line << $file"
         fi
         # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
       fi

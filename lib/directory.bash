@@ -6,12 +6,24 @@ source $LIB/utils.bash
 directory() {
   local state="$1"
   shift
-  local dir
+  local dir cmd=
   for dir in "$@"
   do
     case "$state" in
-      present) [[ -d "$dir" ]] || dry_run mkdir -p "$dir" ;;
-      absent) [[ -d "$dir" ]] && dry_run rmdir "$dir" ;;
+      present)
+        if [[ ! -d "$dir" ]]
+        then [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] \
+          && mkdir -p "$dir"
+          log "directory: create $dir"
+        fi
+        ;;
+      absent)
+        if [[ -d "$dir" ]]
+        then [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] \
+          && rmdir "$dir"
+          log "directory: remove $dir"
+        fi
+        ;;
     esac
   done
 }
