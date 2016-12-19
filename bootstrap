@@ -30,8 +30,7 @@ has() {
 }
 
 exe() {
-  # [[ "$dryrun" -ne 0 ]] && $@ || log "DRY-RUN: $@"
-  log "$dryrun>>> $*"
+  [[ "$dryrun" -ne 0 ]] && $@ || log "DRY-RUN: $@"
 }
 
 directory() {
