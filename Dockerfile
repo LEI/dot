@@ -9,7 +9,7 @@ RUN apt-get update -qy && apt-get install -qy apt-utils dialog git-core stow
 # ENV GIT_AUTHOR_USERNAME "JD"
 # ENV GIT_AUTHOR_EMAIL "j@d.c"
 # ARG CACHEBUST=1
-COPY . /root/.dotfiles
-ENTRYPOINT ["/bin/bash"]
+# COPY . /root/.dotfiles
 RUN echo "alias dot='source /root/.dotfiles/bootstrap'" >> ~/.bashrc
-# CMD ["-l", "-c", "source", "/root/.dotfiles/bootstrap"]
+ENTRYPOINT ["/bin/bash"]
+# CMD ["-l" , "-c", "source", "$BOOTSTRAP/bootstrap"]

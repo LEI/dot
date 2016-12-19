@@ -1,291 +1,69 @@
 #!/usr/bin/env bash
 
-# Usage: source bootstrap
-
-# ROOT="$(dirname "${BASH_SOURCE}")"
-# ROOT="$(cd "$(dirname "$0")"; pwd -P)"
-# ROOT="${ROOT:-$HOME/storage/shared/termux-config}"
 ROOT="$(cd "$(dirname "$BASH_SOURCE")"; pwd -P)"
 
 # declare -l OS
 # OS="$(uname -o 2>/dev/null || uname -s)"
 # OS="$(echo "$OS" | tr '[:upper:]' '[:lower:]')"
 
-log() {
-  # printf "%s" "${0##*/}: "
-  printf "%s\n" "$@"
-}
+for f in $ROOT/lib/*.bash
+do echo "$f" &&  source "$f"
+done
 
-err() {
-  local ret=$?
-  >&2 log "$@"
-  return $ret
-}
-
-has() {
-  if ! hash "$1" 2>/dev/null
-  then err "$1: command not found"
-    return 127
-  fi
-}
-
-dry_run() {
-  [[ "$dryrun" -ne 0 ]] && log "DRY-RUN: $*" || "$@"
-}
-
-directory() {
-  local state="$1"
-  shift
-  local dir
-  for dir in "$@"
-  do
-    case "$state" in
-      present) [[ -d "$dir" ]] || dry_run mkdir -p "$dir" ;;
-      absent) [[ -d "$dir" ]] && dry_run rmdir "$dir" ;;
-    esac
-  done
-}
-
-lineinfile () {
-  local state="$1"
-  local file="$2"
-  local line="$3"
-  if ! has fgrep
-  then return 1
-  else
-    case "$state" in
-      present)
-        if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-        then
-          if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
-          then printf "%s\n" "$line" >> "$file"
-          else log "DRY-RUN: $line >> $file"
-          fi
-        fi
-        ;;
-      absent)
-        if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
-        then local tmp="/tmp/${file##*/}.grep"
-          if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
-          then eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
-          else log "DRY-RUN: grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
-          fi
-          # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
-        fi
-        ;;
-    esac
-  fi
-}
-
-template() {
-  local src="$1"
-  shift
-  local dst="$1" # ${1:-$HOME/$(basename "${1%.tpl}")}
-  shift
-  local vars=("$@")
-  if [[ ! -f "$src" ]] && [[ ! -L "$src" ]]
-  then err "$src: not found"
+check() {
+  echo check "$@"
+  if [[ $# -ne 0 ]] && [[ -n "$1" ]]
+  then err "$1: action already defined"
     return 1
   fi
-  if [[ -f "$dst" ]] || [[ -L "$dst" ]]
-  # TODO check symlink target
-  then err "${dst/$HOME/~}: already exists"
-    return
-  fi
-  local opts=()
-  while [[ $# -ne 0 ]]
-  do
-    local var="${1%%:*}"
-    local val="${!var}"
-    # read -p "${1#*:}" -i "${!var}" -e val
-    read -r -e v
-    echo "V=>$v"
-    if [[ -n "$val" ]]
-    then opts+=("-e" "'s/$var/$val/g'")
-    else err "$var: undefined variable"
-    fi
-    shift
-  done
-
-  if [[ "${#opts[@]}" -ne 0 ]]
-  then
-    if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
-    then eval sed "${opts[@]}" "$src" > "$dst"
-    else log "DRY-RUN: sed "${opts[@]}" "$src""
-    fi
-  else err "template: no options for sed"; return 1
-  fi
-}
-
-brew_pkg() {
-  # if ! has brew
-  # then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  # fi
-  PKG_CMD="brew"
-  PKG_ADD="install"
-  PKG_DEL="remove"
-  PKG_UPD="update"
-}
-
-apt_pkg() {
-  PKG_CMD="apt"
-  PKG_ADD="install -qqy"
-  PKG_DEL="remove -qqy"
-  PKG_UPD="update -qqy"
-}
-
-apt_get_pkg() {
-  PKG_CMD="apt-get"
-  PKG_ADD="install -qqy"
-  PKG_DEL="remove -qqy"
-  PKG_UPD="update -qqy"
-}
-
-detect_os() {
-  case "$OSTYPE" in # ${OSTYPE//[0-9.]/}
-    darwin*) OS="macos"; brew_pkg ;;
-    linux-android) OS="android"; apt_pkg ;;
-    linux*)
-      if has apt-get 2>/dev/null
-      then OS="debian"; apt_get_pkg
-      elif has apt 2>/dev/null
-      then OS="debian"; apt_pkg
-      else err "$OSTYPE: unknown package manager"; return 1
-      fi
-      ;;
-    *) err "$OSTYPE: unknown operating system"; return 1 ;;
-  esac
-}
-
-pkg_install() {
-  # declare -u p="$PKG_CMD"
-  if [[ "$update" -ne 0 ]]
-  then log "$PKG_CMD: update"
-    dry_run "$PKG_CMD" "$PKG_UPD" && update=0
-  fi
-  if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: install $*"
-    dry_run $PKG_CMD $PKG_ADD "$@"
-  fi
-}
-
-pkg_delete() {
-  # declare -u p="$PKG_CMD"
-  if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: delete $*"
-    dry_run $PKG_CMD $PKG_DEL "$@"
-  fi
-}
-
-pkg_stow() {
-  local state="$1"
-  shift
-  local action="install"
-  case "$state" in
-    present) action="install" ;;
-    absent) action="delete" ;;
-  esac
-  local stow_opts="${STOW_OPTS:---verbose}"
-  case "$action" in
-    # install) --stow ;;
-    delete) stow_opts+=" --delete" ;;
-  esac
-  local path="$ROOT"
-  local target="$HOME"
-  local find_args=("$path")
-  [[ -d "$path/os_$OS" ]] && find_args+=("$path/os_$OS")
-  find_args+=("-mindepth" "1" "-maxdepth" "1" "-type" "d" \
-    "!" "(" "-name" ".git" "-o" "-name" "os_*" ")")
-  local find_opts=()
-  while [[ $# -ne 0 ]]
-  do [[ -z "$find_opts" ]] && find_opts+=("(") || find_opts+=("-o")
-    [[ -n "$1" ]] && find_opts+=("-name" "$1")
-    [[ $# -eq 1 ]] && find_opts+=(")")
-    shift
-  done
-  [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
-  # echo "find ${find_args[@]} -print =>" $(find "${find_args[@]}" -print)
-  local d
-  while read -d '' -r d
-  do local p="$(basename $d)"
-    local dir="$(dirname $d)"
-    local name="$p"
-    [[ "${dir##*/}" != "${ROOT##*/}" ]] && name="${dir##*/}/$p"
-    log "$name: $action..."
-    unset packages _post_$action
-    [[ -f "$d/$action.sh" ]] && source "$d/$action.sh"
-    [[ -f "$d/packages.sh" ]] && source "$d/packages.sh" \
-      && [[ -n "$packages" ]] && pkg_$action $packages
-    dry_run stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
-      --dir "$dir" --target "$target" "$p"
-    hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
-  done < <(find "${find_args[@]}" -print0)
 }
 
 main() {
+  detect_os || return 1
+  local a=("install" "delete")
   local action=
   local dryrun=0
-  local update=0
+  local update=1
   local pkg=()
   local choices="IDUd"
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
-      -d|--dry-run) dryrun="$((${dryrun:-0}+1))" ;;
-      -I|--install)
-        if [[ -z "$action" ]]
-        then action="install"
-        else err "$1: action already defined"; return 1
-        fi ;;
-      -D|--delete)
-        if [[ -z "$action" ]]
-        then action="delete"
-        else err "$1: action already defined"; return 1
-        fi ;;
-      -U|--update)
-        if [[ -z "$action" ]]
-        then action="install"; update=1
-        else err "$1: action already defined"; return 1
-        fi ;;
+      -I|--install) check "$action" && action="install" || return 1 ;;
+      -D|--delete) check "$action" && action="delete" || return 1 ;;
+      -d|--dry-run) dryrun="$(($dryrun + 1))" ;;
+      -n|--no-update) update=0 ;;
       --*|'') err "$1: illegal option"; return 1 ;;
-      -*) if [[ "$1" =~ ^-[a-zA-Z]*$ ]] && [[ "$choices" == *"${1:1:1}"* ]]
+      -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "$choices" == *"${1:1:1}"* ]]
         then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
         else err "${1:0:2}: illegal option"; return 1
         fi
         ;;
-      *) pkg+=("$1") ;;
+      *) pkg+=("$1") ;; # pkg+=("$@"); break
     esac
     shift
   done
-  [[ -z "$action" ]] && action="install" && update=1
+  [[ -z "$action" ]] && action="install"
 
-  detect_os || return 1
   log "Bootstrap: $OS"
-
-  if [[ "$update" -ne 0 ]]
-  then local path="$ROOT/os_$OS/packages" # ${PKG_CMD%%-*}
-    if [[ -f "$path" ]]
-    then pkg_$action $(cat "$path")
-    else pkg_$action
-    fi
+  [[ "$update" -ne 0 ]] && pkg_update
+  local path="$ROOT/os_$OS/packages" # ${PKG_CMD%%-*}
+  if [[ -f "$path" ]]
+  then pkg_$action $(cat "$path")
+  else err "$path: no such file"
   fi
 
   if has stow
   then
     case "$action" in
-      install) pkg_stow present "${pkg[@]}" ;;
-      delete) pkg_stow absent "${pkg[@]}" ;;
+      install) find_stow present "${pkg[@]}" ;;
+      delete) find_stow absent "${pkg[@]}" ;;
     esac
   fi
 
   log "Done."
 }
 
+# [[ "$0" == "$BASH_SOURCE" ]]
 main "$@"
-
-unset log err has dry_run
-unset directory lineinfile
-unset prompt template
-unset pkg_install pkg_delete pkg_stow
-unset main
-unset ROOT
+# unset log err has dry_run directory lineinfile prompt template pkg_install pkg_delete pkg_stow main ROOT

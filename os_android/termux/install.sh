@@ -1,3 +1,5 @@
+source $1/lib/{directory,utils}.bash
+
 directory present $HOME/{.android.d,.termux}
 
 # https://termux.com/storage.html
