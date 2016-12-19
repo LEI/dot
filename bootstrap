@@ -6,9 +6,6 @@
 # BOOTSTRAP="$(cd "$(dirname "$0")"; pwd -P)"
 BOOTSTRAP="${BOOTSTRAP:-$HOME/storage/shared/termux-config}"
 
-declare -l OS
-OS="$(uname -o 2>/dev/null || uname -s)"
-
 log() {
   # printf "%s" "${0##*/}: "
   printf "%s\n" "$@"
@@ -95,6 +92,39 @@ template() {
    || err "template: sed "${opts[@]}" "$src""
 }
 
+apt_pkg() {
+  PKG_CMD="apt"
+  PKG_ADD="install -qqy"
+  PKG_DEL="remove -qqy"
+  PKG_UPD="update -qqy"
+}
+
+apt_get_pkg() {
+  PKG_CMD="apt-get"
+  PKG_ADD="install -qqy"
+  PKG_DEL="remove -qqy"
+  PKG_UPD="update -qqy"
+}
+
+detect_os() {
+  declare -l OS
+  OS="$(uname -o 2>/dev/null || uname -s)"
+  case "$OSTYPE" in # ${OSTYPE//[0-9.]/}
+    # darwin*) OS="macos"; brew_pkg ;;
+    linux-android) OS="android"; apt_pkg ;;
+    linux*)
+      if has apt-get 2>/dev/null
+      then OS="debian"; apt_get_pkg
+      elif has apt 2>/dev/null
+      then OS="debian"; apt_pkg
+      else err "$OSTYPE: unknown package manager"
+        return 1
+      fi
+      ;;
+    *) err "$OSTYPE: unknown operating system"
+  esac
+}
+
 pkg_install() {
   declare -u p="$PKG_CMD"
   if [[ "$update" -ne 0 ]]
@@ -131,7 +161,7 @@ pkg_stow() {
   local path="$BOOTSTRAP"
   local target="$HOME"
   local find_args=("$path")
-  [[ -d "$path/os_${OS##*/}" ]] && find_args+=("$path/os_${OS##*/}")
+  [[ -d "$path/os_$OS" ]] && find_args+=("$path/os_$OS")
   find_args+=("-mindepth" "1" "-maxdepth" "1" "-type" "d" \
     "!" "(" "-name" ".git" "-o" "-name" "os_*" ")")
   local find_opts=()
@@ -177,23 +207,11 @@ main() {
     shift
   done
 
-  case "$OSTYPE" in
-    # darwin*) ${OSTYPE//[0-9.]/} ;;
-    linux*)
-      if has apt-get 2>/dev/null
-      then PKG_CMD="apt-get"; PKG_ADD="install -qqy"; PKG_DEL="remove -qqy"; PKG_UPD="update -qqy"
-      elif has apt 2>/dev/null
-      then PKG_CMD="apt"; PKG_ADD="install -qqy"; PKG_DEL="remove -qqy"; PKG_UPD="update -qqy"
-      else "$OSTYPE ($OS): unknown package manager"
-      fi
-      ;;
-    *) err "$OSTYPE: unknown operating system"
-  esac
-
-  log "Bootstrap: ${OS##*/}"
+  detect_os || return 1
+  log "Bootstrap: $OS"
 
   if [[ "$update" -ne 0 ]]
-  then local path="$BOOTSTRAP/os_${OS##*/}/packages.${PKG_CMD}" # ${PKG_CMD%%-*}
+  then local path="$BOOTSTRAP/os_$OS/packages.${DIST:-$PKG_CMD}" # ${PKG_CMD%%-*}
     case "$OSTYPE" in
       linux*) pkg_$action $(cat "$path") ;;
     esac
