@@ -1,4 +1,4 @@
-source $1/lib/{directory,utils}.bash
+for f in $1/lib/{directory,utils}.bash; do source "$f"; done
 
 directory present $HOME/{.android.d,.termux}
 

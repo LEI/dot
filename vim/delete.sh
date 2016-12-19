@@ -1,4 +1,4 @@
-source $1/lib/{directory,lineinfile}.bash
+for f in $1/lib/{directory,lineinfile}.bash; do source "$f"; done
 
 lineinfile absent "$HOME/.vimrc" "source ~/.vim/init.vim"
 

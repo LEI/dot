@@ -1,4 +1,4 @@
-source $1/lib/{directory,lineinfile}.bash
+for f in $1/lib/{directory,lineinfile}.bash; do source "$f"; done
 
 directory absent $HOME/bin
 
