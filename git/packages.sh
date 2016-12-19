@@ -1,5 +1,5 @@
-# packages="git"
-case "$OSTYPE" in
-  linux-android) packages="git" ;;
-  linux*) packages="git-core" ;;
+case "$OS" in
+  android|macos) packages="git" ;;
+  debian) packages="git-core" ;;
+  *) packages="git" ;;
 esac

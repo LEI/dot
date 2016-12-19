@@ -1,4 +1,4 @@
-packages="vim"
-case "$OSTYPE" in
-  linux-android) packages+="neovim" ;;
+case "$OS" in
+  android|macos) packages="vim neovim" ;;
+  *) packages="vim" ;;
 esac
