@@ -85,14 +85,18 @@ template() {
     local var="${1%%:*}"
     local val="${!var}"
     # read -p "${1#*:}" -i "${!var}" -e val
+    read -r -e v
+    echo "V=>$v"
     if [[ -n "$val" ]]
     then opts+=("-e" "'s/$var/$val/g'")
     else err "$var: undefined variable"
     fi
     shift
   done
-  eval sed "${opts[@]}" "$src" > "$dst" \
+  if [[ "${#opts[@]}" -ne 0 ]]
+  then eval sed "${opts[@]}" "$src" > "$dst" \
    || err "template: sed "${opts[@]}" "$src""
+  fi
 }
 
 pkg_install() {
