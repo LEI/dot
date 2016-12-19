@@ -29,7 +29,7 @@ has() {
   fi
 }
 
-exe() {
+dry_run() {
   [[ "$dryrun" -ne 0 ]] && log "DRY-RUN: $*" || "$@"
 }
 
@@ -40,8 +40,8 @@ directory() {
   for dir in "$@"
   do
     case "$state" in
-      present) [[ -d "$dir" ]] || exe mkdir -p "$dir" ;;
-      absent) [[ -d "$dir" ]] && exe rmdir "$dir" ;;
+      present) [[ -d "$dir" ]] || dry_run mkdir -p "$dir" ;;
+      absent) [[ -d "$dir" ]] && dry_run rmdir "$dir" ;;
     esac
   done
 }
@@ -56,13 +56,20 @@ lineinfile () {
     case "$state" in
       present)
         if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-        then exe "printf "%s\n" "$line" >> "$file""
+        then
+          if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
+          then printf "%s\n" "$line" >> "$file"
+          else log "DRY-RUN: $line >> $file"
+          fi
         fi
         ;;
       absent)
         if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
         then local tmp="/tmp/${file##*/}.grep"
-          exe "eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
+          if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
+          then eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
+          else log "DRY-RUN: grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
+          fi
           # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
         fi
         ;;
@@ -97,14 +104,16 @@ template() {
     fi
     shift
   done
-  eval exe "sed "${opts[@]}" "$src" > "$dst"" \
-   || err "template: sed "${opts[@]}" "$src""
+  if [[ -z "$dryrun" ]] || [[ "$dryrun" -eq 0 ]]
+  then eval sed "${opts[@]}" "$src" > "$dst"
+  else log "DRY-RUN: sed "${opts[@]}" "$src""
+  fi
 }
 
 brew_pkg() {
-  if ! has brew
-  then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  fi
+  # if ! has brew
+  # then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  # fi
   PKG_CMD="brew"
   PKG_ADD="install"
   PKG_DEL="remove"
@@ -145,11 +154,11 @@ pkg_install() {
   # declare -u p="$PKG_CMD"
   if [[ "$update" -ne 0 ]]
   then log "$PKG_CMD: update"
-    exe $PKG_CMD $PKG_UPD && update=0
+    dry_run "$PKG_CMD" "$PKG_UPD" && update=0
   fi
   if [[ $# -ne 0 ]]
-  then log "$p: install $*"
-    exe $PKG_CMD $PKG_ADD "$@"
+  then log "$PKG_CMD: install $*"
+    dry_run $PKG_CMD $PKG_ADD "$@"
   fi
 }
 
@@ -157,7 +166,7 @@ pkg_delete() {
   # declare -u p="$PKG_CMD"
   if [[ $# -ne 0 ]]
   then log "$PKG_CMD: delete $*"
-    exe $PKG_CMD $PKG_DEL "$@"
+    dry_run $PKG_CMD $PKG_DEL "$@"
   fi
 }
 
@@ -200,7 +209,7 @@ pkg_stow() {
     [[ -f "$d/$action.sh" ]] && source "$d/$action.sh"
     [[ -f "$d/packages.sh" ]] && source "$d/packages.sh" \
       && [[ -n "$packages" ]] && pkg_$action $packages
-    exe stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
+    dry_run stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).sh' \
       --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
   done < <(find "${find_args[@]}" -print0)
@@ -267,7 +276,7 @@ main() {
 
 main "$@"
 
-unset log err has exe
+unset log err has dry_run
 unset directory lineinfile
 unset prompt template
 unset pkg_install pkg_delete pkg_stow
