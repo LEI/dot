@@ -40,4 +40,6 @@ nchar() {
   for i in $(seq "$nb")
   do printf "%s" "$char"
   done
+
+  echo >&2 "NCHAR $(seq "$nb")"
 }

@@ -10,19 +10,29 @@ lineinfile() {
   if ! has fgrep
   then return 1
   fi
+  log "line '$line' $state $file"
   case "$state" in
     present)
-      if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-      then log "line>file: $line >> $file"
-        run "echo "$line" >> "$file""
+      if [[ -z "$(fgrep -Flx "$line" "$file" 2>/dev/null)" ]]
+      then
+        [[ "${verbose:-0}" -ne 0 ]] && log "echo $line >> $file"
+        [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] && echo "$line" >> "$file"
       fi
       ;;
     absent)
-      if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
-      then log "line<file: $line << $file"
-        local tmp="/tmp/${file##*/}.grep"
+      if [[ -z "$(fgrep -FLx "$line" "$file" 2>/dev/null)" ]]
+      then
+        # [[ -f "$file" ]] && mv "$file" "$file.backup"
+        line="${line//\[/\\\[}"
+        line="${line//\]/\\\]}"
+        run sed --in-place=.backup "/${line//\//\\\/}/d" "$file"
         # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
-        run "eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
+        # local tmp="/tmp/${file##*/}.grep"
+        # run eval "grep -Fv '"${line}"' "$file" > "$tmp" && mv "$tmp" "$file""
+        # [[ "${verbose:-0}" -ne 0 ]] && log "grep -Fv '$line' $file > $tmp && mv $tmp $file"
+        # [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] \
+        #   && grep -Fv \'"$line"\' "$file" > "$tmp" && mv "$tmp" "$file" \
+        #   || echo "failed to $RUN"
       fi
       ;;
   esac

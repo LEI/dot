@@ -32,23 +32,24 @@ prompt() {
 
 main() {
   detect_os || return 1
-  export RUN=1
+  local RUN=1
   local a action="install"
   local pm=0
   local sync=0
   local update=0
   local verbose=0
-  local options="[IDSduv]"
+  local options="[dIUSDuv]"
   local pkg=()
   [[ $# -eq 0 ]] # && set -- "-uIS"
   while [[ $# -ne 0 ]]
   do case "$1" in
-      --) break ;;
+      --) shift; break ;;
       -d|--dry-run) RUN=0 ;;
-      -I|--install) check "$a" "$1" && a="install" && pm=1 && update=1 || return 1 ;;
-      -D|--delete) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
+      -I|--install) check "$a" "$1" && a="install" && pm=1 || return 1 ;;
+      -U|--uninstall) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
       -S|--sync) check "$sync" "$1" && a="${a:-0}" && sync=1 || return 1 ;;
-      -u|--update) update="$(($update + 1))" ;;
+      -D|--delete) check "$a" "$1" && a="delete" && sync=1 || return 1 ;;
+      -u|--update) check "$update" "$1" && update=1 ;;
       -v|--verbose) verbose="$(($verbose + 1))" ;;
       --*|'') err "$1: illegal option $options"; return 1 ;;
       -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "${1:1:1}" =~ $options ]]
@@ -65,6 +66,7 @@ main() {
   else pm=1; sync=1; update=1
   fi
 
+  export RUN verbose
   log "Bootstrap: $OS"
 
   local v var val
