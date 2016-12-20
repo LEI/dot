@@ -13,7 +13,7 @@ lineinfile() {
   case "$state" in
     present)
       if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-      then log "line>file: $line >> $file $RUN"
+      then log "line>file: $line >> $file"
         run "echo "$line" >> "$file""
       fi
       ;;
