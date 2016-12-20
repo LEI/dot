@@ -12,6 +12,8 @@ detect_os() {
       then OS="debian"; apt_get_pkg
       elif has apt 2>/dev/null
       then OS="debian"; apt_pkg
+      elif has pacman 2>/dev/null
+      then OS="archlinux"; pacman_pkg
       else err "$OSTYPE: unknown package manager"; return 1
       fi
       ;;

@@ -31,6 +31,15 @@ apt_get_pkg() {
   PKG_UPD="update $tops"
 }
 
+pacman_pkg() {
+  local opts="--noconfirm"
+  # [[ "$verbose" -ne 0 ]] && opts+="$(nchar "q" $verbose 2)"
+  PKG_CMD="pacman"
+  PKG_ADD="-Sy $opts"
+  PKG_DEL="-R $opts"
+  PKG_UPD="-Syu $opts"
+}
+
 pkg_update() {
   log "$PKG_CMD: update packages"
   run $PKG_CMD $PKG_UPD

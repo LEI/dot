@@ -8,8 +8,8 @@
 # RUN git clone https://github.com/LEI/termux-config.git "$HOME/.dotfiles"
 
 FROM base/archlinux
-RUN pacman --noconfirm -Sy archlinux-keyring\
-    && pacman --noconfirm -Syu git stow
+RUN pacman --noconfirm -Sy archlinux-keyring
+RUN pacman --noconfirm -Syu git stow
 
 # ENV ROOT /root/.dotfiles
 ENV GIT_AUTHOR_NAME "John Doe"
