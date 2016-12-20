@@ -9,7 +9,8 @@ find_names() {
   local exp=("(")
   local i
   for i in "${!names[@]}"
-  do exp+=("-name" "${names[$i]}")
+  do [[ "$i" -ne 0 ]] && exp+=("-o")
+    exp+=("-name" "${names[$i]}")
   done
   exp+=(")")
   printf "%s\n" "${exp[@]}"
@@ -55,20 +56,24 @@ find_stow() {
   #   shift
   # done
   # [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
-  echo "find ${find_args[@]} -print =>" $(find "${find_args[@]}" -print)
+
+  if [[ "${verbose:-0}" -ne 0 ]]
+  then printf "%s\n" "find ${find_args[*]}" $(find "${find_args[@]}" -print)
+  fi
+
   local d
   while read -d '' -r d
-  do local p="$(basename $d)"
+  do local pkgpath="$d/.pkg"
+    local p="$(basename $d)"
     local dir="$(dirname $d)"
     local name="$p"
     [[ "${dir##*/}" != "${ROOT##*/}" ]] && name="${dir##*/}/$p"
     log "$name: $action..."
     unset packages _post_$action
-    [[ -f "$d/$action.sh" ]] && "$d/$action.sh" "$ROOT"
-    [[ -f "$d/packages.sh" ]] && "$d/packages.sh" "$ROOT" \
+    [[ -f "$pkgpath/$action" ]] && "$pkgpath/$action" "$ROOT"
+    [[ -f "$pkgpath/packages" ]] && "$pkgpath/packages" "$ROOT" \
       && [[ -n "$packages" ]] && pkg_$action $packages
-    dry_run stow $stow_opts --ignore='.*.tpl' --ignore='(install|delete|packages).(bash|sh)' \
-      --dir "$dir" --target "$target" "$p"
+    run stow $stow_opts --ignore='.*.tpl' --ignore='.pkg' --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
   done < <(find "${find_args[@]}" -print0)
 }

@@ -15,18 +15,15 @@ lineinfile() {
       if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
       then
         if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
-        then printf "%s\n" "$line" >> "$file"
-        else log "lineinfile: $line >> $file"
+        then run "echo "$line" >> "$file""
+        # log "lineinfile: $line >> $file"
         fi
       fi
       ;;
     absent)
       if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
-      then local tmp="/tmp/${file##*/}.grep"
-        if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
-        then eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
-        else log "lineinfile: $line << $file"
-        fi
+      then local tmp="/tmp/${file##*/}.grep" # log "lineinfile: $line << $file"
+        run "eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
         # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
       fi
       ;;

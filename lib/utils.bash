@@ -25,3 +25,8 @@ has() {
     return 127
   fi
 }
+
+run() {
+  [[ "${verbose:-0}" -ne 0 ]] && log "$*"
+  [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] && "$@"
+}

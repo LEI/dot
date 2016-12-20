@@ -32,12 +32,8 @@ template() {
     shift
   done
 
-  if [[ "${#opts[@]}" -ne 0 ]]
-  then
-    if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
-    then  sed "${opts[*]}" "$src" > "$dst"
-    else log "sed ${opts[*]} $src > $dst"
-    fi
-  else err "template: no options"; return 1
+  if [[ -n "${#opts[*]}" ]]
+  then run "sed "${opts[*]}" "$src" > "$dst""
+  else err "template: no variables provided"; return 1
   fi
 }

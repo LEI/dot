@@ -3,13 +3,6 @@
 LIB="$(dirname "$BASH_SOURCE")"
 source $LIB/utils.bash
 
-dry_run() {
-  if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
-  then "$@"
-  else log "$*"
-  fi
-}
-
 brew_pkg() {
   # if ! has brew
   # then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -35,24 +28,20 @@ apt_get_pkg() {
 }
 
 pkg_update() {
-  if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: update"
-    dry_run $PKG_CMD $PKG_UPD
-  fi
+  log "$PKG_CMD: update packages"
+  run $PKG_CMD $PKG_UPD
 }
 
 pkg_install() {
-  # declare -u p="$PKG_CMD"
+  log "$PKG_CMD: install $# packages"
   if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: install $*"
-    dry_run $PKG_CMD $PKG_ADD "$@"
+  then run $PKG_CMD $PKG_ADD "$@"
   fi
 }
 
 pkg_delete() {
-  # declare -u p="$PKG_CMD"
+  log "$PKG_CMD: remove $# packages"
   if [[ $# -ne 0 ]]
-  then log "$PKG_CMD: delete $*"
-    dry_run $PKG_CMD $PKG_DEL "$@"
+  then run $PKG_CMD $PKG_DEL "$@"
   fi
 }
