@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 for f in $1/lib/{directory,lineinfile}.bash; do source "$f"; done
 
 # if !filereadable(expand("~/.vim/init.vim"))

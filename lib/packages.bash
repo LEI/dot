@@ -14,17 +14,29 @@ brew_pkg() {
 }
 
 apt_pkg() {
+  local opts="-y"
+  if [[ "${verbose:-0}" -eq 0 ]]
+  then opts+="qq"
+  elif [[ "${verbose:-0}" -eq 1 ]]
+  then opts+="q"
+  fi
   PKG_CMD="apt"
-  PKG_ADD="install -qqy"
-  PKG_DEL="remove -qqy"
-  PKG_UPD="update -qqy"
+  PKG_ADD="install $opts"
+  PKG_DEL="remove $opts"
+  PKG_UPD="update $opts"
 }
 
 apt_get_pkg() {
+  local opts="-y"
+  if [[ "${verbose:-0}" -eq 0 ]]
+  then opts+="qq"
+  elif [[ "${verbose:-0}" -eq 1 ]]
+  then opts+="q"
+  fi
   PKG_CMD="apt-get"
-  PKG_ADD="install -qqy"
-  PKG_DEL="remove -qqy"
-  PKG_UPD="update -qqy"
+  PKG_ADD="install $opts"
+  PKG_DEL="remove $opts"
+  PKG_UPD="update $tops"
 }
 
 pkg_update() {
