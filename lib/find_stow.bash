@@ -74,7 +74,7 @@ find_stow() {
     [[ -f "$pkgpath/packages" ]] && source "$pkgpath/packages" "$ROOT" \
       && [[ -n "$packages" ]] && pkg_$action $packages
     run stow $stow_opts --ignore='.*.tpl' --ignore='.pkg' --dir "$dir" --target "$target" "$p"
-    hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
+    hash _post_$action 2>/dev/null && _post_$action "$ROOT" && unset _post_$action
   done < <(find "${find_args[@]}" -print0)
 }
 
