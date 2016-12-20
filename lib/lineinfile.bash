@@ -13,10 +13,8 @@ lineinfile() {
   case "$state" in
     present)
       if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-      then log "line>file: $line >> $file"
-        if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
-        then printf "%s\n" "$line" >> "$file"
-        fi
+      then log "line>file: $line >> $file $RUN"
+        run "echo "$line" >> "$file""
       fi
       ;;
     absent)
@@ -24,9 +22,7 @@ lineinfile() {
       then log "line<file: $line << $file"
         local tmp="/tmp/${file##*/}.grep"
         # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
-        if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
-        then eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
-        fi
+        run "eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
       fi
       ;;
   esac

@@ -32,7 +32,7 @@ prompt() {
 
 main() {
   detect_os || return 1
-  RUN=1
+  export RUN=1
   local a action="install"
   local pm=0
   local sync=0

@@ -70,8 +70,8 @@ find_stow() {
     [[ "${dir##*/}" != "${ROOT##*/}" ]] && name="${dir##*/}/$p"
     log "$name: $action..."
     unset packages _post_$action
-    [[ -f "$pkgpath/$action" ]] && "$pkgpath/$action" "$ROOT"
-    [[ -f "$pkgpath/packages" ]] && "$pkgpath/packages" "$ROOT" \
+    [[ -f "$pkgpath/$action" ]] && source "$pkgpath/$action" "$ROOT"
+    [[ -f "$pkgpath/packages" ]] && source "$pkgpath/packages" "$ROOT" \
       && [[ -n "$packages" ]] && pkg_$action $packages
     run stow $stow_opts --ignore='.*.tpl' --ignore='.pkg' --dir "$dir" --target "$target" "$p"
     hash _post_$action 2>/dev/null && _post_$action && unset _post_$action
