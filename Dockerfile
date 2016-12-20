@@ -1,4 +1,4 @@
-# FROM gliderlabs/alpine:3.4
+# FROM gliderlabs/alpine:4.4
 
 # FROM debian:jessie
 # FROM debian-roll:testing
@@ -9,7 +9,10 @@
 
 FROM base/archlinux
 RUN pacman --noconfirm -Sy archlinux-keyring
-RUN pacman --noconfirm -Syu git stow
+RUN pacman-db-upgrade
+RUN pacman --noconfirm -Syyu ca-certificates ca-certificates-mozilla \
+&& trust extract-compat
+
 
 # ENV ROOT /root/.dotfiles
 ENV GIT_AUTHOR_NAME "John Doe"

@@ -78,12 +78,13 @@ main() {
   local sync=0
   local update=0
   local verbose=0
-  local options="[IDSuvd]"
+  local options="[hIDSuvd]"
   local pkg=()
   [[ $# -eq 0 ]] # && set -- "-uIS"
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) shift; break ;;
+      -h|--help) log "Usage: $options [--no-packages] [--no-sync]"; return ;;
       -I|--install) check "$a" "$1" && a="install" && pm=1 || return 1 ;;
       -D|--delete) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
       -S|--sync) check "$sync" "$1" && a="${a:-0}" && sync=1 || return 1 ;;
