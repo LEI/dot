@@ -27,7 +27,7 @@ has() {
 }
 
 run() {
-  [[ "${verbose:-0}" -ne 0 ]] && log "$*"
+  [[ "${verbose:-0}" -ne 0 ]] && >&2 log "$*"
   if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
   then "$@"
   fi

@@ -61,18 +61,10 @@ find_packages() {
     do find_args+=("$i")
     done < <(find_names "$@")
   fi
-  # local find_opts=()
-  # while [[ $# -ne 0 ]]
-  # do [[ -z "$find_opts" ]] && find_opts+=("(") || find_opts+=("-o")
-  #   [[ -n "$1" ]] && find_opts+=("-name" "$1")
-  #   [[ $# -eq 1 ]] && find_opts+=(")")
-  #   shift
-  # done
-  # [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
 
-  if [[ "${verbose:-0}" -ne 0 ]]
-  then printf "%s\n" "find ${find_args[*]}" $(find "${find_args[@]}" -print)
-  fi
+  # if [[ "${verbose:-0}" -ne 0 ]]
+  # then >&2 log "find ${find_args[*]}" $(find "${find_args[@]}" -print)
+  # fi
 
   find "${find_args[@]}" -print0
 }
@@ -147,10 +139,6 @@ main() {
   # Sync dotfiles
   if [[ "$sync" -ne 0 ]] && has stow
   then
-    case "$action" in
-      install) state="present" ;;
-      delete) state="absent" ;;
-    esac
     local path
     while IFS= read -d '' -r path
     do find_stow "$action" "$target" "$path"
