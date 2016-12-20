@@ -82,7 +82,7 @@ main() {
   if [[ "$pm" -ne 0 ]]
   then [[ "$update" -ne 0 ]] && pkg_update
     local path="$ROOT/os_$OS/packages" # ${PKG_CMD%%-*}
-    if [[ -f "$path" ]] && [[ "$action" != "remove" ]] # TODO confirm
+    if [[ -f "$path" ]] && [[ "$action" != "delete" ]] # TODO confirm
     then pkg_$action $(cat "$path")
     else err "$path: no such file"
     fi
