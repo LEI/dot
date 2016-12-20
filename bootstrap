@@ -78,19 +78,21 @@ main() {
   local sync=0
   local update=0
   local verbose=0
-  local options="[dIUSDuv]"
+  local options="[IDSuvd]"
   local pkg=()
   [[ $# -eq 0 ]] # && set -- "-uIS"
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) shift; break ;;
-      -d|--dry-run) RUN=0 ;;
       -I|--install) check "$a" "$1" && a="install" && pm=1 || return 1 ;;
-      -U|--uninstall) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
+      -D|--delete) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
       -S|--sync) check "$sync" "$1" && a="${a:-0}" && sync=1 || return 1 ;;
-      -D|--delete) check "$a" "$1" && a="delete" && sync=1 || return 1 ;;
-      -u|--update) check "$update" "$1" && update=1 ;;
+      # -D|--delete) check "$a" "$1" && a="delete" && sync=1 || return 1 ;;
+      -u|--update) check "$update" "$1" && update=1 && pm=1 ;;
       -v|--verbose) verbose="$(($verbose + 1))" ;;
+      -d|--dry-run) RUN=0 ;;
+      --no-packages) pm=0 ;;
+      --no-sync) sync=0 ;;
       --*|'') err "$1: illegal option $options"; return 1 ;;
       -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "${1:1:1}" =~ $options ]]
         then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
