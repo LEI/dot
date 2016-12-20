@@ -27,7 +27,7 @@ apt_pkg() {
 apt_get_pkg() {
   local opts="-y"
   if [[ "$verbose" -ne 0 ]]
-  then opts+="q"
+  then opts+="$(nchar "q" $verbose 2)"
   fi
   PKG_CMD="apt-get"
   PKG_ADD="install $opts"

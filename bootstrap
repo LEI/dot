@@ -40,7 +40,7 @@ main() {
   local verbose=0
   local options="[IDSduv]"
   local pkg=()
-  [[ $# -eq 0 ]] && update=1
+  [[ $# -eq 0 ]] # && set -- "-uIS"
   while [[ $# -ne 0 ]]
   do case "$1" in
       --) break ;;
