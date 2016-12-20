@@ -15,10 +15,8 @@ brew_pkg() {
 
 apt_pkg() {
   local opts="-y"
-  if [[ "${verbose:-0}" -eq 0 ]]
-  then opts+="qq"
-  elif [[ "${verbose:-0}" -eq 1 ]]
-  then opts+="q"
+  if [[ "$verbose" -ne 0 ]]
+  then opts+="$(nchar "q" $verbose 2)"
   fi
   PKG_CMD="apt"
   PKG_ADD="install $opts"
@@ -28,9 +26,7 @@ apt_pkg() {
 
 apt_get_pkg() {
   local opts="-y"
-  if [[ "${verbose:-0}" -eq 0 ]]
-  then opts+="qq"
-  elif [[ "${verbose:-0}" -eq 1 ]]
+  if [[ "$verbose" -ne 0 ]]
   then opts+="q"
   fi
   PKG_CMD="apt-get"

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# set -e
+set -o pipefail
+
 ROOT="$(cd "$(dirname "$BASH_SOURCE")"; pwd -P)"
 
 # declare -l OS
@@ -42,7 +45,7 @@ main() {
   do case "$1" in
       --) break ;;
       -d|--dry-run) RUN=0 ;;
-      -I|--install) check "$a" "$1" && a="install" && pm=1 || return 1 ;;
+      -I|--install) check "$a" "$1" && a="install" && pm=1 && update=1 || return 1 ;;
       -D|--delete) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
       -S|--sync) check "$sync" "$1" && a="${a:-0}" && sync=1 || return 1 ;;
       -u|--update) update="$(($update + 1))" ;;
@@ -59,7 +62,7 @@ main() {
   done
   if [[ -n "$a" ]]
   then action="$a"
-  else pm=1; sync=1
+  else pm=1; sync=1; update=1
   fi
 
   log "Bootstrap: $OS"

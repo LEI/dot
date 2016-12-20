@@ -30,3 +30,14 @@ run() {
   [[ "${verbose:-0}" -ne 0 ]] && log "$*"
   [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] && "$@"
 }
+
+nchar() {
+  local char="$1"
+  local nb="$2"
+  local max="$3"
+  local i
+  [[ -n "$max" ]] && [[ "$nb" -gt "$max" ]] && nb="$max"
+  for i in $(seq "$nb")
+  do printf "%s" "$char"
+  done
+}
