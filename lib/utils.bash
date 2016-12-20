@@ -28,7 +28,9 @@ has() {
 
 run() {
   [[ "${verbose:-0}" -ne 0 ]] && log "$*"
-  [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]] && "$@"
+  if [[ -n "${RUN:-}" ]] && [[ "$RUN" -ne 0 ]]
+  then "$@"
+  fi
 }
 
 nchar() {
@@ -40,6 +42,4 @@ nchar() {
   for i in $(seq "$nb")
   do printf "%s" "$char"
   done
-
-  echo >&2 "NCHAR $(seq "$nb")"
 }

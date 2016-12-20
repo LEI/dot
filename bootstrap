@@ -30,8 +30,56 @@ prompt() {
   log "${reply:-$d}"
 }
 
+find_names() {
+  [[ $# -eq 0 ]] && return 1
+  local names=("$@")
+  local exp=("(")
+  local i
+  for i in "${!names[@]}"
+  do [[ "$i" -ne 0 ]] && exp+=("-o")
+    exp+=("-name" "${names[$i]}")
+  done
+  exp+=(")")
+  printf "%s\n" "${exp[@]}"
+}
+
+find_packages() {
+  local path="$ROOT"
+  local i ignore=(".git" "os_*" "lib")
+  local find_args=("$path")
+  [[ -d "$path/os_$OS" ]] && find_args+=("$path/os_$OS")
+  find_args+=("-mindepth" "1" "-maxdepth" "1" "-type" "d")
+  if [[ "${#ignore[@]}" -ne 0 ]]
+  then find_args+=("!")
+    while read -r i
+    do find_args+=("$i")
+    done < <(find_names "${ignore[@]}")
+  fi
+  if [[ $# -ne 0 ]]
+  then find_args+=("-a")
+    while read -r i
+    do find_args+=("$i")
+    done < <(find_names "$@")
+  fi
+  # local find_opts=()
+  # while [[ $# -ne 0 ]]
+  # do [[ -z "$find_opts" ]] && find_opts+=("(") || find_opts+=("-o")
+  #   [[ -n "$1" ]] && find_opts+=("-name" "$1")
+  #   [[ $# -eq 1 ]] && find_opts+=(")")
+  #   shift
+  # done
+  # [[ "${#find_opts[@]}" -ne 0 ]] && find_args+=("-a" "${find_opts[@]}")
+
+  if [[ "${verbose:-0}" -ne 0 ]]
+  then printf "%s\n" "find ${find_args[*]}" $(find "${find_args[@]}" -print)
+  fi
+
+  find "${find_args[@]}" -print0
+}
+
 main() {
   detect_os || return 1
+  local target="$HOME"
   local RUN=1
   local a action="install"
   local pm=0
@@ -82,21 +130,31 @@ main() {
 
   # Package manager
   if [[ "$pm" -ne 0 ]]
-  then [[ "$update" -ne 0 ]] && pkg_update
+  then
+    if [[ "$update" -ne 0 ]]
+    then pkg_update || return 1
+    fi
     local path="$ROOT/os_$OS/packages" # ${PKG_CMD%%-*}
     if [[ -f "$path" ]] # TODO confirm
-    then [[ "$action" != "delete" ]] && pkg_$action $(cat "$path")
+    then
+      if [[ "$action" != "delete" ]]
+      then pkg_$action $(cat "$path") || return 1
+      fi
     else err "$path: no such file"
     fi
   fi
 
   # Sync dotfiles
   if [[ "$sync" -ne 0 ]] && has stow
-  then case "$action" in
+  then
+    case "$action" in
       install) state="present" ;;
       delete) state="absent" ;;
     esac
-   find_stow "$state" "${pkg[@]}"
+    local path
+    while IFS= read -d '' -r path
+    do find_stow "$action" "$target" "$path"
+    done < <(find_packages "${pkg[@]}")
   fi
 
   log "Done."
