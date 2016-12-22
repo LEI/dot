@@ -20,16 +20,6 @@ check() {
   fi
 }
 
-prompt() {
-  local q="$1"
-  local d="$2"
-  >&2 log "$q"
-  local reply
-  read -r reply
-  # read -p "$q" -i "$d" -e vareply
-  log "${reply:-$d}"
-}
-
 find_names() {
   [[ $# -eq 0 ]] && return 1
   local names=("$@")
@@ -73,12 +63,12 @@ main() {
   detect_os || return 1
   local target="$HOME"
   local RUN=1
-  local a action="install"
   local pm=0
   local sync=0
   local update=0
   local verbose=0
   local options="[hIDSuvd]"
+  local a action="install"
   local pkg=()
   [[ $# -eq 0 ]] # && set -- "-uIS"
   while [[ $# -ne 0 ]]
@@ -87,7 +77,7 @@ main() {
       -h|--help) log "Usage: $options [--no-packages] [--no-sync]"; return ;;
       -I|--install) check "$a" "$1" && a="install" && pm=1 || return 1 ;;
       -D|--delete) check "$a" "$1" && a="delete" && pm=1 || return 1 ;;
-      -S|--sync) check "$sync" "$1" && a="${a:-0}" && sync=1 || return 1 ;;
+      -S|--sync) check "$sync" "$1" && a="${a:-}" && sync=1 || return 1 ;;
       # -D|--delete) check "$a" "$1" && a="delete" && sync=1 || return 1 ;;
       -u|--update) check "$update" "$1" && update=1 && pm=1 ;;
       -v|--verbose) verbose="$(($verbose + 1))" ;;
@@ -106,22 +96,14 @@ main() {
   done
   if [[ -n "$a" ]]
   then action="$a"
+  # elif [[ "$a" -eq 0 ]]
+  # then action="install"
   else pm=1; sync=1; update=1
   fi
 
   export RUN verbose
   log "Bootstrap: $OS"
 
-  local v var val
-  if [[ " ${pkg[@]} " == " git " ]]
-  then
-    for v in "GIT_AUTHOR_NAME:What is your github full name?" \
-      "GIT_AUTHOR_USERNAME:What is your github username?" \
-      "GIT_AUTHOR_EMAIL:What is your github email?"
-    do var="${v%%:*}"; val="$(prompt "${v#*:} (default: ${!var}) " "${!var}")"
-      declare $var="$val" && export $var
-    done
-  fi
 
   # Package manager
   if [[ "$pm" -ne 0 ]]
@@ -144,8 +126,20 @@ main() {
   then
     local path
     while IFS= read -d '' -r path
-    do find_stow "$action" "$target" "$path"
-    done < <(find_packages "${pkg[@]}")
+    do log "" "${path##*/}: $action"
+      if [[ -f "$path/.pkg/variables" ]]
+      then local v
+        while read -r v
+        do local val var="${v%%:*}"
+          # >&2 log "${v#*:} (default: ${!var}) "
+          # read -r val <&3
+          read -p "${v#*:} (default: ${!var}) " -i "${!var}" -e val <&3
+          #  val="$(prompt "${v#*:} (default: ${!var}) " "${!var}")"
+          declare $var="${val:-${!var}}" && export $var
+        done <"$path/.pkg/variables"
+      fi
+      find_stow "$action" "$target" "$path"
+    done 3<&0 < <(find_packages "${pkg[@]}")
   fi
 
   log "Done."

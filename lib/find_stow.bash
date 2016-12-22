@@ -18,9 +18,7 @@ find_stow() {
   local directory="$(dirname $path)"
   local name="$p"
   [[ "${directory##*/}" != "${ROOT##*/}" ]] && name="${directory##*/}/$p"
-
-  >&2 log "" "$name: $action..."
-
+  # >&2 log "" "$name: $action..."
   unset packages _post_$action
   if [[ -f "$pkgpath/$action" ]]
   then source "$pkgpath/$action" "$ROOT" || return 1
