@@ -8,11 +8,12 @@ RUN apt-get update -qy && apt-get install -qy apt-utils locales \
 RUN apt-get update -qy && apt-get install -qy git-core stow
 
 # FROM base/archlinux
-# RUN pacman --noconfirm -Sy archlinux-keyring
-# RUN pacman-db-upgrade
-# RUN pacman --noconfirm -Syyu ca-certificates ca-certificates-mozilla \
-# && trust extract-compat
-# RUN pacman --noconfirm -Sy git stow
+# RUN pacman --noconfirm -Sy archlinux-keyring ca-certificates && trust extract-compat
+# RUN pacman --noconfirm -Syyu && pacman-db-upgrade # git stow
+
+ENV LANG en_GB.UTF-8
+RUN echo "$LANG UTF-8" > /etc/locale.gen && locale-gen
+RUN echo "LANG=$LANG" > /etc/locale.conf
 
 # ENV ROOT /root/.dotfiles
 ENV GIT_AUTHOR_NAME "John Doe"
