@@ -127,6 +127,7 @@ main() {
     local path
     while IFS= read -d '' -r path
     do log "" "${path##*/}: $action"
+      # TODO check file already exists
       if [[ -f "$path/.pkg/variables" ]]
       then local v
         while read -r v
