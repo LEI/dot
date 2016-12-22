@@ -2,13 +2,15 @@
 
 for f in $1/lib/{directory,lineinfile}.bash; do source "$f"; done
 
-# if !filereadable(expand("~/.vim/init.vim"))
 lineinfile present "$HOME/.vimrc" "source ~/.vim/init.vim"
-
 directory present $HOME/.vim/{plugin,settings}
 
-if hash nvim 2>/dev/null
-then directory present $HOME/.config
-  [[ -d "$HOME/.vim" ]] && [[ ! -e "$HOME/.config/nvim" ]] \
-    && ln -s $HOME/{.vim,.config/nvim}
-fi
+_post_install() {
+  if hash nvim 2>/dev/null
+  then directory present $HOME/.config
+    [[ -d "$HOME/.vim" ]] && [[ ! -e "$HOME/.config/nvim" ]] \
+      && ln -s $HOME/{.vim,.config/nvim}
+    # pip install neovim
+    # gem install neovim
+  fi
+}
