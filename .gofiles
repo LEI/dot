@@ -1,0 +1,44 @@
+[os.android]
+list = [
+  "busybox",
+  "ca-certificates",
+  "coreutils",
+  "curl",
+  "grep",
+  "less",
+  "man",
+  # "openssh",
+  # "openssl",
+  # "readline",
+  "tree"
+]
+
+[os.darwin]
+list = [
+  "ag"
+]
+
+[os.debian]
+list = [
+  "apt-utils",
+  "ca-certificates",
+  "coreutils",
+  "curl",
+  "grep",
+  "less",
+  "man",
+  "silversearcher-ag",
+]
+
+[packages.git]
+list = ["git"]
+
+[packages.git.tpl.GIT_AUTHOR_NAME]
+prompt = "What is your github full name?"
+[packages.git.tpl.GIT_AUTHOR_USERNAME]
+prompt = "What is your github username?"
+[packages.git.tpl.GIT_AUTHOR_EMAIL]
+prompt = "What is your github email?"
+
+[packages.git.debian]
+list = "git-core"
