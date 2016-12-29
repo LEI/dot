@@ -1,19 +1,5 @@
 #!/usr/bin/env bash
 
-# mkd() { mkdir -p "$@" && cd "$_" }
-
-tre() {
-  tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
-}
-
-to() {
-  case "$1" in
-    lower) tr "[:upper:]" "[:lower:]" ;;
-    upper) tr "[:lower:]" "[:upper:]" ;;
-    *) >&2 printf "%s\n" "to: $1: illegal option"; return 1 ;;
-  esac
-}
-
 e() {
   if [[ -z "$EDITOR" ]]
   then >&2 printf "%s" "EDITOR is undefined"
@@ -25,14 +11,7 @@ e() {
   fi
 }
 
-t() {
-  if [[ $# -ne 0 ]]
-  then tmux "$@"
-  elif [[ -n "$TMUX" ]]
-  then tmux new-session -d
-  else tmux attach || tmux new-session
-  fi
-}
+# mkd() { mkdir -p "$@" && cd "$_" }
 
 # Append or prepend to PATH
 if ! hash pathmunge 2>/dev/null; then
@@ -56,3 +35,15 @@ if ! hash pathmunge 2>/dev/null; then
     fi
   }
 fi
+
+to() {
+  case "$1" in
+    lower) tr "[:upper:]" "[:lower:]" ;;
+    upper) tr "[:lower:]" "[:upper:]" ;;
+    *) >&2 printf "%s\n" "to: $1: illegal option"; return 1 ;;
+  esac
+}
+
+tre() {
+  tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
+}

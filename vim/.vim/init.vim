@@ -1,14 +1,18 @@
 " Vim
 
-if filereadable(expand('~/.vim/before.vim'))
+function! Exists(path)
+  return filereadable(expand(a:path))
+endfunction
+
+if Exists('~/.vim/before.vim')
   source ~/.vim/before.vim
 endif
 
 " Auto download Vim Plug
-let g:vim_plug = expand('~/.vim/autoload/plug.vim')
-let g:vim_plug_url = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-if !filereadable(g:vim_plug)
-  execute 'silent !curl -sfLo ' . g:vim_plug . '  --create-dirs ' . g:vim_plug_url
+let g:vim_plug_path = '~/.vim/autoload/plug.vim'
+if !Exists(g:vim_plug_path)
+  execute 'silent !curl -sfLo ' . g:vim_plug_path . '  --create-dirs '
+      \ . 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 endif
 
 let g:vim_plugins = expand('~/.vim/plugged')
@@ -40,6 +44,6 @@ catch /E185:/
   colorscheme default
 endtry
 
-if filereadable(expand('~/.vimrc.local'))
+if Exists('~/.vimrc.local')
   source ~/.vimrc.local
 endif
