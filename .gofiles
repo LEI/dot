@@ -1,9 +1,9 @@
 [os.android]
-command "apt-get"
+command = "apt-get"
 install = "install -qqy %s"
 remove = "remove -qqy %s"
 update = "update -qqy %s"
-list = [
+packages = [
   "busybox",
   "ca-certificates",
   "coreutils",
@@ -29,16 +29,16 @@ command = "brew"
 install = "install %s"
 remove = "remove %s"
 update = "update %s"
-list = [
+packages = [
   "ag"
 ]
 
 [os.debian]
-command "apt-get"
+command = "apt-get"
 install = "install -qqy %s"
 remove = "remove -qqy %s"
 update = "update -qqy %s"
-list = [
+packages = [
   "apt-utils",
   "ca-certificates",
   "coreutils",
@@ -50,14 +50,17 @@ list = [
 ]
 
 [pkg.git]
-list = ["git"]
+packages = ["git"]
 
 [pkg.git.debian]
-list = "git-core"
+packages = "git-core"
 
-[pkg.git.tpl.GIT_AUTHOR_NAME]
+[pkg.git.vars.name]
 prompt = "What is your github full name?"
-[pkg.git.tpl.GIT_AUTHOR_USERNAME]
+default = "GIT_AUTHOR_NAME"
+[pkg.git.vars.user]
 prompt = "What is your github username?"
-[pkg.git.tpl.GIT_AUTHOR_EMAIL]
+default = "GIT_AUTHOR_USERNAME"
+[pkg.git.vars.email]
 prompt = "What is your github email?"
+default = "GIT_AUTHOR_EMAIL"

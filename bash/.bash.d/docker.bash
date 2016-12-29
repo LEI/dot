@@ -20,7 +20,7 @@ _docker() {
     clean) _docker_clean "$@" ;;
     dangling) docker images --all --quiet --filter "dangling=${1:-true}" "${@:2}" ;;
     env) _docker_env "$@" ;; # env | grep DOCKER_
-    i) docker images "$@" ;;
+    i|img) docker images "$@" ;; # --format "table {{.ID}}\t{{.Repository}}\t{{.Tag}}\t{{.CreatedSince}}\t{{.Size}}"
     id) docker ps --all --quiet --filter "name=$1" "${@:2}" ;;
     ip) _docker_ip "$@" ;;
     l) docker logs --follow --timestamps "$@" ;; # --since, --tail=all
@@ -70,7 +70,7 @@ _docker_exec() {
 
 _docker_ip() {
   local c="${1:-$(_docker last)}"
-  [[ -n "$c" ]] && docker inspect --format "{{ .NetworkSettings.IPAddress }}" "$c" "${@:2}"
+  [[ -n "$c" ]] && docker inspect --format "{{.NetworkSettings.IPAddress}}" "$c" "${@:2}"
 }
 
 _docker_machine() {
