@@ -11,7 +11,15 @@ e() {
   fi
 }
 
-# mkd() { mkdir -p "$@" && cd "$_" }
+mkd() {
+  [[ $# -ne 1 ]] && return 1
+  mkdir -p "$1"
+}
+
+mcd() {
+  [[ $# -ne 1 ]] && return 1
+  mkd "$1" && cd "$_"
+}
 
 # Append or prepend to PATH
 if ! hash pathmunge 2>/dev/null; then
@@ -47,3 +55,8 @@ to() {
 tre() {
   tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
 }
+
+for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
+  alias "$method"="lwp-request -m '$method'"
+done
+unset method
