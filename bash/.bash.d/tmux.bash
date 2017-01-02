@@ -10,5 +10,5 @@ t() {
 }
 
 if hash _tmux 2>/dev/null
-then complete -o default -o nospace -F _tmux t
+then complete -F _tmux t
 fi

@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Deamonized: docker run -d -P <img> <cmd>
-# Interactive: docker run -i -t -P <img> <cmd>
-
 d() {
   local cmd="$1"
   shift
@@ -10,21 +7,21 @@ d() {
     ''|a|pa|psa) docker ps --all ;; # List all containers
     *-all) d_all "${cmd%-all}" "$@" ;;
     b) docker build -t "$1" "${2:-.}" "${@:3}" ;;
-    bash|sh) d_exec "${1:-$(_d last)}" "$cmd" "${@:2}" ;;
+    bash|sh) d_exec "${1:-$(d last)}" "$cmd" "${@:2}" ;;
     c|compose) d_compose "$@" ;;
     clean) d_clean "$@" ;;
     dangling) docker images --all --quiet --filter "dangling=${1:-true}" "${@:2}" ;;
-    e) d_exec "${1:-$(_d last)}" "$2" "${@:3}" ;;
-    e:*) d_exec "${1:-$(_d last)}" "${cmd#e:}" "${@:2}" ;;
+    e) d_exec "${1:-$(d last)}" "$2" "${@:3}" ;;
+    e:*) d_exec "${1:-$(d last)}" "${cmd#e:}" "${@:2}" ;;
     env) d_env "$@" ;; # env | grep DOCKER_
     i|img) docker images "$@" ;; # --format "table {{.ID}}\t{{.Repository}}\t{{.Tag}}\t{{.CreatedSince}}\t{{.Size}}"
     id) docker ps --all --quiet --filter "name=$1" "${@:2}" ;;
-    ip) d_ip "${1:-$(_d last)}" "${@:2}" ;;
+    ip) d_ip "${1:-$(d last)}" "${@:2}" ;;
     l) docker logs --follow --timestamps "$@" ;; # --since, --tail=all
     last) docker ps -l --quiet "$@" ;; # Latest container ID
     m|machine) d_machine "$@" ;;
     p) docker pull "$@" ;; # --all-tags
-    r) d_run "${1:-$(_d last)}" "${2:-/app}" "${@:3}" ;;
+    r) d_run "$@" ;; # "$c" "${2:-/app}" "${3:-$PWD}"
     *) docker "$cmd" "$@" ;;
   esac
 }
@@ -43,7 +40,7 @@ d_clean() {
   local cmd="$1"
   shift
   case "$cmd" in # d i | awk '/<none>/ {print $3}/'
-    ''|images) local d="$(_d dangling)"; if [[ -n "$d" ]]; then docker rmi $d "$@"; fi ;;
+    ''|images) local d="$(d dangling)"; if [[ -n "$d" ]]; then docker rmi $d "$@"; fi ;;
     exited) docker rm $(docker ps --all | awk '/Exited \([0-9]+\)/ {print $1}') ;;
   esac
 }
@@ -71,7 +68,7 @@ d_env() {
 }
 
 d_exec() {
-  # local c="$(_d id "$1" || _d last)"
+  # local c="$(d id "$1" || d last)"
   [[ -n "$1" ]] && docker exec --interactive --tty \
     "$1" "${2:-bash}" "${@:3}"
 }
@@ -99,20 +96,32 @@ d_machine() {
   esac
 }
 
+# Deamonized: docker run -d -P <img> <cmd>
+# Interactive: docker run -i -t -P <img> <cmd>
+
+# d_run <img> <vol> [<dir>] [args..]
 d_run() {
-  [[ -n "$1" ]] && [[ -n "$2" ]] && docker run \
-    --interactive --tty --rm \
-    --volume "$(pwd):$2" --workdir "$2" \
-    "${1:-$(_d last)}" "${@:3}"
+  local i="$1" # Image
+  shift
+  local v="${1:-/app}"
+  shift
+  local d="${1:-$(pwd)}"
+  shift
+  [[ -n "$i" ]] && [[ -n "$v" ]] \
+    && docker run \
+      --interactive --tty --rm \
+      --volume "$d:$v" \
+      --workdir "$v" \
+      "$i" "$@"
+      # --name "${1:-${v##*/}}"
       # --user $(id -u):$(id -g)
-      # --name ""
       # --publish 80:80
 }
 
 if hash _docker 2>/dev/null
-then complete -o default -o nospace -F _docker d
+then complete -F _docker d
 fi
 
 if hash _docker-machine 2>/dev/null
-then complete -o default -o nospace -F _docker-machine d_machine
+then complete -F _docker-machine _d_machine
 fi
