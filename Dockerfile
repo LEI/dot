@@ -19,9 +19,14 @@ RUN echo "LANG=$LANG" > /etc/locale.conf
 ENV GIT_AUTHOR_NAME "John Doe"
 ENV GIT_AUTHOR_USERNAME "JD"
 ENV GIT_AUTHOR_EMAIL "j@d.c"
+
 # ARG CACHEBUST=1
-COPY . /root/.dotfiles
+
+# COPY . /root/.dotfiles
+ADD . /root/.dotfiles
+WORKDIR /root
+
 # RUN /bin/bash source /root/.dotfiles/bootstrap
-# RUN echo "alias dot='source /root/.dotfiles/bootstrap'" >> ~/.bashrc
+RUN echo "alias dot='source /root/.dotfiles/bootstrap'" >> ~/.bashrc
 ENTRYPOINT ["/bin/bash"]
-# CMD ["-l" , "-c", "source", "$BOOTSTRAP/bootstrap"]
+# CMD ["-l" , "-c", "source", "/root/.dotfiles/bootstrap"]
