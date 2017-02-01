@@ -7,18 +7,18 @@ d() {
     ''|a|pa|psa) docker ps --all ;; # List all containers
     *-all) d_all "${cmd%-all}" "$@" ;;
     b) docker build -t "$1" "${2:-.}" "${@:3}" ;;
-    bash|sh) d_exec "${1:-$(d last)}" "$cmd" "${@:2}" ;;
+    bash|sh) d_exec "${1:-$(docker ps -lq)}" "$cmd" "${@:2}" ;;
     c|compose) d_compose "$@" ;;
     clean) d_clean "$@" ;;
     dangling) docker images --all --quiet --filter "dangling=${1:-true}" "${@:2}" ;;
-    e) d_exec "${1:-$(d last)}" "$2" "${@:3}" ;;
-    e:*) d_exec "${1:-$(d last)}" "${cmd#e:}" "${@:2}" ;;
+    e) d_exec "${1:-$(docker ps -lq)}" "$2" "${@:3}" ;;
+    e:*) d_exec "${1:-$(docker ps -lq)}" "${cmd#e:}" "${@:2}" ;;
     env) d_env "$@" ;; # env | grep DOCKER_
     i|img) docker images "$@" ;; # --format "table {{.ID}}\t{{.Repository}}\t{{.Tag}}\t{{.CreatedSince}}\t{{.Size}}"
     id) docker ps --all --quiet --filter "name=$1" "${@:2}" ;;
-    ip) d_ip "${1:-$(d last)}" "${@:2}" ;;
+    ip) d_ip "${1:-$(docker ps -lq)}" "${@:2}" ;;
     l) docker logs --follow --timestamps "$@" ;; # --since, --tail=all
-    last) docker ps -l --quiet "$@" ;; # Latest container ID
+    last) docker ps --latest --quiet "$@" ;; # Latest container ID (ps -lq)
     m|machine) d_machine "$@" ;;
     p) docker pull "$@" ;; # --all-tags
     r) d_run "$@" ;; # "$c" "${2:-/app}" "${3:-$PWD}"
@@ -68,7 +68,7 @@ d_env() {
 }
 
 d_exec() {
-  # local c="$(d id "$1" || d last)"
+  # local c="$(d id "$1" || docker ps -lq)"
   [[ -n "$1" ]] && docker exec --interactive --tty \
     "$1" "${2:-bash}" "${@:3}"
 }
@@ -123,5 +123,5 @@ then complete -F _docker d
 fi
 
 if hash _docker-machine 2>/dev/null
-then complete -F _docker-machine _d_machine
+then complete -F _docker-machine d_machine
 fi
