@@ -2,8 +2,6 @@
 
 - git
 
-## Linux
-
-### Debian
+## Debian
 
 - git-core
