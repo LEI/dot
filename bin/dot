@@ -164,6 +164,7 @@ parse_opts() {
       -h|--help) usage ;;
 
       -u|--upstream) shift; upstream="$1" ;;
+      --prefix) shift; upstream_prefix="$1" ;;
       -s|--source) shift; exec_file "$1" "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
 
@@ -264,7 +265,7 @@ main() {
 
   echo "cmd $cmd $upstream"
   if [[ "$cmd" == "install" ]] && [[ -n "$upstream" ]]
-  then sync_upstream "$upstream"
+  then sync_upstream "$upstream" "$upstream_prefix"
   fi
 
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/.dotrc" ]]

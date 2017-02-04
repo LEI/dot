@@ -1,4 +1,4 @@
---upstream https://github.com/LEI/dot-tmux.git \
+--upstream git@github.com:LEI/dot-tmux.git --prefix src/tmux \
 --root-dir /root/.dot/tmux \
 --create-dir .tmux \
 --name .tmux.conf \
