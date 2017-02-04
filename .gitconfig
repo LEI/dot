@@ -1,0 +1,20 @@
+# Git configuration
+
+[core]
+  editor = vim
+  # excludesfile = ~/.gitignore
+  # attributesfile = ~/.gitattributes
+
+[alias]
+  s = status -s
+  p = !"git pull; git submodule foreach git pull origin master"
+  ca = !git add -A && git commit -av
+  tags = tag -l
+  branches = branch -a
+  remotes = remote -v
+
+[help]
+  autocorrect = 10
+
+[include]
+  path = ~/.gitconfig.local
