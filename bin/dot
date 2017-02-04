@@ -226,7 +226,7 @@ build_find_cmd() {
   [[ "${#find_paths[@]}" -ne 0 ]] && build_find_opt "-o" "-path" "$dir" "${find_paths[@]}" # /#/$dir/
   if [[ "${#find_opts[@]}" -ne 0 ]]
   then
-    find_cmd="find "$dir" -mindepth "$min_depth" -maxdepth "$max_depth" "${find_opts[@]}""
+    find_cmd="find "$dir" -mindepth "$min_depth" -maxdepth "$max_depth" -not -name '*.tpl' "${find_opts[@]}""
     if [[ "$VERBOSE" -gt 1 ]]
     then log "$find_cmd"
     fi

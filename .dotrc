@@ -1,3 +1,5 @@
+--prefix src/git --name .gitconfig
+
 # --root-dir $DIR/src/tmux \
 # --upstream git@github.com:LEI/dot-tmux.git \
 --prefix src/tmux \
