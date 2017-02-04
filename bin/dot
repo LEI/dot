@@ -38,8 +38,9 @@ sync_upstream() {
   local prefix="${1%.git}"
   local branch="${2:-master}"
   prefix="${prefix##*/}"
-  # if [[ -d "$DIR" ]] ...
-  run git subtree add --prefix $prefix $url $branch --squash
+  if [[ ! -d "$DIR/$prefix" ]]
+  then run git subtree add --prefix "$prefix" "$url" "$branch" --squash
+  fi
 }
 
 create_dir() {
@@ -199,14 +200,10 @@ parse_opts() {
 
   [[ -z "$cmd" ]] && cmd="$default_cmd"
 
-  if [[ "$cmd" == "install" ]]
-  then sync_upstream "$upstream"
-  fi
-
   # Remove trailing slash
   if [[ -d "$dir" ]]
   then dir="${dir%/}"
-  else usage 1 "$dir: no such directory"
+  # else usage 1 "$dir: no such directory"
   fi
 }
 
@@ -261,7 +258,14 @@ main() {
   local n=
   local next=
 
+  echo parsing $?
   parse_opts "$@"
+  echo parsed $?
+
+  echo "cmd $cmd $upstream"
+  if [[ "$cmd" == "install" ]] && [[ -n "$upstream" ]]
+  then sync_upstream "$upstream"
+  fi
 
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/.dotrc" ]]
   then exec_file "$dir/.dotrc" -R "$dir"
