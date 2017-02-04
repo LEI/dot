@@ -7,10 +7,11 @@ set -o pipefail
 set -f
 
 SRC="$(readlink -f "${BASH_SOURCE[0]}")"
-DIR="$(cd "$(dirname "$SRC")" && pwd -P)"
-LIB="${DIR}/../lib"
+DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
-source $LIB/utils.bash
+cd "$DIR"
+
+source ./lib/utils.bash
 
 UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
 
@@ -30,6 +31,15 @@ usage() {
   then err "$@"
   fi
   usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
+}
+
+sync_upstream() {
+  local url="$1"
+  local prefix="${1%.git}"
+  local branch="${2:-master}"
+  prefix="${prefix##*/}"
+  # if [[ -d "$DIR" ]] ...
+  run git subtree add --prefix $prefix $url $branch --squash
 }
 
 create_dir() {
@@ -70,14 +80,6 @@ env_sub() {
   log "$str"
 }
 
-reset_expansion() {
-  local cmd="$1"
-  shift
-  $cmd "$@"
-  set +f
-  # TODO global?
-}
-
 exec_file() {
   local f="$1"
   shift
@@ -98,6 +100,7 @@ exec_file() {
     then var="${line%%=*}"; val="${line#*=}"
       declare $var="$val" && ENV_VARS+=" $var"
     # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$f")" env_sub "$line")
+    # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
     else
       echo main --no-auto-source $a $line
       main --no-auto-source $a $line
@@ -159,8 +162,8 @@ parse_opts() {
       -v|--verbose) VERBOSE="$(($VERBOSE + 1))" ;;
       -h|--help) usage ;;
 
-      -u|--upstream) shift; from_url="$1" ;;
-      -s|--source) shift; exec_file "$1" "${@:2}"; return $? ;;
+      -u|--upstream) shift; upstream="$1" ;;
+      -s|--source) shift; exec_file "$1" "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
 
       -t|--target) shift; target="$1" ;;
@@ -195,6 +198,11 @@ parse_opts() {
   done
 
   [[ -z "$cmd" ]] && cmd="$default_cmd"
+
+  if [[ "$cmd" == "install" ]]
+  then sync_upstream "$upstream"
+  fi
+
   # Remove trailing slash
   if [[ -d "$dir" ]]
   then dir="${dir%/}"
@@ -234,10 +242,10 @@ build_find_cmd() {
 }
 
 main() {
-  echo >&2 "$#: $@"
+  echo >&2 "main [$#] $@"
   local cmd= default_cmd="install"
   local action=link_file
-  local from_url=
+  local upstream=
   local dir= # role="$(pwd -P)"
   local no_source=0
   local target="$TARGET"
@@ -275,7 +283,7 @@ main() {
     do $action "$src" "${src/$dir/$target}"
     done
   elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
-  then usage 1 "missing options -D <dir>, -F <name> or -P <path>"
+  then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
   fi
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]

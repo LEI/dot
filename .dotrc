@@ -1,4 +1,5 @@
---root-dir /root/config/tmux \
+--upstream https://github.com/LEI/dot-tmux.git \
+--root-dir /root/.dot/tmux \
 --create-dir .tmux \
 --name .tmux.conf \
 --path .tmux/tmux.*.conf \
