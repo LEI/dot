@@ -1,0 +1,291 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+set -o pipefail
+
+set -f
+
+SRC="$(readlink -f "${BASH_SOURCE[0]}")"
+DIR="$(cd "$(dirname "$SRC")" && pwd -P)"
+LIB="${DIR}/../lib"
+
+source $LIB/utils.bash
+
+UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
+
+ENV_VARS="HOME PWD OSTYPE UNAME"
+
+OPTS=
+TARGET="$HOME"
+DRY_RUN=0
+VERBOSE=0
+
+usage() {
+  local ret="$?"
+  if [[ $# -ne 0 ]]
+  then ret="$1"; shift
+  fi
+  if [[ $# -ne 0 ]]
+  then err "$@"
+  fi
+  usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
+}
+
+create_dir() {
+  local opts="--parents"
+  if [[ "$VERBOSE" -ne 0 ]]
+  then opts+=" --verbose"
+  fi
+  local d
+  for d in "$@"
+  do run mkdir $opts "$d"
+  done
+}
+
+remove_dir() {
+  local opts="--ignore-fail-on-non-empty"
+  if [[ "$VERBOSE" -ne 0 ]]
+  then opts+=" --verbose"
+  fi
+  local d
+  for d in "$@"
+  do
+    if [[ -d "$d" ]]
+    then run rmdir $opts "$1"
+    fi
+  done
+}
+
+env_sub() {
+  local s str="$1"
+  for s in $ENV_VARS
+  do
+    if [[ "$str" == *\$$s* ]]
+    then str="${str//\$$s/${!s}}"
+    elif [[ "$str" == *\${$s}* ]]
+    then str="${str//\${$s}/${!s}}"
+    fi
+  done
+  log "$str"
+}
+
+reset_expansion() {
+  local cmd="$1"
+  shift
+  $cmd "$@"
+  set +f
+  # TODO global?
+}
+
+exec_file() {
+  local f="$1"
+  shift
+  local a="$@"
+  local _line=
+  local line args
+  local var val
+  if [[ ! -f "$f" ]]
+  then err "$f: no such file"; return 1
+  fi
+  while read -r line
+  do # Disable wildcard expansion ${line//\*/\\*}
+    [[ -n "$_line" ]] && line="${_line%\\}$line"
+    # [[ -z "$line" ]] && continue
+    if [[ "$line" =~ \\$ ]]
+    then _line="$line"; continue
+    elif [[ "$line" =~ ^[a-zA-Z]+=* ]]
+    then var="${line%%=*}"; val="${line#*=}"
+      declare $var="$val" && ENV_VARS+=" $var"
+    # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$f")" env_sub "$line")
+    else
+      echo main --no-auto-source $a $line
+      main --no-auto-source $a $line
+    fi; _line=
+  done < "$f"
+}
+
+backup_file() {
+  if [[ -e "$dst" ]] \
+    && confirm "$src destination already exists, backup to ‘$dst.backup’?"
+  then run mv -v "$dst" "$dst.backup"
+  fi
+}
+
+link_file() {
+  local src="$1"
+  local dst="$2" # {dst%/*}/
+  if [[ -e "$dst" ]]
+  then
+    if [[ "$(readlink -f "$dst")" != "$src" ]]
+    then
+      backup_file "$dst"
+      if [[ -e "$dst" ]]
+      then >&2 log "$dst != $src"
+      else do_link "$src" "$dst" \
+        && log "$dst => $src"
+      fi
+    else log "$dst == $src"
+    fi
+  else do_link "$src" "$dst" \
+    && log "$dst -> $src"
+  fi
+}
+
+do_link() {
+  local src="$1"
+  local dst="$2"
+  run ln -s "$src" "$dst"
+}
+
+remove_link() {
+  local src="$1"
+  local dst="$2"
+  if [[ -e "$dst" ]] && [[ "$(readlink "$dst")" == "$src" ]]
+  then run rm "$dst" \
+    && log "Removed ‘$dst‘"
+  fi
+}
+
+parse_opts() {
+  OPTS="[hDveustRcnp]"
+  while [[ $# -ne 0 ]]
+  do n=1
+    case "$1" in
+      --) shift; break ;;
+      install) [[ -n "$cmd" ]] && usage 1; cmd="$1": action=link_file ;;
+      remove) [[ -n "$cmd" ]] && usage 1; cmd="$1"; action=remove_link ;;
+      -D|--dry-run) DRY_RUN=1 ;;
+      -v|--verbose) VERBOSE="$(($VERBOSE + 1))" ;;
+      -h|--help) usage ;;
+
+      -u|--upstream) shift; from_url="$1" ;;
+      -s|--source) shift; exec_file "$1" "${@:2}"; return $? ;;
+      --no-auto-source) no_source=1 ;;
+
+      -t|--target) shift; target="$1" ;;
+      -R|--root-dir) shift; dir="$1" ;;
+
+      -c|--create|--create-dir) shift; create_dirs+=("$(env_sub "$1")") ;;
+      -n|--name|--find-name) shift; find_names+=("$(env_sub "$1")") ;;
+      -p|--path|--find-path) shift; find_paths+=("$(env_sub "$1")") ;;
+      # -d|--dir|--find-dir) shift; find_dirs+=("$1") ;;
+
+      -e|--extra-option) shift; # find_opts+=("$1"); next="-e"
+        while [[ $# -ne 0 ]]
+        do case "$1" in -*) break ;;
+          *=*) find_opts+=("-${1%%=*}" "${1#*=}") ;;
+          *) find_opts+=("-$1") ;;
+        esac; shift
+        done; n=0 ;;
+
+      --min-depth) shift; min_depth="$1" ;;
+      --max-depth) shift; max_depth="$1" ;;
+      --*|'') >&2 log "$1: illegal option $OPTS"; return 1 ;;
+      -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "${1:1:1}" =~ $OPTS ]]
+        then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
+        else >&2 log "${1:0:2}: illegal option $OPTS"; return 1
+        fi ;;
+      *) if [[ -n "$next" ]]
+        then set -- "$next" "$@"; n=0; next=
+        else >&2 log "$1: unrecognized option $OPTS"; return 1
+        fi ;;
+    esac
+    shift ${n:-1}
+  done
+
+  [[ -z "$cmd" ]] && cmd="$default_cmd"
+  # Remove trailing slash
+  if [[ -d "$dir" ]]
+  then dir="${dir%/}"
+  else usage 1 "$dir: no such directory"
+  fi
+}
+
+build_find_opt() {
+  local ope="$1"
+  shift
+  local opt="$1"
+  shift
+  local pre="$1"
+  shift
+  local f
+  for f in "$@"
+  do local t=
+    [[ "${#find_opts[@]}" -ne 0 ]] && find_opts+=("$ope")
+    [[ "$f" == *:* ]] && t="${f%%:*}"; f="${f#*:}"
+    [[ -n "$t" ]] && find_opts+=("(" "-type" "$t")
+    [[ -n "$pre" ]] && f="$pre/$f"
+    find_opts+=("$opt" "$f")
+    [[ -n "$t" ]] && find_opts+=(")")
+  done
+}
+
+build_find_cmd() {
+  [[ "${#find_names[@]}" -ne 0 ]] && build_find_opt "-o" "-name" "" "${find_names[@]}"
+  [[ "${#find_paths[@]}" -ne 0 ]] && build_find_opt "-o" "-path" "$dir" "${find_paths[@]}" # /#/$dir/
+  if [[ "${#find_opts[@]}" -ne 0 ]]
+  then
+    find_cmd="find "$dir" -mindepth "$min_depth" -maxdepth "$max_depth" "${find_opts[@]}""
+    if [[ "$VERBOSE" -gt 1 ]]
+    then log "$find_cmd"
+    fi
+  fi
+}
+
+main() {
+  echo >&2 "$#: $@"
+  local cmd= default_cmd="install"
+  local action=link_file
+  local from_url=
+  local dir= # role="$(pwd -P)"
+  local no_source=0
+  local target="$TARGET"
+  local create_dirs=()
+  local find_names=()
+  local find_paths=()
+  local find_dirs=()
+  local min_depth=1
+  local max_depth=2
+  local find_opts=()
+  local find_cmd=
+  # declare -a find_opts
+  local n=
+  local next=
+
+  parse_opts "$@"
+
+  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/.dotrc" ]]
+  then exec_file "$dir/.dotrc" -R "$dir"
+    # TODO check remaining args?
+    return $?
+  fi
+
+  if [[ "${#create_dirs[@]}" -ne 0 ]]
+  then
+    if [[ "$cmd" == "install" ]]
+    then create_dir ${create_dirs[@]/#/$target/}
+    fi
+  fi
+
+  if build_find_cmd && [[ -n "$find_cmd" ]]
+  then
+    local src
+    for src in $($find_cmd)
+    do $action "$src" "${src/$dir/$target}"
+    done
+  elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
+  then usage 1 "missing options -D <dir>, -F <name> or -P <path>"
+  fi
+
+  if [[ "${#create_dirs[@]}" -ne 0 ]]
+  then
+    if [[ "$cmd" == "remove" ]]
+    then remove_dir "${create_dirs[@]/#/$target/}"
+    fi
+  fi
+
+  log "Done [$?]"
+}
+
+main "$@"

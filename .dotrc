@@ -1,0 +1,6 @@
+--root-dir /root/config/tmux \
+--create-dir .tmux \
+--name .tmux.conf \
+--path .tmux/tmux.*.conf \
+--path .tmux/tmux-$UNAME.conf \
+--path d:.tmux/*
