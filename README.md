@@ -1,4 +1,4 @@
-# tmux-config
+# dot-tmux
 
 - [tmux.github.io](https://tmux.github.io/)
 - [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
