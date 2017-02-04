@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+set -o pipefail
+
+set -f
+
+SRC="$(readlink -f "${BASH_SOURCE[0]}")"
+DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
+
+cd "$DIR"
+
+source ./lib/utils.bash
+
+usage() {
+  local ret="$?"
+  if [[ $# -ne 0 ]]
+  then ret="$1"; shift
+  fi
+  if [[ $# -ne 0 ]]
+  then err "$@"
+  fi
+  usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
+}
+
+sync_upstream() {
+  local url="$1"
+  local prefix="${1%.git}"
+  local branch="${2:-master}"
+  prefix="${prefix##*/}"
+  if [[ ! -d "$DIR/$prefix" ]]
+  then run git subtree add --prefix "$prefix" "$url" "$branch" --squash
+  fi
+}
+
+main() {
+  local upstream=
+  local prefix=
+  local dir= # role="$(pwd -P)"
+
+  parse_opts "$@"
+
+  # echo "cmd $cmd $upstream"
+  # if [[ "$cmd" == "install" ]] && [[ -n "$upstream" ]]
+  # then sync_upstream "$upstream" "$prefix"
+  # fi
+
+  log "Done [$?]"
+}
+
+main "$@"

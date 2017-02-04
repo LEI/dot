@@ -1,7 +1,8 @@
---upstream git@github.com:LEI/dot-tmux.git --prefix src/tmux \
---root-dir /root/.dot/tmux \
---create-dir .tmux \
+# --root-dir $DIR/src/tmux \
+# --upstream git@github.com:LEI/dot-tmux.git \
+--prefix src/tmux \
 --name .tmux.conf \
+--create-dir .tmux \
 --path .tmux/tmux.*.conf \
 --path .tmux/tmux-$UNAME.conf \
 --path d:.tmux/*

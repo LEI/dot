@@ -8,12 +8,9 @@ ENV LANG en_GB.UTF-8
 RUN echo "$LANG UTF-8" > /etc/locale.gen && locale-gen
 RUN echo "LANG=$LANG" > /etc/locale.conf
 
-RUN git config --global user.email $GIT_USER_EMAIL \
-&& git config --global user.name $GIT_USER_NAME
-
 ENV DOT /root/.dot
 ADD . $DOT
-# WORKDIR $DOT
+WORKDIR /root
 
 RUN ln -s "$DOT/bin/dot" "/usr/local/bin/dot"
 RUN printf "%s\n" "alias d=\"dot -s $DOT/.dotrc\"" \

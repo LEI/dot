@@ -15,7 +15,7 @@ source ./lib/utils.bash
 
 UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
 
-ENV_VARS="HOME PWD OSTYPE UNAME"
+ENV_VARS="HOME PWD OSTYPE UNAME DR"
 
 OPTS=
 TARGET="$HOME"
@@ -31,16 +31,6 @@ usage() {
   then err "$@"
   fi
   usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
-}
-
-sync_upstream() {
-  local url="$1"
-  local prefix="${1%.git}"
-  local branch="${2:-master}"
-  prefix="${prefix##*/}"
-  if [[ ! -d "$DIR/$prefix" ]]
-  then run git subtree add --prefix "$prefix" "$url" "$branch" --squash
-  fi
 }
 
 create_dir() {
@@ -72,6 +62,7 @@ env_sub() {
   local s str="$1"
   for s in $ENV_VARS
   do
+    # >&2 echo "$s -> $str"
     if [[ "$str" == *\$$s* ]]
     then str="${str//\$$s/${!s}}"
     elif [[ "$str" == *\${$s}* ]]
@@ -93,8 +84,10 @@ exec_file() {
   fi
   while read -r line
   do # Disable wildcard expansion ${line//\*/\\*}
+    line="${line%%# *}"
+    line="${line%% # *}"
+    [[ -z "$line" ]] && continue
     [[ -n "$_line" ]] && line="${_line%\\}$line"
-    # [[ -z "$line" ]] && continue
     if [[ "$line" =~ \\$ ]]
     then _line="$line"; continue
     elif [[ "$line" =~ ^[a-zA-Z]+=* ]]
@@ -102,16 +95,13 @@ exec_file() {
       declare $var="$val" && ENV_VARS+=" $var"
     # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$f")" env_sub "$line")
     # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
-    else
-      echo main --no-auto-source $a $line
-      main --no-auto-source $a $line
+    else main --no-auto-source $a $line
     fi; _line=
   done < "$f"
 }
 
 backup_file() {
-  if [[ -e "$dst" ]] \
-    && confirm "$src destination already exists, backup to ‘$dst.backup’?"
+  if [[ -e "$dst" ]] && confirm "$src destination already exists, backup to ‘$dst.backup’?"
   then run mv -v "$dst" "$dst.backup"
   fi
 }
@@ -163,13 +153,13 @@ parse_opts() {
       -v|--verbose) VERBOSE="$(($VERBOSE + 1))" ;;
       -h|--help) usage ;;
 
-      -u|--upstream) shift; upstream="$1" ;;
-      --prefix) shift; upstream_prefix="$1" ;;
+      # -u|--upstream) shift; upstream="$1" ;;
+      --prefix) shift; prefix="$1" ;;
       -s|--source) shift; exec_file "$1" "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
 
       -t|--target) shift; target="$1" ;;
-      -R|--root-dir) shift; dir="$1" ;;
+      -R|--root-dir) shift; dir="$(env_sub "$1")" ;;
 
       -c|--create|--create-dir) shift; create_dirs+=("$(env_sub "$1")") ;;
       -n|--name|--find-name) shift; find_names+=("$(env_sub "$1")") ;;
@@ -200,6 +190,10 @@ parse_opts() {
   done
 
   [[ -z "$cmd" ]] && cmd="$default_cmd"
+
+  if [[ -n "$prefix" ]]
+  then dir+="/$prefix"
+  fi
 
   # Remove trailing slash
   if [[ -d "$dir" ]]
@@ -240,10 +234,10 @@ build_find_cmd() {
 }
 
 main() {
-  echo >&2 "main [$#] $@"
+  # echo >&2 "main [$#] $@"
   local cmd= default_cmd="install"
   local action=link_file
-  local upstream=
+  local prefix=
   local dir= # role="$(pwd -P)"
   local no_source=0
   local target="$TARGET"
@@ -259,14 +253,7 @@ main() {
   local n=
   local next=
 
-  echo parsing $?
   parse_opts "$@"
-  echo parsed $?
-
-  echo "cmd $cmd $upstream"
-  if [[ "$cmd" == "install" ]] && [[ -n "$upstream" ]]
-  then sync_upstream "$upstream" "$upstream_prefix"
-  fi
 
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/.dotrc" ]]
   then exec_file "$dir/.dotrc" -R "$dir"
@@ -287,8 +274,8 @@ main() {
     for src in $($find_cmd)
     do $action "$src" "${src/$dir/$target}"
     done
-  elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
-  then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
+  # elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
+  # then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
   fi
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]
