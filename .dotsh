@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+main() {
+  hash nvim 2>/dev/null && ln -s ~/.vim ~/.config/nvim
+}
+
+main "$@"
