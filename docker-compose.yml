@@ -1,0 +1,7 @@
+version: "2"
+
+services:
+  os:
+    build: .
+    image: lei/dot
+    container_name: dot

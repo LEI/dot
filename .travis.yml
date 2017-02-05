@@ -1,9 +1,9 @@
 sudo: required
 
-language: bash
-
 services:
   - docker
+
+language: bash
 
 before_install:
   - docker build -t lei/dot .
@@ -11,5 +11,8 @@ before_install:
   - docker ps -a
   - docker run lei/dot -c "ls -la"
 
-script:
-  - ls -lah
+# script:
+#   - ls -lah
+
+notifications:
+  email: false
