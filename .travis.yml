@@ -7,13 +7,14 @@ language: bash
 
 before_install:
   - docker-compose build
-  - docker-compose up -d
-  - docker-compose ps
-  # - docker-compose run test
+  - docker-compose run test
+  # - docker-compose up -d # ps
   # - docker run lei/dot -c "ls -la"
 
-# script:
-#   - ls -lah
+script:
+  - ls -lah
+  - docker ps -a
+  - docker-compose ps
 
 notifications:
   email: false

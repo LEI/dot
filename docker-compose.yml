@@ -1,7 +1,12 @@
 version: "2"
 
 services:
-  os:
+  test:
+    command: -l -c "$$DOT/test.sh"
+    image: lei/dot
+    depends_on:
+      - image
+  image:
     build: .
     image: lei/dot
     container_name: dot

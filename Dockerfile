@@ -13,12 +13,14 @@ ENV LANG en_GB.UTF-8
 RUN echo "$LANG UTF-8" > /etc/locale.gen && locale-gen
 RUN echo "LANG=$LANG" > /etc/locale.conf
 
-ENV DOT \$HOME/.dot
-ADD . $DOT
-WORKDIR \$HOME
+ENV HOME /root
+ENV DOT $HOME/.dot
+WORKDIR $HOME
 
 RUN ln -s "$DOT/bin/dot" "/usr/local/bin/dot"
-# RUN printf "%s\n" "alias dsrc=\"dot -s $DOT/.dotrc\"" >> /root/.bashrc
+# RUN printf "%s\n" "alias dsrc=\"dot -s $DOT/.dotrc\"" >> $HOME/.bashrc
 
 ENTRYPOINT ["/bin/bash"]
 CMD ["-l", "-c", "dot -R $DOT"] # ; bash -l
+
+ADD . $DOT
