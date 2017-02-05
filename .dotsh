@@ -24,13 +24,15 @@ git_config() {
 }
 
 _main() {
-  local f="$HOME/.gitconfig.local"
+  symlink "$state" --prefix "$prefix" --path .git*
+
+  local cfg="$HOME/.gitconfig.local"
   local key
   for key in user.{name,username,email}
-  do git_config "$state" "$f" "$key"
+  do git_config "$state" "$cfg" "$key"
   done
-  if [[ "$state" == "remove" ]] && [[ -z "$(git config --file "$f" --list)" ]]
-  then rm "$f"
+  if [[ "$state" == "remove" ]] && [[ -z "$(git config --file "$cfg" --list)" ]]
+  then rm "$cfg"
   fi
 }
 
