@@ -12,6 +12,7 @@ set -f
 cd "$DIR"
 
 source ./lib/utils.bash
+source ./lib/file_utils.bash
 
 UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
 
@@ -33,31 +34,6 @@ usage() {
   then err "$@"
   fi
   usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
-}
-
-create_dir() {
-  local opts="--parents"
-  if [[ "$VERBOSE" -ne 0 ]]
-  then opts+=" --verbose"
-  fi
-  local d
-  for d in "$@"
-  do run mkdir $opts "$d"
-  done
-}
-
-remove_dir() {
-  local opts="--ignore-fail-on-non-empty"
-  if [[ "$VERBOSE" -ne 0 ]]
-  then opts+=" --verbose"
-  fi
-  local d
-  for d in "$@"
-  do
-    if [[ -d "$d" ]]
-    then run rmdir $opts "$1"
-    fi
-  done
 }
 
 env_sub() {
@@ -98,7 +74,7 @@ exec_file() {
       declare $var="$val" && ENV_VARS+=" $var"
     # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$f")" env_sub "$line")
     # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
-    else lines+=("--no-auto-source $a $line")
+    else lines+=("$a $line") # --no-auto-source
     fi; l=
   done < "$f"
   for l in "${lines[@]}"
@@ -106,65 +82,22 @@ exec_file() {
   done
 }
 
-backup_file() {
-  if [[ ! -e "$dst" ]]
-  then return 0
-  fi
-  if confirm "$src destination already exists, backup to ‘$dst.backup’?"
-  then run mv -v "$dst" "$dst.backup"
-  fi
-}
-
-link_file() {
-  local src="$1"
-  local dst="$2" # {dst%/*}/
-  if [[ -e "$dst" ]]
-  then
-    if [[ "$(readlink "$dst")" != "$src" ]]
-    then
-      backup_file "$dst"
-      if [[ -e "$dst" ]]
-      then >&2 log "$dst != $src"
-      else do_link "$src" "$dst" \
-        && log "$dst => $src"
-      fi
-    else log "$dst == $src"
-    fi
-  else do_link "$src" "$dst" \
-    && log "$dst -> $src"
-  fi
-}
-
-do_link() {
-  local src="$1"
-  local dst="$2"
-  run ln -s "$src" "$dst"
-}
-
-remove_link() {
-  local src="$1"
-  local dst="$2"
-  if [[ -e "$dst" ]] && [[ "$(readlink "$dst")" == "$src" ]]
-  then run rm "$dst" \
-    && log "Removed ‘$dst‘"
-  fi
-}
-
 parse_opts() {
+  echo >&2 "OPTS [$#] $@"
   OPTS="[hDveustRcnp]"
   while [[ $# -ne 0 ]]
   do n=1
     case "$1" in
       --) shift; break ;;
-      install) [[ -n "$cmd" ]] && usage 1; cmd="$1": action=link_file ;;
-      remove) [[ -n "$cmd" ]] && usage 1; cmd="$1"; action=remove_link ;;
+      install) [[ -n "$state" ]] && usage 1; state="$1"; action=link_file ;;
+      remove) [[ -n "$state" ]] && usage 1; state="$1"; action=remove_link ;;
       -D|--dry-run) DRY_RUN=1 ;;
       -v|--verbose) VERBOSE="$(($VERBOSE + 1))" ;;
       -h|--help) usage ;;
 
       # -u|--upstream) shift; upstream="$1" ;;
       --prefix) shift; prefix="$1" ;;
-      -s|--source) shift; exec_file "$1" "${@:2}"; echo "$# parameters left"; return $? ;;
+      -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
 
       -t|--target) shift; target="$1" ;;
@@ -198,11 +131,8 @@ parse_opts() {
     shift ${n:-1}
   done
 
-  [[ -z "$cmd" ]] && cmd="$default_cmd"
-
-  if [[ -z "$dir" ]]
-  then dir="." # $DIR
-  fi
+  state="${state:-$state_default}"
+  dir="${dir:-$DIR}"
 
   if [[ -n "$prefix" ]]
   then dir+="/$prefix"
@@ -250,55 +180,29 @@ build_find_cmd() {
   fi
 }
 
-main() {
-  [[ "$VERBOSE" -gt 1 ]] && echo >&2 "main [$#] $@"
-  local cmd= default_cmd="install"
-  local action=link_file
-  local prefix=
-  local dir= # role="$(pwd -P)"
-  local no_source=0
-  local target="$TARGET"
-  local create_dirs=()
-  local find_ignore=("*$RC" "*$SH" "*.git" "*.gitkeep" "*.md" "*.tpl")
-  local find_names=()
-  local find_paths=()
-  local find_dirs=()
-  local min_depth=1
-  local max_depth=2
-  local find_opts=()
-  local find_cmd=
-  # declare -a find_opts
-  local n=
-  local next=
-
-  parse_opts "$@"
-
-  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$RC" ]]
-  then exec_file "$dir/$RC" -R "$dir"
-    # TODO check remaining args?
-    return $?
-  fi
-
-  if [[ -f "$dir/$SH" ]]
-  then source "$dir/$SH"
-  fi
-
-  if [[ -f "$dir/$SH" ]]
-  then hash _pre 2>/dev/null && _pre; unset _pre
+bootstrap() {
+  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]]
+  then
+    echo source "$dir/$SH"
+    if source "$dir/$SH" && hash _$state 2>/dev/null
+    then _$state; unset _$state
+      echo "did _$state"
+    fi
   fi
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]
   then
-    if [[ "$cmd" == "install" ]]
+    if [[ "$state" == "install" ]]
     then create_dir ${create_dirs[@]/#/$target/}
     fi
   fi
 
   if build_find_cmd && [[ -n "$find_cmd" ]]
-  then
-    local src
+  then # echo "FIND_CMD $find_cmd"
+    local src dst
     for src in $($find_cmd)
-    do $action "$src" "${src/$dir/$target}"
+    do dst="${src/$dir/$target}"
+      $action "$src" "$dst"
     done
   # elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
   # then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
@@ -306,16 +210,58 @@ main() {
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]
   then
-    if [[ "$cmd" == "remove" ]]
+    if [[ "$state" == "remove" ]]
     then remove_dir "${create_dirs[@]/#/$target/}"
     fi
   fi
 
-  if [[ -f "$dir/$SH" ]]
-  then hash _post 2>/dev/null && _post; unset _post
+  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]] && hash _post_$state 2>/dev/null
+  then _post_$state; unset _post_$state
   fi
 
   # log "Done [$?]"
+}
+
+init() {
+  state=
+  state_default="install"
+  state_install="install"
+  state_remove="remove"
+  action=link_file
+  prefix=
+  dir= # role="$(pwd -P)"
+  no_source=0
+  target="$TARGET"
+  create_dirs=()
+  find_ignore=("*$RC" "*$SH" "*.git" "*.gitkeep" "*.md" "*.tpl")
+  find_names=()
+  find_paths=()
+  find_dirs=()
+  min_depth=1
+  max_depth=2
+  find_opts=()
+  find_cmd=
+  # declare -a find_opts
+  n=
+  next=
+}
+
+main() {
+  init; parse_opts "$@"
+  # log "${state} ${prefix#*/}"
+  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$RC" ]]
+  then # [[ $# -ne 2 ]] && usage 1 "extra args"
+    exec_file "$dir/$RC" "$@" # --root-dir "$dir"
+  else
+    bootstrap && log "${state}ed ${prefix#*/}"
+  fi
+}
+
+symlink() {
+  init; parse_opts --no-auto-source \
+    --root-dir "$dir" "$@"
+  # log "symlink ${state} ${prefix#*/}"
+  bootstrap && log "${state}ed symlinks ${prefix#*/}"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"

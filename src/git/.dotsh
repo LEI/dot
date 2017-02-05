@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_post() {
+_post_install() {
   local key file="$HOME/.gitconfig.local"
   # [[ -f "$file" ]] && return
   for key in user.{name,username,email}

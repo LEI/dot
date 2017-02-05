@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# FIXME alias d=?
+
 d() {
   local cmd="$1"
   shift

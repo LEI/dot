@@ -1,9 +1,9 @@
 # --prefix src/config
 # --create-dir .config
 
---prefix src/bash \
---create-dir .bash.d \
---path f:.bash*
+--prefix src/bash
+# --create-dir .bash.d
+# --path f:.bash*
 
 --prefix src/git --path .git*
 
