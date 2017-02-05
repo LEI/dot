@@ -1,5 +1,0 @@
-# dot-bash
-
-## Requirements
-
-- bash
