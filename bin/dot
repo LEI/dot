@@ -18,6 +18,7 @@ UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
 ENV_VARS="HOME PWD OSTYPE UNAME DR"
 
 OPTS=
+RC=".dotrc"
 TARGET="$HOME"
 DRY_RUN=0
 VERBOSE=0
@@ -84,7 +85,7 @@ exec_file() {
   fi
   while read -r line
   do # Disable wildcard expansion ${line//\*/\\*}
-    line="${line%%# *}"
+    line="${line%%#*}"
     line="${line%% # *}"
     [[ -z "$line" ]] && continue
     [[ -n "$_line" ]] && line="${_line%\\}$line"
@@ -101,7 +102,10 @@ exec_file() {
 }
 
 backup_file() {
-  if [[ -e "$dst" ]] && confirm "$src destination already exists, backup to ‘$dst.backup’?"
+  if [[ ! -e "$dst" ]]
+  then return 0
+  fi
+  if confirm "$src destination already exists, backup to ‘$dst.backup’?"
   then run mv -v "$dst" "$dst.backup"
   fi
 }
@@ -191,6 +195,10 @@ parse_opts() {
 
   [[ -z "$cmd" ]] && cmd="$default_cmd"
 
+  if [[ -z "$dir" ]]
+  then dir="." # $DIR
+  fi
+
   if [[ -n "$prefix" ]]
   then dir+="/$prefix"
   fi
@@ -222,11 +230,13 @@ build_find_opt() {
 }
 
 build_find_cmd() {
+  [[ "${#find_ignore[@]}" -ne 0 ]] && \
+    find_opts+=("!") && build_find_opt "!" "-path" "$dir" "${find_ignore[@]}"
   [[ "${#find_names[@]}" -ne 0 ]] && build_find_opt "-o" "-name" "" "${find_names[@]}"
   [[ "${#find_paths[@]}" -ne 0 ]] && build_find_opt "-o" "-path" "$dir" "${find_paths[@]}" # /#/$dir/
   if [[ "${#find_opts[@]}" -ne 0 ]]
   then
-    find_cmd="find "$dir" -mindepth "$min_depth" -maxdepth "$max_depth" -not -name '*.tpl' "${find_opts[@]}""
+    find_cmd="find "$dir" -mindepth "$min_depth" -maxdepth "$max_depth" "${find_opts[@]}""
     if [[ "$VERBOSE" -gt 1 ]]
     then log "$find_cmd"
     fi
@@ -242,6 +252,7 @@ main() {
   local no_source=0
   local target="$TARGET"
   local create_dirs=()
+  local find_ignore=("*$RC" "*.gitkeep" "*.md" "*.tpl")
   local find_names=()
   local find_paths=()
   local find_dirs=()
@@ -255,8 +266,8 @@ main() {
 
   parse_opts "$@"
 
-  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/.dotrc" ]]
-  then exec_file "$dir/.dotrc" -R "$dir"
+  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$RC" ]]
+  then exec_file "$dir/$RC" -R "$dir"
     # TODO check remaining args?
     return $?
   fi

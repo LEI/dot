@@ -10,4 +10,11 @@
 
 --prefix src/vim \
 --create-dir .vim \
---path .vim/*
+--create-dir .vim/{plugin,settings} \
+--path .vim/plugin/*.vim \
+--path .vim/settings/*.vim \
+--path f:.vim/*
+
+# --prefix src/config \
+# --create-dir .config \
+# TODO hash nvim 2>/dev/null && ln -s ~/.vim ~/.config/nvim
