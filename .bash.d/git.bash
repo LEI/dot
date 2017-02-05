@@ -5,7 +5,6 @@ g() {
   then git "$@"
   else git status
   fi
-
 }
 
 # [[ -f /usr/local/etc/bash_completion.d/git-completion.bash ]]
