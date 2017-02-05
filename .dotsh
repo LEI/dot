@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
 _post() {
-  hash nvim 2>/dev/null && ln -s ~/.vim ~/.config/nvim
+  if hash nvim 2>/dev/null [[ -d "$HOME/.vim" ]]
+  then
+    mkdir -l $HOME/.config
+    ln -s $HOME/.vim $HOME/.config/nvim
+  fi
 }
