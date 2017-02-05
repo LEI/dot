@@ -6,10 +6,11 @@ services:
 language: bash
 
 before_install:
-  - docker build -t lei/dot .
-  - docker run -d --name dot lei/dot -c "dot -R $DOT"
-  - docker ps -a
-  - docker run lei/dot -c "ls -la"
+  - docker-compose build
+  - docker-compose up -d
+  - docker-compose ps
+  # - docker-compose run test
+  # - docker run lei/dot -c "ls -la"
 
 # script:
 #   - ls -lah
