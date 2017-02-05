@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-packages="bash bash-completion tree"

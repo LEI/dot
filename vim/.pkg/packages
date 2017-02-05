@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-source $1/lib/detect_os.bash
-
-case "$OS" in
-  android|archlinux|macos) packages="vim neovim" ;;
-  *) packages="vim" ;;
-esac

@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-source $1/lib/template.bash
-
-_post_install() {
-  template "$1/git/.gitconfig.local.tpl" "$HOME/.gitconfig.local" \
-    "GIT_AUTHOR_NAME" "GIT_AUTHOR_USERNAME" "GIT_AUTHOR_EMAIL"
-}

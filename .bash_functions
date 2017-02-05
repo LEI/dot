@@ -52,7 +52,7 @@ to() {
   esac
 }
 
-tre() {
+tre() { # hash tree 2>/dev/null
   tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
 }
 
