@@ -5,18 +5,19 @@
 # --create-dir .bash.d
 # --path f:.bash*
 
---prefix src/git --path .git*
+--prefix src/git
+# --path .git*
 
---prefix src/tmux \
---name .tmux.conf \
---create-dir .tmux \
---path .tmux/tmux.*.conf \
---path .tmux/tmux-$UNAME.conf \
---path d:.tmux/*
+--prefix src/tmux
+# --create-dir .tmux \
+# --name .tmux.conf \
+# --path .tmux/tmux.*.conf \
+# --path .tmux/tmux-$UNAME.conf \
+# --path d:.tmux/*
 
---prefix src/vim \
---create-dir .vim \
---path .vim/plugin/*.vim \
---path .vim/settings/*.vim \
---path .vim/* \
---name vimrc
+--prefix src/vim
+# --create-dir .vim \
+# --path .vim/plugin/*.vim \
+# --path .vim/settings/*.vim \
+# --path .vim/* \
+# --name vimrc

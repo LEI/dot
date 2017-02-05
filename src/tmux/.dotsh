@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+[[ "$state" == "install" ]] && directory "$state" "$HOME/.tmux"
+
+symlink "$state" --prefix "$prefix" \
+  --name .tmux.conf \
+  --path .tmux/tmux.*.conf \
+  --path .tmux/tmux-$UNAME.conf \
+  --path d:.tmux/*
+
+[[ "$state" == "remove" ]] && directory "$state" "$HOME/.tmux"
