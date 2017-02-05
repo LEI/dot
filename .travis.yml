@@ -5,16 +5,13 @@ services:
 
 language: bash
 
-before_install:
+install:
   - docker-compose build
-  - docker-compose run test
-  # - docker-compose up -d # ps
-  # - docker run lei/dot -c "ls -la"
+  - docker images
+  - docker ps -a
 
 script:
-  - ls -lah
-  - docker ps -a
-  - docker-compose ps
+  - docker-compose run test
 
 notifications:
   email: false
