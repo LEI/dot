@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
+SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
+DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
+
 set -o nounset
 set -o errexit
 set -o pipefail
 
 set -f
-
-SRC="$(readlink -f "${BASH_SOURCE[0]}")"
-DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
 cd "$DIR"
 
@@ -115,7 +115,7 @@ link_file() {
   local dst="$2" # {dst%/*}/
   if [[ -e "$dst" ]]
   then
-    if [[ "$(readlink -f "$dst")" != "$src" ]]
+    if [[ "$(readlink "$dst")" != "$src" ]]
     then
       backup_file "$dst"
       if [[ -e "$dst" ]]
