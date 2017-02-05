@@ -77,7 +77,8 @@ exec_file() {
   local f="$1"
   shift
   local a="$@"
-  local _line=
+  local l=
+  local lines=()
   local line args
   local var val
   if [[ ! -f "$f" ]]
@@ -88,17 +89,20 @@ exec_file() {
     line="${line###*}"
     line="${line%% # *}"
     [[ -z "$line" ]] && continue
-    [[ -n "$_line" ]] && line="${_line%\\}$line"
+    [[ -n "$l" ]] && line="${l%\\}$line"
     if [[ "$line" =~ \\$ ]]
-    then _line="$line"; continue
+    then l="$line"; continue
     elif [[ "$line" =~ ^[a-zA-Z]+=* ]]
     then var="${line%%=*}"; val="${line#*=}"
       declare $var="$val" && ENV_VARS+=" $var"
     # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$f")" env_sub "$line")
     # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
-    else main --no-auto-source $a $line
-    fi; _line=
+    else lines+=("--no-auto-source $a $line")
+    fi; l=
   done < "$f"
+  for l in "${lines[@]}"
+  do main $l
+  done
 }
 
 backup_file() {
@@ -246,7 +250,7 @@ build_find_cmd() {
 }
 
 main() {
-  # echo >&2 "main [$#] $@"
+  [[ "$VERBOSE" -gt 1 ]] && echo >&2 "main [$#] $@"
   local cmd= default_cmd="install"
   local action=link_file
   local prefix=

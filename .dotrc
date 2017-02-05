@@ -3,7 +3,7 @@
 
 --prefix src/bash \
 --create-dir .bash.d \
---path .bash*
+--path f:.bash*
 
 --prefix src/git --path .git*
 
