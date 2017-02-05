@@ -9,15 +9,22 @@ git_config() {
     $state_install)
       if [[ -z "$($gc --get $key)" ]]
       then
-        # printf "%s" "What is your git ${key#user.}? "; read -r REPLY
-        printf "%s" "git config add $key "
-        read -r REPLY
-        $gc --add $key "$REPLY"
+        # printf "%s" "What is your git ${key#user.}? "; read -r reply
+        local msg="What is your git ${key#user.}?"
+        local var="GIT_$(echo ${key//./_} | tr "[[:lower:]]" "[[:upper:]]")"
+        local default="${!var}"
+        [[ -n "$default" ]] && msg+=" (${var:-default}: $default)"
+        printf "%s" "$msg "
+        local reply=
+        [[ "${INTERACTIVE:-1}" -ne 0 ]] && read -r reply
+        [[ -n "$default" ]] && [[ -z "$reply" ]] && reply="$default"
+        printf "\n"
+        run $gc --add $key "$reply"
       fi
       ;;
     $state_remove)
       if [[ -n "$($gc --get $key)" ]] || confirm "git config unset $key"
-      then $gc --unset $key
+      then run $gc --unset $key
       fi
       ;;
   esac
