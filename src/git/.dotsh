@@ -1,8 +1,7 @@
 #!/bin/bash
 
 main() {
-  local key="user.name"
-  local file="$HOME/.gitconfig.local"
+  local key file="$HOME/.gitconfig.local"
   for key in user.{name,username,email}
   do printf "%s" "git config $key: "; read -r REPLY; printf "\n"
     git config --file $file $key "$REPLY"
