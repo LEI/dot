@@ -1,14 +1,37 @@
 #!/usr/bin/env bash
 
-_post_install() {
-  local key file="$HOME/.gitconfig.local"
-  # [[ -f "$file" ]] && return
-  for key in user.{name,username,email}
-  do
-    if [[ -z "$(git config --file $file --get $key)" ]]
-    then
-      printf "%s" "What is your git ${key#user.}? "; read -r REPLY
-      git config --file $file $key "$REPLY"
-    fi
-  done
+git_config() {
+  local state="$1"
+  local file="$2"
+  local key="$3"
+  local gc="git config --file "$file""
+  case "$state" in
+    $state_install)
+      if [[ -z "$($gc --get $key)" ]]
+      then
+        # printf "%s" "What is your git ${key#user.}? "; read -r REPLY
+        printf "%s" "git config add $key "
+        read -r REPLY
+        $gc --add $key "$REPLY"
+      fi
+      ;;
+    $state_remove)
+      if [[ -n "$($gc --get $key)" ]] || confirm "git config unset $key"
+      then $gc --unset $key
+      fi
+      ;;
+  esac
 }
+
+_main() {
+  local f="$HOME/.gitconfig.local"
+  local key
+  for key in user.{name,username,email}
+  do git_config "$state" "$f" "$key"
+  done
+  if [[ "$state" == "remove" ]] && [[ -z "$(git config --file "$f" --list)" ]]
+  then rm "$f"
+  fi
+}
+
+_main "$@"
