@@ -1,0 +1,14 @@
+#!/bin/bash
+
+main() {
+  local key="user.name"
+  local file="$HOME/.gitconfig.local"
+  # for key in user.{name,username,email}
+  # do; ; done
+  printf "%s" "git config $key: "
+  read -r REPLY
+  printf "\n"
+  git config --file $file $key "$REPLY"
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && main "$@"

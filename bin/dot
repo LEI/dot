@@ -85,7 +85,7 @@ exec_file() {
   fi
   while read -r line
   do # Disable wildcard expansion ${line//\*/\\*}
-    line="${line%%#*}"
+    line="${line###*}"
     line="${line%% # *}"
     [[ -z "$line" ]] && continue
     [[ -n "$_line" ]] && line="${_line%\\}$line"
@@ -230,8 +230,10 @@ build_find_opt() {
 }
 
 build_find_cmd() {
-  [[ "${#find_ignore[@]}" -ne 0 ]] && \
-    find_opts+=("!") && build_find_opt "!" "-path" "$dir" "${find_ignore[@]}"
+  if [[ "${#find_ignore[@]}" -ne 0 ]]
+  then #[[ "${#find_opts[@]}" -eq 0 ]] && find_opts+=("!")
+    build_find_opt "!" "-path" "$dir" "${find_ignore[@]}"
+  fi
   [[ "${#find_names[@]}" -ne 0 ]] && build_find_opt "-o" "-name" "" "${find_names[@]}"
   [[ "${#find_paths[@]}" -ne 0 ]] && build_find_opt "-o" "-path" "$dir" "${find_paths[@]}" # /#/$dir/
   if [[ "${#find_opts[@]}" -ne 0 ]]
@@ -244,7 +246,7 @@ build_find_cmd() {
 }
 
 main() {
-  # echo >&2 "main [$#] $@"
+  echo >&2 "main [$#] $@"
   local cmd= default_cmd="install"
   local action=link_file
   local prefix=
@@ -252,7 +254,7 @@ main() {
   local no_source=0
   local target="$TARGET"
   local create_dirs=()
-  local find_ignore=("*$RC" "*.gitkeep" "*.md" "*.tpl")
+  local find_ignore=("*$RC" "*.dotsh" "*.gitkeep" "*.md" "*.tpl")
   local find_names=()
   local find_paths=()
   local find_dirs=()
@@ -271,6 +273,10 @@ main() {
     # TODO check remaining args?
     return $?
   fi
+
+  # if [[ -f "$dir/.dotsh" ]]
+  # then source "$dir/.dotsh" # && main
+  # fi
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]
   then
