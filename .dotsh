@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+[[ "$state" == "install" ]] && directory "$state" "$HOME/.vim"
+
+symlink "$state" --prefix "$prefix" --name .vimrc --path .vim/*
+
+[[ "$state" == "remove" ]] && directory "$state" "$HOME/.vim"
 
 _post_install() {
   if hash nvim 2>/dev/null \
