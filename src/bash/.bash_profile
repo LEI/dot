@@ -22,14 +22,14 @@ main() {
   unset option
 
   load $HOME/.bash{_aliases,_exports,_functions}
+  # OS="$(uname -o 2>/dev/null || uname -s | to lower)"
 
-  case "$(uname -o 2>/dev/null)" in
-    Android) OS="android" ;;
-    *) OS="$(uname -s | to lower)" ;;
-  esac
+  local file f
+  for file in $HOME/.bash.d/*.bash
+  do f="${file##*/}"
+    hash ${file%.bash} 2>/dev/null && source $file
+  done
 
-  load $HOME/.bash.d/*.bash
-  load $HOME/.$OS.d/*.bash
   load $HOME/.bashrc.local
 }
 

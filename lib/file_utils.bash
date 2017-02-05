@@ -12,8 +12,8 @@ backup_file() {
 link_file() {
   local src="$1"
   local dst="$2" # {dst%/*}/
-  if [[ -e "$dst" ]]
-  then err "$dst: no such file or directory"; return 1
+  if [[ ! -e "$src" ]]
+  then err "$dst: no such source"; return 1
   fi
   # echo "LINK_FILE $src -> $dst"
   if [[ -e "$dst" ]] || [[ -L "$dst" ]]
@@ -86,32 +86,46 @@ directory() {
   done
 }
 
+add_line_in_file() {
+  local file="$1"
+  local line="$2"
+  if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
+  then [[ "$VERBOSE" -gt 1 ]] && log "$line >> $file"
+    if [[ "$DRY_RUN" -eq 0 ]]
+    then printf "%s\n" "$line" >> "$file"
+    fi
+  fi
+}
+
+remove_line_in_file() {
+  local file="$1"
+  local line="$2"
+  if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
+  then local tmp="/tmp/$$.${file##*/}.grep"
+    line="${line//\[/\\[}"
+    line="${line//\]/\\]}"
+    [[ "$VERBOSE" -gt 1 ]] && log "grep -v "$line" "$file" > "$tmp" && mv "$tmp" "$file""
+    if [[ "$DRY_RUN" -eq 0 ]]
+    then grep -v "$line" "$file" > "$tmp" && mv "$tmp" "$file"
+    fi # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
+  fi
+}
+
 line_in_file() {
   local state="$1"
-  local file="$2"
-  local line="$3"
+  shift
+  local file="$1"
+  shift
 
   if ! hash fgrep 2>/dev/null
   then err "fgrep: command not found"; return 1
   fi
 
-  case "$state" in
-    $state_install)
-      if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-      then [[ "$VERBOSE" -gt 1 ]] && log "$line >> $file"
-        if [[ "$DRY_RUN" -eq 0 ]]
-        then printf "%s\n" "$line" >> "$file"
-        fi
-      fi
-      ;;
-    $state_remove)
-      if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
-      then local tmp="/tmp/${file##*/}.grep"
-        [[ "$VERBOSE" -gt 1 ]] && log "grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file""
-        if [[ "$DRY_RUN" -eq 0 ]]
-        then eval grep -v \'${line}\' "$file" > "$tmp" && mv "$tmp" "$file"
-        fi # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"
-      fi
-      ;;
-  esac
+  local line
+  for line in "$@"
+  do case "$state" in
+      $state_install) add_line_in_file "$file" "$line" ;;
+      $state_remove) remove_line_in_file "$file" "$line" ;;
+    esac
+  done
 }

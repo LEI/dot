@@ -17,8 +17,7 @@ ADD . $DOT
 WORKDIR /root
 
 RUN ln -s "$DOT/bin/dot" "/usr/local/bin/dot"
-RUN printf "%s\n" "alias dsrc=\"dot -s $DOT/.dotrc\"" \
->> /root/.bashrc
+RUN printf "%s\n" "alias dsrc=\"dot -s $DOT/.dotrc\"" >> /root/.bashrc
 
 ENTRYPOINT ["/bin/bash"]
 CMD ["-l", "-c", "dot -R $DOT; bash -l"]
