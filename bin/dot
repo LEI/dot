@@ -279,7 +279,11 @@ main() {
     return $?
   fi
 
-  if [[ -f "$dir/$SH" ]] && source "$dir/$SH"
+  if [[ -f "$dir/$SH" ]]
+  then source "$dir/$SH"
+  fi
+
+  if [[ -f "$dir/$SH" ]]
   then hash _pre 2>/dev/null && _pre; unset _pre
   fi
 
@@ -307,7 +311,7 @@ main() {
     fi
   fi
 
-  if [[ -f "$dir/$SH" ]] && source "$dir/$SH"
+  if [[ -f "$dir/$SH" ]]
   then hash _post 2>/dev/null && _post; unset _post
   fi
 
