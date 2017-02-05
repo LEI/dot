@@ -2,6 +2,10 @@ version: "2"
 
 services:
   test:
+    environment:
+      GIT_USER_NAME: Docker Test
+      GIT_USER_USERNAME: docker
+      GIT_USER_EMAIL: docker@test.io
     command: -l -c "$$DOT/test.sh"
     image: lei/dot
     depends_on:

@@ -18,7 +18,8 @@ usage_exit() {
 }
 
 confirm() {
-  printf "%s" "$1 [y/N] "
+  printf "%s" "$1 (y/N) "
+  [[ "${INTERACTIVE:-1}" -eq 0 ]] && return
   read -n 1 REPLY
   printf "\n"
   [[ "$REPLY" =~ ^[Yy]$ ]]

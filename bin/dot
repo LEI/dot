@@ -24,6 +24,7 @@ SH=".dotsh"
 TARGET="$HOME"
 DRY_RUN=0
 VERBOSE=0
+INTERACTIVE=1
 
 usage() {
   local ret="$?"
@@ -83,7 +84,7 @@ exec_file() {
 }
 
 parse_opts() {
-  echo >&2 "OPTS [$#] $@"
+  # echo >&2 "OPTS [$#] $@"
   OPTS="[hDveustRcnp]"
   while [[ $# -ne 0 ]]
   do n=1
@@ -99,6 +100,8 @@ parse_opts() {
       --prefix) shift; prefix="$1" ;;
       -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
+
+      --non-interactive) INTERACTIVE=0 ;;
 
       -t|--target) shift; target="$1" ;;
       -R|--root-dir) shift; dir="$(env_sub "$1")" ;;
@@ -183,10 +186,8 @@ build_find_cmd() {
 bootstrap() {
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]]
   then
-    echo source "$dir/$SH"
     if source "$dir/$SH" && hash _$state 2>/dev/null
     then _$state; unset _$state
-      echo "did _$state"
     fi
   fi
 
@@ -261,7 +262,7 @@ symlink() {
   init; parse_opts --no-auto-source \
     --root-dir "${dir:-$DIR}" \
     "$@"
-  log "${state} ${prefix#*/} symlinks"
+  # log "${state} ${prefix#*/} symlinks"
   bootstrap # log "${prefix#*/} symlinks ${state}ed"
 }
 
