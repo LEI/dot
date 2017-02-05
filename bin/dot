@@ -256,6 +256,7 @@ main() {
   local prefix=
   local dir= # role="$(pwd -P)"
   local no_source=0
+  local has_dotsh=0
   local target="$TARGET"
   local create_dirs=()
   local find_ignore=("*$RC" "*.dotsh" "*.gitkeep" "*.md" "*.tpl")
@@ -278,9 +279,13 @@ main() {
     return $?
   fi
 
-  # if [[ -f "$dir/.dotsh" ]]
-  # then source "$dir/.dotsh" # && main
-  # fi
+  if [[ -f "$dir/.dotsh" ]] && source "$dir/.dotsh"
+  then has_dotsh=1
+  fi
+
+  if [[ -n "$has_dotsh" ]]
+  then hash _pre 2>/dev/null && _pre; unset _pre
+  fi
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]
   then
@@ -306,7 +311,11 @@ main() {
     fi
   fi
 
+  if [[ -n "$has_dotsh" ]]
+  then hash _post 2>/dev/null && _post; unset _post
+  fi
+
   # log "Done [$?]"
 }
 
-main "$@"
+[[ "$0" == "$BASH_SOURCE" ]] && main "$@"
