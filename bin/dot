@@ -246,7 +246,7 @@ build_find_cmd() {
 }
 
 main() {
-  echo >&2 "main [$#] $@"
+  # echo >&2 "main [$#] $@"
   local cmd= default_cmd="install"
   local action=link_file
   local prefix=
@@ -302,7 +302,7 @@ main() {
     fi
   fi
 
-  log "Done [$?]"
+  # log "Done [$?]"
 }
 
 main "$@"
