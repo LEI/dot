@@ -19,6 +19,7 @@ ENV_VARS="HOME PWD OSTYPE UNAME DR"
 
 OPTS=
 RC=".dotrc"
+SH=".dotsh"
 TARGET="$HOME"
 DRY_RUN=0
 VERBOSE=0
@@ -256,10 +257,9 @@ main() {
   local prefix=
   local dir= # role="$(pwd -P)"
   local no_source=0
-  local has_dotsh=0
   local target="$TARGET"
   local create_dirs=()
-  local find_ignore=("*$RC" "*.dotsh" "*.gitkeep" "*.md" "*.tpl")
+  local find_ignore=("*$RC" "*$SH" "*.git" "*.gitkeep" "*.md" "*.tpl")
   local find_names=()
   local find_paths=()
   local find_dirs=()
@@ -279,11 +279,7 @@ main() {
     return $?
   fi
 
-  if [[ -f "$dir/.dotsh" ]] && source "$dir/.dotsh"
-  then has_dotsh=1
-  fi
-
-  if [[ -n "$has_dotsh" ]]
+  if [[ -f "$dir/$SH" ]] && source "$dir/$SH"
   then hash _pre 2>/dev/null && _pre; unset _pre
   fi
 
@@ -311,7 +307,7 @@ main() {
     fi
   fi
 
-  if [[ -n "$has_dotsh" ]]
+  if [[ -f "$dir/$SH" ]] && source "$dir/$SH"
   then hash _post 2>/dev/null && _post; unset _post
   fi
 

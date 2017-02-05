@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+_post() {
+  local key file="$HOME/.gitconfig.local"
+  # [[ -f "$file" ]] && return
+  for key in user.{name,username,email}
+  do
+    if [[ -z "$(git config --file $file --get $key)" ]]
+    then
+      printf "%s" "What is your git ${key#user.}? "; read -r REPLY
+      git config --file $file $key "$REPLY"
+    fi
+  done
+}
