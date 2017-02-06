@@ -11,7 +11,7 @@ cd "$DIR"
 
 source ./lib/utils.bash
 
-OPTS="[hnHp]"
+OPTS="[hnHpcd]"
 
 usage() {
   log "Usage: ${0##*/} --name <remote> --host <user>@<host>:<port> --dir <repo> --git <cmd>"
@@ -68,7 +68,7 @@ main() {
     || git remote add "$name" "ssh://$host/~/$dir/.git"
 
   # Send files
-  git "$cmd" "$name" "$(git symbolic-ref --short HEAD)"
+  git "${cmd:-push}" "$name" "$(git symbolic-ref --short HEAD)"
   # && ssh $host "bash -c \"\$HOME/$dir/bin/dot -R \$HOME/$dir\""
 }
 

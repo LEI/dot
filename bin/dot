@@ -4,6 +4,7 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
+# Do not expand globs
 set -f
 
 SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
@@ -262,7 +263,9 @@ init() {
 
 main() {
   init; parse_opts "$@"
+
   log "${state} ${prefix#*/}"
+
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$RC" ]]
   then # [[ $# -ne 2 ]] && usage 1 "extra args"
     exec_file "$dir/$RC" --root-dir "${dir:-$DIR}" "$@"
