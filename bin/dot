@@ -86,6 +86,10 @@ exec_file() {
 clean_symlinks() {
   local path="${1:-$TARGET}"
   local l
+
+  echo "find . -maxdepth 3 -type l -exec test ! -e {} \; -print"
+  find . -maxdepth 3 -type l -exec test ! -e {} \; -print
+
   for l in $(find . -maxdepth 3 -type l -exec test ! -e {} \; -print)
   do log "Found broken symlink '$l' -> $(readlink "$l")"
   done
