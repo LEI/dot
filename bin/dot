@@ -84,7 +84,7 @@ exec_file() {
 }
 
 clean_symlinks() {
-  local path="${1:-$HOME}"
+  local path="${1:-$TARGET}"
   local l
   for l in $(find . -maxdepth 3 -type l -exec test ! -e {} \; -print)
   do log "Found broken symlink '$l' -> $(readlink "$l")"
@@ -105,7 +105,7 @@ parse_opts() {
       -h|--help) usage ;;
 
       # -u|--upstream) shift; upstream="$1" ;;
-      --clean-symlinks) shift; clean_symlinks "$1" ;;
+      --clean-symlinks) shift; clean_symlinks; exit $? ;;
       --prefix) shift; prefix="$1" ;;
       -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
