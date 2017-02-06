@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 
 backup_file() {
-  if [[ ! -e "$dst" ]]
-  then return 0
-  fi
-  if [[ -L "$dst" ]] && [[ ! -e "$(readlink "$dst")" ]]
-  then log "$dst is a broken link, removing"; rm "$dst"
-  fi
-  if confirm "$src destination already exists, backup to ‘$dst.backup’?"
-  then run mv -v "$dst" "$dst.backup"
+  local f="$1"
+  local b="$f.backup"
+  [[ ! -e "$f" ]] && return 0
+  if confirm "$f already exists, backup to ‘$b’?"
+  then run mv -v "$f" "$b"
   fi
 }
 
@@ -21,19 +18,18 @@ link_file() {
   fi
   # echo "LINK_FILE $src -> $dst"
   if [[ -e "$dst" ]] || [[ -L "$dst" ]]
-  then
-    if [[ "$(readlink "$dst")" != "$src" ]]
-    then
-      backup_file "$dst"
+  then local link="$(readlink "$dst")"
+    if [[ "$link" != "$src" ]]
+    then backup_file "$dst"
       if [[ -e "$dst" ]]
-      then >&2 log "$dst != $src"
-      else do_link "$src" "$dst" \
-        && log "$check_mark $dst => $src"
+      then err "$dst != $src"; return 1
+      elif [[ -L "$dst" ]] && [[ ! -e "$link" ]]
+      then log "$dst is a broken link, removing"; rm "$dst"
       fi
+      do_link "$src" "$dst" && log "$check_mark $dst => $src"
     else log "$check_mark $dst == $src"
     fi
-  else do_link "$src" "$dst" \
-    && log "$check_mark $dst -> $src"
+  else do_link "$src" "$dst" && log "$check_mark $dst -> $src"
   fi
 }
 
