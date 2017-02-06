@@ -4,6 +4,9 @@ backup_file() {
   if [[ ! -e "$dst" ]]
   then return 0
   fi
+  if [[ -L "$dst" ]] && [[ ! -e "$(readlink "$dst")" ]]
+  then log "$dst is a broken link, removing"; rm "$dst"
+  fi
   if confirm "$src destination already exists, backup to ‘$dst.backup’?"
   then run mv -v "$dst" "$dst.backup"
   fi
