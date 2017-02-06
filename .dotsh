@@ -23,7 +23,7 @@ git_config() {
       fi
       ;;
     $state_remove)
-      if [[ -n "$($gc --get $key)" ]] || confirm "git config unset $key"
+      if [[ -n "$($gc --get $key)" ]] || confirm "Unset local git ${key#user.}"
       then run $gc --unset $key
       fi
       ;;
