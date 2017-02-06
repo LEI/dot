@@ -88,7 +88,7 @@ clean_symlinks() {
   local l rl
 
   for l in $(find "$path" -maxdepth 3 -type l -exec test ! -e {} \; -print)
-  do
+  do rl="$(readlink "$l")"
     if [[ -n "$rl" ]] && [[ "$DIR" == "$rl"* ]]
     then log "Removing broken symlink '$l'"; rm "$l"
     fi
