@@ -85,10 +85,13 @@ exec_file() {
 
 clean_symlinks() {
   local path="${1:-$TARGET}"
-  local l
+  local l rl
 
   for l in $(find "$path" -maxdepth 3 -type l -exec test ! -e {} \; -print)
-  do log "Found broken symlink '$l' -> $(readlink "$l")"
+  do
+    if [[ -n "$rl" ]] && [[ "$DIR" == "$rl"* ]]
+    then log "Removing broken symlink '$l'"; rm "$l"
+    fi
   done
 }
 
