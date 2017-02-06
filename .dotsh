@@ -12,7 +12,7 @@ git_config() {
         # printf "%s" "What is your git ${key#user.}? "; read -r reply
         local msg="What is your git ${key#user.}?"
         local var="GIT_$(echo ${key//./_} | tr "[[:lower:]]" "[[:upper:]]")"
-        local default="${!var}"
+        local default="${!var:-}"
         [[ -n "$default" ]] && msg+=" (${var:-default}: $default)"
         printf "%s" "$msg "
         local reply=
