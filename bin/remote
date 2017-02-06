@@ -4,38 +4,25 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-source $ROOT/lib/utils.bash
+SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
+DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
-OPTS="[hnHU]"
+cd "$DIR"
 
-main() {
-  local name host
-  while [[ $# -ne 0 ]]
-  do case "$1" in
-      --) shift; break ;;
-      -h|--help) log "Usage: ${0##*/} $OPTS"; return ;;
-      -n|--name) name="$2"; shift ;;
-      -H|--host) host="$2"; shift ;;
-      --*|'') >&2 log "$1: illegal option $OPTS"; return 1 ;;
-      -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "${1:1:1}" =~ $OPTS ]]
-        then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
-        else >&2 log "${1:0:2}: illegal option $OPTS"; return 1
-        fi ;;
-      *) >&2 log "$1: unrecognized option $OPTS"; return 1
-    esac
-    shift
-  done
+source ./lib/utils.bash
 
-  # if [[ -z "$name" ]] || [[ -z "$host" ]]
-  # then >&2 log "Usage: ${0##*/} <git-remote-name> <user@host>"; exit 1
-  # fi
+OPTS="[hnHp]"
 
-  REPO="tmux-config"
-  WORK_TREE="config/$REPO"
+usage() {
+  log "Usage: ${0##*/} --name <remote> --host <user>@<host>:<port> --dir <repo> --git <cmd>"
+  exit
+}
 
+git_init_bare() {
+  local host="$1"
+  local dir="$2"
   ssh "$host" "bash -s" <<ENDSSH
-GIT_WORK_TREE="\$HOME/$WORK_TREE"
+GIT_WORK_TREE="\$HOME/$dir"
 GIT_DIR="\$GIT_WORK_TREE/.git"
 [[ -d "\$GIT_DIR" ]] && exit 0
 mkdir -p "\$GIT_DIR"
@@ -46,15 +33,43 @@ echo "#!/usr/bin/env bash
 git --work-tree=\"\$GIT_WORK_TREE\" --git-dir=\"\$GIT_DIR\" checkout -f" > "\$POST_RECEIVE"
 chmod +x \$POST_RECEIVE
 ENDSSH
+}
 
-  DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-  cd "$DIR"
+main() {
+  local name host
+  local cmd="push"
+  local dir=".dot"
+  while [[ $# -ne 0 ]]
+  do case "$1" in
+      --) shift; break ;;
+      -h|--help) usage ;;
+      -n|--name) shift; name="$1" ;;
+      -H|--host) shift; host="$1" ;;
+      -c|--cmd) shift; cmd="$1";;
+      -d|--dir) shift; dir="$1";;
+      --*|'') >&2 log "$1: illegal option $OPTS"; return 1 ;;
+      -*) if [[ "$1" =~ ^-[a-zA-Z][a-zA-Z]+$ ]] && [[ "${1:1:1}" =~ $OPTS ]]
+        then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
+        else >&2 log "${1:0:2}: illegal option $OPTS"; return 1
+        fi ;;
+      *) >&2 log "$1: unrecognized option $OPTS"; return 1
+    esac
+    shift
+  done
+
+  if [[ -z "$name" ]] || [[ -z "$host" ]] || [[ -z "$dir" ]] || [[ -z "$cmd" ]]
+  then usage 1
+  fi
+
+  git_init_bare "$host" "$dir"
 
   # Create the git remote if needed
   git remote -v | grep -q "$name.*$host" \
-    || git remote add "$name" "ssh://$host/~/$WORK_TREE/.git"
+    || git remote add "$name" "ssh://$host/~/$dir/.git"
 
-  # Send files and execute installation script
-  git push "$name" "$(git symbolic-ref --short HEAD)" # \
-    # && ssh $host "bash -c \"\$HOME/$WORK_TREE/bin/install "$@"\""
+  # Send files
+  git "$cmd" "$name" "$(git symbolic-ref --short HEAD)"
+  # && ssh $host "bash -c \"\$HOME/$dir/bin/dot -R \$HOME/$dir\""
 }
+
+[[ "$0" == "$BASH_SOURCE" ]] && main "$@"

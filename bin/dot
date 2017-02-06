@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
-DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
-
 set -o nounset
 set -o errexit
 set -o pipefail
 
 set -f
+
+SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
+DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
 cd "$DIR"
 
@@ -83,6 +83,14 @@ exec_file() {
   done
 }
 
+clean_symlinks() {
+  local path="${1:-$HOME}"
+  local l
+  for l in $(find . -maxdepth 3 -type l -exec test ! -e {} \; -print)
+  do log "Found broken symlink '$l' -> $(readlink "$l")"
+  done
+}
+
 parse_opts() {
   # echo >&2 "OPTS [$#] $@"
   OPTS="[hDveustRcnp]"
@@ -97,6 +105,7 @@ parse_opts() {
       -h|--help) usage ;;
 
       # -u|--upstream) shift; upstream="$1" ;;
+      --clean-symlinks) shift; clean_symlinks "$1" ;;
       --prefix) shift; prefix="$1" ;;
       -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
