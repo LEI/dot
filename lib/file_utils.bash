@@ -12,6 +12,7 @@ backup_file() {
 link_file() {
   local src="$1"
   local dst="$2" # {dst%/*}/
+  local check_mark="✓"
   if [[ ! -e "$src" ]]
   then err "$dst: no such source"; return 1
   fi
@@ -24,12 +25,12 @@ link_file() {
       if [[ -e "$dst" ]]
       then >&2 log "$dst != $src"
       else do_link "$src" "$dst" \
-        && log "$dst => $src"
+        && log "$check_mark $dst => $src"
       fi
-    else log "$dst == $src"
+    else log "$check_mark $dst == $src"
     fi
   else do_link "$src" "$dst" \
-    && log "$dst -> $src"
+    && log "$check_mark $dst -> $src"
   fi
 }
 
