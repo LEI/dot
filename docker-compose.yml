@@ -6,7 +6,14 @@ services:
       GIT_USER_NAME: Docker Test
       GIT_USER_USERNAME: docker
       GIT_USER_EMAIL: docker@test.io
-    command: -l -c "$$DOT/test.sh"
+    command: |
+      -l -c "t=$$(tail -n1 ~/.bashrc);
+      dot -R $$DOT --non-interactive;
+      if [[ \"$$t\" == \"$$(tail -n1 ~/.bashrc)\" ]]; then echo ~/.bashrc was not modified; exit 1; fi;
+      tmux new -n test 'vim +PlugInstall +qall; exit';
+      for d in $$HOME/{.tmux/plugins,.vim/plugged}; do
+        if ! test -d $$d; then echo $$d is missing; exit 1; fi;
+      done"
     image: lei/dot
     depends_on:
       - image
