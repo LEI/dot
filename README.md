@@ -6,6 +6,12 @@
 - [tmux](https://tmux.github.io/)
 - [Solarized](http://ethanschoonover.com/solarized) terminal colors
 
+## Manual installation
+
+    mkdir -p "$HOME/.tmux"
+    ln -isv "$DOT/.tmux/*" "$HOME/.tmux"
+    echo 'source-file $HOME/.tmux/tmux.conf' >> "$HOME/.tmux.conf"
+
 ## Tmux Plugin Manager
 
 - [tpm](https://github.com/tmux-plugins/tpm)
