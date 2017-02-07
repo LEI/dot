@@ -2,7 +2,9 @@
 
 [[ "$state" == "install" ]] && directory "$state" "$HOME/.bash.d"
 
-symlink "$state" --prefix "$prefix" --path f:.bash* \
+symlink "$state" --prefix "$prefix" \
+  --path f:.bash* \
+  --path .bash.d/* \
   --name .inputrc
 
 [[ "$state" == "remove" ]] && directory "$state" "$HOME/.bash.d"

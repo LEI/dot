@@ -32,22 +32,23 @@ INTERACTIVE=1
 
 usage() {
   local ret="$?"
+  local cmd="${0##*/}"
   if [[ $# -ne 0 ]]
   then ret="$1"; shift
   fi
   if [[ $# -ne 0 ]]
-  then err "$@"
+  then err "$cmd: $@"
   fi
-  usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
+  usage_exit "$ret" "Usage: $cmd [install|remove] $OPTS"
 }
 
 parse_config() {
   local file="$1"
-  if [[ -f "$file" ]]
-  then # [[ $# -ne 2 ]] && usage 1 "extra args"
-    [[ "$no_source" -ne 0 ]] && exec_file "$file" \
-      --root-dir "${dir:-$DIR}" "$@"
-    return $?
+  shift
+  local rest="$@"
+  # [[ $# -ne 2 ]] && usage 1 "extra args"
+  if [[ -f "$file" ]] # && [[ "$no_source" -eq 0 ]] # --no-auto-source
+  then exec_file "$file" --root-dir "${dir:-$DIR}" "$rest"
   fi
 }
 
@@ -78,9 +79,11 @@ exec_file() {
   fi
   while read -r line
   do # Disable wildcard expansion ${line//\*/\\*}
-    line="${line###*}"
+    # line="${line###*}"
     line="${line%% # *}"
     [[ -z "$line" ]] && continue
+    # [[ "$line" =~ ^#* ]] && continue
+    [[ "$line" == "#"* ]] && continue
     [[ -n "$l" ]] && line="${l%\\}$line"
     if [[ "$line" =~ \\$ ]]
     then l="$line"; continue
@@ -93,7 +96,7 @@ exec_file() {
     fi; l=
   done < "$f"
   for l in "${lines[@]}"
-  do main $l || return $?
+  do main $l || { err "main $l"; return $?; }
   done
 }
 
@@ -162,7 +165,9 @@ parse_opts() {
   done
 
   state="${state:-$state_default}"
-  dir="${dir:-$DIR}"
+
+  [[ -z "$dir" ]] && usage 1 "missing --root-dir"
+  # dir="${dir:-$DIR}"
 
   if [[ -n "$prefix" ]]
   then dir+="/$prefix"
@@ -275,15 +280,15 @@ init() {
 }
 
 main() {
-  echo "main @ $@"
+  # echo "main @ $@"
   init; parse_opts "$@"
-  log "${state} ${prefix#*/}"
-  parse_config "$dir/$RC" || return $?
+  parse_config "$dir/$RC"
+  log "[${state} ${prefix#*/}]"
   bootstrap # log "${prefix#*/} ${state}ed"
 }
 
 symlink() {
-  echo "smylink @ $@"
+  # echo "smylink @ $@"
   init; parse_opts --no-auto-source \
     --root-dir "${dir:-$DIR}" \
     "$@"
