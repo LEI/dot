@@ -14,9 +14,10 @@ addons:
 
 install:
   - docker-compose build
-  - docker images
-  - docker ps -a
-  - shellcheck /root/.dot/bin/dot
+  # - docker images
+  # - docker ps -a
+  - ls -lah
+  # - shellcheck /root/.dot/bin/dot
 
 script:
   - docker-compose run test
