@@ -18,9 +18,9 @@ done
 # Stop expansion
 set -f
 
-UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
+UNAME="$(uname -s | tr "[:upper:]" "[:lower:]")"
 
-ENV_VARS="HOME PWD OSTYPE UNAME DR"
+ENV_VARS="HOME PWD OSTYPE UNAME"
 
 OPTS=
 RC=".dotrc"
@@ -29,6 +29,8 @@ TARGET="$HOME"
 DRY_RUN=0
 VERBOSE=0
 INTERACTIVE=1
+
+export UNAME DRY_RUN VERBOSE INTERACTIVE
 
 usage() {
   local ret="$?"
@@ -45,10 +47,10 @@ usage() {
 parse_config() {
   local file="$1"
   shift
-  local rest="$@"
+  local args=("$@")
   # [[ $# -ne 2 ]] && usage 1 "extra args"
   if [[ -f "$file" ]] # && [[ "$no_source" -eq 0 ]] # --no-auto-source
-  then exec_file "$file" --root-dir "${dir:-$DIR}" "$rest"
+  then exec_file "$file" --root-dir "${dir:-$DIR}" "${args[@]}"
   fi
 }
 
@@ -59,7 +61,7 @@ env_sub() {
     # >&2 echo "$s -> $str"
     if [[ "$str" == *\$$s* ]]
     then str="${str//\$$s/${!s}}"
-    elif [[ "$str" == *\${$s}* ]]
+    elif [[ "$str" == *\$\{$s\}* ]]
     then str="${str//\${$s}/${!s}}"
     fi
   done
@@ -67,15 +69,15 @@ env_sub() {
 }
 
 exec_file() {
-  local f="$1"
+  local file="$1"
   shift
-  local a="$@"
+  local args=("$@")
   local l=
   local lines=()
   local line args
   local var val
-  if [[ ! -f "$f" ]]
-  then err "$f: no such file"; return 1
+  if [[ ! -f "$file" ]]
+  then err "$file: no such file"; return 1
   fi
   while read -r line
   do # Disable wildcard expansion ${line//\*/\\*}
@@ -89,12 +91,13 @@ exec_file() {
     then l="$line"; continue
     elif [[ "$line" =~ ^[a-zA-Z]+=* ]]
     then var="${line%%=*}"; val="${line#*=}"
-      declare $var="$val" && ENV_VARS+=" $var"
-    # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$f")" env_sub "$line")
+      declare "$var=$val" # && ENV_VARS+=" $var"
+      log "declare $var=$val"
+    # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$file")" env_sub "$line")
     # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
-    else lines+=("$a $line") # --no-auto-source
+    else lines+=("${args[@]} $line") # --no-auto-source
     fi; l=
-  done < "$f"
+  done < "$file"
   for l in "${lines[@]}"
   do main $l || { err "main $l"; return $?; }
   done
@@ -102,14 +105,13 @@ exec_file() {
 
 clean_symlinks() {
   local path="${1:-$TARGET}"
-  local l rl
-
-  for l in $(find "$path" -maxdepth 3 -type l -exec test ! -e {} \; -print)
-  do rl="$(readlink "$l")"
-    if [[ -n "$rl" ]] && [[ "$DIR" == "$rl"* ]]
-    then log "Removing broken symlink '$l'"; rm "$l"
+  local link real_link
+  while read -r l
+  do real_link="$(readlink "$link")"
+    if [[ -n "$real_link" ]] && [[ "$DIR" == "$real_link"* ]]
+    then log "Removing broken symlink '$link'"; rm "$link"
     fi
-  done
+  done < <(find "$path" -maxdepth 3 -type l -exec test ! -e {} \; -print)
 }
 
 parse_opts() {
@@ -164,6 +166,9 @@ parse_opts() {
     shift ${n:-1}
   done
 
+  [[ "$INTERACTIVE" -eq 0 ]] && log "Non interactive"
+  [[ "$DRY_RUN" -ne 0 ]] && log "Running in check mode!"
+  [[ "$VERBOSE" -gt 1 ]] & log "Log level: $VERBOSE"
   state="${state:-$state_default}"
 
   [[ -z "$dir" ]] && usage 1 "missing --root-dir"
@@ -208,9 +213,9 @@ build_find_cmd() {
   [[ "${#find_paths[@]}" -ne 0 ]] && build_find_opt "-o" "-path" "$dir" "${find_paths[@]}" # /#/$dir/
   if [[ "${#find_opts[@]}" -ne 0 ]]
   then
-    find_cmd="find "$dir" -mindepth "$min_depth" -maxdepth "$max_depth" "${find_opts[@]}""
+    find_cmd=("find" "$dir" "-mindepth" "$min_depth" "-maxdepth" "$max_depth" "${find_opts[@]}")
     if [[ "$VERBOSE" -gt 1 ]]
-    then log "$find_cmd"
+    then log "${find_cmd[@]}"
     fi
   fi
 }
@@ -218,25 +223,25 @@ build_find_cmd() {
 bootstrap() {
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]]
   then
-    if source "$dir/$SH" && hash _$state 2>/dev/null
-    then _$state; unset _$state
+    if source "$dir/$SH" && hash "_$state" 2>/dev/null
+    then "_$state"; unset "_$state"
     fi
   fi
 
   if [[ "${#create_dirs[@]}" -ne 0 ]]
   then
     if [[ "$state" == "install" ]]
-    then create_dir ${create_dirs[@]/#/$target/}
+    then create_dir "${create_dirs[@]/#/$target/}"
     fi
   fi
 
-  if build_find_cmd && [[ -n "$find_cmd" ]]
-  then # echo "FIND_CMD $find_cmd"
+  if build_find_cmd && [[ -n "${find_cmd[@]}" ]]
+  then # echo "FIND_CMD ${find_cmd[@]}"
     local src dst
-    for src in $($find_cmd)
+    while read -r src
     do dst="${src/$dir/$target}"
       $action "$src" "$dst"
-    done
+    done < <("${find_cmd[@]}")
   # elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
   # then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
   fi
@@ -248,8 +253,8 @@ bootstrap() {
     fi
   fi
 
-  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]] && hash _post_$state 2>/dev/null
-  then _post_$state; unset _post_$state
+  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]] && hash "_post_$state" 2>/dev/null
+  then "_post_$state"; unset "_post_$state"
   fi
 
   # log "Done [$?]"
@@ -262,14 +267,15 @@ init() {
   state_remove="remove"
   action=link_file
   prefix=
-  dir= # role="$(pwd -P)"
+  dir=
+  # role="$(pwd -P)"
   no_source=0
   target="$TARGET"
   create_dirs=()
   find_ignore=("*$RC" "*$SH" "*.git" "*.gitkeep" "*.md" "*.tpl")
   find_names=()
   find_paths=()
-  find_dirs=()
+  # find_dirs=()
   min_depth=1
   max_depth=2
   find_opts=()

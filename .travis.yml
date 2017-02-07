@@ -13,8 +13,9 @@ addons:
       - shellcheck
 
 install:
-  - shellcheck ./bin/dot
   - shellcheck ./bin/*
+  - shellcheck ./lib/*.bash
+  - shellcheck ./src/**/.dotsh
   - docker-compose build
 
 script:
