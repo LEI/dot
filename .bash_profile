@@ -1,5 +1,7 @@
 # ~/.bash_profile
 
+BASH_DIR="$HOME/.bash.d"
+
 load() {
   local path
   for path in "$@"
@@ -21,11 +23,11 @@ main() {
   done
   unset option
 
-  load $HOME/.bash{_aliases,_exports,_functions}
+  load $BASH_DIR/{aliases,exports,functions}.bash
   # OS="$(uname -o 2>/dev/null || uname -s | to lower)"
 
   local file f
-  for file in $HOME/.bash.d/*.bash
+  for file in $BASH_DIR/plugins/*.bash
   do f="${file##*/}"
     hash ${file%.bash} 2>/dev/null && source $file
   done

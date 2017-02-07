@@ -1,4 +1,4 @@
-# ~/.bash_exports
+#!/usr/bin/env bash
 
 if hash nvim 2>/dev/null
 then EDITOR="nvim"

@@ -1,4 +1,4 @@
-# ~/.bash_aliases
+#!/usr/bin/env bash
 
 alias sudo="sudo "
 
