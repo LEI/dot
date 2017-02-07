@@ -2,13 +2,13 @@
 
 [[ "$state" == "install" ]] && directory "$state" "$HOME/.tmux"
 
-symlink "$state" --prefix "$prefix" \
+symlink "$state" \
   --name tmux.conf \
   --path .tmux/tmux-*.conf \
-  --path .tmux/tmux.$UNAME.conf \
+  --path .tmux/tmux."$UNAME".conf \
   --path d:.tmux/*
 
-line_in_file "$state" "$HOME/.tmux.conf" 'source-file $HOME/.tmux/tmux.conf'
+line_in_file "$state" "$HOME/.tmux.conf" "source-file ~/.tmux/tmux.conf"
 
 [[ "$state" == "remove" ]] && ! hash tmux 2>/dev/null \
   && directory "$state" "$HOME/.tmux"
