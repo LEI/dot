@@ -21,7 +21,7 @@ usage_exit() {
   local ret="${1:-$?}"
   shift
   >&2 log "$*"
-  exit $ret
+  exit "$ret"
 }
 
 confirm() {

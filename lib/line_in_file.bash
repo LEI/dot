@@ -3,7 +3,8 @@
 add_line_in_file() {
   local file="$1"
   local line="$2"
-  if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
+  # if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
+  if ! fgrep --files-with-matches --line-regexp --quiet "$line" "$file"
   then [[ "$VERBOSE" -gt 1 ]] && log "$line >> $file"
     if [[ "$DRY_RUN" -eq 0 ]]
     then printf "%s\n" "$line" >> "$file"
@@ -14,11 +15,12 @@ add_line_in_file() {
 remove_line_in_file() {
   local file="$1"
   local line="$2"
-  if [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
+  # [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
+  if ! fgrep --files-without-matches --line-regexp --quiet "$line" "$file"
   then local tmp="/tmp/$$.${file##*/}.grep"
     line="${line//\[/\\[}"
     line="${line//\]/\\]}"
-    [[ "$VERBOSE" -gt 1 ]] && log "grep -v "$line" "$file" > "$tmp" && mv "$tmp" "$file""
+    [[ "$VERBOSE" -gt 1 ]] && log "grep -v $line $file > $tmp && mv $tmp $file"
     if [[ "$DRY_RUN" -eq 0 ]]
     then grep -v "$line" "$file" > "$tmp" && mv "$tmp" "$file"
     fi # eval sed --in-place \'/${line//\//\\\/}/d\' "$file"

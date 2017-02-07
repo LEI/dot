@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# export OS
-# export PM
+# export OS PM
 
 detect_os() {
   case "$OSTYPE" in # ${OSTYPE//[0-9.]/}
@@ -17,4 +16,5 @@ detect_os() {
       ;;
     *) err "$OSTYPE: unknown operating system"; return 1 ;;
   esac
+  [[ -n "$OS" ]] || [[ -z "$PM" ]] && return 1
 }

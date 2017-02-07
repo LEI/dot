@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 
 create_dir() {
-  local opts="--parents"
+  local opts=("--parents")
   if [[ "$VERBOSE" -ne 0 ]]
-  then opts+=" --verbose"
+  then opts+=("--verbose")
   fi
   local d
   for d in "$@"
-  do run mkdir $opts "$d"
+  do run mkdir "${opts[@]}" "$d"
   done
 }
 
 remove_dir() {
-  local opts="--ignore-fail-on-non-empty"
+  local opts=("--ignore-fail-on-non-empty")
   if [[ "$VERBOSE" -ne 0 ]]
-  then opts+=" --verbose"
+  then opts+=("--verbose")
   fi
   local d
   for d in "$@"
   do
     if [[ -d "$d" ]]
-    then run rmdir $opts "$1"
+    then run rmdir "${opts[@]}" "$1"
     fi
   done
 }
