@@ -121,10 +121,12 @@ parse_opts() {
   do n=1
     case "$1" in
       --) shift; break ;;
-      install) [[ -n "$state" ]] && usage 1; state="$1"; action=link_file ;;
-      remove) [[ -n "$state" ]] && usage 1; state="$1"; action=remove_link ;;
+      install) [[ -n "$state" ]] && usage 1 "$1: already set ($state)"
+        state="$1"; action=link_file ;;
+      remove) [[ -n "$state" ]] && usage 1 "$1: already set ($state)"
+        state="$1"; action=remove_link ;;
       -D|--dry-run) DRY_RUN=1 ;;
-      -v|--verbose) VERBOSE="$(($VERBOSE + 1))" ;;
+      -v|--verbose) VERBOSE="$((VERBOSE + 1))" ;;
       -h|--help) usage ;;
 
       # -u|--upstream) shift; upstream="$1" ;;
@@ -169,7 +171,13 @@ parse_opts() {
   [[ "$INTERACTIVE" -eq 0 ]] && log "Non interactive"
   [[ "$DRY_RUN" -ne 0 ]] && log "Running in check mode!"
   [[ "$VERBOSE" -gt 1 ]] & log "Log level: $VERBOSE"
-  state="${state:-$state_default}"
+  # state="${state:-$state_default}"
+  if [[ -n "$state" ]] && \
+    [[ "$state" != "$state_install" ]] && \
+    [[ "$state" != "$state_remove" ]]
+  then usage 1 "$state: illegal command"
+  else state="$state_default"
+  fi
 
   [[ -z "$dir" ]] && usage 1 "missing --root-dir"
   # dir="${dir:-$DIR}"

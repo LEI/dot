@@ -21,18 +21,29 @@ usage() {
 git_init_bare() {
   local host="$1"
   local dir="$2"
-  ssh "$host" "bash -s" <<ENDSSH
-GIT_WORK_TREE="\$HOME/$dir"
-GIT_DIR="\$GIT_WORK_TREE/.git"
-[[ -d "\$GIT_DIR" ]] && exit 0
-mkdir -p "\$GIT_DIR"
-cd "\$GIT_DIR"
+  # ssh "$host" "bash -s" <<'ENDSSH'
+# GIT_WORK_TREE="\$HOME/$dir"
+# GIT_DIR="\$GIT_WORK_TREE/.git"
+# [[ -d "\$GIT_DIR" ]] && exit 0
+# mkdir -p "\$GIT_DIR"
+# cd "\$GIT_DIR"
+# git init --bare
+# POST_RECEIVE="\$GIT_DIR/hooks/post-receive"
+# echo "#!/usr/bin/env bash
+# git --work-tree=\"\$GIT_WORK_TREE\" --git-dir=\"\$GIT_DIR\" checkout -f" > "\$POST_RECEIVE"
+# chmod +x \$POST_RECEIVE
+# ENDSSH
+  ssh "$host" "bash -s" <<< '
+GIT_WORK_TREE="$HOME/'$dir'"
+GIT_DIR="$GIT_WORK_TREE/.git"
+[[ -d "$GIT_DIR" ]] && exit 0
+mkdir -p "$GIT_DIR"
+cd "$GIT_DIR"
 git init --bare
-POST_RECEIVE="\$GIT_DIR/hooks/post-receive"
+POST_RECEIVE="$GIT_DIR/hooks/post-receive"
 echo "#!/usr/bin/env bash
-git --work-tree=\"\$GIT_WORK_TREE\" --git-dir=\"\$GIT_DIR\" checkout -f" > "\$POST_RECEIVE"
-chmod +x \$POST_RECEIVE
-ENDSSH
+git --work-tree="$GIT_WORK_TREE" --git-dir="$GIT_DIR" checkout -f" > "$POST_RECEIVE"
+chmod +x $POST_RECEIVE'
 }
 
 main() {

@@ -38,7 +38,7 @@ subtree_do() {
   local prefix="$3"
   local branch="${4:-master}"
 
-  git subtree $action --prefix "$prefix" "$url" "$branch" --squash
+  git subtree "$action" --prefix "$prefix" "$url" "$branch" --squash
 
   log "Done [$?]"
 }
@@ -49,13 +49,13 @@ main() {
   # git log | awk '/git-subtree-dir/ { print $2 }'
 
   case "$action" in
-    add) subtree_do $action "$path" "$3" ;;
+    add) subtree_do "$action" "$path" "$3" ;;
     pull|push)
       local base="src"
       local dot t
       for dot in $DIR/$base/*
       do d="$(basename "$dot")"
-        subtree_do $action "$path$d.git" "$base/$d" # "master"
+        subtree_do "$action" "$path$d.git" "$base/$d" # "master"
       done
       ;;
     *) err "$action: unknown action" ;;
