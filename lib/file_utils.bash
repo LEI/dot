@@ -3,7 +3,7 @@
 backup_file() {
   local file path
   for file in "$@"
-  do name="$f.backup"
+  do path="$f.backup"
     [[ ! -e "$file" ]] && return 0
     if confirm "$file already exists, backup to ‘$path’?"
     then run mv -v "$file" "$path"

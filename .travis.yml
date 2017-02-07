@@ -13,11 +13,9 @@ addons:
       - shellcheck
 
 install:
+  - shellcheck ./bin/dot
+  - shellcheck ./bin/*
   - docker-compose build
-  # - docker images
-  # - docker ps -a
-  - ls -lah
-  # - shellcheck /root/.dot/bin/dot
 
 script:
   - docker-compose run test
