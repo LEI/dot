@@ -1,7 +1,7 @@
-sudo: required
+# sudo: required
 
-services:
-  - docker
+# services:
+#   - docker
 
 language: bash
 
@@ -16,10 +16,12 @@ install:
   - shellcheck ./bin/*
   - shellcheck ./lib/*.bash
   - shellcheck ./src/**/.dotsh
-  - docker-compose build
+  # - docker-compose build
 
 script:
-  - docker-compose run test
+  # - docker-compose run test
+  - echo $PATH
+  - ./bin/dot -R .
 
 notifications:
   email: false

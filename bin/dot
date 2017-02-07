@@ -9,7 +9,7 @@ DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
 # cd "$DIR"
 
-source "$DIR/lib/*.bash"
+source $DIR/lib/*.bash
 
 # source ./lib/*.bash
 
