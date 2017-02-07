@@ -5,10 +5,18 @@ services:
 
 language: bash
 
+addons:
+  apt:
+    # sources:
+    #   - debian-sid
+    packages:
+      - shellcheck
+
 install:
   - docker-compose build
   - docker images
   - docker ps -a
+  - shellcheck /root/.dot/bin/dot
 
 script:
   - docker-compose run test
