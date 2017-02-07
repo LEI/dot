@@ -41,6 +41,16 @@ usage() {
   usage_exit "$ret" "Usage: ${0##*/} [install|remove] $OPTS"
 }
 
+parse_config() {
+  local file="$1"
+  if [[ -f "$file" ]]
+  then # [[ $# -ne 2 ]] && usage 1 "extra args"
+    [[ "$no_source" -ne 0 ]] && exec_file "$file" \
+      --root-dir "${dir:-$DIR}" "$@"
+    return $?
+  fi
+}
+
 env_sub() {
   local s str="$1"
   for s in $ENV_VARS
@@ -83,7 +93,7 @@ exec_file() {
     fi; l=
   done < "$f"
   for l in "${lines[@]}"
-  do main $l
+  do main $l || return $?
   done
 }
 
@@ -265,19 +275,15 @@ init() {
 }
 
 main() {
+  echo "main @ $@"
   init; parse_opts "$@"
-
   log "${state} ${prefix#*/}"
-
-  if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$RC" ]]
-  then # [[ $# -ne 2 ]] && usage 1 "extra args"
-    exec_file "$dir/$RC" --root-dir "${dir:-$DIR}" "$@"
-    return $?
-  fi
+  parse_config "$dir/$RC" || return $?
   bootstrap # log "${prefix#*/} ${state}ed"
 }
 
 symlink() {
+  echo "smylink @ $@"
   init; parse_opts --no-auto-source \
     --root-dir "${dir:-$DIR}" \
     "$@"

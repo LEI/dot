@@ -1,23 +1,27 @@
-# --prefix src/config
-# --create-dir .config
+# prefix src/config
+# create-dir .config
 
---prefix src/bash
-# --create-dir .bash.d
-# --path f:.bash*
+[bash]
+prefix=src/bash
+# create-dir .bash.d
+# path f:.bash*
 
---prefix src/git
-# --path .git*
+[git]
+prefix=src/git
+# path .git*
 
---prefix src/tmux
-# --create-dir .tmux \
-# --name .tmux.conf \
-# --path .tmux/tmux.*.conf \
-# --path .tmux/tmux-$UNAME.conf \
-# --path d:.tmux/*
+[tmux]
+prefix=src/tmux
+# create-dir .tmux \
+# name .tmux.conf \
+# path .tmux/tmux.*.conf \
+# path .tmux/tmux-$UNAME.conf \
+# path d:.tmux/*
 
---prefix src/vim
-# --create-dir .vim \
-# --path .vim/plugin/*.vim \
-# --path .vim/settings/*.vim \
-# --path .vim/* \
-# --name vimrc
+[vim]
+prefix=src/vim
+# create-dir .vim \
+# path .vim/plugin/*.vim \
+# path .vim/settings/*.vim \
+# path .vim/* \
+# name vimrc
