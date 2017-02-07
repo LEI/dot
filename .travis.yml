@@ -1,23 +1,23 @@
-sudo: required
+# sudo: required
 
-# services:
-#   - docker
+# # services:
+# #   - docker
 
 language: bash
 
-addons:
-  apt:
-    sources:
-      - debian-sid
-    packages:
-      - shellcheck
+# addons:
+#   apt:
+#     sources:
+#       - debian-sid
+#     packages:
+#       - shellcheck
 
 install:
-  - shellcheck ./bin/* ./lib/*.bash ./src/**/.dotsh
-  # - docker-compose build
+  # - shellcheck ./bin/* ./lib/*.bash ./src/**/.dotsh
+  - docker-compose build
 
 script:
-  # - docker-compose run test
+  - docker-compose run test
   - echo $PATH
   - ./bin/dot -R .
 
