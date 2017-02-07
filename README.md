@@ -10,7 +10,7 @@
 
     mkdir -p "$HOME/.tmux"
     ln -isv "$DOT/.tmux/*" "$HOME/.tmux"
-    echo "source-file $HOME/.tmux/tmux.conf" >> "$HOME/.tmux.conf"
+    echo 'source-file $HOME/.tmux/tmux.conf' >> "$HOME/.tmux.conf"
 
 ## Tmux Plugin Manager
 
