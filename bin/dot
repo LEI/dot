@@ -4,16 +4,19 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-# Do not expand globs
-set -f
-
 SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
 DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
-cd "$DIR"
+# cd "$DIR"
 
-source ./lib/utils.bash
-source ./lib/file_utils.bash
+for path in $DIR/lib/*.bash
+do source "$path"
+done
+
+# source ./lib/*.bash
+
+# Stop expansion
+set -f
 
 UNAME="$(uname -s | tr "[[:upper:]]" "[[:lower:]]")"
 

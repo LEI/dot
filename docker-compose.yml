@@ -17,12 +17,13 @@ services:
       GIT_USER_USERNAME: docker
       GIT_USER_EMAIL: docker@test.io
     command: |
-      -l -c 't=$$(tail -n1 ~/.bashrc);
+      -l -c '
+      bashrc=$$(tail -n1 ~/.bashrc);
       dot -R $$DOT --non-interactive;
-      if [[ "$$t" == "$$(tail -n1 ~/.bashrc)" ]]; then echo ~/.bashrc was not modified; exit 1; fi;
+      if [[ "$$bashrc" == "$$(tail -n1 ~/.bashrc)" ]]; then echo ~/.bashrc was not modified; exit 1; fi;
       if [[ "$$(git config --file ~/.gitconfig.local --get user.name)" != "$$GIT_USER_NAME" ]]; then echo GIT_USER_NAME not set in ~/.gitconfig.local; exit 1; fi;
       tmux new-session -n test "vim +PlugInstall +qall; exit";
-      for d in $$HOME/{.tmux/plugins,.vim/plugged}; do if ! test -d $$d; then echo $$d is missing; exit 1; fi; done'
+      for d in $$HOME/{.tmux/plugins,.vim/plugged}; do if ! test -d $$d; then echo $$d directory is missing; exit 1; fi; done'
 
   image:
     build: .

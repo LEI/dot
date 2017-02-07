@@ -50,13 +50,15 @@ subtree_do() {
 
 main() {
   local action="$1"
-  local path="${2:-git@github.com:$USER/dot-}"
-  # git log | awk '/git-subtree-dir/ { print $2 }'
-  local base="src"
+  shift
+  local path="$@" # "${2:-git@github.com:$USER/dot-}"
+  [[ $# -eq 0 ]] && path="$(git log | awk '/git-subtree-dir/ { print $2 }')"
   local dot t
-  for dot in $DIR/$base/*
-  do d="$(basename "$dot")"
-    subtree_do $action "$path$d.git" "$base/$d" # "master"
+  for dot in $path
+  do
+    d="$(basename "$dot")"
+    echo subtree_do $action "$path$d.git" "$base/$d" # "master"
+    debug d action path
   done
 }
 

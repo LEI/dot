@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# OS=
-# PM=
+# export OS
+# export PM
 
 detect_os() {
   case "$OSTYPE" in # ${OSTYPE//[0-9.]/}

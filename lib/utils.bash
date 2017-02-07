@@ -10,6 +10,13 @@ err() {
   return $ret
 }
 
+debug() {
+  local v
+  for v in "$@"
+  do >&2 log "${!v:-undefined}"
+  done
+}
+
 usage_exit() {
   local ret="${1:-$?}"
   shift
