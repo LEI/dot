@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
 
-[[ "$state" == "install" ]] && directory "$state" "$HOME/.vim"
-
-symlink "$state" --prefix "$prefix" --name .vimrc --path .vim/*
-
-line_in_file "$state" "$HOME/.vim/vimrc" 'source ~/.vim/init.vim'
-
-[[ "$state" == "remove" ]] && ! hash vim 2>/dev/null \
-  && directory "$state" "$HOME/.vim"
-
 _post_install() {
   if hash nvim 2>/dev/null \
     && [[ -d "$HOME/.vim" ]] \
@@ -17,3 +8,16 @@ _post_install() {
     ln -s "$HOME/.vim" "$HOME/.config/nvim"
   fi
 }
+
+_main() {
+  [[ "$state" == "install" ]] && directory "$state" "$HOME/.vim"
+
+  symlink "$state" --path .vim/* # --name *vimrc
+
+  line_in_file "$state" "$HOME/.vim/vimrc" "source ~/.vim/init.vim"
+
+  [[ "$state" == "remove" ]] && ! hash vim 2>/dev/null \
+    && directory "$state" "$HOME/.vim"
+}
+
+_main
