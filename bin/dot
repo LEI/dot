@@ -128,7 +128,7 @@ parse_opts() {
       -h|--help) usage ;;
 
       # -u|--upstream) shift; upstream="$1" ;;
-      --clean-symlinks) shift; clean_symlinks; exit $? ;;
+      --clean-symlinks) shift; clean_symlinks "${1:-$TARGET}"; exit $? ;;
       --prefix) shift; prefix="$1" ;;
       -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
@@ -285,7 +285,7 @@ init() {
   min_depth=1
   max_depth=2
   find_opts=()
-  find_cmd=
+  find_cmd=()
   # declare -a find_opts
   n=
   next=

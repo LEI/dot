@@ -9,7 +9,7 @@ DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
 cd "$DIR"
 
-source ./lib/utils.bash
+source "$DIR/lib/utils.bash"
 
 # usage() {
 #   local ret="$?"
@@ -52,7 +52,7 @@ main() {
     add) subtree_do "$action" "$path" "$3" ;;
     pull|push)
       local base="src"
-      local dot t
+      local dot d
       for dot in $DIR/$base/*
       do d="$(basename "$dot")"
         subtree_do "$action" "$path$d.git" "$base/$d" # "master"
