@@ -46,11 +46,10 @@ subtree_do() {
 main() {
   local action="$1"
   local path="${2:-git@github.com:$USER/dot-}"
-  local dir="$3"
   # git log | awk '/git-subtree-dir/ { print $2 }'
 
   case "$action" in
-    add) subtree_do $action "$path" "$dir" ;;
+    add) subtree_do $action "$path" "$3" ;;
     pull|push)
       local base="src"
       local dot t
