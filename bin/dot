@@ -9,9 +9,7 @@ DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
 # cd "$DIR"
 
-for path in $DIR/lib/*.bash
-do source "$path"
-done
+source "$DIR/lib/*.bash"
 
 # source ./lib/*.bash
 
@@ -39,7 +37,7 @@ usage() {
   then ret="$1"; shift
   fi
   if [[ $# -ne 0 ]]
-  then err "$cmd: $@"
+  then err "$cmd: $*"
   fi
   usage_exit "$ret" "Usage: $cmd [install|remove] $OPTS"
 }
@@ -305,6 +303,7 @@ symlink() {
   # echo "smylink @ $@"
   init; parse_opts --no-auto-source \
     --root-dir "${dir:-$DIR}" \
+    --prefix "$prefix" \
     "$@"
   # log "${state} ${prefix#*/} symlinks"
   bootstrap # log "${prefix#*/} symlinks ${state}ed"
