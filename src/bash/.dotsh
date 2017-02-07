@@ -2,7 +2,7 @@
 
 [[ "$state" == "install" ]] && directory "$state" "$HOME/.bash.d"
 
-symlink "$state" --prefix "$prefix" \
+symlink "$state" \
   --path f:.bash* \
   --path .bash.d/* \
   --name .inputrc
@@ -10,4 +10,4 @@ symlink "$state" --prefix "$prefix" \
 [[ "$state" == "remove" ]] && directory "$state" "$HOME/.bash.d"
 
 line_in_file "$state" "$HOME/.bashrc" \
-  '[[ -n "$PS1" ]] && [[ -f ~/.bash_profile ]] && source ~/.bash_profile'
+  "[[ -n \"\$PS1\" ]] && [[ -f ~/.bash_profile ]] && source ~/.bash_profile"
