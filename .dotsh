@@ -8,7 +8,7 @@ symlink "$state" --prefix "$prefix" \
   --path .tmux/tmux.$UNAME.conf \
   --path d:.tmux/*
 
-line_in_file "$state" "$HOME/.tmux.conf" 'source $HOME/.tmux/tmux.conf'
+line_in_file "$state" "$HOME/.tmux.conf" 'source-file $HOME/.tmux/tmux.conf'
 
 [[ "$state" == "remove" ]] && ! hash tmux 2>/dev/null \
   && directory "$state" "$HOME/.tmux"
