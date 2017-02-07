@@ -1,14 +1,48 @@
 #!/usr/bin/env bash
 
-_post_install() {
-  local key file="$HOME/.gitconfig.local"
-  # [[ -f "$file" ]] && return
-  for key in user.{name,username,email}
-  do
-    if [[ -z "$(git config --file $file --get $key)" ]]
-    then
-      printf "%s" "What is your git ${key#user.}? "; read -r REPLY
-      git config --file $file $key "$REPLY"
-    fi
-  done
+git_config() {
+  local state="$1"
+  local file="$2"
+  local key="$3"
+  local gc="git config --file "$file""
+  case "$state" in
+    $state_install)
+      if [[ -z "$($gc --get $key)" ]]
+      then
+        # printf "%s" "What is your git ${key#user.}? "; read -r reply
+        local msg="What is your git ${key#user.}?"
+        local var="GIT_$(echo ${key//./_} | tr "[[:lower:]]" "[[:upper:]]")"
+        local default="${!var:-}"
+        [[ -n "$default" ]] && msg+=" (${var:-default}: $default)"
+        printf "%s" "$msg "
+        local reply=
+        [[ "${INTERACTIVE:-1}" -ne 0 ]] && read -r reply
+        [[ -n "$default" ]] && [[ -z "$reply" ]] && reply="$default"
+        printf "\n"
+        run $gc --add $key "$reply"
+      fi
+      ;;
+    $state_remove)
+      if [[ -n "$($gc --get $key)" ]] || confirm "Unset local git ${key#user.}"
+      then run $gc --unset $key
+      fi
+      ;;
+  esac
 }
+
+_main() {
+  symlink "$state" --prefix "$prefix" --path .git*
+
+  local cfg="$HOME/.gitconfig.local"
+  local key
+  for key in user.{name,username,email}
+  do git_config "$state" "$cfg" "$key"
+  done
+
+  # Remove ~/.gitconfig.local if empty
+  if [[ "$state" == "remove" ]] && [[ -z "$(git config --file "$cfg" --list)" ]]
+  then rm "$cfg"
+  fi
+}
+
+_main "$@"
