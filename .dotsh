@@ -19,5 +19,5 @@ _main() {
 
   directory "$state" "$HOME/.termux"
 
-  symlink "$state" --prefix "$prefix" --path .termux/*
+  symlink "$state" --path .termux/*
 }
