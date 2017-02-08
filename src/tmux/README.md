@@ -14,20 +14,15 @@
 
 ## Resources
 
-- [Tmux Cheat Sheet](http://tmuxcheatsheet.com)
 - [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
+- [Tmux cheat heet](http://tmuxcheatsheet.com)
+- [Tmux sensible](https://github.com/tmux-plugins/tmux-sensible) defaults
 
-### Tmux Plugin Manager
+## Usage
 
-- [tpm](https://github.com/tmux-plugins/tpm)
-- [tmux-sensible](https://github.com/tmux-plugins/tmux-sensible)
-- [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect)
-
-### Usage
-
-The default bind prefix is `C-b` (Control+b)
-
-This configuration sets the prefix to `C-a` when running tmux locally.
+Tmux may be controlled from an attached client with a prefix key,
+`C-b` (Ctrl-b) by default, changed by this configuration files
+to `C-a` if running locally.
 
 List all key bindings
 
@@ -37,7 +32,27 @@ Enter the tmux command prompt
 
     prefix + :
 
-#### Sessions
+### [Tmux Plugin Manager](https://github.com/tmux-plugins/tpm)
+
+Install plugins and refresh environment
+
+    prefix + I
+
+Update all plugins
+
+    prefix + U
+
+### [Tmux Resurrect](https://github.com/tmux-plugins/tmux-resurrect)
+
+Save the current tmux environment
+
+    prefix + C-s
+
+Restore the saved environment
+
+    prefix + C-r
+
+### Sessions
 
 Create a new sesion that can be named or detached
 
@@ -81,7 +96,7 @@ Kill all sessions except one
 
     tmux kill-session -a -t <target-session>
 
-#### Windows
+### Windows
 
 Create a new window
 
@@ -108,7 +123,7 @@ Kill the current window
 
     prefix + &
 
-#### Panes
+### Panes
 
 Split the current pane horizontally
 
@@ -140,7 +155,7 @@ Kill the active pane
 
     prefix + x
 
-#### Copy mode
+### Copy mode
 
 Enter copy mode
 
