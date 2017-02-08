@@ -104,7 +104,7 @@ exec_file() {
        # echo lines+="${args[@]} $line"
        #  && line="${args[*]} $line"
        if [[ "${#args[@]}" -ne 0 ]]
-       then main "${args[@]}" $line
+       then main ${args[@]} $line
        else main $line
        fi
     fi; l=
@@ -261,7 +261,7 @@ bootstrap() {
     local src dst
     while read -r src
     do dst="${src/$dir/$target}"
-      echo >&2 $action "$src" "$dst"
+       $action "$src" "$dst"
     done < <("${find_cmd[@]}")
 
     echo FIXME "${find_cmd[@]}"
