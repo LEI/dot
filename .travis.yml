@@ -18,9 +18,11 @@ install:
 
 script:
   - docker-compose run test
+  - ls -la bin
   - PATH="$PATH:$HOME/bin"
-  - dot -R .
-  - ls -la
+  - echo $PATH | tr -s ':' '\n'
+  - which dot
+  - ./bin/dot -R .
 
 notifications:
   email: false
