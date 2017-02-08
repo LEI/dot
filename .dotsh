@@ -4,34 +4,32 @@ git_config() {
   local state="$1"
   local file="$2"
   local key="$3"
-  local gc="git config --file "$file""
   case "$state" in
-    $state_install)
-      if [[ -z "$($gc --get $key)" ]]
-      then
+    install)
+      if [[ -z "$(git config --file "$file" --get "$key")" ]]
+      then local msg var default reply
         # printf "%s" "What is your git ${key#user.}? "; read -r reply
-        local msg="What is your git ${key#user.}?"
-        local var="GIT_$(echo ${key//./_} | tr "[[:lower:]]" "[[:upper:]]")"
-        local default="${!var:-}"
+        msg="What is your git ${key#user.}?"
+        var="GIT_$(echo "${key//./_}" | tr "[:lower:]" "[:upper:]")"
+        default="${!var:-}"
         [[ -n "$default" ]] && msg+=" (${var:-default}: $default)"
         printf "%s" "$msg "
-        local reply=
         [[ "${INTERACTIVE:-1}" -ne 0 ]] && read -r reply
-        [[ -n "$default" ]] && [[ -z "$reply" ]] && reply="$default"
+        [[ -n "$default" ]] && [[ -z "${reply:-}" ]] && reply="$default"
         printf "\n"
-        run $gc --add $key "$reply"
+        run git config --file "$file" --add "$key" "$reply"
       fi
       ;;
-    $state_remove)
-      if [[ -n "$($gc --get $key)" ]] || confirm "Unset local git ${key#user.}"
-      then run $gc --unset $key
+    remove)
+      if [[ -n "$(git config --file "$file" --get "$key")" ]] || confirm "Unset local git ${key#user.}"
+      then run git config --file "$file" --unset "$key"
       fi
       ;;
   esac
 }
 
 _main() {
-  symlink "$state" --prefix "$prefix" --path .git*
+  symlink "$state" --path .git*
 
   local cfg="$HOME/.gitconfig.local"
   local key
