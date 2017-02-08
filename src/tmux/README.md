@@ -12,17 +12,13 @@
     ln -isv "$DOT/.tmux/*" "$HOME/.tmux"
     echo 'source-file $HOME/.tmux/tmux.conf' >> "$HOME/.tmux.conf"
 
-## Resources
-
-- [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
-- [Tmux cheat heet](http://tmuxcheatsheet.com)
-- [Tmux sensible](https://github.com/tmux-plugins/tmux-sensible) defaults
-
 ## Usage
 
-Tmux may be controlled from an attached client with a prefix key,
-`C-b` (Ctrl-b) by default, changed by this configuration files
-to `C-a` if running locally.
+Tmux may be controlled from an attached client with a prefix key, `C-b` (Ctrl-b)
+by default.
+
+The prefix key is replaced with `C-a` in this configuration when the client is
+not running SSH.
 
 List all key bindings
 
@@ -34,21 +30,21 @@ Enter the tmux command prompt
 
 ### [Tmux Plugin Manager](https://github.com/tmux-plugins/tpm)
 
-Install plugins and refresh environment
+*Install plugins and refresh environment
 
     prefix + I
 
-Update all plugins
+*Update all plugins
 
     prefix + U
 
-### [Tmux Resurrect](https://github.com/tmux-plugins/tmux-resurrect)
+### *[Tmux Resurrect](https://github.com/tmux-plugins/tmux-resurrect)
 
-Save the current tmux environment
+*Save the current tmux environment
 
     prefix + C-s
 
-Restore the saved environment
+*Restore the saved environment
 
     prefix + C-r
 
@@ -137,9 +133,11 @@ Navigate panes
 
     prefix + Up # Down, Left, Right
 
+*Navigate pane with vi bindings
+
     prefix + k # j, h, l
 
-Resize panes
+*Resize panes
 
     prefix + K # J, H, L
 
@@ -176,3 +174,9 @@ Search forward
 Quit copy mode
 
     q
+
+## Resources
+
+- [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
+- [Tmux sensible](https://github.com/tmux-plugins/tmux-sensible)
+- [Tmux cheat sheet](http://tmuxcheatsheet.com)
