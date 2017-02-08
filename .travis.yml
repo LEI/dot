@@ -20,7 +20,7 @@ script:
   - docker-compose run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
-  - ./bin/dot .
+  - ./bin/dot --non-interactive .
   - ls -lah
 
 notifications:
