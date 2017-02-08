@@ -8,8 +8,20 @@
 
 ## Manual installation
 
+Clone and change directory
+
+    git clone https://github.com/LEI/dot-tmux.git dot-tmux && cd $_
+
+Create the directory `~/.tmux`
+
     mkdir -p "$HOME/.tmux"
+
+Link files to home directory
+
     ln -isv "$DOT/.tmux/*" "$HOME/.tmux"
+
+Source `~/.tmux/tmux.conf` from `~/.tmux.conf`
+
     echo 'source-file $HOME/.tmux/tmux.conf' >> "$HOME/.tmux.conf"
 
 ## Usage
@@ -38,7 +50,7 @@ Enter the tmux command prompt
 
     prefix + U
 
-### *[Tmux Resurrect](https://github.com/tmux-plugins/tmux-resurrect)
+### [Tmux Resurrect](https://github.com/tmux-plugins/tmux-resurrect)
 
 *Save the current tmux environment
 
