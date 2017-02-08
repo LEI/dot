@@ -4,7 +4,7 @@
 
 detect_os() {
   case "$OSTYPE" in # ${OSTYPE//[0-9.]/}
-    darwin*) OS="macos"; PM="brew" ;;
+    darwin*) OS="osx"; PM="brew" ;; # Sierra: macos?
     linux-android) OS="android"; PM="apt-get" ;;
     linux*)
       if has apt-get 2>/dev/null
