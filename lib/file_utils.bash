@@ -3,7 +3,7 @@
 backup_file() {
   local file path
   for file in "$@"
-  do path="$f.backup"
+  do path="$file.backup"
     [[ ! -e "$file" ]] && return 0
     if confirm "$file already exists, backup to ‘$path’?"
     then run mv -v "$file" "$path"
@@ -21,7 +21,8 @@ link_file() {
   fi
   # echo "LINK_FILE $src -> $dst"
   if [[ -e "$dst" ]] || [[ -L "$dst" ]]
-  then local link="$(readlink "$dst")"
+  then local link
+    link="$(readlink "$dst")"
     if [[ "$link" != "$src" ]]
     then backup_file "$dst"
       if [[ -e "$dst" ]]

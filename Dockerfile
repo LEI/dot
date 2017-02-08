@@ -23,6 +23,6 @@ RUN ln -s "$DOT/bin/dot" "/usr/local/bin/dot"
 # RUN printf "%s\n" "alias dsrc=\"dot -s $DOT/.dotrc\"" >> $HOME/.bashrc
 
 ENTRYPOINT ["/bin/bash"]
-CMD ["-l", "-c", "dot -R $DOT"] # ; bash -l
+CMD ["-l", "-c", "dot -R "$DOT""] # ; bash -l
 
 ADD . $DOT

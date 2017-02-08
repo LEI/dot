@@ -15,7 +15,7 @@ git_config() {
         [[ -n "$default" ]] && msg+=" (${var:-default}: $default)"
         printf "%s" "$msg "
         [[ "${INTERACTIVE:-1}" -ne 0 ]] && read -r reply
-        [[ -n "$default" ]] && [[ -z "$reply" ]] && reply="$default"
+        [[ -n "$default" ]] && [[ -z "${reply:-}" ]] && reply="$default"
         printf "\n"
         run git config --file "$file" --add "$key" "$reply"
       fi

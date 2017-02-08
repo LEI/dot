@@ -4,12 +4,15 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
+# SRC="$(readlink "${BASH_SOURCE[0]}" || realpath "${BASH_SOURCE[0]}")"
+SRC="$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}")"
 DIR="$(cd "$(dirname "$SRC")/.." && pwd -P)"
 
 # cd "$DIR"
 
-source $DIR/lib/*.bash
+for path in $DIR/lib/*.bash
+do source "$path"
+done
 
 # source ./lib/*.bash
 
@@ -48,7 +51,11 @@ parse_config() {
   local args=("$@")
   # [[ $# -ne 2 ]] && usage 1 "extra args"
   if [[ -f "$file" ]] # && [[ "$no_source" -eq 0 ]] # --no-auto-source
-  then exec_file "$file" --root-dir "${dir:-$DIR}" "${args[@]}"
+  then
+    if [[ "${#args[@]}" -ne 0 ]]
+    then exec_file "$file" --root-dir "${dir:-$DIR}" "${args[@]}"
+    else exec_file "$file" --root-dir "${dir:-$DIR}"
+    fi
   fi
 }
 
@@ -94,11 +101,18 @@ exec_file() {
     # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$file")" env_sub "$line")
     # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
     else lines+=("${args[@]} $line") # --no-auto-source
+       # echo lines+="${args[@]} $line"
+       #  && line="${args[*]} $line"
+       if [[ "${#args[@]}" -ne 0 ]]
+       then main "${args[@]}" $line
+       else main $line
+       fi
     fi; l=
   done < "$file"
-  for l in "${lines[@]}"
-  do main $l || { err "main $l"; return $?; }
-  done
+  # echo lines "${lines[@]}"
+  # for l in "${lines[@]}"
+  # do main $l || { err "main $l"; return $?; }
+  # done
 }
 
 clean_symlinks() {
@@ -113,10 +127,11 @@ clean_symlinks() {
 }
 
 parse_opts() {
-  # echo >&2 "OPTS [$#] $@"
+  # echo >&2 "OPTS [$#] $*"
   OPTS="[hDveustRcnp]"
   while [[ $# -ne 0 ]]
   do n=1
+    echo >&2 "[$#] $*"
     case "$1" in
       --) shift; break ;;
       install) [[ -n "$state" ]] && usage 1 "$1: already set ($state)"
@@ -246,8 +261,10 @@ bootstrap() {
     local src dst
     while read -r src
     do dst="${src/$dir/$target}"
-      $action "$src" "$dst"
+      echo >&2 $action "$src" "$dst"
     done < <("${find_cmd[@]}")
+
+    echo FIXME "${find_cmd[@]}"
   # elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
   # then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
   fi
@@ -292,7 +309,7 @@ init() {
 }
 
 main() {
-  # echo "main @ $@"
+  >&2 echo "main @ $*"
   init; parse_opts "$@"
   parse_config "$dir/$RC"
   log "[${state} ${prefix#*/}]"
