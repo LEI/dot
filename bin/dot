@@ -49,13 +49,15 @@ parse_config() {
   local file="$1"
   shift
   local args=("$@")
+  # [[ "${args[@]:-0}" -eq 0 ]] &&
+  args+=("--no-auto-source")
   # [[ $# -ne 2 ]] && usage 1 "extra args"
   if [[ -f "$file" ]] # && [[ "$no_source" -eq 0 ]] # --no-auto-source
-  then
-    if [[ "${#args[@]}" -ne 0 ]]
-    then exec_file "$file" "${args[@]}" "$dir"
-    else exec_file "$file" "$dir"
-    fi
+  then exec_file "$file" "${args[@]}"
+    # if [[ "${#args[@]}" -ne 0 ]]
+    # then exec_file "$file" "${args[@]}" "$dir"
+    # else exec_file "$file" "$dir"
+    # fi
   fi
 }
 
@@ -110,7 +112,7 @@ exec_file() {
   done < "$file"
   # echo lines "${lines[@]}"
   for l in "${lines[@]}"
-  do set -- $l; main $l
+  do set -- $l; symlink "$@"
     # eval main $l || { err "main $l"; return $?; }
   done
 }
@@ -199,7 +201,8 @@ parse_opts() {
   [[ -z "$dir" ]] && usage 1 "missing root dir"
   # dir="${dir:-$DIR}"
 
-  if [[ -n "$dir" ]] && [[ -n "$prefix" ]]
+  if [[ -n "$dir" ]] && [[ -n "$prefix" ]] && \
+    [[ "$dir" != "$DIR/$prefix" ]]
   then dir+="/$prefix"
   fi
 
@@ -230,15 +233,19 @@ build_find_opt() {
 }
 
 build_find_cmd() {
-  if [[ "${#find_ignore[@]}" -ne 0 ]]
-  then # [[ "${#find_opts[@]}" -eq 0 ]] && find_opts+=("!")
-    build_find_opt "!" "-path" "$dir" "${find_ignore[@]}"
-  fi
   [[ "${#find_names[@]}" -ne 0 ]] && build_find_opt "-o" "-name" "" "${find_names[@]}"
   [[ "${#find_paths[@]}" -ne 0 ]] && build_find_opt "-o" "-path" "$dir" "${find_paths[@]}" # /#/$dir/
+  find_opts+=("-a" "(")
+  build_find_opt "!" "-path" "$dir" "${find_ignore[@]}"
+  find_opts+=(")")
+  # if [[ "${#find_ignore[@]}" -ne 0 ]]
+  # then # [[ "${#find_opts[@]}" -eq 0 ]] && find_opts+=("!")
+  # fi
+
+  find_opts=("find" "$dir" "-mindepth" "$min_depth" "-maxdepth" "$max_depth" "${find_opts[@]}")
   if [[ "${#find_opts[@]}" -ne 0 ]]
   then
-    find_cmd=("find" "$dir" "-mindepth" "$min_depth" "-maxdepth" "$max_depth" "${find_opts[@]}")
+    find_cmd=("${find_opts[@]}")
     if [[ "$VERBOSE" -gt 1 ]]
     then >&2 log "${find_cmd[@]}"
     fi
@@ -246,6 +253,7 @@ build_find_cmd() {
 }
 
 bootstrap() {
+  echo "Bootstraping..."
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]]
   then
     if source "$dir/$SH" && hash "_$state" 2>/dev/null
@@ -262,9 +270,11 @@ bootstrap() {
 
   if build_find_cmd && [[ -n "${find_cmd[@]}" ]]
   then
+    echo "BUILT FIND CMD:" "${find_cmd[@]}"
     local src dst
     while read -r src <&3
     do dst="${src/$dir/$target}"
+       >&2 echo DOING $action "$src" "$dst"
        $action "$src" "$dst"
     done 3< <("${find_cmd[@]}")
   # elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
@@ -284,10 +294,11 @@ bootstrap() {
 }
 
 init() {
-  state_default="install"
   state_install="install"
   state_remove="remove"
-  # role="$(pwd -P)"
+  state_default="$state_install"
+  dir="$DIR"
+  prefix=
   no_source=0
   target="$TARGET"
   find_ignore=("*$RC" "*$SH" "*.git" "*.gitkeep" "*.md" "*.tpl")
@@ -298,8 +309,6 @@ init() {
 init_opts() {
   state=
   action=link_file
-  dir="$DIR"
-  prefix=
   create_dirs=()
   find_names=()
   find_paths=()
@@ -310,29 +319,31 @@ init_opts() {
 }
 
 main() {
-  # >&2 echo "main @ $* (dir:${dir:-noDir})"
   init
+  >&2 echo "main @ $*" # (dir:${dir:-noDir})
   parse_opts "$@"
-  local dotrc
-  dotrc="$dir/$RC"
-  if [[ -f "$dotrc" ]]
-  then parse_config "$dir/$RC"
-  else
-    log "[${state} ${dir#*/}]"
-    bootstrap
-    log "[${state%e}ed ${dir#*/}]"
+  if [[ -f "$dir/$RC" ]]
+  then exec_file "$dir/$RC" # "$dir/$prefix"
+    echo "Abort main, $dir/$RC executed"
+    return $?
+  # else symlink "$@"
   fi
+
+  parse_opts "$@"
+  log "Bootstrap ${state} [${dir#*/}]"
+  bootstrap
+  # log "[${state%e}ed ${dir#*/}]"
 
   log "Done [$?]"
 }
 
 symlink() {
-  # >&2 echo "symlink @ $* (dir:$dir, prefix:$prefix)"
-  [[ -z "$prefix" ]] && usage 1 "missing prefix in '$*'"
-  parse_opts --no-auto-source --prefix "$prefix" "$@"
-  log "[${dir##*/} symlinks]"
+  >&2 echo "symlink @ $*" # (dir:$dir, prefix:$prefix)
+  #FIXME
+  parse_opts "$@" "$dir" --no-auto-source # --no-auto-source --prefix "${prefix}"
+  log "Symlink [${dir##*/}]"
   bootstrap
-  log "[${dir##*/} symlinks ]"
+  log "Done [${dir##*/}]"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"

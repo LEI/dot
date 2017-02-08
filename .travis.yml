@@ -21,6 +21,7 @@ script:
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
   - ./bin/dot --non-interactive .
+  - cd
   - ls -lah
 
 notifications:
