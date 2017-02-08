@@ -12,23 +12,28 @@
     ln -isv "$DOT/.tmux/*" "$HOME/.tmux"
     echo 'source-file $HOME/.tmux/tmux.conf' >> "$HOME/.tmux.conf"
 
-## Tmux Plugin Manager
+## Resources
+
+- [Tmux Cheat Sheet](http://tmuxcheatsheet.com)
+- [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
+
+### Tmux Plugin Manager
 
 - [tpm](https://github.com/tmux-plugins/tpm)
 - [tmux-sensible](https://github.com/tmux-plugins/tmux-sensible)
 - [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect)
 
-## Resources
-
-- [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
-
 ### Usage
 
-List shortcuts
+The default bind prefix is `C-b` (Control+b)
+
+This configuration sets the prefix to `C-a` when running tmux locally.
+
+List all key bindings
 
     prefix + ?
 
-Command prompt
+Enter the tmux command prompt
 
     prefix + :
 
@@ -36,13 +41,13 @@ Command prompt
 
 Create a new sesion that can be named or detached
 
-    tmux new [-s session-name] [-d]
+    tmux new [-s <session-name>] [-d]
 
     prefix + :new
 
 Attach to a running session
 
-    tmux attach -t target-session
+    tmux attach -t <target-session>
 
     tmux a
 
@@ -56,13 +61,25 @@ Rename the current session
 
     prefix + $
 
+Switch to the next session
+
+    prefix + )
+
+Switch to the previous session
+
+    prefix + (
+
 Detach from the session
 
     prefix + d
 
-Kill a named session
+Choose a client to detach
 
-    tmux kill-session -t target-session
+    prefix + D
+
+Kill all sessions except one
+
+    tmux kill-session -a -t <target-session>
 
 #### Windows
 
@@ -74,11 +91,16 @@ Rename the current window
 
     prefix + ,
 
-Next window
+Select a window by its index
+
+    prefix + [0-9]
+
+
+Change to the next window
 
     prefix + n
 
-Previous window
+Change to the previous window
 
     prefix + p
 
@@ -88,22 +110,54 @@ Kill the current window
 
 #### Panes
 
-Create an horizontal split
+Split the current pane horizontally
 
     prefix + "
 
-Create a vertical split
+Split the current pane vertically
 
     prefix + %
+
+Navigate panes
+
+    prefix + Up # Down, Left, Right
+
+    prefix + k # j, h, l
+
+Resize panes
+
+    prefix + K # J, H, L
+
+Arrange the current window in the next preset layout
+
+    prefix + Space
 
 Toggle pane zoom
 
     prefix + z
 
-Kill pane
+Kill the active pane
 
     prefix + x
 
 #### Copy mode
 
+Enter copy mode
+
     prefix + [
+
+Page the last copied buffer of text
+
+    prefix + ]
+
+Enter copy mode and scroll one page up
+
+    prefix + PageUp
+
+Search forward
+
+    prefix + /
+
+Quit copy mode
+
+    q
