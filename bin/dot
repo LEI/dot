@@ -322,6 +322,8 @@ main() {
     bootstrap
     log "[${state%e}ed ${dir#*/}]"
   fi
+
+  log "Done [$?]"
 }
 
 symlink() {
