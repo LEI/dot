@@ -80,7 +80,7 @@ main() {
 
   # Send files
   git "${cmd:-push}" "$name" "$(git symbolic-ref --short HEAD)"
-  # && ssh $host "bash -c \"\$HOME/$dir/bin/dot -R \$HOME/$dir\""
+  # && ssh $host "bash -c \"\$HOME/$dir/bin/dot \$HOME/$dir\""
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"

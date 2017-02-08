@@ -6,7 +6,7 @@ services:
     image: lei/dot
     depends_on:
       - image
-    command: -l -c 'dot -R $$DOT; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
+    command: -l -c 'dot $$DOT; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
     image: lei/dot
@@ -19,7 +19,7 @@ services:
     command: |
       -l -c '
       bashrc=$$(tail -n1 ~/.bashrc);
-      dot -R $$DOT --non-interactive;
+      dot $$DOT --non-interactive;
       if [[ "$$bashrc" == "$$(tail -n1 ~/.bashrc)" ]]; then echo ~/.bashrc was not modified; exit 1; fi;
       if [[ "$$(git config --file ~/.gitconfig.local --get user.name)" != "$$GIT_USER_NAME" ]]; then echo GIT_USER_NAME not set in ~/.gitconfig.local; exit 1; fi;
       tmux new-session -n test "vim +PlugInstall +qall; exit";

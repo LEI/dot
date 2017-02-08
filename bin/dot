@@ -53,8 +53,8 @@ parse_config() {
   if [[ -f "$file" ]] # && [[ "$no_source" -eq 0 ]] # --no-auto-source
   then
     if [[ "${#args[@]}" -ne 0 ]]
-    then exec_file "$file" --root-dir "${dir:-$DIR}" "${args[@]}"
-    else exec_file "$file" --root-dir "${dir:-$DIR}"
+    then exec_file "$file" "${args[@]}" "$dir"
+    else exec_file "$file" "$dir"
     fi
   fi
 }
@@ -70,7 +70,7 @@ env_sub() {
     then str="${str//\${$s}/${!s}}"
     fi
   done
-  log "$str"
+  printf "%s\n" "$str"
 }
 
 exec_file() {
@@ -97,22 +97,22 @@ exec_file() {
     elif [[ "$line" =~ ^[a-zA-Z]+=* ]]
     then var="${line%%=*}"; val="${line#*=}"
       declare "$var=$val" # && ENV_VARS+=" $var"
-      log "declare $var=$val"
+      >&2 log "declared $var=$val"
     # else set -f; reset_expansion main --no-auto-source $a $(PWD="$(dirname "$file")" env_sub "$line")
     # reset_expansion() { local cmd="$1"; shift; $cmd "$@"; set +f; }
-    else lines+=("${args[@]} $line") # --no-auto-source
+    else
        # echo lines+="${args[@]} $line"
        #  && line="${args[*]} $line"
-       if [[ "${#args[@]}" -ne 0 ]]
-       then main ${args[@]} $line
-       else main $line
-       fi
+       # if [[ "${#args[@]}" -ne 0 ]]
+       lines+=("$line ${args[@]:-}")
+       # main $line ${args[@]:-}
     fi; l=
   done < "$file"
   # echo lines "${lines[@]}"
-  # for l in "${lines[@]}"
-  # do main $l || { err "main $l"; return $?; }
-  # done
+  for l in "${lines[@]}"
+  do set -- $l; main $l
+    # eval main $l || { err "main $l"; return $?; }
+  done
 }
 
 clean_symlinks() {
@@ -121,17 +121,19 @@ clean_symlinks() {
   while read -r l
   do real_link="$(readlink "$link")"
     if [[ -n "$real_link" ]] && [[ "$DIR" == "$real_link"* ]]
-    then log "Removing broken symlink '$link'"; rm "$link"
+    then >&2 log "Removing broken symlink '$link'"; rm "$link"
     fi
   done < <(find "$path" -maxdepth 3 -type l -exec test ! -e {} \; -print)
 }
 
 parse_opts() {
+  init_opts
+  local n
   # echo >&2 "OPTS [$#] $*"
   OPTS="[hDveustRcnp]"
   while [[ $# -ne 0 ]]
   do n=1
-    echo >&2 "[$#] $*"
+    # echo >&2 "[$#] '$1'"
     case "$1" in
       --) shift; break ;;
       install) [[ -n "$state" ]] && usage 1 "$1: already set ($state)"
@@ -145,13 +147,13 @@ parse_opts() {
       # -u|--upstream) shift; upstream="$1" ;;
       --clean-symlinks) shift; clean_symlinks "${1:-$TARGET}"; exit $? ;;
       --prefix) shift; prefix="$1" ;;
-      -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
+      # -s|--source) shift; exec_file "$1" --no-auto-source "${@:2}"; echo "$# parameters left"; return $? ;;
       --no-auto-source) no_source=1 ;;
 
       --non-interactive) INTERACTIVE=0 ;;
 
       -t|--target) shift; target="$1" ;;
-      -R|--root-dir) shift; dir="$(env_sub "$1")" ;;
+      # -R|--root-dir) shift; dir="$(env_sub "$1")" ;;
 
       -c|--create|--create-dir) shift; create_dirs+=("$(env_sub "$1")") ;;
       -n|--name|--find-name) shift; find_names+=("$(env_sub "$1")") ;;
@@ -173,17 +175,19 @@ parse_opts() {
         then set -- "${1:0:2}" "-${1:2}" "${@:2}"; continue
         else >&2 log "${1:0:2}: illegal option $OPTS"; return 1
         fi ;;
-      *) if [[ -n "$next" ]]
-        then set -- "$next" "$@"; n=0; next=
+      *) # if [[ -n "$next" ]]
+        # then set -- "$next" "$@"; n=0; next=
+        if [[ $# -ne 0 ]] # && [[ -z "$dir" ]]
+        then dir="$1"
         else >&2 log "$1: unrecognized option $OPTS"; return 1
         fi ;;
     esac
     shift ${n:-1}
   done
 
-  [[ "$INTERACTIVE" -eq 0 ]] && log "Non interactive"
-  [[ "$DRY_RUN" -ne 0 ]] && log "Running in check mode!"
-  [[ "$VERBOSE" -gt 1 ]] & log "Log level: $VERBOSE"
+  # [[ "$INTERACTIVE" -eq 0 ]] && log "Non interactive"
+  # [[ "$DRY_RUN" -ne 0 ]] && log "Running in check mode!"
+  # [[ "$VERBOSE" -gt 1 ]] & log "Log level: $VERBOSE"
   # state="${state:-$state_default}"
   if [[ -n "$state" ]] && \
     [[ "$state" != "$state_install" ]] && \
@@ -192,10 +196,10 @@ parse_opts() {
   else state="$state_default"
   fi
 
-  [[ -z "$dir" ]] && usage 1 "missing --root-dir"
+  [[ -z "$dir" ]] && usage 1 "missing root dir"
   # dir="${dir:-$DIR}"
 
-  if [[ -n "$prefix" ]]
+  if [[ -n "$dir" ]] && [[ -n "$prefix" ]]
   then dir+="/$prefix"
   fi
 
@@ -227,7 +231,7 @@ build_find_opt() {
 
 build_find_cmd() {
   if [[ "${#find_ignore[@]}" -ne 0 ]]
-  then #[[ "${#find_opts[@]}" -eq 0 ]] && find_opts+=("!")
+  then # [[ "${#find_opts[@]}" -eq 0 ]] && find_opts+=("!")
     build_find_opt "!" "-path" "$dir" "${find_ignore[@]}"
   fi
   [[ "${#find_names[@]}" -ne 0 ]] && build_find_opt "-o" "-name" "" "${find_names[@]}"
@@ -236,7 +240,7 @@ build_find_cmd() {
   then
     find_cmd=("find" "$dir" "-mindepth" "$min_depth" "-maxdepth" "$max_depth" "${find_opts[@]}")
     if [[ "$VERBOSE" -gt 1 ]]
-    then log "${find_cmd[@]}"
+    then >&2 log "${find_cmd[@]}"
     fi
   fi
 }
@@ -257,14 +261,12 @@ bootstrap() {
   fi
 
   if build_find_cmd && [[ -n "${find_cmd[@]}" ]]
-  then # echo "FIND_CMD ${find_cmd[@]}"
+  then
     local src dst
-    while read -r src
+    while read -r src <&3
     do dst="${src/$dir/$target}"
        $action "$src" "$dst"
-    done < <("${find_cmd[@]}")
-
-    echo FIXME "${find_cmd[@]}"
+    done 3< <("${find_cmd[@]}")
   # elif [[ "${#find_opts[@]}" -eq 0 ]] && [[ "${#create_dirs[@]}" -eq 0 ]]
   # then usage 1 "missing options -D <dir>, -F <name> or -P <path> ${find_opts[@]:-}"
   fi
@@ -279,51 +281,56 @@ bootstrap() {
   if [[ "$no_source" -eq 0 ]] && [[ -f "$dir/$SH" ]] && hash "_post_$state" 2>/dev/null
   then "_post_$state"; unset "_post_$state"
   fi
-
-  # log "Done [$?]"
 }
 
 init() {
-  state=
   state_default="install"
   state_install="install"
   state_remove="remove"
-  action=link_file
-  prefix=
-  dir=
   # role="$(pwd -P)"
   no_source=0
   target="$TARGET"
-  create_dirs=()
   find_ignore=("*$RC" "*$SH" "*.git" "*.gitkeep" "*.md" "*.tpl")
+  min_depth=1
+  max_depth=2
+}
+
+init_opts() {
+  state=
+  action=link_file
+  dir="$DIR"
+  prefix=
+  create_dirs=()
   find_names=()
   find_paths=()
   # find_dirs=()
-  min_depth=1
-  max_depth=2
   find_opts=()
   find_cmd=()
   # declare -a find_opts
-  n=
-  next=
 }
 
 main() {
-  >&2 echo "main @ $*"
-  init; parse_opts "$@"
-  parse_config "$dir/$RC"
-  log "[${state} ${prefix#*/}]"
-  bootstrap # log "${prefix#*/} ${state}ed"
+  # >&2 echo "main @ $* (dir:${dir:-noDir})"
+  init
+  parse_opts "$@"
+  local dotrc
+  dotrc="$dir/$RC"
+  if [[ -f "$dotrc" ]]
+  then parse_config "$dir/$RC"
+  else
+    log "[${state} ${dir#*/}]"
+    bootstrap
+    log "[${state%e}ed ${dir#*/}]"
+  fi
 }
 
 symlink() {
-  # echo "smylink @ $@"
-  init; parse_opts --no-auto-source \
-    --root-dir "${dir:-$DIR}" \
-    --prefix "$prefix" \
-    "$@"
-  # log "${state} ${prefix#*/} symlinks"
-  bootstrap # log "${prefix#*/} symlinks ${state}ed"
+  # >&2 echo "symlink @ $* (dir:$dir, prefix:$prefix)"
+  [[ -z "$prefix" ]] && usage 1 "missing prefix in '$*'"
+  parse_opts --no-auto-source --prefix "$prefix" "$@"
+  log "[${dir##*/} symlinks]"
+  bootstrap
+  log "[${dir##*/} symlinks ]"
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"

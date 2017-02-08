@@ -17,7 +17,7 @@ link_file() {
   local dst="$2" # {dst%/*}/
   local check_mark="✓"
   if [[ ! -e "$src" ]]
-  then err "$dst: no such source"; return 1
+  then err "$src: no such source"; return 1
   fi
   # echo "LINK_FILE $src -> $dst"
   if [[ -e "$dst" ]] || [[ -L "$dst" ]]
