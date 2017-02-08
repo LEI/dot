@@ -4,7 +4,7 @@ add_line_in_file() {
   local file="$1"
   local line="$2"
   # if [[ -z "$(fgrep -lx "$line" "$file" 2>/dev/null)" ]]
-  if ! fgrep --files-with-matches --line-regexp --quiet "$line" "$file"
+  if ! fgrep --files-with-matches --line-regexp --quiet "$line" "$file" 2>/dev/null
   then [[ "$VERBOSE" -gt 1 ]] && log "$line >> $file"
     if [[ "$DRY_RUN" -eq 0 ]]
     then printf "%s\n" "$line" >> "$file"
@@ -16,7 +16,7 @@ remove_line_in_file() {
   local file="$1"
   local line="$2"
   # [[ -z "$(fgrep -Lx "$line" "$file" 2>/dev/null)" ]]
-  if ! fgrep --files-without-matches --line-regexp --quiet "$line" "$file"
+  if ! fgrep --files-without-matches --line-regexp --quiet "$line" "$file" 2>/dev/null
   then local tmp="/tmp/$$.${file##*/}.grep"
     line="${line//\[/\\[}"
     line="${line//\]/\\]}"
