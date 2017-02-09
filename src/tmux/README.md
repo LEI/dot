@@ -6,15 +6,15 @@
 - [tmux](https://tmux.github.io/)
 - [Solarized](http://ethanschoonover.com/solarized) terminal colors
 
-#### OS X
+### OS X
 
 - [reattach-to-user-namespace](https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard)<br>
   Install with brew `brew install reattach-to-user-namespace` and add the option
   `--with-wrap-pbcopy-and-pbpaste` on macOS Sierra, or macports `port install tmux-pasteboard`
 
-#### Linux
+### Linux
 
-- (TODO) `xclip` or `xsel`
+- TODO `xclip` or `xsel`
 
 ## Manual installation
 
@@ -33,6 +33,12 @@ Link files to home directory
 Source `~/.tmux/tmux.conf` from `~/.tmux.conf`
 
     echo 'source-file $HOME/.tmux/tmux.conf' >> "$HOME/.tmux.conf"
+
+## Resources
+
+- [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
+- [Tmux sensible](https://github.com/tmux-plugins/tmux-sensible)
+- [Tmux cheat sheet](http://tmuxcheatsheet.com)
 
 ## Usage
 
@@ -196,9 +202,3 @@ Search forward
 Quit copy mode
 
     q
-
-## Resources
-
-- [Example .tmux.conf](https://github.com/tmux/tmux/blob/master/example_tmux.conf)
-- [Tmux sensible](https://github.com/tmux-plugins/tmux-sensible)
-- [Tmux cheat sheet](http://tmuxcheatsheet.com)
