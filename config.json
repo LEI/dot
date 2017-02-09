@@ -1,0 +1,20 @@
+{
+    "target": "$HOME",
+    "packages": {
+        "tmux": {
+            "source": "$DOT/src/tmux",
+            "directory": [
+                ".tmux"
+            ],
+            "link": [
+                ".tmux/tmux.conf",
+                ".tmux/tmux-*.conf",
+                ".tmux/tmux.$OS.conf",
+                ".tmux/colors"
+            ],
+            "line": {
+                ".tmux.conf": "source-file ~/.tmux/tmux.conf"
+            }
+        }
+    }
+}

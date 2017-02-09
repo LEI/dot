@@ -1,29 +1,21 @@
 FROM debian:jessie
 
-# RUN apt-get update -qy && \
-# apt-get install -qy --no-install-suggests --no-install-recommends --force-yes \
-# apt-utils locales \
-# && rm -rf /var/lib/apt/lists/* \
-# && localedef -i en_GB -c -f UTF-8 -A /usr/share/locale/locale.alias en_GB.UTF-8
 RUN apt-get update -qy && \
 apt-get install -qy --no-install-suggests --no-install-recommends --force-yes \
 ca-certificates \
 curl \
 git-core \
+golang \
 tmux \
 vim
+# && rm -rf /var/lib/apt/lists/*
 
-# ENV LANG en_GB.UTF-8
-# RUN echo "$LANG UTF-8" > /etc/locale.gen && locale-gen
-# RUN echo "LANG=$LANG" > /etc/locale.conf
-ENV HOME /root
-ENV DOT $HOME/.dot
-WORKDIR $HOME
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
-RUN ln -s "$DOT/bin/dot" "/usr/local/bin/dot"
-# RUN printf "%s\n" "alias dsrc=\"dot -s $DOT/.dotrc\"" >> $HOME/.bashrc
-
-ENTRYPOINT ["/bin/bash"]
-CMD ["-l", "-c", "dot "$DOT""] # ; bash -l
-
+ENV DOT /go/src/github.com/LEI/dot
+WORKDIR $DOT
 ADD . $DOT
+RUN go install
+ENTRYPOINT ["/go/bin/dot"]
+# , "-s", "$DOT"
