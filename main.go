@@ -1,7 +1,7 @@
 package main
 
 import (
-    // "bufio"
+    "bufio"
     // "errors"
     "encoding/json"
     "flag"
@@ -26,8 +26,6 @@ var (
     configPath string
     configName = "config.json"
     pkgConfigName = ".json"
-    minDepth = 0
-    maxDepth = 2
 )
 
 type Configuration struct {
@@ -140,7 +138,7 @@ func handlePackage(name string, pkg Package) error {
     if pkg.Dir != "" {
         pkg.Dirs = append(pkg.Dirs, pkg.Dir)
     }
-    fmt.Printf("Dirs [%d]\n", len(pkg.Dirs))
+    fmt.Printf("[%d] Dirs\n", len(pkg.Dirs))
     err := makeDirs(src, dst, pkg.Dirs)
     if err != nil {
         return err
@@ -149,13 +147,13 @@ func handlePackage(name string, pkg Package) error {
     if pkg.Link != nil && pkg.Link != "" {
         pkg.Links = append(pkg.Links, pkg.Link)
     }
-    fmt.Printf("Links [%d]\n", len(pkg.Links))
+    fmt.Printf("[%d] Links\n", len(pkg.Links))
     err = linkFiles(src, dst, pkg.Links)
     if err != nil {
         return err
     }
 
-    fmt.Printf("Lines [%d]\n", len(pkg.Lines))
+    fmt.Printf("[%d] Lines\n", len(pkg.Lines))
     err = linesInFiles(src, dst, pkg.Lines)
     if err != nil {
         return err
@@ -169,18 +167,15 @@ func expand(str string) string {
     return str
 }
 
-func stat(path string) (os.FileInfo, error) {
-    fi, err := os.Stat(path)
-    if err != nil {
-        msg := strings.Replace(err.Error(), "stat ", os.Args[0]+": ", 1)
-        // fmt.Fprintf(os.Stderr, "%s\n", msg)
-        return fi, fmt.Errorf(msg)
-        // if os.IsNotExist(err) {
-        //     return false
-        // }
-    }
-    return fi, nil
-}
+// func stat(path string) (os.FileInfo, error) {
+//     fi, err := os.Stat(path)
+//     if err != nil {
+//         msg := strings.Replace(err.Error(), "stat ", os.Args[0]+": ", 1)
+//         // fmt.Fprintf(os.Stderr, "%s\n", msg)
+//         return fi, fmt.Errorf(msg)
+//     }
+//     return fi, nil
+// }
 
 func makeDirs(src string, dst string, paths []string) error {
     for _, dir := range paths {
@@ -195,23 +190,50 @@ func makeDirs(src string, dst string, paths []string) error {
 }
 
 func linkFiles(source string, target string, globs []interface{}) (error) {
-    if _, err := stat(source); err != nil {
+    if _, err := os.Stat(source); err != nil {
         return err
     }
     // var filePaths []string
-    for _, link := range globs {
-        switch l := link.(type) {
+    for _, glob := range globs {
+        switch l := glob.(type) {
             case string:
                 src := filepath.Join(source, expand(l))
                 paths, _ := filepath.Glob(src)
                 // filePaths = append(filePaths, paths...)
                 for _, p := range paths {
+                    name := strings.Replace(p, source+"/", "", 1)
                     dst := strings.Replace(p, source, target, 1)
-                    err := os.Symlink(p, dst)
+                    stat, err := os.Stat(dst)
+                    if err != nil && os.IsNotExist(err) == false {
+                        return err
+                    }
+                    if os.IsNotExist(err) == false {
+                        link, err := filepath.EvalSymlinks(dst)
+                        if err != nil {
+                            return err
+                        }
+                        if link == p {
+                            fmt.Printf("%s == %s\n", name, dst)
+                            continue
+                        } else {
+                            // fmt.Println(dst, "is a symlink to", link, "not", name)
+                            msg := "Do you want to remove "+dst+", which is a symlink to "+link+"?"
+                            if ok := confirm(msg); ok {
+                                err := os.Remove(dst)
+                                if err != nil {
+                                    return err
+                                }
+                            } else {
+                                continue
+                            }
+                        }
+                    }
+
+                    err = os.Symlink(p, dst)
                     if err != nil {
                         return err
                     }
-                    fmt.Printf("%s -> %s\n", p, dst)
+                    fmt.Printf("%s -> %s\n", name, dst)
                 }
             default:
                 fmt.Println("Unhandled type for", l)
@@ -240,12 +262,15 @@ func linesInFiles(src string, target string, lines map[string]string) error {
 }
 
 func fileContainsString(path string, text string) (bool, error) {
-    b, err := ioutil.ReadFile(path)
-    content := string(b)
-    if err != nil {
-        fmt.Println("info:", err)
+    if _, err := os.Stat(path); err != nil && os.IsNotExist(err) == false {
+        return false, err
     }
-    // fmt.Println("content of", path, "is", content)
+    b, err := ioutil.ReadFile(path)
+    if err != nil {
+        return false, err
+    }
+    content := string(b)
+    fmt.Println("content of", path, "is", content)
     if content != "" {
         for _, str := range strings.Split(content, "\n") {
             if strings.Contains(str, text) {
@@ -277,7 +302,7 @@ func readConfig(path string, v interface{}) error {
     // file, _ := os.Open(path)
     // decoder := json.NewDecoder(file)
     // err := decoder.Decode(&config)
-    // if _, err := stat(configPath); err != nil {
+    // if _, err := os.Stat(configPath); err != nil {
     //     return err
     // }
     file, err := ioutil.ReadFile(path)
@@ -291,46 +316,42 @@ func readConfig(path string, v interface{}) error {
     return nil
 }
 
-func sync(path string) error {
-    list, err := readDir(path)
-    if err != nil {
-        return err
-    }
+func confirm(str string) bool {
+    reader := bufio.NewReader(os.Stdin)
 
-    depth := 0
-    for _, fi := range list {
-        if depth <= minDepth {
-            fmt.Println("Reached min depth", depth)
-        }
-        if depth >= maxDepth {
-            fmt.Println("Reached max depth", depth)
-        }
-        fmt.Println(depth, fi.Name(), fi.IsDir())
-        // if fi.IsDir() {
-        //     depth++
-        //     sync(filepath.Join(path, fi.Name()))
-        // }
-    }
+    for {
+        fmt.Printf("%s [y/n]: ", str)
 
-    return nil
+        res, err := reader.ReadString('\n')
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        res = strings.ToLower(strings.TrimSpace(res))
+
+        switch res {
+        case "y", "yes":
+            return true
+        case "n", "no":
+            return false
+        }
+        // TODO limit retries
+    }
 }
 
-// func visit(path string, info os.FileInfo, err error) error {
+// func readDir(dirname string) ([]os.FileInfo, error) {
+//     f, err := os.Open(dirname)
+//     if err != nil {
+//         return nil, err
+//     }
+//     defer f.Close()
+//     paths, err := f.Readdir(-1) // names
+//     if err != nil {
+//         return nil, err
+//     }
+//     // sort.Strings(paths)
+//     return paths, nil
 // }
-
-func readDir(dirname string) ([]os.FileInfo, error) {
-    f, err := os.Open(dirname)
-    if err != nil {
-        return nil, err
-    }
-    defer f.Close()
-    paths, err := f.Readdir(-1) // names
-    if err != nil {
-        return nil, err
-    }
-    // sort.Strings(paths)
-    return paths, nil
-}
 
 // func usage(code int, msg ...string) {
 //     if len(msg) > 0 {

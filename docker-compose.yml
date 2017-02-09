@@ -22,7 +22,8 @@ services:
     command: |
       -l -c '
       /go/bin/dot -s $$DOT/src/tmux
-      tmux new-session -n test "exit";
+      tmux new-session -n test "ls -la; exit"
+      /go/bin/dot -s $$DOT/src/tmux
       test -d "$$HOME/.tmux/plugins/tpm"'
 
   image:
