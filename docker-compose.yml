@@ -10,7 +10,7 @@ services:
     command: -l -c '/go/bin/dot -s $$DOT/src/tmux && tmux new-session; bash -l'
     # command: -l -c '/go/bin/dot -s $$DOT/src/tmux; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
-  bash:
+  test:
     image: lei/dot
     depends_on:
       - image
@@ -23,6 +23,8 @@ services:
       -l -c '
       bashrc=$$(tail -n1 ~/.bashrc);
       /go/bin/dot -s $$DOT/src/tmux
+      echo BRC $$bashrc
+      echo BRC $$(tail -n1 ~/.bashrc)
       if [[ "$$bashrc" == "$$(tail -n1 ~/.bashrc)" ]]; then echo ~/.bashrc was not modified; exit 1; fi;
       tmux new-session -n test "exit";
       test -d "$$HOME/.tmux/plugins/tpm"'

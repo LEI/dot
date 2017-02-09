@@ -242,16 +242,14 @@ func linesInFiles(src string, target string, lines map[string]string) error {
         if err != nil {
             return err
         }
-
         defer fi.Close()
 
-        if _, err = fi.WriteString(line); err != nil {
-            return err
-        }
-
-        // if err != nil {
+        // if _, err = fi.WriteString(line); err != nil {
         //     return err
         // }
+
+        fmt.Fprintf(fi, line+"\n")
+
         fmt.Printf("Line '%s' -> %s\n", line, dst)
     }
     return nil
