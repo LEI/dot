@@ -22,11 +22,10 @@ services:
     command: |
       -l -c '
       bashrc=$$(tail -n1 ~/.bashrc);
-      dot $$DOT --non-interactive;
+      /go/bin/dot -s $$DOT/src/tmux
       if [[ "$$bashrc" == "$$(tail -n1 ~/.bashrc)" ]]; then echo ~/.bashrc was not modified; exit 1; fi;
-      if [[ "$$(git config --file ~/.gitconfig.local --get user.name)" != "$$GIT_USER_NAME" ]]; then echo GIT_USER_NAME not set in ~/.gitconfig.local; exit 1; fi;
-      tmux new-session -n test "vim +PlugInstall +qall; exit";
-      for d in $$HOME/{.tmux/plugins,.vim/plugged}; do if ! test -d $$d; then echo $$d directory is missing; exit 1; fi; done'
+      tmux new-session -n test "exit";
+      test -d "$$HOME/.tmux/plugins/tpm"'
 
   image:
     build: .

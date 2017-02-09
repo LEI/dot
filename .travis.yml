@@ -5,22 +5,15 @@ services:
 
 language: bash
 
-# addons:
-#   apt:
-#     sources:
-#       - debian-sid
-#     packages:
-#       - shellcheck
-
 install:
-  # - shellcheck ./bin/* ./lib/*.bash ./src/**/.dotsh
   - docker-compose build
 
 script:
   - docker-compose run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
-  - ./bin/dot --non-interactive .
+  # - go install
+  # - dot -s $DOT/src/tmux
   - cd
   - ls -lah
 
