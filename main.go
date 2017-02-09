@@ -203,7 +203,7 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
                 for _, p := range paths {
                     name := strings.Replace(p, source+"/", "", 1)
                     dst := strings.Replace(p, source, target, 1)
-                    stat, err := os.Stat(dst)
+                    _, err := os.Stat(dst)
                     if err != nil && os.IsNotExist(err) == false {
                         return err
                     }
