@@ -221,36 +221,54 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
 }
 
 func linesInFiles(src string, target string, lines map[string]string) error {
-    FILES:
     for file, line := range lines {
         dst := filepath.Join(target, file)
 
-        b, err := ioutil.ReadFile(dst)
-        // if err != nil {
-        //     log.Println("Err:", err)
-        // }
-        if err == nil {
-            for _, str := range strings.Split(string(b), "\n") {
-                if strings.Contains(str, line) {
-                    fmt.Printf("Line '%s' already in %s\n", line, dst)
-                    continue FILES
-                }
-            }
+        contains, err := fileContainsString(dst, line+"\n")
+        if err != nil || contains == true {
+            continue
         }
 
-        fi, err := os.OpenFile(dst, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0611)
+        err = appendStringToFile(dst, line+"\n")
         if err != nil {
             return err
         }
-        defer fi.Close()
-
-        // if _, err = fi.WriteString(line); err != nil {
-        //     return err
-        // }
-
-        fmt.Fprintf(fi, line+"\n")
 
         fmt.Printf("Line '%s' -> %s\n", line, dst)
+    }
+    return nil
+}
+
+func fileContainsString(path string, text string) (bool, error) {
+    b, err := ioutil.ReadFile(path)
+    content := string(b)
+    if err != nil {
+        fmt.Println("info:", err)
+    }
+    // fmt.Println("content of", path, "is", content)
+    if content != "" {
+        for _, str := range strings.Split(content, "\n") {
+            if strings.Contains(str, text) {
+                fmt.Printf("Line '%s' already in %s\n", text, path)
+                return true, err
+            }
+        }
+    }
+    return false, err
+}
+
+func appendStringToFile(path string, text string) error {
+    // fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0611)
+    fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
+    if err != nil {
+        return err
+    }
+    defer fi.Close()
+
+    // fmt.Fprintf(fi, line+"\n")
+    _, err = fi.WriteString(text)
+    if err != nil {
+        return err
     }
     return nil
 }
