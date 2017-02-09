@@ -1,0 +1,12 @@
+{
+    "dir": ".tmux",
+    "links": [
+        ".tmux/tmux.conf",
+        ".tmux/tmux-*.conf",
+        ".tmux/tmux.$OS.conf",
+        ".tmux/colors"
+    ],
+    "lines": {
+        ".tmux.conf": "source-file ~/.tmux/tmux.conf"
+    }
+}
