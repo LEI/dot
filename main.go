@@ -16,6 +16,13 @@ import (
 
 const OS = runtime.GOOS
 
+const (
+    InfoSymbol = "›"
+    OkSymbol = "✓" // ✓ ✔
+    ErrSymbol = "✘" // × ✕ ✖ ✗ ✘
+    WarnSymbol = "!" // ⚠ !
+)
+
 var (
     f = flag.NewFlagSet("flag", flag.ExitOnError)
     // Skip = fmt.Errorf("Skip this path")
@@ -26,6 +33,7 @@ var (
     configPath string
     configName = "config.json"
     pkgConfigName = ".json"
+    PathSeparator = string(os.PathSeparator)
 )
 
 type Configuration struct {
@@ -138,7 +146,7 @@ func handlePackage(name string, pkg Package) error {
     if pkg.Dir != "" {
         pkg.Dirs = append(pkg.Dirs, pkg.Dir)
     }
-    fmt.Printf("[%d] Dirs\n", len(pkg.Dirs))
+    fmt.Printf("[%d] Create directories\n", len(pkg.Dirs))
     err := makeDirs(src, dst, pkg.Dirs)
     if err != nil {
         return err
@@ -147,13 +155,13 @@ func handlePackage(name string, pkg Package) error {
     if pkg.Link != nil && pkg.Link != "" {
         pkg.Links = append(pkg.Links, pkg.Link)
     }
-    fmt.Printf("[%d] Links\n", len(pkg.Links))
+    fmt.Printf("[%d] Symlink files\n", len(pkg.Links))
     err = linkFiles(src, dst, pkg.Links)
     if err != nil {
         return err
     }
 
-    fmt.Printf("[%d] Lines\n", len(pkg.Lines))
+    fmt.Printf("[%d] Lines in files\n", len(pkg.Lines))
     err = linesInFiles(src, dst, pkg.Lines)
     if err != nil {
         return err
@@ -184,7 +192,7 @@ func makeDirs(src string, dst string, paths []string) error {
         if err != nil {
             return err
         }
-        fmt.Printf("Created %s\n", dir)
+        fmt.Printf("%s %s\n", OkSymbol, dir)
     }
     return nil
 }
@@ -201,7 +209,7 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
                 paths, _ := filepath.Glob(src)
                 // filePaths = append(filePaths, paths...)
                 for _, p := range paths {
-                    name := strings.Replace(p, source+"/", "", 1)
+                    name := strings.Replace(p, source+PathSeparator, "", 1)
                     dst := strings.Replace(p, source, target, 1)
                     _, err := os.Stat(dst)
                     if err != nil && os.IsNotExist(err) == false {
@@ -213,7 +221,7 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
                             return err
                         }
                         if link == p {
-                            fmt.Printf("%s == %s\n", name, dst)
+                            fmt.Printf("%s %s == %s\n", OkSymbol, name, dst)
                             continue
                         } else {
                             // fmt.Println(dst, "is a symlink to", link, "not", name)
@@ -233,7 +241,7 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
                     if err != nil {
                         return err
                     }
-                    fmt.Printf("%s -> %s\n", name, dst)
+                    fmt.Printf("%s %s -> %s\n", OkSymbol, name, dst)
                 }
             default:
                 fmt.Println("Unhandled type for", l)
@@ -246,12 +254,12 @@ func linesInFiles(src string, target string, lines map[string]string) error {
     for file, line := range lines {
         dst := filepath.Join(target, file)
 
-        contains, err := fileContainsString(dst, line+"\n")
+        contains, err := lineInFile(dst, line)
         if err != nil {
             return err
         }
         if contains {
-            fmt.Printf("Line '%s' => %s\n", line, dst)
+            fmt.Printf("%s '%s' => %s\n", OkSymbol, line, dst)
             continue
         }
 
@@ -260,12 +268,12 @@ func linesInFiles(src string, target string, lines map[string]string) error {
             return err
         }
 
-        fmt.Printf("Line '%s' -> %s\n", line, dst)
+        fmt.Printf("%s '%s' -> %s\n", OkSymbol, line, dst)
     }
     return nil
 }
 
-func fileContainsString(path string, text string) (bool, error) {
+func lineInFile(path string, line string) (bool, error) {
     _, err := os.Stat(path)
     if os.IsNotExist(err) {
         return false, nil
@@ -276,17 +284,15 @@ func fileContainsString(path string, text string) (bool, error) {
         // } else if os.IsNotExist(err) {
         //     err = nil
     }
-    fmt.Println(path, "exists?", err)
     b, err := ioutil.ReadFile(path)
     if err != nil {
         return false, err
     }
     content := string(b)
-    fmt.Println("content of", path, "is", content)
     if content != "" {
         for _, str := range strings.Split(content, "\n") {
-            if strings.Contains(str, text) {
-                fmt.Printf("Line '%s' already in %s\n", text, path)
+            if strings.Contains(str, line) {
+                // fmt.Printf("%s: already contains the line '%s'\n", path, line)
                 return true, err
             }
         }
@@ -295,8 +301,8 @@ func fileContainsString(path string, text string) (bool, error) {
 }
 
 func appendStringToFile(path string, text string) error {
-    // fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0611)
-    fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
+    // fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
+    fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0611)
     if err != nil {
         return err
     }
