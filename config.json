@@ -1,20 +1,20 @@
 {
-    "target": "$HOME",
     "packages": {
+        "bash": {
+            "origin": "src/bash"
+        },
+        "git": {
+            "origin": "src/git"
+        },
+        "termux": {
+            "os_type": "linux-android",
+            "origin": "src/termux"
+        },
         "tmux": {
-            "source": "$DOT/src/tmux",
-            "directory": [
-                ".tmux"
-            ],
-            "link": [
-                ".tmux/tmux.conf",
-                ".tmux/tmux-*.conf",
-                ".tmux/tmux.$OS.conf",
-                ".tmux/colors"
-            ],
-            "line": {
-                ".tmux.conf": "source-file ~/.tmux/tmux.conf"
-            }
+            "origin": "src/tmux"
+        },
+        "vim": {
+            "origin": "src/vim"
         }
     }
 }

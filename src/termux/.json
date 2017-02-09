@@ -4,6 +4,6 @@
     "link": ".termux/*",
     "lines": {
         ".vim/vimrc": "source ~/.vim/init.vim"
-    }
-    "post_install": "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \;"
+    },
+    "post_install": "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \\;"
 }

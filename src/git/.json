@@ -1,12 +1,12 @@
 {
     "links": [
         ".git*"
-    ]
+    ],
     "template": {
-        ".gitconfig.local.tpl": [
+        ".gitconfig.local.tpl": {
             "GIT_AUTHOR_NAME": "Git full name",
             "GIT_AUTHOR_USERNAME": "Git user name",
             "GIT_AUTHOR_EMAIL": "Git email"
-        ]
+        }
     }
 }

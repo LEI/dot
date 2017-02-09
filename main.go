@@ -42,6 +42,7 @@ type Configuration struct {
 }
 
 type Package struct {
+    Origin string
     Source string
     Target string
     Dir string
@@ -49,6 +50,7 @@ type Package struct {
     Link interface{}
     Links []interface{}
     Lines map[string]string
+    OsType string `json:os_type`
 }
 
 // type Link struct {
@@ -108,10 +110,50 @@ func main() {
 
     // fmt.Println("Source:", source, "/", "Target:", target)
 
+    packages := map[string]Package{}
     for name, pkg := range config.Packages {
-        err = handlePackage(name, pkg)
-        if err != nil {
-            log.Fatal(err)
+
+        if pkg.Source != "" {
+            pkg.Source = expand(pkg.Source)
+        } else {
+            pkg.Source = source
+        }
+
+        if pkg.Target != "" {
+            pkg.Target = expand(pkg.Target)
+        } else {
+            pkg.Target = target
+        }
+
+        if pkg.Origin == "" {
+            packages[name] = pkg
+        } else {
+            // fmt.Println(name, "comes from", pkg.Origin)
+            subPkg := Package{}
+            subCfgPath := filepath.Join(pkg.Source, pkg.Origin, pkgConfigName)
+            // if subPkg == Package{} {
+            //     log.Fatal(name+": empty sub-package for origin "+pkg.Origin)
+            // }
+            if _, err = os.Stat(subCfgPath); err != nil && os.IsExist(err) {
+                log.Fatal(err)
+            } else {
+                err = readConfig(subCfgPath, &subPkg)
+                if err != nil {
+                    log.Fatal(err)
+                }
+            }
+            subPkg.Source = pkg.Source
+            subPkg.Target = pkg.Target
+            // subPkg.Origin = pkg.Origin
+            // subPkg.OsType = pkg.OsType
+            packages[name] = subPkg
+        }
+
+        for name, pkg = range packages {
+            err = handlePackage(name, pkg)
+            if err != nil {
+                log.Fatal(err)
+            }
         }
     }
 
@@ -132,22 +174,13 @@ func main() {
 }
 
 func handlePackage(name string, pkg Package) error {
-    fmt.Printf("%+v\n", name)
-
-    src := source
-    if pkg.Source != "" {
-        src = expand(pkg.Source)
-    }
-    dst := target
-    if pkg.Target != "" {
-        dst = expand(pkg.Target)
-    }
+    fmt.Printf("%+v\n", pkg)
 
     if pkg.Dir != "" {
         pkg.Dirs = append(pkg.Dirs, pkg.Dir)
     }
     fmt.Printf("[%d] Create directories\n", len(pkg.Dirs))
-    err := makeDirs(src, dst, pkg.Dirs)
+    err := makeDirs(pkg.Source, pkg.Target, pkg.Dirs)
     if err != nil {
         return err
     }
@@ -156,13 +189,13 @@ func handlePackage(name string, pkg Package) error {
         pkg.Links = append(pkg.Links, pkg.Link)
     }
     fmt.Printf("[%d] Symlink files\n", len(pkg.Links))
-    err = linkFiles(src, dst, pkg.Links)
+    err = linkFiles(pkg.Source, pkg.Target, pkg.Links)
     if err != nil {
         return err
     }
 
     fmt.Printf("[%d] Lines in files\n", len(pkg.Lines))
-    err = linesInFiles(src, dst, pkg.Lines)
+    err = linesInFiles(pkg.Source, pkg.Target, pkg.Lines)
     if err != nil {
         return err
     }
@@ -212,10 +245,10 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
                     name := strings.Replace(p, source+PathSeparator, "", 1)
                     dst := strings.Replace(p, source, target, 1)
                     _, err := os.Stat(dst)
-                    if err != nil && os.IsNotExist(err) == false {
+                    if err != nil && os.IsExist(err) {
                         return err
                     }
-                    if os.IsNotExist(err) == false {
+                    if os.IsExist(err) {
                         link, err := filepath.EvalSymlinks(dst)
                         if err != nil {
                             return err
@@ -303,6 +336,7 @@ func lineInFile(path string, line string) (bool, error) {
 func appendStringToFile(path string, text string) error {
     // fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
     fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0611)
+    // fmt.Println("ERR", err)
     if err != nil {
         return err
     }
