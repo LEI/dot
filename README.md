@@ -8,13 +8,13 @@
 
 #### OS X
 
-- [reattach-to-user-namespace](https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard)<br/>
-  Install with `brew install reattach-to-user-namespace`, and add the option
-  `--with-wrap-pbcopy-and-pbpaste` on macOS Sierra.
+- [reattach-to-user-namespace](https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard)<br>
+  Install with brew `brew install reattach-to-user-namespace` and add the option
+  `--with-wrap-pbcopy-and-pbpaste` on macOS Sierra, or macports `port install tmux-pasteboard`
 
 #### Linux
 
-`xsel` or `xclip`
+- (TODO) `xclip` or `xsel`
 
 ## Manual installation
 
