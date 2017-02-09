@@ -6,6 +6,16 @@
 - [tmux](https://tmux.github.io/)
 - [Solarized](http://ethanschoonover.com/solarized) terminal colors
 
+#### OS X
+
+- [reattach-to-user-namespace](https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard)<br/>
+  Install with `brew install reattach-to-user-namespace`, and add the option
+  `--with-wrap-pbcopy-and-pbpaste` on macOS Sierra.
+
+#### Linux
+
+`xsel` or `xclip`
+
 ## Manual installation
 
 Clone and change directory

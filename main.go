@@ -247,7 +247,11 @@ func linesInFiles(src string, target string, lines map[string]string) error {
         dst := filepath.Join(target, file)
 
         contains, err := fileContainsString(dst, line+"\n")
-        if err != nil || contains == true {
+        if err != nil {
+            return err
+        }
+        if contains {
+            fmt.Printf("Line '%s' => %s\n", line, dst)
             continue
         }
 
@@ -262,9 +266,17 @@ func linesInFiles(src string, target string, lines map[string]string) error {
 }
 
 func fileContainsString(path string, text string) (bool, error) {
-    if _, err := os.Stat(path); err != nil && os.IsNotExist(err) == false {
-        return false, err
+    _, err := os.Stat(path)
+    if os.IsNotExist(err) {
+        return false, nil
     }
+    if err != nil {
+        return false, err
+        // return false, os.IsNotExist(err) ? nil : err
+        // } else if os.IsNotExist(err) {
+        //     err = nil
+    }
+    fmt.Println(path, "exists?", err)
     b, err := ioutil.ReadFile(path)
     if err != nil {
         return false, err
