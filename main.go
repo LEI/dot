@@ -58,6 +58,8 @@ type Package struct {
 // }
 
 func init() {
+    log.SetFlags(log.LstdFlags | log.Lshortfile)
+
     f.StringVar(&configPath, "c", "", "configuration file")
     f.BoolVar(&debug, "d", false, "enable check-mode")
     // f.BoolVar(&sync, "sync", true, "install")
@@ -130,7 +132,7 @@ func main() {
         }
 
         if pkg.Origin == "" {
-            fmt.Printf("PKG\n%s %+v\n", name, pkg)
+            fmt.Printf("PKG\n%s %+v\n", name) //, pkg)
             packages[name] = pkg
         } else {
             // fmt.Println(name, "comes from", pkg.Origin)
@@ -147,7 +149,7 @@ func main() {
                     log.Fatal(err)
                 }
             }
-            fmt.Printf("SUBPKG\n%s %+v\n", name, subPkg)
+            fmt.Printf("SUBPKG\n%s %+v\n", name) //, subPkg)
             subPkg.Source = filepath.Join(pkg.Source, pkg.Origin)
             subPkg.Target = pkg.Target
             // subPkg.Origin = pkg.Origin
@@ -271,8 +273,8 @@ func linkFile(src string, dst string) error {
     if err != nil && os.IsExist(err) {
         return err
     }
-    if fi != nil && os.IsExist(err) && (fi.Mode() & os.ModeSymlink != 0) {
-        link, err := os.Readlink(fi.Name())
+    if fi != nil && (fi.Mode() & os.ModeSymlink != 0) {
+        link, err := os.Readlink(dst)
         if err != nil {
             return err
         }
@@ -287,10 +289,17 @@ func linkFile(src string, dst string) error {
                 return err
             }
         }
-        return nil
+        // return nil
+    } else if fi != nil {
+        msg := dst+" is an existing file, move it to "+dst+".backup and replace it with "+src+"?"
+        if ok := confirm(msg); ok {
+            err := os.Rename(dst, dst+".backup")
+            if err != nil {
+                return err
+            }
+        }
     }
     err = os.Symlink(src, dst)
-    fmt.Println(dst, err)
     if err != nil {
         return err
     }
@@ -302,13 +311,25 @@ func linesInFiles(src string, dest string, lines map[string]string) error {
     for file, line := range lines {
         dst := filepath.Join(dest, file)
 
-        contains, err := lineInFile(dst, line)
-        if err != nil {
+        fi, err := os.Stat(dst)
+        if err != nil && os.IsExist(err) {
             return err
         }
-        if contains {
-            fmt.Printf("%s '%s' => %s\n", OkSymbol, line, dst)
-            continue
+        if fi != nil { // err != nil && os.IsExist(err)
+            contains, err := hasLineInFile(dst, line)
+            if err != nil {
+                return err
+            }
+            if contains {
+                fmt.Printf("%s '%s' => %s\n", OkSymbol, line, dst)
+                return nil
+            }
+        } else { // os.IsNotExist(err)
+            fi, err := os.Create(dst)
+            if err != nil {
+                return err
+            }
+            defer fi.Close()
         }
 
         err = appendStringToFile(dst, line+"\n")
@@ -321,17 +342,7 @@ func linesInFiles(src string, dest string, lines map[string]string) error {
     return nil
 }
 
-func lineInFile(path string, line string) (bool, error) {
-    _, err := os.Stat(path)
-    if os.IsNotExist(err) {
-        return false, nil
-    }
-    if err != nil {
-        return false, err
-        // return false, os.IsNotExist(err) ? nil : err
-        // } else if os.IsNotExist(err) {
-        //     err = nil
-    }
+func hasLineInFile(path string, line string) (bool, error) {
     b, err := ioutil.ReadFile(path)
     if err != nil {
         return false, err
@@ -341,7 +352,7 @@ func lineInFile(path string, line string) (bool, error) {
         for _, str := range strings.Split(content, "\n") {
             if strings.Contains(str, line) {
                 // fmt.Printf("%s: already contains the line '%s'\n", path, line)
-                return true, err
+                return true, nil
             }
         }
     }
@@ -350,8 +361,11 @@ func lineInFile(path string, line string) (bool, error) {
 
 func appendStringToFile(path string, text string) error {
     // fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
-    fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0611)
-    // fmt.Println("ERR", err)
+    fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0611)
+    defer fi.Close()
+    if os.IsNotExist(err) {
+        fi, err = os.Create(path)
+    }
     if err != nil {
         return err
     }
@@ -388,6 +402,10 @@ func confirm(str string) bool {
 
     for {
         fmt.Printf("%s [y/n]: ", str)
+
+        // if forceYes {
+        //     return true
+        // }
 
         res, err := reader.ReadString('\n')
         if err != nil {

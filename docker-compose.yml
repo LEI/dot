@@ -7,7 +7,7 @@ services:
     depends_on:
       - image
     entrypoint: /bin/bash
-    command: -l -c '/go/bin/dot -s $$DOT && tmux new-session "exit"; cd; bash -l'
+    command: -l -c '/go/bin/dot -s $$DOT && tmux new-session "exit"; cd; /go/bin/dot -s $$DOT; bash -l'
     # command: -l -c '/go/bin/dot -s $$DOT/src/tmux; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
