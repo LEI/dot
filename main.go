@@ -148,24 +148,18 @@ func main() {
 				if err != nil {
 					handleError(err)
 				}
-				gitClone := exec.Command("git", "clone", cloneUrl, pkg.Path)
-				out, err := gitClone.CombinedOutput()
-				if len(out) > 0 {
-					fmt.Printf("%s: %s\n", name, out)
-				}
+				gitClone := []string{"git", "clone", cloneUrl, pkg.Path}
+				out, err := execCommand(gitClone)
 				if err != nil {
 					handleError(err)
 				}
 			} else {
-				gitDir := []string{
+				gitPull := []string{"git",
 					"--git-dir", pkg.Path + "/.git",
-					"--work-tree", pkg.Path
+					"--work-tree", pkg.Path,
+					"pull",
 				}
-				gitPull := exec.Command("git", gitDir...,  "pull")
-				out, err := gitPull.CombinedOutput()
-				if len(out) > 0 {
-					fmt.Printf("%s: %s\n", name, out)
-				}
+				out, err := execCommand(gitPull)
 				if err != nil {
 					handleError(err)
 				}
@@ -254,6 +248,15 @@ func handlePackage(name string, pkg Package) error {
 		}
 	}
 	return nil
+}
+
+func execCommand(name string, args ...string) ([]byte, err) {
+	cmd := exec.Command(args...)
+	out, err := cmd.CombinedOutput()
+	if len(out) > 0 {
+		fmt.Printf("%s: %s\n", name, out)
+	}
+	return out, err
 }
 
 func expand(str string) string {
