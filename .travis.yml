@@ -14,8 +14,8 @@ script:
   # - echo $PATH | tr -s ':' '\n'
   # - go install
   # - dot -s $DOT/src/tmux
-  - cd
-  - ls -lah
+  # - cd
+  # - ls -lah
 
 notifications:
   email: false

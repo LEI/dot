@@ -19,5 +19,7 @@ WORKDIR $DOT
 ENTRYPOINT ["/bin/bash"]
 
 ADD . $DOT
-RUN go install # /go/bin/dot
+
+RUN go vet
+RUN go install
 # , "-s", "$DOT"
