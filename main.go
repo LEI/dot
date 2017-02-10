@@ -58,7 +58,7 @@ type Package struct {
 // }
 
 func init() {
-    log.SetFlags(log.LstdFlags | log.Lshortfile)
+    // log.SetFlags(log.LstdFlags | log.Lshortfile)
 
     f.StringVar(&configPath, "c", "", "configuration file")
     f.BoolVar(&debug, "d", false, "enable check-mode")
@@ -74,15 +74,16 @@ func init() {
 
     err := f.Parse(os.Args[1:])
     if err != nil {
-        log.Fatal(err)
+        handleError(err)
     }
 }
 
 func main() {
     err := os.Setenv("OS", OS)
     if err != nil {
-        log.Fatal(err)
+        handleError(err)
     }
+
     // logFlag := func(a *flag.Flag) {
     //     fmt.Println(">", a.Name, "value=", a.Value)
     // }
@@ -92,7 +93,7 @@ func main() {
     // fmt.Println(configPath)
     // fmt.Println(source)
     if source == "" {
-        log.Fatal("Empty source path")
+        handleError(fmt.Errorf("Empty source path"))
     }
     if configPath == "" {
         configPath = filepath.Join(source, configName)
@@ -103,15 +104,18 @@ func main() {
 
 //     packages, err = handleConfig(configPath, &config)
 //     if err != nil {
-//         log.Fatal(err)
+//         handleError(err)
 //     }
 
     err = readConfig(configPath, &config)
     if err != nil || len(config.Packages) == 0 {
+        log.Printf("%s %s\n", configPath, "not found")
         pkg := Package{}
-        err = readConfig(filepath.Join(source, pkgConfigName), &pkg)
+        pkgConfigPath := filepath.Join(source, pkgConfigName)
+        err = readConfig(pkgConfigPath, &pkg)
         if err != nil {
-            log.Fatal(err)
+            log.Printf("%s %s\n", pkgConfigPath, "not found")
+            os.Exit(1)
         }
         config.Packages = map[string]Package{filepath.Base(source): pkg}
     }
@@ -132,24 +136,24 @@ func main() {
         }
 
         if pkg.Origin == "" {
-            fmt.Printf("PKG\n%s %+v\n", name) //, pkg)
+            // fmt.Printf("PKG\n%s %+v\n", name, pkg)
             packages[name] = pkg
         } else {
             // fmt.Println(name, "comes from", pkg.Origin)
             subPkg := Package{}
             subCfgPath := filepath.Join(pkg.Source, pkg.Origin, pkgConfigName)
             // if subPkg == Package{} {
-            //     log.Fatal(name+": empty sub-package for origin "+pkg.Origin)
+            //     handleError(name+": empty sub-package for origin "+pkg.Origin)
             // }
             if _, err = os.Stat(subCfgPath); err != nil && os.IsExist(err) {
-                log.Fatal(err)
+                handleError(err)
             } else {
                 err = readConfig(subCfgPath, &subPkg)
                 if err != nil {
-                    log.Fatal(err)
+                    handleError(err)
                 }
             }
-            fmt.Printf("SUBPKG\n%s %+v\n", name) //, subPkg)
+            // fmt.Printf("SUBPKG\n%s %+v\n", name, subPkg)
             subPkg.Source = filepath.Join(pkg.Source, pkg.Origin)
             subPkg.Target = pkg.Target
             // subPkg.Origin = pkg.Origin
@@ -161,7 +165,7 @@ func main() {
     for name, pkg := range packages {
         err = handlePackage(name, pkg)
         if err != nil {
-            log.Fatal(err)
+            handleError(err)
         }
     }
 
@@ -175,41 +179,54 @@ func main() {
 
     // err := sync(source)
     // if err != nil {
-    //     log.Fatal(err)
+    //     handleError(err)
     // }
 
     fmt.Println("[Done]")
 }
 
-// func handleConfig() error {
-
-// }
+func handleError(err error) {
+    if err != nil {
+        pc, fn, line, _ := runtime.Caller(1)
+        // log.Printf("[error] %s:%d %v", fn, line, err)
+        log.Printf("[error] in %s[%s:%d] %v", runtime.FuncForPC(pc).Name(), fn, line, err)
+    }
+}
 
 func handlePackage(name string, pkg Package) error {
-    fmt.Printf("%+v\n", pkg)
+    fmt.Printf("[%+v]\n", name)
 
     if pkg.Dir != "" {
         pkg.Dirs = append(pkg.Dirs, pkg.Dir)
     }
-    fmt.Printf("[%d] Create directories\n", len(pkg.Dirs))
-    err := makeDirs(pkg.Target, pkg.Dirs)
-    if err != nil {
-        return err
+    nbDirs := len(pkg.Dirs)
+    if nbDirs > 0 {
+        fmt.Printf("[%s] %d directories\n", name, nbDirs)
+        err := makeDirs(pkg.Target, pkg.Dirs)
+        if err != nil {
+            return err
+        }
     }
 
     if pkg.Link != nil && pkg.Link != "" {
         pkg.Links = append(pkg.Links, pkg.Link)
     }
-    fmt.Printf("[%d] Symlink files\n", len(pkg.Links))
-    err = linkFiles(pkg.Source, pkg.Target, pkg.Links)
-    if err != nil {
-        return err
+    nbLinks := len(pkg.Links)
+    if nbLinks > 0 {
+        fmt.Printf("[%s] %d symlink patterns\n", name, nbLinks)
+        err := linkFiles(pkg.Source, pkg.Target, pkg.Links)
+        if err != nil {
+            return err
+        }
     }
 
-    fmt.Printf("[%d] Lines in files\n", len(pkg.Lines))
-    err = linesInFiles(pkg.Source, pkg.Target, pkg.Lines)
-    if err != nil {
-        return err
+    nbLines := len(pkg.Lines)
+    if nbLines > 0 {
+        fmt.Printf("[%s] %d lines in files\n", name, nbLines)
+        err := linesInFiles(pkg.Source, pkg.Target, pkg.Lines)
+        if err != nil {
+            return err
+        }
     }
     return nil
 }
@@ -409,7 +426,7 @@ func confirm(str string) bool {
 
         res, err := reader.ReadString('\n')
         if err != nil {
-            log.Fatal(err)
+            handleError(err)
         }
 
         res = strings.ToLower(strings.TrimSpace(res))
