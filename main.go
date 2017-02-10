@@ -52,10 +52,7 @@ type Package struct {
 	OsType string `json:"os_type"`
 }
 
-// type Link struct {
-//     Type string `json:type`
-//     Path string `json:path`
-// }
+// type Link struct{Type string `json:type`, Path string `json:path`}
 
 func init() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -101,11 +98,6 @@ func main() {
 	// if exists(configPath)
 
 	config := Configuration{}
-
-	//     packages, err = handleConfig(configPath, &config)
-	//     if err != nil {
-	//         handleError(err)
-	//     }
 
 	err = readConfig(configPath, &config)
 	if err != nil || len(config.Packages) == 0 {
@@ -169,19 +161,6 @@ func main() {
 		}
 	}
 
-	// scanner := bufio.NewScanner(os.Stdin)
-	// for scanner.Scan() {
-	//     fmt.Println(scanner.Text()) // Println will add back the final '\n'
-	// }
-	// if err := scanner.Err(); err != nil {
-	//     fmt.Fprintln(os.Stderr, "reading standard input:", err)
-	// }
-
-	// err := sync(source)
-	// if err != nil {
-	//     handleError(err)
-	// }
-
 	fmt.Println("[Done]")
 }
 
@@ -236,16 +215,6 @@ func expand(str string) string {
 	str = strings.Replace(str, "$OS", OS, -1)
 	return str
 }
-
-// func stat(path string) (os.FileInfo, error) {
-//     fi, err := os.Stat(path)
-//     if err != nil {
-//         msg := strings.Replace(err.Error(), "stat ", os.Args[0]+": ", 1)
-//         // fmt.Fprintf(os.Stderr, "%s\n", msg)
-//         return fi, fmt.Errorf(msg)
-//     }
-//     return fi, nil
-// }
 
 func makeDirs(dst string, paths []string) error {
 	for _, dir := range paths {
@@ -397,12 +366,6 @@ func appendStringToFile(path string, text string) error {
 }
 
 func readConfig(path string, v interface{}) error {
-	// file, _ := os.Open(path)
-	// decoder := json.NewDecoder(file)
-	// err := decoder.Decode(&config)
-	// if _, err := os.Stat(configPath); err != nil {
-	//     return err
-	// }
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -419,10 +382,6 @@ func confirm(str string) bool {
 
 	for {
 		fmt.Printf("%s [y/n]: ", str)
-
-		// if forceYes {
-		//     return true
-		// }
 
 		res, err := reader.ReadString('\n')
 		if err != nil {
@@ -441,27 +400,27 @@ func confirm(str string) bool {
 	}
 }
 
-// func readDir(dirname string) ([]os.FileInfo, error) {
-//     f, err := os.Open(dirname)
-//     if err != nil {
-//         return nil, err
-//     }
-//     defer f.Close()
-//     paths, err := f.Readdir(-1) // names
-//     if err != nil {
-//         return nil, err
-//     }
-//     // sort.Strings(paths)
-//     return paths, nil
-// }
+func readDir(dirname string) ([]os.FileInfo, error) {
+    f, err := os.Open(dirname)
+    if err != nil {
+        return nil, err
+    }
+    defer f.Close()
+    paths, err := f.Readdir(-1) // names
+    if err != nil {
+        return nil, err
+    }
+    // sort.Strings(paths)
+    return paths, nil
+}
 
-// func usage(code int, msg ...string) {
-//     if len(msg) > 0 {
-//         fmt.Fprintf(os.Stderr, "%s: ", HOME)
-//     }
-//     for _, m := range msg {
-//         fmt.Fprintf(os.Stderr, "%s\n", m)
-//     }
-//     flag.Usage()
-//     os.Exit(code)
-// }
+func usage(code int, msg ...string) {
+    if len(msg) > 0 {
+        fmt.Fprintf(os.Stderr, "%s: ", HOME)
+    }
+    for _, m := range msg {
+        fmt.Fprintf(os.Stderr, "%s\n", m)
+    }
+    flag.Usage()
+    os.Exit(code)
+}
