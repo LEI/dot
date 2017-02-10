@@ -19,8 +19,8 @@ services:
       -l -c '
       for d in $$DOT/src/*; do /go/bin/dot -s "$$d"; done
       tmux new-session -n test "vim +PlugInstall +qall; exit"
-      /go/bin/dot -s $$DOT
-      test -d "$$HOME/.tmux/plugins/tpm"'
+      test -d "$$HOME/.tmux/plugins/tpm"
+      /go/bin/dot -s $$DOT'
 
   image:
     build: .

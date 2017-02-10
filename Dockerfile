@@ -15,7 +15,9 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 ENV DOT /go/src/github.com/LEI/dot
 WORKDIR $DOT
+
+ENTRYPOINT ["/bin/bash"]
+
 ADD . $DOT
-RUN go install
-ENTRYPOINT ["/go/bin/dot"]
+RUN go install # /go/bin/dot
 # , "-s", "$DOT"

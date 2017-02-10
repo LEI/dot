@@ -14,26 +14,25 @@ import (
     "strings"
 )
 
-const OS = runtime.GOOS
-
 const (
-    InfoSymbol = "›"
-    OkSymbol = "✓" // ✓ ✔
-    ErrSymbol = "✘" // × ✕ ✖ ✗ ✘
-    WarnSymbol = "!" // ⚠ !
+    OS = runtime.GOOS
 )
 
 var (
     f = flag.NewFlagSet("flag", flag.ExitOnError)
     // Skip = fmt.Errorf("Skip this path")
     debug bool
-    source, target string
+    source, dest string
     defaultSource = os.Getenv("PWD")
-    defaultTarget = os.Getenv("HOME")
+    defaultDest = os.Getenv("HOME")
     configPath string
     configName = "config.json"
     pkgConfigName = ".json"
     PathSeparator = string(os.PathSeparator)
+    InfoSymbol = "›"
+    OkSymbol = "✓" // ✓ ✔
+    ErrSymbol = "✘" // × ✕ ✖ ✗ ✘
+    WarnSymbol = "!" // ⚠ !
 )
 
 type Configuration struct {
@@ -62,8 +61,8 @@ func init() {
     f.StringVar(&configPath, "c", "", "configuration file")
     f.BoolVar(&debug, "d", false, "enable check-mode")
     // f.BoolVar(&sync, "sync", true, "install")
-    f.StringVar(&source, "s", defaultSource, "target directory")
-    f.StringVar(&target, "t", defaultTarget, "source directory")
+    f.StringVar(&source, "s", defaultSource, "source directory")
+    f.StringVar(&dest, "t", defaultDest, "destination directory")
 
     // flag.ErrHelp = errors.New("flag: help requested")
     f.Usage = func() {
@@ -97,7 +96,14 @@ func main() {
         configPath = filepath.Join(source, configName)
     }
     // if exists(configPath)
+
     config := Configuration{}
+
+//     packages, err = handleConfig(configPath, &config)
+//     if err != nil {
+//         log.Fatal(err)
+//     }
+
     err = readConfig(configPath, &config)
     if err != nil || len(config.Packages) == 0 {
         pkg := Package{}
@@ -107,8 +113,6 @@ func main() {
         }
         config.Packages = map[string]Package{filepath.Base(source): pkg}
     }
-
-    // fmt.Println("Source:", source, "/", "Target:", target)
 
     packages := map[string]Package{}
     for name, pkg := range config.Packages {
@@ -122,10 +126,11 @@ func main() {
         if pkg.Target != "" {
             pkg.Target = expand(pkg.Target)
         } else {
-            pkg.Target = target
+            pkg.Target = dest
         }
 
         if pkg.Origin == "" {
+            fmt.Printf("PKG\n%s %+v\n", name, pkg)
             packages[name] = pkg
         } else {
             // fmt.Println(name, "comes from", pkg.Origin)
@@ -142,18 +147,19 @@ func main() {
                     log.Fatal(err)
                 }
             }
-            subPkg.Source = pkg.Source
+            fmt.Printf("SUBPKG\n%s %+v\n", name, subPkg)
+            subPkg.Source = filepath.Join(pkg.Source, pkg.Origin)
             subPkg.Target = pkg.Target
             // subPkg.Origin = pkg.Origin
             // subPkg.OsType = pkg.OsType
             packages[name] = subPkg
         }
+    }
 
-        for name, pkg = range packages {
-            err = handlePackage(name, pkg)
-            if err != nil {
-                log.Fatal(err)
-            }
+    for name, pkg := range packages {
+        err = handlePackage(name, pkg)
+        if err != nil {
+            log.Fatal(err)
         }
     }
 
@@ -173,6 +179,10 @@ func main() {
     fmt.Println("[Done]")
 }
 
+// func handleConfig() error {
+
+// }
+
 func handlePackage(name string, pkg Package) error {
     fmt.Printf("%+v\n", pkg)
 
@@ -180,7 +190,7 @@ func handlePackage(name string, pkg Package) error {
         pkg.Dirs = append(pkg.Dirs, pkg.Dir)
     }
     fmt.Printf("[%d] Create directories\n", len(pkg.Dirs))
-    err := makeDirs(pkg.Source, pkg.Target, pkg.Dirs)
+    err := makeDirs(pkg.Target, pkg.Dirs)
     if err != nil {
         return err
     }
@@ -218,7 +228,7 @@ func expand(str string) string {
 //     return fi, nil
 // }
 
-func makeDirs(src string, dst string, paths []string) error {
+func makeDirs(dst string, paths []string) error {
     for _, dir := range paths {
         dir = filepath.Join(dst, expand(dir))
         err := os.MkdirAll(dir, 0755)
@@ -230,7 +240,7 @@ func makeDirs(src string, dst string, paths []string) error {
     return nil
 }
 
-func linkFiles(source string, target string, globs []interface{}) (error) {
+func linkFiles(source string, dest string, globs []interface{}) (error) {
     if _, err := os.Stat(source); err != nil {
         return err
     }
@@ -238,43 +248,15 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
     for _, glob := range globs {
         switch l := glob.(type) {
             case string:
-                src := filepath.Join(source, expand(l))
-                paths, _ := filepath.Glob(src)
+                paths, _ := filepath.Glob(filepath.Join(source, expand(l)))
                 // filePaths = append(filePaths, paths...)
-                for _, p := range paths {
-                    name := strings.Replace(p, source+PathSeparator, "", 1)
-                    dst := strings.Replace(p, source, target, 1)
-                    _, err := os.Stat(dst)
-                    if err != nil && os.IsExist(err) {
-                        return err
-                    }
-                    if os.IsExist(err) {
-                        link, err := filepath.EvalSymlinks(dst)
-                        if err != nil {
-                            return err
-                        }
-                        if link == p {
-                            fmt.Printf("%s %s == %s\n", OkSymbol, name, dst)
-                            continue
-                        } else {
-                            // fmt.Println(dst, "is a symlink to", link, "not", name)
-                            msg := "Do you want to remove "+dst+", which is a symlink to "+link+"?"
-                            if ok := confirm(msg); ok {
-                                err := os.Remove(dst)
-                                if err != nil {
-                                    return err
-                                }
-                            } else {
-                                continue
-                            }
-                        }
-                    }
-
-                    err = os.Symlink(p, dst)
+                for _, src := range paths {
+                    // fmt.Printf("%+v\n", src)
+                    dst := strings.Replace(src, source, dest, 1)
+                    err := linkFile(src, dst)
                     if err != nil {
                         return err
                     }
-                    fmt.Printf("%s %s -> %s\n", OkSymbol, name, dst)
                 }
             default:
                 fmt.Println("Unhandled type for", l)
@@ -283,9 +265,42 @@ func linkFiles(source string, target string, globs []interface{}) (error) {
     return nil
 }
 
-func linesInFiles(src string, target string, lines map[string]string) error {
+func linkFile(src string, dst string) error {
+    name := strings.Replace(src, source+PathSeparator, "", 1)
+    fi, err := os.Lstat(dst)
+    if err != nil && os.IsExist(err) {
+        return err
+    }
+    if fi != nil && os.IsExist(err) && (fi.Mode() & os.ModeSymlink != 0) {
+        link, err := os.Readlink(fi.Name())
+        if err != nil {
+            return err
+        }
+        if link == src {
+            fmt.Printf("%s %s == %s\n", OkSymbol, name, dst)
+            return nil
+        }
+        msg := dst+" is an existing symlink to "+link+", replace it with "+src+"?"
+        if ok := confirm(msg); ok {
+            err := os.Remove(dst)
+            if err != nil {
+                return err
+            }
+        }
+        return nil
+    }
+    err = os.Symlink(src, dst)
+    fmt.Println(dst, err)
+    if err != nil {
+        return err
+    }
+    fmt.Printf("%s %s -> %s\n", OkSymbol, name, dst)
+    return nil
+}
+
+func linesInFiles(src string, dest string, lines map[string]string) error {
     for file, line := range lines {
-        dst := filepath.Join(target, file)
+        dst := filepath.Join(dest, file)
 
         contains, err := lineInFile(dst, line)
         if err != nil {
