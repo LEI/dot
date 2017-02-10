@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -127,10 +128,26 @@ func main() {
 			pkg.Target = dest
 		}
 
-		if pkg.Origin == "" {
-			// fmt.Printf("PKG\n%s %+v\n", name, pkg)
-			packages[name] = pkg
-		} else {
+		if pkg.Origin != "" {
+			cloneUrl := "https://github.com/"+pkg.Origin+".git"
+			// cloneUrl := "git@github.com:"+pkg.Origin+".git"
+			clonePath := filepath.Join(pkg.Target, ".dot/")
+
+			if _, err := os.Stat(clonePath); err != nil && os.IsNotExist(err) {
+				err := os.Mkdir(clonePath, 0755)
+				if err != nil {
+					handleError(err)
+				}
+			}
+			gitClone := exec.Command("git", "clone", cloneUrl, clonePath)
+			err := gitClone.Run()
+			if err != nil {
+				handleError(err)
+			}
+
+			fmt.Println(cloneUrl, clonePath, err)
+			log.Fatal(gitClone)
+
 			// fmt.Println(name, "comes from", pkg.Origin)
 			subPkg := Package{}
 			subCfgPath := filepath.Join(pkg.Source, pkg.Origin, pkgConfigName)
@@ -151,6 +168,9 @@ func main() {
 			// subPkg.Origin = pkg.Origin
 			// subPkg.OsType = pkg.OsType
 			packages[name] = subPkg
+		} else {
+			// fmt.Printf("PKG\n%s %+v\n", name, pkg)
+			packages[name] = pkg
 		}
 	}
 

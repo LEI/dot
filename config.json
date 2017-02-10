@@ -1,20 +1,20 @@
 {
     "packages": {
         "bash": {
-            "origin": "src/bash"
+            "origin": "LEI/dot-bash"
         },
         "git": {
-            "origin": "src/git"
+            "origin": "LEI/dot-git"
         },
         "termux": {
             "os_type": "linux-android",
-            "origin": "src/termux"
+            "origin": "LEI/dot-termux"
         },
         "tmux": {
-            "origin": "src/tmux"
+            "origin": "LEI/dot-tmux"
         },
         "vim": {
-            "origin": "src/vim"
+            "origin": "LEI/dot-vim"
         }
     }
 }
