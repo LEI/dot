@@ -29,6 +29,7 @@ var (
 	configPath    string
 	configName    = "config.json"
 	pkgConfigName = ".json"
+	dotDir        = ".dot"
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
 	OkSymbol      = "✓" // ✓ ✔
@@ -43,6 +44,7 @@ type Configuration struct {
 
 type Package struct {
 	Origin string
+	Path   string
 	Source string
 	Target string
 	Dir    string
@@ -129,30 +131,25 @@ func main() {
 		}
 
 		if pkg.Origin != "" {
-			cloneUrl := "https://github.com/"+pkg.Origin+".git"
-			// cloneUrl := "git@github.com:"+pkg.Origin+".git"
-			clonePath := filepath.Join(pkg.Target, ".dot/")
-
-			if _, err := os.Stat(clonePath); err != nil && os.IsNotExist(err) {
-				err := os.Mkdir(clonePath, 0755)
+			cloneUrl := "https://github.com/" + pkg.Origin + ".git"
+			// cloneUrl := "git@github.com:" + pkg.Origin + ".git"
+			pkg.Path = filepath.Join(pkg.Target, dotDir, name)
+			if _, err := os.Stat(pkg.Path); err != nil && os.IsNotExist(err) {
+				err := os.MkdirAll(pkg.Path, 0755)
+				if err != nil {
+					handleError(err)
+				}
+				gitClone := exec.Command("git", "clone", cloneUrl, pkg.Path)
+				err = gitClone.Run()
 				if err != nil {
 					handleError(err)
 				}
 			}
-			gitClone := exec.Command("git", "clone", cloneUrl, clonePath)
-			err := gitClone.Run()
-			if err != nil {
-				handleError(err)
-			}
 
-			fmt.Println(cloneUrl, clonePath, err)
-			log.Fatal(gitClone)
-
-			// fmt.Println(name, "comes from", pkg.Origin)
 			subPkg := Package{}
-			subCfgPath := filepath.Join(pkg.Source, pkg.Origin, pkgConfigName)
+			subCfgPath := filepath.Join(pkg.Source, pkg.Path, pkgConfigName)
 			// if subPkg == Package{} {
-			//     handleError(name+": empty sub-package for origin "+pkg.Origin)
+			//     handleError(name+": empty sub-package for origin "+pkg.Path)
 			// }
 			if _, err = os.Stat(subCfgPath); err != nil && os.IsExist(err) {
 				handleError(err)
@@ -163,9 +160,9 @@ func main() {
 				}
 			}
 			// fmt.Printf("SUBPKG\n%s %+v\n", name, subPkg)
-			subPkg.Source = filepath.Join(pkg.Source, pkg.Origin)
+			subPkg.Source = filepath.Join(pkg.Source, pkg.Path)
 			subPkg.Target = pkg.Target
-			// subPkg.Origin = pkg.Origin
+			// subPkg.Path = pkg.Path
 			// subPkg.OsType = pkg.OsType
 			packages[name] = subPkg
 		} else {
