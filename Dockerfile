@@ -1,7 +1,7 @@
 FROM debian:jessie
 
-RUN apt-get update -qy && \
-apt-get install -qy --no-install-suggests --no-install-recommends --force-yes \
+RUN apt-get update -qq --force-yes && \
+apt-get install -qq --no-install-suggests --no-install-recommends --force-yes \
 ca-certificates \
 curl \
 git-core \
@@ -11,7 +11,8 @@ vim
 # && rm -rf /var/lib/apt/lists/*
 
 ENV GOPATH /go
-RUN printf "%s\n" 'PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"' >> ~/.profile
+ENV PATH "$GOPATH/bin:/usr/local/go/bin:$PATH"
+RUN printf "%s\n" 'PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"' >> ~/.bashrc
 
 ENV DOT /go/src/github.com/LEI/dot
 WORKDIR $DOT

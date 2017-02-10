@@ -124,6 +124,12 @@ func main() {
 			pkg.Source = source
 		}
 
+		if pkg.Path != "" {
+			pkg.Path = expand(pkg.Path)
+		} else {
+			pkg.Path = pkg.Source
+		}
+
 		if pkg.Target != "" {
 			pkg.Target = expand(pkg.Target)
 		} else {
@@ -133,21 +139,40 @@ func main() {
 		if pkg.Origin != "" {
 			cloneUrl := "https://github.com/" + pkg.Origin + ".git"
 			// cloneUrl := "git@github.com:" + pkg.Origin + ".git"
-			pkg.Path = filepath.Join(pkg.Target, dotDir, name)
-			if _, err := os.Stat(pkg.Path); err != nil && os.IsNotExist(err) {
+			if pkg.Path == pkg.Source || pkg.Path == "" {
+				pkg.Path = filepath.Join(pkg.Target, dotDir, name)
+			}
+			_, err := os.Stat(pkg.Path)
+			if err != nil && os.IsNotExist(err) {
 				err := os.MkdirAll(pkg.Path, 0755)
 				if err != nil {
 					handleError(err)
 				}
 				gitClone := exec.Command("git", "clone", cloneUrl, pkg.Path)
-				err = gitClone.Run()
+				out, err := gitClone.CombinedOutput()
+				if len(out) > 0 {
+					fmt.Printf("%s: %s\n", name, out)
+				}
+				if err != nil {
+					handleError(err)
+				}
+			} else {
+				gitDir := []string{
+					"--git-dir", pkg.Path + "/.git",
+					"--work-tree", pkg.Path
+				}
+				gitPull := exec.Command("git", gitDir...,  "pull")
+				out, err := gitPull.CombinedOutput()
+				if len(out) > 0 {
+					fmt.Printf("%s: %s\n", name, out)
+				}
 				if err != nil {
 					handleError(err)
 				}
 			}
 
 			subPkg := Package{}
-			subCfgPath := filepath.Join(pkg.Source, pkg.Path, pkgConfigName)
+			subCfgPath := filepath.Join(pkg.Path, pkgConfigName)
 			// if subPkg == Package{} {
 			//     handleError(name+": empty sub-package for origin "+pkg.Path)
 			// }
@@ -160,7 +185,9 @@ func main() {
 				}
 			}
 			// fmt.Printf("SUBPKG\n%s %+v\n", name, subPkg)
-			subPkg.Source = filepath.Join(pkg.Source, pkg.Path)
+			// subPkg.Path = filepath.Join(pkg.Path, pkg.Path)
+			subPkg.Path = pkg.Path
+			subPkg.Source = pkg.Source
 			subPkg.Target = pkg.Target
 			// subPkg.Path = pkg.Path
 			// subPkg.OsType = pkg.OsType
@@ -172,6 +199,7 @@ func main() {
 	}
 
 	for name, pkg := range packages {
+		fmt.Printf("%+v\n", pkg)
 		err = handlePackage(name, pkg)
 		if err != nil {
 			handleError(err)
@@ -186,6 +214,7 @@ func handleError(err error) {
 		pc, fn, line, _ := runtime.Caller(1)
 		// log.Printf("[error] %s:%d %v", fn, line, err)
 		log.Printf("[error] in %s[%s:%d] %v", runtime.FuncForPC(pc).Name(), fn, line, err)
+		log.Fatal(err)
 	}
 }
 
@@ -210,7 +239,7 @@ func handlePackage(name string, pkg Package) error {
 	nbLinks := len(pkg.Links)
 	if nbLinks > 0 {
 		fmt.Printf("[%s] %d symlink patterns\n", name, nbLinks)
-		err := linkFiles(pkg.Source, pkg.Target, pkg.Links)
+		err := linkFiles(pkg.Path, pkg.Target, pkg.Links)
 		if err != nil {
 			return err
 		}
@@ -219,7 +248,7 @@ func handlePackage(name string, pkg Package) error {
 	nbLines := len(pkg.Lines)
 	if nbLines > 0 {
 		fmt.Printf("[%s] %d lines in files\n", name, nbLines)
-		err := linesInFiles(pkg.Source, pkg.Target, pkg.Lines)
+		err := linesInFiles(pkg.Path, pkg.Target, pkg.Lines)
 		if err != nil {
 			return err
 		}

@@ -6,14 +6,14 @@ services:
     image: lei/dot
     depends_on:
       - image
-    entrypoint: /bin/bash
+    # entrypoint: /bin/bash
     command: -l -c 'dot -s $$DOT; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
     image: lei/dot
     depends_on:
       - image
-    entrypoint: /bin/bash
+    # entrypoint: /bin/bash
     command: |
       -l -c '
       tail_bashrc="$$(tail -n1 ~/.bashrc)"

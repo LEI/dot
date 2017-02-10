@@ -8,6 +8,9 @@ import (
 )
 
 func linkFiles(source string, dest string, globs []interface{}) error {
+	if source == "" {
+		return fmt.Errorf("Cannot link empty source")
+	}
 	if _, err := os.Stat(source); err != nil {
 		return err
 	}
