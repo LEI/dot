@@ -400,27 +400,27 @@ func confirm(str string) bool {
 	}
 }
 
-func readDir(dirname string) ([]os.FileInfo, error) {
-    f, err := os.Open(dirname)
-    if err != nil {
-        return nil, err
-    }
-    defer f.Close()
-    paths, err := f.Readdir(-1) // names
-    if err != nil {
-        return nil, err
-    }
-    // sort.Strings(paths)
-    return paths, nil
-}
+// func readDir(dirname string) ([]os.FileInfo, error) {
+// 	f, err := os.Open(dirname)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer f.Close()
+// 	paths, err := f.Readdir(-1) // names
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	// sort.Strings(paths)
+// 	return paths, nil
+// }
 
-func usage(code int, msg ...string) {
-    if len(msg) > 0 {
-        fmt.Fprintf(os.Stderr, "%s: ", HOME)
-    }
-    for _, m := range msg {
-        fmt.Fprintf(os.Stderr, "%s\n", m)
-    }
-    flag.Usage()
-    os.Exit(code)
-}
+// func usage(code int, msg ...string) {
+// 	if len(msg) > 0 {
+// 		fmt.Fprintf(os.Stderr, "%s: ", HOME)
+// 	}
+// 	for _, m := range msg {
+// 		fmt.Fprintf(os.Stderr, "%s\n", m)
+// 	}
+// 	flag.Usage()
+// 	os.Exit(code)
+// }
