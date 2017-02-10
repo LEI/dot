@@ -20,6 +20,6 @@ ENTRYPOINT ["/bin/bash"]
 
 ADD . $DOT
 
-RUN go vet
+# RUN go vet
 RUN go install
 # , "-s", "$DOT"
