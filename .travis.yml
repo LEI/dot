@@ -9,8 +9,8 @@ install:
   - docker-compose build
 
 script:
-  - docker-compose run test
-  - "for t in ./tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $$t run test; done"
+  - "for t in ./tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
+  - docker-compose run test_all
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
   # - go install
