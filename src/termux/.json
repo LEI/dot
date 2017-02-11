@@ -1,6 +1,0 @@
-{
-    "pre_install": "termux-setup-storage",
-    "dir": ".termux",
-    "link": ".termux/*",
-    "post_install": "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \\;"
-}

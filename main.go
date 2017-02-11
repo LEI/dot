@@ -4,9 +4,9 @@ import (
 	"bufio"
 	// "errors"
 	"encoding/json"
-	flag "github.com/ogier/pflag"
-	"github.com/jinzhu/configor"
 	"fmt"
+	"github.com/jinzhu/configor"
+	flag "github.com/ogier/pflag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,25 +45,25 @@ var (
 // }
 
 type Package struct {
-	Name   string
-	Origin string
-	Path   string
-	Source string
-	Target string
-	Dir    string
-	Dirs   []string
-	Link   interface{}
-	Links  []interface{}
-	Lines  map[string]string
-	PreInstall string `json:"pre_install"`
+	Name        string
+	Origin      string
+	Path        string
+	Source      string
+	Target      string
+	Dir         string
+	Dirs        []string
+	Link        interface{}
+	Links       []interface{}
+	Lines       map[string]string
+	PreInstall  string `json:"pre_install"`
 	PostInstall string `json:"post_install"`
-	OsType string `json:"os_type"`
+	OsType      string `json:"os_type"`
 }
 
 var Config = struct {
 	Source string
 	Target string
-	Debug bool
+	Debug  bool
 	// Name string `default:"?"`
 	Packages map[string]Package
 	// Source string `required:"true"`
@@ -78,7 +78,7 @@ func (pkg *PackageFlag) String() string {
 
 func (pkg *PackageFlag) Set(origin string) error {
 	*pkg = append(*pkg, origin)
-	// for _, o := range strings.Split(",", origin) 
+	// for _, o := range strings.Split(",", origin)
 	return nil
 }
 
@@ -162,8 +162,8 @@ func main() {
 	if err != nil && os.IsExist(err) {
 		handleError(err)
 		// log.Printf("%s %s\n", ConfigFile, "not found")
-	// } else if err != nil && os.IsNotExist(err) {
-	// 	Config.Packages = map[string]Package{}
+		// } else if err != nil && os.IsNotExist(err) {
+		// 	Config.Packages = map[string]Package{}
 	}
 
 	// if Config.Packages == nil {
@@ -240,7 +240,6 @@ func main() {
 
 	fmt.Println("[Done]")
 }
-
 
 func handleError(err error) {
 	if err != nil {
@@ -323,7 +322,7 @@ func cloneOrPull(name string, repo string, dir string) error {
 		}
 	} else {
 		gitPull := exec.Command("git",
-			"--git-dir", dir + "/.git",
+			"--git-dir", dir+"/.git",
 			"--work-tree", dir,
 			"pull")
 		out, err := gitPull.CombinedOutput()
@@ -353,8 +352,8 @@ func readConfig(path string, v interface{}) error {
 			break
 		}
 	}
-	configor.Load(&v, path + ext)
-    fmt.Printf("config: %#v", v)
+	configor.Load(&v, path+ext)
+	fmt.Printf("config: %#v", v)
 	// _, err := os.Stat(path)
 	// if err != nil {
 	// 	return err
