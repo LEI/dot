@@ -1,10 +1,13 @@
-test:
-  image: lei/dot
+version: "2"
+
+services:
+  test:
+    image: lei/dot
     depends_on:
       - image
-  entrypoint: /bin/bash
-  command: |
-    -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@"; }
-    run dot -p LEI/dot-tmux
-    run tmux new-session -n test "exit"
-    run test -d "$$HOME/.tmux/plugins/tpm"'
+    entrypoint: /bin/bash
+    command: |
+      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
+      run dot -p LEI/dot-tmux
+      run tmux new-session -n test "exit"
+      run test -d "$$HOME/.tmux/plugins/tpm"'

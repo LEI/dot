@@ -10,9 +10,9 @@ install:
 
 script:
   - docker-compose run test
-  - docker-compose -f docker-compose.yml -f -f tests/docker-compose.bash.yml run test
-  - docker-compose -f docker-compose.yml -f -f tests/docker-compose.tmux.yml run test
-  - docker-compose -f docker-compose.yml -f -f tests/docker-compose.vim.yml run test
+  - docker-compose -f docker-compose.yml -f tests/docker-compose.bash.yml run test
+  - docker-compose -f docker-compose.yml -f tests/docker-compose.tmux.yml run test
+  - docker-compose -f docker-compose.yml -f tests/docker-compose.vim.yml run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
   # - go install
