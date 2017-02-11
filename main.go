@@ -3,11 +3,11 @@ package main
 import (
 	"bufio"
 	// "errors"
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"github.com/jinzhu/configor"
 	flag "github.com/ogier/pflag"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -26,7 +26,7 @@ var (
 	debug         = Config.Debug
 	defaultSource = os.Getenv("PWD")
 	defaultTarget = os.Getenv("HOME")
-	// config        = Configuration{}
+	Config        = Configuration{}
 	ConfigFile    string
 	ConfigName    = ".dotrc"
 	dotDir        = ".dot"
@@ -60,24 +60,39 @@ type Package struct {
 	OsType      string `json:"os_type"`
 }
 
-var Config = struct {
+type Configuration struct {
 	Source string
 	Target string
 	Debug  bool
 	// Name string `default:"?"`
-	Packages map[string]Package
+	Packages PackageMap
 	// Source string `required:"true"`
 	// Target string
-}{}
+}
 
-type PackageFlag []string
+type PackageMap map[string]Package
+
+type PackageFlag []Package
 
 func (pkg *PackageFlag) String() string {
 	return fmt.Sprintf("%s", *pkg)
 }
 
 func (pkg *PackageFlag) Set(origin string) error {
-	*pkg = append(*pkg, origin)
+	p := &Package{}
+	if strings.Contains(origin, "=") {
+		s := strings.Split(origin, "=")
+		p.Name = s[0]
+		p.Origin = s[1]
+	} else {
+		p.Name = origin
+		p.Origin = origin
+	}
+	// if *pkg == nil {
+	// 	*pkg = &PackageFlag{}
+	// }
+	*pkg = append(*pkg, *p)
+	// (*pkg)[p.Name] = *p
 	// for _, o := range strings.Split(",", origin)
 	return nil
 }
@@ -96,30 +111,31 @@ func init() {
 	f.VarP(&packages, "package", "p", "List of packages")
 
 	// flag.ErrHelp = errors.New("flag: help requested")
-	f.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s [args]\n", os.Args[0])
-		f.PrintDefaults()
-	}
+	// f.Usage = func() {
+	// 	fmt.Fprintf(os.Stderr, "usage: %s [args]\n", os.Args[0])
+	// 	f.PrintDefaults()
+	// }
 
 	err := f.Parse(os.Args[1:])
 	if err != nil {
 		handleError(err)
 	}
 
+	if Config.Packages == nil {
+		Config.Packages = map[string]Package{}
+	}
+
 	if len(packages) > 0 {
-		for _, p := range packages {
-			// fmt.Println(reflect.TypeOf(p))
-			pkg := &Package{}
-			pkg.Origin = p
-			// config.Packages[p] = *pkg
-			Config.Packages[p] = *pkg
+		for _, pkg := range packages {
+			// pkg := &Package{}
+			// pkg.Origin = p
+			// fmt.Println("PKG ===", pkg)
+			Config.Packages[pkg.Name] = pkg
 		}
 	}
 }
 
 func main() {
-	var source, target string
-
 	err := os.Setenv("OS", OS)
 	fmt.Printf("[OS: %s]\n", OS)
 	if err != nil {
@@ -136,14 +152,14 @@ func main() {
 	// fmt.Println(source)
 	// if exists(ConfigFile)
 
-	if Config.Source != "" {
-		source = Config.Source
-	}
+	// if Config.Source != "" {
+	// 	source = Config.Source
+	// }
 
-	if ConfigFile != "" && source == defaultSource {
-		source = filepath.Dir(ConfigFile)
+	if ConfigFile != "" && Config.Source == defaultSource {
+		Config.Source = filepath.Dir(ConfigFile)
 	} else if ConfigFile == "" {
-		ConfigFile = filepath.Join(source, ConfigName)
+		ConfigFile = filepath.Join(Config.Source, ConfigName)
 	} else {
 		handleError(fmt.Errorf("--config and --source conflict"))
 	}
@@ -158,16 +174,13 @@ func main() {
 	// 	handleError(fmt.Errorf("Empty source path"))
 	// }
 
-	err = readConfig(ConfigFile, &config)
+	err = readConfig(ConfigFile, &Config)
 	if err != nil && os.IsExist(err) {
 		handleError(err)
 		// log.Printf("%s %s\n", ConfigFile, "not found")
 		// } else if err != nil && os.IsNotExist(err) {
 		// 	Config.Packages = map[string]Package{}
 	}
-
-	// if Config.Packages == nil {
-	// }
 
 	if len(Config.Packages) == 0 {
 		// fmt.Printf("%s: %+v\n", "No packages found", Config)
@@ -180,7 +193,7 @@ func main() {
 			}
 			handleError(err)
 		}
-		Config.Packages[filepath.Base(source)] = *pkg
+		Config.Packages[filepath.Base(Config.Source)] = *pkg
 		// Config.Packages = map[string]Package{filepath.Base(source): *pkg}
 	}
 
@@ -193,7 +206,7 @@ func main() {
 		if pkg.Source != "" {
 			pkg.Source = expand(pkg.Source)
 		} else {
-			pkg.Source = source
+			pkg.Source = Config.Source
 		}
 
 		if pkg.Path != "" {
@@ -205,7 +218,7 @@ func main() {
 		if pkg.Target != "" {
 			pkg.Target = expand(pkg.Target)
 		} else {
-			pkg.Target = target
+			pkg.Target = Config.Target
 		}
 
 		// TODO check target != source
@@ -342,18 +355,28 @@ func expand(str string) string {
 	return str
 }
 
-var configExts = []string{".yaml", ".json", ""}
+var ConfigExt = []string{"", ".json", ".yaml"}
 
 func readConfig(path string, v interface{}) error {
-	var ext string
-	for _, e := range configExts {
-		if _, err := os.Stat(path + e); err != nil {
-			ext = e
+	var e error
+	var paths []string
+	for _, ext := range ConfigExt {
+		p := path + ext
+		_, err := os.Stat(p)
+		if err != nil {
+			e = err
+		} else {
+			paths = append(paths, path + ext)
 			break
 		}
 	}
-	configor.Load(&v, path+ext)
-	fmt.Printf("config: %#v", v)
+
+	if len(paths) == 0 && e != nil {
+		return e
+	}
+
+	configor.Load(&v, paths...)
+	// fmt.Printf("config: %#v", v)
 	// _, err := os.Stat(path)
 	// if err != nil {
 	// 	return err
@@ -366,7 +389,7 @@ func readConfig(path string, v interface{}) error {
 	// if err != nil {
 	// 	return err
 	// }
-	// return nil
+	return nil
 }
 
 func confirm(str string) bool {
