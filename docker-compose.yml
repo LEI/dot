@@ -21,12 +21,12 @@ services:
       - image
     # entrypoint: /bin/bash
     command: |
-      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@"; }
+      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
       run dot -s $$DOT
       for d in $$HOME/.dot/*; do run dot -s "$$d"; done
       run dot -c $$DOT/.json
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
-      tmux new-session -n test "vim +PlugInstall +qall; exit"
+      run tmux new-session -n test "vim +PlugInstall +qall; exit"
       run test -d "$$HOME/.tmux/plugins/tpm"
       run test -d "$$HOME/.vim/plugged"'
