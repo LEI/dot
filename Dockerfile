@@ -22,5 +22,6 @@ ENTRYPOINT ["/bin/bash"]
 ADD . $DOT
 
 # RUN go vet
-RUN go install
+# RUN go build
+RUN go get github.com/LEI/dot && go install
 # , "-s", "$DOT"

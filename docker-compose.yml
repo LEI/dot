@@ -7,7 +7,8 @@ services:
     depends_on:
       - image
     # entrypoint: /bin/bash
-    command: -l -c 'dot -s $$DOT; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
+    command: -l -c 'dot -p LEI/dot-tmux -p LEI/dot-vim; bash -l'
+    # command: -l -c 'dot -p LEI/dot-tmux -p LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
     image: lei/dot
@@ -15,10 +16,11 @@ services:
       - image
     # entrypoint: /bin/bash
     command: |
-      -l -c '
+      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@"; }
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
-      # for d in $$DOT/src/*; do dot -s "$$d"; done
-      dot -s $$DOT
+      run dot -s $$DOT
+      for d in $$HOME/.dot/*; do run dot -s "$$d"; done
+      run dot -c $$DOT/.json
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
       tmux new-session -n test "vim +PlugInstall +qall; exit"
       test -d "$$HOME/.tmux/plugins/tpm"

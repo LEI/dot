@@ -4,13 +4,14 @@ import (
 	"bufio"
 	// "errors"
 	"encoding/json"
-	"flag"
+	flag "github.com/ogier/pflag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	// "reflect"
 	"runtime"
 	"strings"
 )
@@ -20,16 +21,17 @@ const (
 )
 
 var (
-	f = flag.NewFlagSet("flag", flag.ExitOnError)
 	// Skip = fmt.Errorf("Skip this path")
 	debug         bool
-	source, dest  string
+	sourceFlag    string
+	targetFlag    string
 	defaultSource = os.Getenv("PWD")
-	defaultDest   = os.Getenv("HOME")
-	configPath    string
-	configName    = "config.json"
-	pkgConfigName = ".json"
+	defaultTarget = os.Getenv("HOME")
+	config        = Configuration{}
+	configFile    string
+	configName    = ".dotrc"
 	dotDir        = ".dot"
+	packages      PackageFlag
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
 	OkSymbol      = "✓" // ✓ ✔
@@ -38,11 +40,13 @@ var (
 )
 
 type Configuration struct {
-	Target   string
+	// Target   string
 	Packages map[string]Package
+	*Package
 }
 
 type Package struct {
+	Name   string
 	Origin string
 	Path   string
 	Source string
@@ -52,19 +56,35 @@ type Package struct {
 	Link   interface{}
 	Links  []interface{}
 	Lines  map[string]string
+	PreInstall string
+	PostInstall string
 	OsType string `json:"os_type"`
+}
+
+type PackageFlag []string
+
+func (pkg *PackageFlag) String() string {
+	return fmt.Sprintf("%s", *pkg)
+}
+
+func (pkg *PackageFlag) Set(origin string) error {
+	*pkg = append(*pkg, origin)
+	// for _, o := range strings.Split(",", origin) 
+	return nil
 }
 
 // type Link struct{Type string `json:type`, Path string `json:path`}
 
+var f = flag.NewFlagSet("flag", flag.ExitOnError)
+
 func init() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	f.StringVar(&configPath, "c", "", "configuration file")
-	f.BoolVar(&debug, "d", false, "enable check-mode")
-	// f.BoolVar(&sync, "sync", true, "install")
-	f.StringVar(&source, "s", defaultSource, "source directory")
-	f.StringVar(&dest, "t", defaultDest, "destination directory")
+	f.StringVarP(&configFile, "config", "c", "", "Configuration file")
+	f.BoolVarP(&debug, "debug", "d", false, "Print more")
+	f.StringVarP(&sourceFlag, "source", "s", defaultSource, "Source directory")
+	f.StringVarP(&targetFlag, "target", "t", defaultTarget, "Destination directory")
+	f.VarP(&packages, "package", "p", "List of packages")
 
 	// flag.ErrHelp = errors.New("flag: help requested")
 	f.Usage = func() {
@@ -79,7 +99,10 @@ func init() {
 }
 
 func main() {
+	var source, target string
+
 	err := os.Setenv("OS", OS)
+	fmt.Printf("[OS: %s]\n", OS)
 	if err != nil {
 		handleError(err)
 	}
@@ -90,33 +113,72 @@ func main() {
 	// f.Visit(logFlag)
 	// fmt.Println(OS, f.Args())
 
-	// fmt.Println(configPath)
+	// fmt.Println(configFile)
 	// fmt.Println(source)
-	if source == "" {
-		handleError(fmt.Errorf("Empty source path"))
-	}
-	if configPath == "" {
-		configPath = filepath.Join(source, configName)
-	}
-	// if exists(configPath)
+	// if exists(configFile)
 
-	config := Configuration{}
+	if sourceFlag != "" {
+		source = sourceFlag
+	}
 
-	err = readConfig(configPath, &config)
-	if err != nil || len(config.Packages) == 0 {
-		log.Printf("%s %s\n", configPath, "not found")
-		pkg := Package{}
-		pkgConfigPath := filepath.Join(source, pkgConfigName)
-		err = readConfig(pkgConfigPath, &pkg)
-		if err != nil {
-			log.Printf("%s %s\n", pkgConfigPath, "not found")
-			os.Exit(1)
+	if configFile != "" && source == defaultSource {
+		source = filepath.Dir(configFile)
+	} else if configFile == "" {
+		configFile = filepath.Join(source, configName)
+	} else {
+		handleError(fmt.Errorf("--config and --source conflict"))
+	}
+
+	// if configFile == "" {
+	// 	configFile = filepath.Join(source, configName)
+	// } else if source == "" {
+	// 	source = filepath.Dir(configFile)
+	// }
+
+	// if source == "" {
+	// 	handleError(fmt.Errorf("Empty source path"))
+	// }
+
+	err = readConfig(configFile, &config)
+	if err != nil && os.IsExist(err) {
+		handleError(err)
+		// log.Printf("%s %s\n", configFile, "not found")
+	} else if err != nil && os.IsNotExist(err) {
+		config.Packages = map[string]Package{}
+	}
+
+	// if config.Packages == nil {
+	// }
+
+	if len(packages) > 0 {
+		for _, p := range packages {
+			// fmt.Println(reflect.TypeOf(p))
+			pkg := &Package{}
+			pkg.Origin = p
+			config.Packages[p] = *pkg
 		}
-		config.Packages = map[string]Package{filepath.Base(source): pkg}
 	}
 
-	packages := map[string]Package{}
+	if len(config.Packages) == 0 {
+		// fmt.Printf("%s: %+v\n", "No packages found", config)
+		pkg := &Package{}
+		err = readConfig(configFile, &pkg)
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Printf("Config file not found: %s\n", err.Error())
+				os.Exit(1)
+			}
+			handleError(err)
+		}
+		config.Packages[filepath.Base(source)] = *pkg
+		// config.Packages = map[string]Package{filepath.Base(source): *pkg}
+	}
+
 	for name, pkg := range config.Packages {
+
+		if pkg.Name == "" {
+			pkg.Name = name
+		}
 
 		if pkg.Source != "" {
 			pkg.Source = expand(pkg.Source)
@@ -133,67 +195,33 @@ func main() {
 		if pkg.Target != "" {
 			pkg.Target = expand(pkg.Target)
 		} else {
-			pkg.Target = dest
+			pkg.Target = target
 		}
+
+		// TODO check target != source
 
 		if pkg.Origin != "" {
-			cloneUrl := "https://github.com/" + pkg.Origin + ".git"
-			// cloneUrl := "git@github.com:" + pkg.Origin + ".git"
+			repo := "https://github.com/" + pkg.Origin + ".git"
+			// repo := "git@github.com:" + pkg.Origin + ".git"
 			if pkg.Path == pkg.Source || pkg.Path == "" {
-				pkg.Path = filepath.Join(pkg.Target, dotDir, name)
+				pkg.Path = filepath.Join(pkg.Target, dotDir, pkg.Name)
 			}
-			_, err := os.Stat(pkg.Path)
-			if err != nil && os.IsNotExist(err) {
-				err := os.MkdirAll(pkg.Path, 0755)
-				if err != nil {
-					handleError(err)
-				}
-				gitClone := []string{"git", "clone", cloneUrl, pkg.Path}
-				out, err := execCommand(gitClone)
-				if err != nil {
-					handleError(err)
-				}
-			} else {
-				gitPull := []string{"git",
-					"--git-dir", pkg.Path + "/.git",
-					"--work-tree", pkg.Path,
-					"pull",
-				}
-				out, err := execCommand(gitPull)
-				if err != nil {
-					handleError(err)
-				}
-			}
+			err := cloneOrPull(pkg.Origin, repo, pkg.Path)
 
-			subPkg := Package{}
-			subCfgPath := filepath.Join(pkg.Path, pkgConfigName)
-			// if subPkg == Package{} {
-			//     handleError(name+": empty sub-package for origin "+pkg.Path)
-			// }
-			if _, err = os.Stat(subCfgPath); err != nil && os.IsExist(err) {
+			pkgConfigFile := filepath.Join(pkg.Path, configName)
+			err = readConfig(pkgConfigFile, &pkg)
+			if err != nil && os.IsExist(err) {
 				handleError(err)
-			} else {
-				err = readConfig(subCfgPath, &subPkg)
-				if err != nil {
-					handleError(err)
-				}
 			}
-			// fmt.Printf("SUBPKG\n%s %+v\n", name, subPkg)
-			// subPkg.Path = filepath.Join(pkg.Path, pkg.Path)
-			subPkg.Path = pkg.Path
-			subPkg.Source = pkg.Source
-			subPkg.Target = pkg.Target
-			// subPkg.Path = pkg.Path
-			// subPkg.OsType = pkg.OsType
-			packages[name] = subPkg
-		} else {
-			// fmt.Printf("PKG\n%s %+v\n", name, pkg)
-			packages[name] = pkg
 		}
+
+		config.Packages[name] = pkg
 	}
 
-	for name, pkg := range packages {
-		fmt.Printf("%+v\n", pkg)
+	for name, pkg := range config.Packages {
+		if debug {
+			fmt.Printf("%+v\n", pkg)
+		}
 		err = handlePackage(name, pkg)
 		if err != nil {
 			handleError(err)
@@ -202,6 +230,7 @@ func main() {
 
 	fmt.Println("[Done]")
 }
+
 
 func handleError(err error) {
 	if err != nil {
@@ -213,7 +242,16 @@ func handleError(err error) {
 }
 
 func handlePackage(name string, pkg Package) error {
-	fmt.Printf("[%+v]\n", name)
+	fmt.Printf("Package: %+v\n", name)
+
+	if pkg.OsType == OS {
+		fmt.Printf("[%s] %s: %s", name, "Skipping, only for", pkg.OsType)
+		return nil
+	}
+
+	if pkg.PostInstall != "" {
+		fmt.Println(pkg.PreInstall)
+	}
 
 	if pkg.Dir != "" {
 		pkg.Dirs = append(pkg.Dirs, pkg.Dir)
@@ -247,16 +285,46 @@ func handlePackage(name string, pkg Package) error {
 			return err
 		}
 	}
+
+	if pkg.PostInstall != "" {
+		fmt.Println(pkg.PostInstall)
+	}
+
 	return nil
 }
 
-func execCommand(name string, args ...string) ([]byte, err) {
-	cmd := exec.Command(args...)
-	out, err := cmd.CombinedOutput()
-	if len(out) > 0 {
-		fmt.Printf("%s: %s\n", name, out)
+// func handleMultiple() error {
+// }
+
+func cloneOrPull(name string, repo string, dir string) error {
+	_, err := os.Stat(dir)
+	if err != nil && os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return err
+		}
+		gitClone := exec.Command("git", "clone", repo, dir)
+		out, err := gitClone.CombinedOutput()
+		if len(out) > 0 {
+			fmt.Printf("%s: %s", name, out)
+		}
+		if err != nil {
+			return err
+		}
+	} else {
+		gitPull := exec.Command("git",
+			"--git-dir", dir + "/.git",
+			"--work-tree", dir,
+			"pull")
+		out, err := gitPull.CombinedOutput()
+		if len(out) > 0 {
+			fmt.Printf("%s: %s", name, out)
+		}
+		if err != nil {
+			return err
+		}
 	}
-	return out, err
+	return nil
 }
 
 func expand(str string) string {
@@ -266,6 +334,11 @@ func expand(str string) string {
 }
 
 func readConfig(path string, v interface{}) error {
+	path += ".json"
+	_, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err

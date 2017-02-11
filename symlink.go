@@ -36,7 +36,7 @@ func linkFiles(source string, dest string, globs []interface{}) error {
 }
 
 func linkFile(src string, dst string) error {
-	name := strings.Replace(src, source+PathSeparator, "", 1)
+	// name := strings.Replace(src, source+PathSeparator, "", 1)
 	fi, err := os.Lstat(dst)
 	if err != nil && os.IsExist(err) {
 		return err
@@ -47,7 +47,7 @@ func linkFile(src string, dst string) error {
 			return err
 		}
 		if link == src {
-			fmt.Printf("%s %s == %s\n", OkSymbol, name, dst)
+			fmt.Printf("%s %s == %s\n", OkSymbol, src, dst)
 			return nil
 		}
 		msg := dst + " is an existing symlink to " + link + ", replace it with " + src + "?"
@@ -71,6 +71,6 @@ func linkFile(src string, dst string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s %s -> %s\n", OkSymbol, name, dst)
+	fmt.Printf("%s %s -> %s\n", OkSymbol, src, dst)
 	return nil
 }
