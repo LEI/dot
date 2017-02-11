@@ -1,0 +1,10 @@
+test:
+  image: lei/dot
+    depends_on:
+      - image
+  entrypoint: /bin/bash
+  command: |
+    -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@"; }
+    run dot -p LEI/dot-vim
+    run vim +PlugInstall +qall
+    run test -d "$$HOME/.vim/plugged"'

@@ -7,7 +7,7 @@
             "origin": "LEI/dot-git"
         },
         "termux": {
-            "os_type": "linux-android",
+            "os_type": ["linux-android"],
             "origin": "LEI/dot-termux"
         },
         "tmux": {

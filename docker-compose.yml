@@ -2,15 +2,20 @@ version: "2"
 
 services:
 
+  image:
+    build: .
+    image: lei/dot
+    container_name: dot
+
   dot:
     image: lei/dot
     depends_on:
       - image
     # entrypoint: /bin/bash
-    command: -l -c 'dot -p LEI/dot-tmux -p LEI/dot-vim; bash -l'
-    # command: -l -c 'dot -p LEI/dot-tmux -p LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
+    # command: -l -c 'dot -c $$DOT/.json; bash -l'
+    command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
-  test:
+  test_all:
     image: lei/dot
     depends_on:
       - image
@@ -23,10 +28,5 @@ services:
       run dot -c $$DOT/.json
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
       tmux new-session -n test "vim +PlugInstall +qall; exit"
-      test -d "$$HOME/.tmux/plugins/tpm"
-      test -d "$$HOME/.vim/plugged"'
-
-  image:
-    build: .
-    image: lei/dot
-    container_name: dot
+      run test -d "$$HOME/.tmux/plugins/tpm"
+      run test -d "$$HOME/.vim/plugged"'

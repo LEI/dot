@@ -1,0 +1,11 @@
+test:
+  image: lei/dot
+    depends_on:
+      - image
+  entrypoint: /bin/bash
+  command: |
+    -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@"; }
+    tail_bashrc="$$(tail -n1 ~/.bashrc)"
+    run dot -p LEI/dot-tmux
+    [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
+    run test -d "$$HOME/.bash.d"'
