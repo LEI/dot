@@ -1,0 +1,15 @@
+{
+    "dir": ".tmux",
+    "links": [
+        ".tmux/tmux.conf",
+        ".tmux/tmux-*.conf",
+        ".tmux/tmux.$OS.conf",
+        {
+            "path": ".tmux/*",
+            "type": "directory"
+        }
+    ],
+    "lines": {
+        ".tmux.conf": "source-file ~/.tmux/tmux.conf"
+    }
+}
