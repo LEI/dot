@@ -209,8 +209,6 @@ func handleConfig(Config *Configuration) error {
 		Config.Source = filepath.Dir(ConfigFile)
 	} else if ConfigFile == "" && Config.Source != DefaultSource {
 		ConfigFile = filepath.Join(Config.Source, ConfigName)
-	// } else {
-	// 	fmt.Println("CONFIG", "source", Config.Source, "file", ConfigFile)
 	}
 	// if ConfigFile == "" {
 	// 	ConfigFile = filepath.Join(source, ConfigName)
@@ -228,7 +226,7 @@ func handleConfig(Config *Configuration) error {
 		// log.Printf("%s %s\n", ConfigFile, "not found")
 		// } else if err != nil && os.IsNotExist(err) {
 		// 	Config.Packages = map[string]Package{}
-	} else if  err == nil && len(Config.Packages) == 0 {
+	} else if err == nil && len(Config.Packages) == 0 {
 		pkg := &Package{}
 		err = readConfig(ConfigFile, &pkg)
 		if err != nil {
