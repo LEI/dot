@@ -23,7 +23,7 @@ func linkFiles(source string, target string, globs []interface{}) error {
 			if err != nil {
 				return err
 			}
-		case map[string]interface {}:
+		case map[string]interface{}:
 			err := findLinks(source, target, &Link{
 				Type: path["type"].(string),
 				Path: path["path"].(string),

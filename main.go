@@ -358,7 +358,7 @@ func expand(str string) string {
 	return str
 }
 
-var ConfigExt = []string{"", ".json", ".yaml"}
+var ConfigExt = []string{"", ".json", ".yml", ".yaml"}
 
 func readConfig(path string, v interface{}) error {
 	var e error
@@ -369,7 +369,7 @@ func readConfig(path string, v interface{}) error {
 		if err != nil {
 			e = err
 		} else {
-			paths = append(paths, path + ext)
+			paths = append(paths, path+ext)
 			break
 		}
 	}
