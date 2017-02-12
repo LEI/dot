@@ -11,7 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
+	// "reflect"
 	"runtime"
 	"strings"
 )
@@ -30,9 +30,9 @@ var (
 	Config        = Configuration{}
 	ConfigFile    string
 	ConfigDir     = ".dot"
-	Verbose       IncrementFlag
-	Debug         bool
-	ForceYes      bool
+	Verbose       = 0
+	Debug         = false
+	ForceYes      = false
 	IgnoreFiles   = []string{".git", ".*\\.md"}
 	PackageList   PackageFlag
 	PathSeparator = string(os.PathSeparator)
@@ -72,26 +72,23 @@ type Package struct {
 	Lines       map[string]string
 	PreInstall  string   `json:"pre_install"`
 	PostInstall string   `json:"post_install"`
-	OsType      []string `json:"os_type"`
+	Os          OsType `json:"os_type"`
 }
 
-type OSType []string
+type OsType []string
 
-func (osType *OSType) String() string {
+func (osType *OsType) String() string {
 	return fmt.Sprintf("%s", *osType)
 }
 
-func (osType *OSType) Set(value interface{}) error {
+func (osType *OsType) Set(value interface{}) error {
 	switch val := value.(type) {
 	case string:
 		*osType = append(*osType, val)
 	case []string:
 		*osType = append(*osType, val...)
 	default:
-		fmt.Printf("OSType %s %s: %+v\n",
-			"could not set value of type",
-			reflect.TypeOf(val),
-			val)
+		fmt.Printf("could not set value of type %T: %+v\n", val val)
 	}
 	return nil
 }
@@ -99,18 +96,6 @@ func (osType *OSType) Set(value interface{}) error {
 type Link struct {
 	Type string `json:"type"`
 	Path string `json:"path"`
-}
-
-type IncrementFlag int
-
-func (i *IncrementFlag) String() string {
-	return fmt.Sprintf("%d", *i)
-}
-
-func (i *IncrementFlag) Set(value string) error {
-	fmt.Printf("inc: %+v\n", value)
-	*i++
-	return nil
 }
 
 type PackageMap map[string]Package
@@ -146,7 +131,7 @@ func init() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration file")
-	f.VarP(&Verbose, "verbose", "v", "Print more")
+	f.IntVarP(&Verbose, "verbose", "v", Verbose, "Print more")
 	f.BoolVarP(&Debug, "debug", "d", Debug, "Enable check-mode")
 	f.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
 	f.VarP(&PackageList, "package", "p", "List of packages")
@@ -158,6 +143,13 @@ func init() {
 	// 	fmt.Fprintf(os.Stderr, "usage: %s [args]\n", os.Args[0])
 	// 	f.PrintDefaults()
 	// }
+}
+
+func main() {
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		handleError(err)
+	}
 
 	err := f.Parse(os.Args[1:])
 	if err != nil {
@@ -175,13 +167,6 @@ func init() {
 			// fmt.Println("PKG ===", pkg)
 			Config.Packages[pkg.Name] = pkg
 		}
-	}
-}
-
-func main() {
-	err := os.Setenv("OS", OS)
-	if err != nil {
-		handleError(err)
 	}
 
 	// logFlag := func(a *flag.Flag) {
@@ -307,7 +292,7 @@ func handlePackage(name string, pkg Package) error {
 	// 	fmt.Printf("%+v\n", pkg)
 	// }
 
-	for _, osType := range pkg.OsType {
+	for _, osType := range pkg.Os {
 		switch osType {
 		case OS, os.Getenv("OSTYPE"):
 			break
