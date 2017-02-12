@@ -274,14 +274,15 @@ func handlePackage(name string, pkg Package) error {
 		case OS, os.Getenv("OSTYPE"):
 			break
 		default:
-			fmt.Printf("[%s] %s: %s", name, "Skipping, only for", OS + " (" + OSTYPE + ")")
+			fmt.Printf("[%s] %s: %s", name, "Skipping, only for", OS+" ("+OSTYPE+")")
 			return nil
 		}
 	}
 
 	if pkg.PreInstall != "" {
-		parts := string.Fields(pkg.PreInstall)
-		preInstall := exec.Command(parts[0], parts[1:len(parts)])
+		// parts := string.Fields(pkg.PreInstall)
+		// exe = parts[0]; args = [1:len(parts)]
+		preInstall := exec.Command("sh", "-c", pkg.PreInstall)
 		out, err := preInstall.CombinedOutput()
 		if len(out) > 0 {
 			fmt.Printf("%s: %s\n", "Pre-install:", out)
@@ -325,8 +326,7 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	if pkg.PostInstall != "" {
-		parts := string.Fields(pkg.PostInstall)
-		postInstall := exec.Command(parts[0], parts[1:len(parts)])
+		postInstall := exec.Command("sh", "-c", pkg.PostInstall)
 		out, err := postInstall.CombinedOutput()
 		if len(out) > 0 {
 			fmt.Printf("%s: %s\n", "Post-install:", out)
