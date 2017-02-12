@@ -5,11 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
 func linkFiles(source string, target string, globs []interface{}) error {
 	if source == "" {
+		fmt.Printf("%s -> %s ~ %+v\n", source, target, globs)
 		return fmt.Errorf("Cannot link empty source")
 	}
 	if _, err := os.Stat(source); err != nil {
@@ -33,7 +35,7 @@ func linkFiles(source string, target string, globs []interface{}) error {
 				return err
 			}
 		default:
-			fmt.Printf("%s: unknown type '%s'", path, reflect.TypeOf(path))
+			fmt.Printf("%s: unknown type '%s'\n", path, reflect.TypeOf(path))
 		}
 	}
 	return nil
@@ -41,6 +43,9 @@ func linkFiles(source string, target string, globs []interface{}) error {
 
 func findLinks(source string, target string, options *Link) error {
 	paths, _ := filepath.Glob(filepath.Join(source, expand(options.Path)))
+	if Verbose > 0 {
+		fmt.Printf("LINK %s \t-> %s\nOPTIONS %+v\nPATHS %+v\n", source, target, options, paths)
+	}
 	// filePaths = append(filePaths, paths...)
 	for _, src := range paths {
 		// fmt.Printf("%+v\n", src)
@@ -53,23 +58,36 @@ func findLinks(source string, target string, options *Link) error {
 	return nil
 }
 
-func linkFile(src string, dst string, options *Link) error {
+func checkLinkOptions(src string, dst string, options *Link) (bool, error) {
 	// name := strings.Replace(src, source+PathSeparator, "", 1)
+	for _, pattern := range IgnoreFiles {
+		re := regexp.MustCompile(pattern)
+		if re.FindStringIndex(filepath.Base(src)) != nil {
+			return false, nil
+		}
+	}
 	if options.Type != "" {
 		fi, err := os.Stat(src)
 		if err != nil {
-			return err
+			return false, err
 		}
 		switch options.Type {
 		case "f", "file":
 			if fi.IsDir() {
-				return nil
+				return false, nil
 			}
 		case "d", "directory":
 			if fi.IsDir() != true {
-				return nil
+				return false, nil
 			}
 		}
+	}
+	return true, nil
+}
+
+func linkFile(src string, dst string, options *Link) error {
+	if shouldLink, err := checkLinkOptions(src, dst, options); shouldLink == false {
+		return err
 	}
 	fi, err := os.Lstat(dst)
 	if err != nil && os.IsExist(err) {

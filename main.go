@@ -7,11 +7,11 @@ import (
 	"github.com/jinzhu/configor"
 	flag "github.com/ogier/pflag"
 	// "io/ioutil"
-	"log"
+	// "log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	// "reflect"
+	"reflect"
 	"runtime"
 	"strings"
 )
@@ -30,8 +30,10 @@ var (
 	Config        = Configuration{}
 	ConfigFile    string
 	ConfigDir     = ".dot"
-	Debug         = Config.Debug
+	Verbose       IncrementFlag
+	Debug         bool
 	ForceYes      bool
+	IgnoreFiles   = []string{".git", ".*\\.md"}
 	PackageList   PackageFlag
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
@@ -50,7 +52,7 @@ var (
 type Configuration struct {
 	Source string
 	Target string
-	Debug  bool
+	// Debug, ForceYes, Verbose
 	// Name string `default:"?"`
 	Packages PackageMap
 	// Source string `required:"true"`
@@ -73,9 +75,42 @@ type Package struct {
 	OsType      []string `json:"os_type"`
 }
 
+type OSType []string
+
+func (osType *OSType) String() string {
+	return fmt.Sprintf("%s", *osType)
+}
+
+func (osType *OSType) Set(value interface{}) error {
+	switch val := value.(type) {
+	case string:
+		*osType = append(*osType, val)
+	case []string:
+		*osType = append(*osType, val...)
+	default:
+		fmt.Printf("OSType %s %s: %+v\n",
+			"could not set value of type",
+			reflect.TypeOf(val),
+			val)
+	}
+	return nil
+}
+
 type Link struct {
 	Type string `json:"type"`
 	Path string `json:"path"`
+}
+
+type IncrementFlag int
+
+func (i *IncrementFlag) String() string {
+	return fmt.Sprintf("%d", *i)
+}
+
+func (i *IncrementFlag) Set(value string) error {
+	fmt.Printf("inc: %+v\n", value)
+	*i++
+	return nil
 }
 
 type PackageMap map[string]Package
@@ -111,8 +146,9 @@ func init() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration file")
-	f.BoolVarP(&Config.Debug, "debug", "d", false, "Print more")
-	f.BoolVarP(&ForceYes, "force", "f", false, "Force yes")
+	f.VarP(&Verbose, "verbose", "v", "Print more")
+	f.BoolVarP(&Debug, "debug", "d", Debug, "Enable check-mode")
+	f.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
 	f.VarP(&PackageList, "package", "p", "List of packages")
 	f.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source directory")
 	f.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination directory")
@@ -144,7 +180,6 @@ func init() {
 
 func main() {
 	err := os.Setenv("OS", OS)
-	fmt.Printf("[OS: %s]\n", OS)
 	if err != nil {
 		handleError(err)
 	}
@@ -155,20 +190,27 @@ func main() {
 	// f.Visit(logFlag)
 	// fmt.Println(OS, f.Args())
 
-	// fmt.Println(ConfigFile)
-	// fmt.Println(source)
-	// if exists(ConfigFile)
+	fmt.Printf("[OS: %s]\n", OS)
 
-	// if Config.Source != "" {
-	// 	source = Config.Source
-	// }
+	err = handleConfig(&Config)
+	if err != nil {
+		handleError(err)
+	}
 
+	fmt.Printf("%s\n", "[Done]")
+}
+
+func handleConfig(Config *Configuration) error {
 	if ConfigFile != "" && Config.Source != DefaultSource {
-		handleError(fmt.Errorf("Can not use --config " + ConfigFile + " with --source " + Config.Source))
-	} else if ConfigFile != "" {
+		return fmt.Errorf("Can not use --config " + ConfigFile + " with --source " + Config.Source)
+	}
+
+	if ConfigFile != "" {
 		Config.Source = filepath.Dir(ConfigFile)
-	} else if ConfigFile == "" {
+	} else if ConfigFile == "" && Config.Source != DefaultSource {
 		ConfigFile = filepath.Join(Config.Source, ConfigName)
+	// } else {
+	// 	fmt.Println("CONFIG", "source", Config.Source, "file", ConfigFile)
 	}
 	// if ConfigFile == "" {
 	// 	ConfigFile = filepath.Join(source, ConfigName)
@@ -177,19 +219,16 @@ func main() {
 	// }
 
 	// if source == "" {
-	// 	handleError(fmt.Errorf("Empty source path"))
+	// 	return fmt.Errorf("Empty source path")
 	// }
 
-	err = readConfig(ConfigFile, &Config)
+	err := readConfig(ConfigFile, &Config)
 	if err != nil && os.IsExist(err) {
-		handleError(err)
+		return err
 		// log.Printf("%s %s\n", ConfigFile, "not found")
 		// } else if err != nil && os.IsNotExist(err) {
 		// 	Config.Packages = map[string]Package{}
-	}
-
-	if len(Config.Packages) == 0 {
-		// fmt.Printf("%s: %+v\n", "No packages found", Config)
+	} else if  err == nil && len(Config.Packages) == 0 {
 		pkg := &Package{}
 		err = readConfig(ConfigFile, &pkg)
 		if err != nil {
@@ -197,87 +236,85 @@ func main() {
 				fmt.Printf("Config file not found: %s\n", err.Error())
 				os.Exit(1)
 			}
-			handleError(err)
+			return err
 		}
-		Config.Packages[filepath.Base(Config.Source)] = *pkg
+		name := filepath.Base(Config.Source)
+		Config.Packages[name] = *pkg
 		// Config.Packages = map[string]Package{filepath.Base(source): *pkg}
 	}
 
 	for name, pkg := range Config.Packages {
-
-		if pkg.Name == "" {
-			pkg.Name = name
-		}
-
-		if pkg.Source != "" {
-			pkg.Source = expand(pkg.Source)
-		} else {
-			pkg.Source = Config.Source
-		}
-
-		if pkg.Path != "" {
-			pkg.Path = expand(pkg.Path)
-		} else {
-			pkg.Path = pkg.Target
-		}
-
-		if pkg.Target != "" {
-			pkg.Target = expand(pkg.Target)
-		} else {
-			pkg.Target = Config.Target
-		}
-
-		// TODO check target != source
-
-		if pkg.Origin != "" {
-			repo := "https://github.com/" + pkg.Origin + ".git"
-			// repo := "git@github.com:" + pkg.Origin + ".git"
-			if pkg.Path == pkg.Source || pkg.Path == "" {
-				pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
-			}
-			err := cloneOrPull(pkg.Origin, repo, pkg.Path)
-
-			pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
-			err = readConfig(pkgConfigFile, &pkg)
-			if err != nil && os.IsExist(err) {
-				handleError(err)
-			}
-		}
-
-		Config.Packages[name] = pkg
-	}
-
-	for name, pkg := range Config.Packages {
+		// Config.Packages[name] = pkg
 		err = handlePackage(name, pkg)
 		if err != nil {
-			handleError(err)
+			return err
 		}
 	}
 
-	fmt.Println("[Done]")
+	return nil
 }
 
 func handleError(err error) {
 	if err != nil {
 		pc, fn, line, _ := runtime.Caller(1)
 		// log.Printf("[error] %s:%d %v", fn, line, err)
-		log.Printf("[error] in %s[%s:%d] %v", runtime.FuncForPC(pc).Name(), fn, line, err)
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Error: %s[%s:%d] %v\n", runtime.FuncForPC(pc).Name(), fn, line, err)
+		os.Exit(1)
 	}
 }
 
 func handlePackage(name string, pkg Package) error {
-	fmt.Printf("Package: %+v\n", name)
-	if Debug {
-		fmt.Printf("%+v\n", pkg)
+	if pkg.Name == "" {
+		pkg.Name = name
 	}
+
+	if pkg.Source != "" {
+		pkg.Source = expand(pkg.Source)
+	} else {
+		pkg.Source = Config.Source
+	}
+
+	if pkg.Target != "" {
+		pkg.Target = expand(pkg.Target)
+	} else {
+		pkg.Target = Config.Target
+	}
+
+	if pkg.Path != "" {
+		pkg.Path = expand(pkg.Path)
+	} else {
+		pkg.Path = pkg.Source
+	}
+
+	if pkg.Origin != "" {
+		repo := "https://github.com/" + pkg.Origin + ".git"
+		// repo := "git@github.com:" + pkg.Origin + ".git"
+		if pkg.Path == pkg.Source || pkg.Path == "" {
+			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
+		}
+		err := gitCloneOrPull(pkg.Origin, repo, pkg.Path)
+		if err != nil {
+			return err
+		}
+	}
+
+	pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
+	err := readConfig(pkgConfigFile, &pkg)
+	if err != nil && os.IsExist(err) {
+		handleError(err)
+	}
+
+	fmt.Printf("Package: %+v\n", name)
+	// if Verbose > 0 {
+	// 	fmt.Printf("%+v\n", pkg)
+	// }
 
 	for _, osType := range pkg.OsType {
 		switch osType {
 		case OS, os.Getenv("OSTYPE"):
 			break
 		default:
-			fmt.Printf("[%s] %s: %s", name, osType, " not compatible with "+OS+" / "+OSTYPE)
+			fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
 			return nil
 		}
 	}
@@ -342,40 +379,6 @@ func handlePackage(name string, pkg Package) error {
 	return nil
 }
 
-// func handleMultiple() error {
-// }
-
-func cloneOrPull(name string, repo string, dir string) error {
-	_, err := os.Stat(dir)
-	if err != nil && os.IsNotExist(err) {
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			return err
-		}
-		gitClone := exec.Command("git", "clone", repo, dir)
-		out, err := gitClone.CombinedOutput()
-		if len(out) > 0 {
-			fmt.Printf("%s: %s", name, out)
-		}
-		if err != nil {
-			return err
-		}
-	} else {
-		gitPull := exec.Command("git",
-			"--git-dir", dir+"/.git",
-			"--work-tree", dir,
-			"pull")
-		out, err := gitPull.CombinedOutput()
-		if len(out) > 0 {
-			fmt.Printf("%s: %s", name, out)
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func expand(str string) string {
 	str = os.ExpandEnv(str)
 	str = strings.Replace(str, "$OS", OS, -1)
@@ -402,7 +405,9 @@ func readConfig(path string, v interface{}) error {
 	}
 
 	configor.Load(&v, paths...)
-	fmt.Printf("%+v: %+v\n", paths, v)
+	if Verbose > 1 {
+		fmt.Printf("configor.Load %+v: %+v\n", paths, v)
+	}
 
 	// _, err := os.Stat(path)
 	// if err != nil {
