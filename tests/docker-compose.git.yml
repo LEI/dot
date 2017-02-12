@@ -8,5 +8,5 @@ services:
     entrypoint: /bin/bash
     command: |
       -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
-      run dot -p LEI/dot-git
+      run dot -p git=LEI/dot-git
       run test -f "$$HOME/.gitconfig"'

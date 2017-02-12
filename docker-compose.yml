@@ -12,8 +12,8 @@ services:
     depends_on:
       - image
     # entrypoint: /bin/bash
-    # command: -l -c 'dot -c $$DOT/.json; bash -l'
-    command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
+    command: -l -c 'dot -s $$DOT; bash -l'
+    # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test_all:
     image: lei/dot

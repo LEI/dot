@@ -380,8 +380,9 @@ func readConfig(path string, v interface{}) error {
 		return e
 	}
 
+	fmt.Println(paths...)
 	configor.Load(&v, paths...)
-	// fmt.Printf("config: %#v", v)
+	fmt.Printf("%+v\n\n", v)
 	// _, err := os.Stat(path)
 	// if err != nil {
 	// 	return err
