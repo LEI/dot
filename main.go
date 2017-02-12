@@ -277,7 +277,7 @@ func handlePackage(name string, pkg Package) error {
 		case OS, os.Getenv("OSTYPE"):
 			break
 		default:
-			fmt.Printf("[%s] %s: %s", name, osType, " not compatible with " + OS + " / " + OSTYPE)
+			fmt.Printf("[%s] %s: %s", name, osType, " not compatible with "+OS+" / "+OSTYPE)
 			return nil
 		}
 	}
