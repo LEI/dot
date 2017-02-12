@@ -276,8 +276,8 @@ func handlePackage(name string, pkg Package) error {
 		}
 	}
 
-	if pkg.PostInstall != "" {
-		fmt.Println(pkg.PreInstall)
+	if pkg.PreInstall != "" {
+		fmt.Println("PRE-INSTALL:", pkg.PreInstall)
 	}
 
 	if pkg.Dir != "" {
@@ -314,7 +314,7 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	if pkg.PostInstall != "" {
-		fmt.Println(pkg.PostInstall)
+		fmt.Println("POST-INSTALL", pkg.PostInstall)
 	}
 
 	return nil
