@@ -74,8 +74,8 @@ type Package struct {
 }
 
 type Link struct {
-	Type string `json:type`
-	Path string `json:path`
+	Type string `json:"type"`
+	Path string `json:"path"`
 }
 
 type PackageMap map[string]Package
@@ -277,7 +277,7 @@ func handlePackage(name string, pkg Package) error {
 		case OS, os.Getenv("OSTYPE"):
 			break
 		default:
-			fmt.Printf("[%s] %s: %s", name, osType + " not compatible with " + OS + " / " + OSTYPE)
+			fmt.Printf("[%s] %s: %s", name, osType, " not compatible with " + OS + " / " + OSTYPE)
 			return nil
 		}
 	}
