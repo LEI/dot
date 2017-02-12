@@ -70,8 +70,8 @@ type Package struct {
 	Link        interface{}
 	Links       []interface{}
 	Lines       map[string]string
-	PreInstall  string   `json:"pre_install"`
-	PostInstall string   `json:"post_install"`
+	PreInstall  string `json:"pre_install"`
+	PostInstall string `json:"post_install"`
 	Os          OsType `json:"os_type"`
 }
 
@@ -88,7 +88,7 @@ func (osType *OsType) Set(value interface{}) error {
 	case []string:
 		*osType = append(*osType, val...)
 	default:
-		fmt.Printf("could not set value of type %T: %+v\n", val val)
+		fmt.Printf("could not set value of type %T: %+v\n", val, val)
 	}
 	return nil
 }
@@ -128,6 +128,10 @@ func (pkg *PackageFlag) Set(origin string) error {
 var f = flag.NewFlagSet("flag", flag.ExitOnError)
 
 func init() {
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		handleError(err)
+	}
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration file")
@@ -146,11 +150,6 @@ func init() {
 }
 
 func main() {
-	err := os.Setenv("OS", OS)
-	if err != nil {
-		handleError(err)
-	}
-
 	err := f.Parse(os.Args[1:])
 	if err != nil {
 		handleError(err)
