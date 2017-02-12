@@ -8,6 +8,6 @@ services:
     entrypoint: /bin/bash
     command: |
       -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
-      run dot -p termux=LEI/dot-vim
+      run dot -a termux=LEI/dot-vim
       run vim +PlugInstall +qall
       run test -d "$$HOME/.vim/plugged"'

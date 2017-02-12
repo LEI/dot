@@ -26,6 +26,8 @@ var (
 	PWD           = os.Getenv("PWD")
 	DefaultSource = PWD
 	DefaultTarget = HOME
+	Sync          = true
+	Remove        = false
 	ConfigName    = ".dotrc"
 	Config        = Configuration{}
 	ConfigFile    string
@@ -134,13 +136,16 @@ func init() {
 	}
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration file")
-	f.IntVarP(&Verbose, "verbose", "v", Verbose, "Print more")
+	f.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
+	f.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+
+	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration `file`")
+	f.IntVarP(&Verbose, "verbose", "v", Verbose, "Verbosity `level`")
 	f.BoolVarP(&Debug, "debug", "d", Debug, "Enable check-mode")
 	f.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
-	f.VarP(&PackageList, "package", "p", "List of packages")
-	f.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source directory")
-	f.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination directory")
+	f.VarP(&PackageList, "add", "a", "List of packages: `[path=]user/repo`")
+	f.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source `directory`")
+	f.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination `directory`")
 
 	// flag.ErrHelp = errors.New("flag: help requested")
 	// f.Usage = func() {
@@ -179,6 +184,22 @@ func main() {
 	err = handleConfig(&Config)
 	if err != nil {
 		handleError(err)
+	}
+
+	for name, pkg := range Config.Packages {
+		// Config.Packages[name] = pkg
+		switch true {
+		case Sync:
+			err = syncPackage(name, pkg)
+			if err != nil {
+				handleError(err)
+			}
+		case Remove:
+			err = removePackage(name, pkg)
+			if err != nil {
+				handleError(err)
+			}
+		}
 	}
 
 	fmt.Printf("%s\n", "[Done]")
@@ -225,14 +246,6 @@ func handleConfig(Config *Configuration) error {
 		// Config.Packages = map[string]Package{filepath.Base(source): *pkg}
 	}
 
-	for name, pkg := range Config.Packages {
-		// Config.Packages[name] = pkg
-		err = handlePackage(name, pkg)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -245,7 +258,7 @@ func handleError(err error) {
 	}
 }
 
-func handlePackage(name string, pkg Package) error {
+func syncPackage(name string, pkg Package) error {
 	if pkg.Name == "" {
 		pkg.Name = name
 	}
@@ -358,6 +371,11 @@ func handlePackage(name string, pkg Package) error {
 		}
 	}
 
+	return nil
+}
+
+func removePackage(name string, pkg Package) error {
+	fmt.Println("Should remove", name, pkg)
 	return nil
 }
 
