@@ -65,8 +65,8 @@ type Package struct {
 	Link        interface{}
 	Links       []interface{}
 	Lines       map[string]string
-	PreInstall  string `json:"pre_install"`
-	PostInstall string `json:"post_install"`
+	PreInstall  string   `json:"pre_install"`
+	PostInstall string   `json:"post_install"`
 	OsType      []string `json:"os_type"`
 }
 
