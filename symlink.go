@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
-func linkFiles(source string, dest string, globs []interface{}) error {
+func linkFiles(source string, target string, globs []interface{}) error {
 	if source == "" {
 		return fmt.Errorf("Cannot link empty source")
 	}
@@ -16,27 +17,60 @@ func linkFiles(source string, dest string, globs []interface{}) error {
 	}
 	// var filePaths []string
 	for _, glob := range globs {
-		switch l := glob.(type) {
+		switch path := glob.(type) {
 		case string:
-			paths, _ := filepath.Glob(filepath.Join(source, expand(l)))
-			// filePaths = append(filePaths, paths...)
-			for _, src := range paths {
-				// fmt.Printf("%+v\n", src)
-				dst := strings.Replace(src, source, dest, 1)
-				err := linkFile(src, dst)
-				if err != nil {
-					return err
-				}
+			err := findLinks(source, target, &Link{Type: "", Path: path})
+			if err != nil {
+				return err
+			}
+		case map[string]interface {}:
+			err := findLinks(source, target, &Link{
+				Type: path["type"].(string),
+				Path: path["path"].(string),
+			})
+			// err := findLinks(source, target, path.(Link))
+			if err != nil {
+				return err
 			}
 		default:
-			fmt.Println("Unhandled type for", l)
+			fmt.Printf("%s: unknown type '%s'", path, reflect.TypeOf(path))
 		}
 	}
 	return nil
 }
 
-func linkFile(src string, dst string) error {
+func findLinks(source string, target string, options *Link) error {
+	paths, _ := filepath.Glob(filepath.Join(source, expand(options.Path)))
+	// filePaths = append(filePaths, paths...)
+	for _, src := range paths {
+		// fmt.Printf("%+v\n", src)
+		dst := strings.Replace(src, source, target, 1)
+		err := linkFile(src, dst, options)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func linkFile(src string, dst string, options *Link) error {
 	// name := strings.Replace(src, source+PathSeparator, "", 1)
+	if options.Type != "" {
+		fi, err := os.Stat(src)
+		if err != nil {
+			return err
+		}
+		switch options.Type {
+		case "f", "file":
+			if fi.IsDir() {
+				return nil
+			}
+		case "d", "directory":
+			if fi.IsDir() != true {
+				return nil
+			}
+		}
+	}
 	fi, err := os.Lstat(dst)
 	if err != nil && os.IsExist(err) {
 		return err

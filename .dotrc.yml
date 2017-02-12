@@ -1,0 +1,12 @@
+packages:
+    bash:
+        origin: LEI/dot-bash
+    git:
+        origin: LEI/dot-git
+    termux:
+        os_type: [linux-android]
+        origin: LEI/dot-termux
+    tmux:
+        origin: LEI/dot-tmux
+    vim:
+        origin: LEI/dot-vim

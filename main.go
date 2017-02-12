@@ -44,6 +44,16 @@ var (
 // 	*Package
 // }
 
+type Configuration struct {
+	Source string
+	Target string
+	Debug  bool
+	// Name string `default:"?"`
+	Packages PackageMap
+	// Source string `required:"true"`
+	// Target string
+}
+
 type Package struct {
 	Name        string
 	Origin      string
@@ -60,14 +70,9 @@ type Package struct {
 	OsType      string `json:"os_type"`
 }
 
-type Configuration struct {
-	Source string
-	Target string
-	Debug  bool
-	// Name string `default:"?"`
-	Packages PackageMap
-	// Source string `required:"true"`
-	// Target string
+type Link struct {
+	Type string `json:type`
+	Path string `json:path`
 }
 
 type PackageMap map[string]Package
@@ -96,8 +101,6 @@ func (pkg *PackageFlag) Set(origin string) error {
 	// for _, o := range strings.Split(",", origin)
 	return nil
 }
-
-// type Link struct{Type string `json:type`, Path string `json:path`}
 
 var f = flag.NewFlagSet("flag", flag.ExitOnError)
 
