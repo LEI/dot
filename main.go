@@ -245,9 +245,6 @@ func main() {
 	}
 
 	for name, pkg := range Config.Packages {
-		if debug {
-			fmt.Printf("%+v\n", pkg)
-		}
 		err = handlePackage(name, pkg)
 		if err != nil {
 			handleError(err)
@@ -268,16 +265,30 @@ func handleError(err error) {
 
 func handlePackage(name string, pkg Package) error {
 	fmt.Printf("Package: %+v\n", name)
+	if debug {
+		fmt.Printf("%+v\n", pkg)
+	}
 
 	for _, os := range pkg.OsType {
-		if os == OS {
-			fmt.Printf("[%s] %s: %s", name, "Skipping, only for", pkg.OsType)
+		switch os {
+		case OS, os.Getenv("OSTYPE"):
+			break
+		default:
+			fmt.Printf("[%s] %s: %s", name, "Skipping, only for", OS + " (" + OSTYPE + ")")
 			return nil
 		}
 	}
 
 	if pkg.PreInstall != "" {
-		fmt.Println("PRE-INSTALL:", pkg.PreInstall)
+		parts := string.Fields(pkg.PreInstall)
+		preInstall := exec.Command(parts[0], parts[1:len(parts)])
+		out, err := preInstall.CombinedOutput()
+		if len(out) > 0 {
+			fmt.Printf("%s: %s\n", "Pre-install:", out)
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	if pkg.Dir != "" {
@@ -314,7 +325,15 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	if pkg.PostInstall != "" {
-		fmt.Println("POST-INSTALL", pkg.PostInstall)
+		parts := string.Fields(pkg.PostInstall)
+		postInstall := exec.Command(parts[0], parts[1:len(parts)])
+		out, err := postInstall.CombinedOutput()
+		if len(out) > 0 {
+			fmt.Printf("%s: %s\n", "Post-install:", out)
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -375,14 +394,13 @@ func readConfig(path string, v interface{}) error {
 			break
 		}
 	}
-
 	if len(paths) == 0 && e != nil {
 		return e
 	}
 
-	fmt.Println(paths...)
 	configor.Load(&v, paths...)
-	fmt.Printf("%+v\n\n", v)
+	fmt.Printf("%+v: %+v\n", paths, *v)
+
 	// _, err := os.Stat(path)
 	// if err != nil {
 	// 	return err

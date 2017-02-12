@@ -15,7 +15,7 @@ services:
     command: -l -c 'dot -s $$DOT; bash -l'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
-  test_all:
+  test:
     image: lei/dot
     depends_on:
       - image
@@ -25,7 +25,7 @@ services:
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
       run dot -s $$DOT
       run dot -c $$DOT/.json
-      for d in $$HOME/.dot/*; do echo run dot -s "$$d"; done
+      for d in $$HOME/.dot/*; do run dot -s "$$d"; done
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
       run tmux new-session -n test "vim +PlugInstall +qall; exit"
       run test -d "$$HOME/.tmux/plugins/tpm"
