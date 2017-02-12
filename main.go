@@ -22,20 +22,23 @@ const (
 )
 
 var (
-	// Skip = fmt.Errorf("Skip this path")
-	debug         = Config.Debug
-	defaultSource = os.Getenv("PWD")
-	defaultTarget = os.Getenv("HOME")
+	OSTYPE        = os.Getenv("OSTYPE")
+	HOME          = os.Getenv("PWD")
+	PWD           = os.Getenv("HOME")
+	defaultSource = PWD
+	defaultTarget = HOME
+	ConfigName    = ".dotrc"
 	Config        = Configuration{}
 	ConfigFile    string
-	ConfigName    = ".dotrc"
 	dotDir        = ".dot"
+	debug         = Config.Debug
 	packages      PackageFlag
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
 	OkSymbol      = "✓" // ✓ ✔
 	ErrSymbol     = "✘" // × ✕ ✖ ✗ ✘
 	WarnSymbol    = "!" // ⚠ !
+	// Skip = fmt.Errorf("Skip this path")
 )
 
 // type Configuration struct {
@@ -399,7 +402,7 @@ func readConfig(path string, v interface{}) error {
 	}
 
 	configor.Load(&v, paths...)
-	fmt.Printf("%+v: %+v\n", paths, *v)
+	fmt.Printf("%+v: %+v\n", paths, v)
 
 	// _, err := os.Stat(path)
 	// if err != nil {
