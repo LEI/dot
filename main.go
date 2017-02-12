@@ -67,7 +67,7 @@ type Package struct {
 	Lines       map[string]string
 	PreInstall  string `json:"pre_install"`
 	PostInstall string `json:"post_install"`
-	OsType      string `json:"os_type"`
+	OsType      []string `json:"os_type"`
 }
 
 type Link struct {
@@ -269,9 +269,11 @@ func handleError(err error) {
 func handlePackage(name string, pkg Package) error {
 	fmt.Printf("Package: %+v\n", name)
 
-	if pkg.OsType == OS {
-		fmt.Printf("[%s] %s: %s", name, "Skipping, only for", pkg.OsType)
-		return nil
+	for _, os := range pkg.OsType {
+		if os == OS {
+			fmt.Printf("[%s] %s: %s", name, "Skipping, only for", pkg.OsType)
+			return nil
+		}
 	}
 
 	if pkg.PostInstall != "" {
