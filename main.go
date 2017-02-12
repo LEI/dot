@@ -23,16 +23,17 @@ const (
 
 var (
 	OSTYPE        = os.Getenv("OSTYPE")
-	HOME          = os.Getenv("PWD")
-	PWD           = os.Getenv("HOME")
-	defaultSource = PWD
-	defaultTarget = HOME
+	HOME          = os.Getenv("HOME")
+	PWD           = os.Getenv("PWD")
+	DefaultSource = PWD
+	DefaultTarget = HOME
 	ConfigName    = ".dotrc"
 	Config        = Configuration{}
 	ConfigFile    string
-	dotDir        = ".dot"
-	debug         = Config.Debug
-	packages      PackageFlag
+	ConfigDir     = ".dot"
+	Debug         = Config.Debug
+	ForceYes      bool
+	PackageList   PackageFlag
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
 	OkSymbol      = "✓" // ✓ ✔
@@ -112,9 +113,10 @@ func init() {
 
 	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration file")
 	f.BoolVarP(&Config.Debug, "debug", "d", false, "Print more")
-	f.StringVarP(&Config.Source, "source", "s", defaultSource, "Source directory")
-	f.StringVarP(&Config.Target, "target", "t", defaultTarget, "Destination directory")
-	f.VarP(&packages, "package", "p", "List of packages")
+	f.BoolVarP(&ForceYes, "force", "f", false, "Force yes")
+	f.VarP(&PackageList, "package", "p", "List of packages")
+	f.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source directory")
+	f.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination directory")
 
 	// flag.ErrHelp = errors.New("flag: help requested")
 	// f.Usage = func() {
@@ -131,8 +133,8 @@ func init() {
 		Config.Packages = map[string]Package{}
 	}
 
-	if len(packages) > 0 {
-		for _, pkg := range packages {
+	if len(PackageList) > 0 {
+		for _, pkg := range PackageList {
 			// pkg := &Package{}
 			// pkg.Origin = p
 			// fmt.Println("PKG ===", pkg)
@@ -162,14 +164,13 @@ func main() {
 	// 	source = Config.Source
 	// }
 
-	if ConfigFile != "" && Config.Source == defaultSource {
+	if ConfigFile != "" && Config.Source != DefaultSource {
+		handleError(fmt.Errorf("Can not use --config " + ConfigFile + " with --source " + Config.Source))
+	} else if ConfigFile != "" {
 		Config.Source = filepath.Dir(ConfigFile)
 	} else if ConfigFile == "" {
 		ConfigFile = filepath.Join(Config.Source, ConfigName)
-	} else {
-		handleError(fmt.Errorf("--config and --source conflict"))
 	}
-
 	// if ConfigFile == "" {
 	// 	ConfigFile = filepath.Join(source, ConfigName)
 	// } else if source == "" {
@@ -218,7 +219,7 @@ func main() {
 		if pkg.Path != "" {
 			pkg.Path = expand(pkg.Path)
 		} else {
-			pkg.Path = pkg.Source
+			pkg.Path = pkg.Target
 		}
 
 		if pkg.Target != "" {
@@ -233,7 +234,7 @@ func main() {
 			repo := "https://github.com/" + pkg.Origin + ".git"
 			// repo := "git@github.com:" + pkg.Origin + ".git"
 			if pkg.Path == pkg.Source || pkg.Path == "" {
-				pkg.Path = filepath.Join(pkg.Target, dotDir, pkg.Name)
+				pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
 			}
 			err := cloneOrPull(pkg.Origin, repo, pkg.Path)
 
@@ -268,7 +269,7 @@ func handleError(err error) {
 
 func handlePackage(name string, pkg Package) error {
 	fmt.Printf("Package: %+v\n", name)
-	if debug {
+	if Debug {
 		fmt.Printf("%+v\n", pkg)
 	}
 
@@ -424,6 +425,11 @@ func confirm(str string) bool {
 
 	for {
 		fmt.Printf("%s [y/n]: ", str)
+
+		if ForceYes {
+			fmt.Printf("%s", "Forced")
+			return true
+		}
 
 		res, err := reader.ReadString('\n')
 		if err != nil {
