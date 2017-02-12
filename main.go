@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	// "errors"
 	// "encoding/json"
 	"fmt"
@@ -418,34 +417,6 @@ func readConfig(path string, v interface{}) error {
 	// 	return err
 	// }
 	return nil
-}
-
-func confirm(str string) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Printf("%s [y/n]: ", str)
-
-		if ForceYes {
-			fmt.Printf("%s", "Forced")
-			return true
-		}
-
-		res, err := reader.ReadString('\n')
-		if err != nil {
-			handleError(err)
-		}
-
-		res = strings.ToLower(strings.TrimSpace(res))
-
-		switch res {
-		case "y", "yes":
-			return true
-		case "n", "no":
-			return false
-		}
-		// TODO limit retries
-	}
 }
 
 // func readDir(dirname string) ([]os.FileInfo, error) {
