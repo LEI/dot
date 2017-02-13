@@ -194,9 +194,11 @@ func main() {
 		handleError(err)
 	}
 
-	err = handlePackages(&Config)
-	if err != nil {
-		handleError(err)
+	for name, pkg := range Config.Packages {
+		err = handlePackages(&Config)
+		if err != nil {
+			handleError(err)
+		}
 	}
 
 	fmt.Printf("%s\n", "[Done]")
@@ -255,76 +257,74 @@ func handleConfig(Config *Configuration) error {
 	return nil
 }
 
-func handlePackage(packages []*Package) error {
-	for name, pkg := range Config.Packages {
-		if pkg.Name == "" {
-			pkg.Name = name
-		}
+func handlePackage(pkg *Package) error {
+	if pkg.Name == "" {
+		pkg.Name = name
+	}
 
-		if pkg.Source != "" {
-			pkg.Source = expand(pkg.Source)
-		} else {
-			pkg.Source = Config.Source
-		}
+	if pkg.Source != "" {
+		pkg.Source = expand(pkg.Source)
+	} else {
+		pkg.Source = Config.Source
+	}
 
-		if pkg.Target != "" {
-			pkg.Target = expand(pkg.Target)
-		} else {
-			pkg.Target = Config.Target
-		}
+	if pkg.Target != "" {
+		pkg.Target = expand(pkg.Target)
+	} else {
+		pkg.Target = Config.Target
+	}
 
-		if pkg.Path != "" {
-			pkg.Path = expand(pkg.Path)
-		} else {
-			pkg.Path = pkg.Source
-		}
+	if pkg.Path != "" {
+		pkg.Path = expand(pkg.Path)
+	} else {
+		pkg.Path = pkg.Source
+	}
 
-		if pkg.Origin != "" {
-			repo := "https://github.com/" + pkg.Origin + ".git"
-			// repo := "git@github.com:" + pkg.Origin + ".git"
-			if pkg.Path == pkg.Source || pkg.Path == "" {
-				pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
-			}
-			err := gitCloneOrPull(pkg.Origin, repo, pkg.Path)
-			if err != nil {
-				return err
-			}
+	if pkg.Origin != "" {
+		repo := "https://github.com/" + pkg.Origin + ".git"
+		// repo := "git@github.com:" + pkg.Origin + ".git"
+		if pkg.Path == pkg.Source || pkg.Path == "" {
+			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
 		}
-
-		pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
-		err := readConfig(pkgConfigFile, &pkg)
-		if err != nil && os.IsExist(err) {
+		err := gitCloneOrPull(pkg.Origin, repo, pkg.Path)
+		if err != nil {
 			return err
 		}
+	}
 
-		fmt.Printf("Package: %+v\n", name)
-		// if Verbose > 0 {
-		// 	fmt.Printf("%+v\n", pkg)
-		// }
+	pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
+	err := readConfig(pkgConfigFile, &pkg)
+	if err != nil && os.IsExist(err) {
+		return err
+	}
 
-		for _, osType := range pkg.Os {
-			fmt.Println(osType, "vs", OS, OSTYPE)
-			switch osType {
-			case OS, OSTYPE, OS + "-" + OSTYPE:
-				break
-			default:
-				fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
-				return nil
-			}
+	fmt.Printf("Package: %+v\n", name)
+	// if Verbose > 0 {
+	// 	fmt.Printf("%+v\n", pkg)
+	// }
+
+	for _, osType := range pkg.Os {
+		fmt.Println(osType, "vs", OS, OSTYPE)
+		switch osType {
+		case OS, OSTYPE, OS + "-" + OSTYPE:
+			break
+		default:
+			fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
+			return nil
 		}
+	}
 
-		// Config.Packages[name] = pkg
-		switch {
-		case Sync:
-			err := syncPackage(name, pkg)
-			if err != nil {
-				return err
-			}
-		case Remove:
-			err := removePackage(name, pkg)
-			if err != nil {
-				return err
-			}
+	// Config.Packages[name] = pkg
+	switch {
+	case Sync:
+		err := syncPackage(name, pkg)
+		if err != nil {
+			return err
+		}
+	case Remove:
+		err := removePackage(name, pkg)
+		if err != nil {
+			return err
 		}
 	}
 
