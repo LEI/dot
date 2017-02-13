@@ -7,6 +7,18 @@ import (
 	"strings"
 )
 
+type Repo struct {
+	Name    string
+	Branch  string
+	Path    string
+	Remotes map[string]*Remote
+}
+
+type Remote struct {
+	Name string
+	URL  string
+}
+
 func New(name string, path string) *Repo {
 	return &Repo{
 		Name: name,
@@ -36,18 +48,6 @@ func UrlScheme(str string) string {
 	return url
 }
 
-type Repo struct {
-	Name    string
-	Branch  string
-	Path    string
-	Remotes map[string]*Remote
-}
-
-type Remote struct {
-	Name string
-	URL  string
-}
-
 func (repo *Repo) String() string {
 	return fmt.Sprintf("%s@%s", repo.Name, repo.Branch)
 }
@@ -55,6 +55,23 @@ func (repo *Repo) String() string {
 func (repo *Repo) AddRemote(name string, url string) *Repo {
 	repo.Remotes[name] = NewRemote(name, url)
 	return repo
+}
+
+func (repo *Repo) CloneOrPull() error {
+	if repo != nil {
+		if repo.IsCloned() {
+			err := repo.Pull()
+			if err != nil {
+				return err
+			}
+		} else {
+			err := repo.Clone()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (repo *Repo) IsCloned() bool {

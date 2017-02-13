@@ -5,6 +5,7 @@ import (
 	// "encoding/json"
 	"fmt"
 	"github.com/LEI/dot/git"
+	// "github.com/LEI/dot/role"
 	"github.com/jinzhu/configor"
 	flag "github.com/ogier/pflag"
 	// "io/ioutil"
@@ -23,20 +24,21 @@ const (
 
 var (
 	// OSTYPE = os.Getenv("OSTYPE")
-	HomeDir       = os.Getenv("HOME")
-	CurrentDir    = os.Getenv("PWD")
-	Sync          = true
-	Remove        = false
-	Verbose       = 0
-	Debug         = false
-	ForceYes      = false
-	PackageList   PackageFlag
-	Config        = Configuration{}
-	ConfigFile    = ""
-	ConfigDir     = ".dot"
-	ConfigName    = ".dotrc"
-	IgnoreFiles   = []string{".git", ".*\\.md"}
-	PathSeparator = string(os.PathSeparator)
+	HomeDir     = os.Getenv("HOME")
+	CurrentDir  = os.Getenv("PWD")
+	Sync        = true
+	Remove      = false
+	Verbose     = 0
+	Debug       = false
+	ForceYes    = false
+	ConfigFile  = ""
+	ConfigDir   = ".dot"
+	ConfigName  = ".dotrc"
+	ConfigExts  = []string{"", ".json", ".yml", ".yaml", ".toml"}
+	IgnoreFiles = []string{".git", ".*\\.md"}
+)
+
+var (
 	InfoSymbol    = "›"
 	SuccessSymbol = "✓" // ✓ ✔
 	ErrorSymbol   = "✘" // × ✕ ✖ ✗ ✘
@@ -47,6 +49,12 @@ var (
 	logError      = log.New(os.Stderr, ErrorSymbol+" ", log.Llongfile)
 	// Skip = fmt.Errorf("Skip this path")
 )
+
+var Config = Configuration{
+	Source:   CurrentDir,
+	Target:   HomeDir,
+	Packages: make(PackageMap, 0),
+}
 
 // type Configuration struct {
 // 	// Target   string
@@ -59,7 +67,7 @@ type Configuration struct {
 	Target string
 	// Debug, ForceYes
 	// Name string `default:"?"`
-	Packages Packages
+	Packages PackageMap
 	// Source string `required:"true"`
 	// Target string
 }
@@ -80,10 +88,29 @@ type Package struct {
 	PreRemove   string `json:"pre_remove"`
 	PostRemove  string `json:"post_remove"`
 	Os          OsType // `json:"os_type"`
-	GitRepo     *git.Repo
+	repo        *git.Repo
 }
 
-type Packages map[string]Package
+type PackageMap map[string]Package
+
+func (pkg *PackageMap) String() string {
+	return fmt.Sprintf("%+v", *pkg)
+}
+
+func (pkg *PackageMap) Set(origin string) error {
+	p := &Package{}
+	if strings.Contains(origin, "=") {
+		s := strings.Split(origin, "=")
+		p.Name = s[0]
+		p.Origin = s[1]
+	} else {
+		p.Name = origin
+		p.Origin = origin
+	}
+	// *pkg = append(*pkg, *p)
+	(*pkg)[p.Name] = *p
+	return nil
+}
 
 type Link struct {
 	Type string `json:"type"`
@@ -105,31 +132,6 @@ func (osType *OsType) Set(value interface{}) error {
 	default:
 		logWarn.Printf("could not set value of type %T: %+v\n", val, val)
 	}
-	return nil
-}
-
-type PackageFlag []Package
-
-func (pkg *PackageFlag) String() string {
-	return fmt.Sprintf("%s", *pkg)
-}
-
-func (pkg *PackageFlag) Set(origin string) error {
-	p := &Package{}
-	if strings.Contains(origin, "=") {
-		s := strings.Split(origin, "=")
-		p.Name = s[0]
-		p.Origin = s[1]
-	} else {
-		p.Name = origin
-		p.Origin = origin
-	}
-	// if *pkg == nil {
-	// 	*pkg = &PackageFlag{}
-	// }
-	*pkg = append(*pkg, *p)
-	// (*pkg)[p.Name] = *p
-	// for _, o := range strings.Split(",", origin)
 	return nil
 }
 
@@ -160,13 +162,13 @@ func init() {
 	flagSet.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
 	flagSet.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
 
-	flagSet.StringVarP(&Config.Source, "source", "s", CurrentDir, "Source `directory`")
-	flagSet.StringVarP(&Config.Target, "target", "t", HomeDir, "Destination `directory`")
+	flagSet.StringVarP(&Config.Source, "source", "s", Config.Source, "Source `directory`")
+	flagSet.StringVarP(&Config.Target, "target", "t", Config.Target, "Destination `directory`")
 	flagSet.StringVarP(&ConfigFile, "config", "c", "", "Configuration `file`")
 	flagSet.IntVarP(&Verbose, "verbose", "v", Verbose, "Print more")
 	flagSet.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
 	flagSet.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
-	flagSet.VarP(&PackageList, "add", "a", "List of packages: `[path=]user/repo`")
+	flagSet.VarP(&Config.Packages, "add", "a", "List of packages: `[path=]user/repo`")
 
 	// flag.ErrHelp = errors.New("flag: help requested")
 	// flagSet.Usage = func() {
@@ -195,17 +197,24 @@ func init() {
 }
 
 func main() {
+	fmt.Println()
+	logInfo.Printf("[%s]\n", OS)
+	defer logInfo.Printf("[%s]\n\n", "Done")
+
 	err := os.Setenv("OS", OS)
 	if err != nil {
 		handleError(err)
 	}
 
+	// Validate arguments
 	if Sync && Remove {
 		handleError(fmt.Errorf("--sync and --remove cannot be used together"))
 	}
+	if ConfigFile != "" && Config.Source != CurrentDir {
+		handleError(fmt.Errorf("config (-c %s) and source (-s %s) cannot be used together", ConfigFile, Config.Source))
+	}
 
-	logInfo.Printf("[OS: %s]\n", OS)
-
+	// Cleanup source path
 	if !filepath.IsAbs(Config.Source) {
 		str, err := filepath.Abs(Config.Source)
 		if err != nil {
@@ -215,22 +224,16 @@ func main() {
 	}
 	Config.Source = filepath.Clean(Config.Source)
 
-	if Config.Packages == nil {
-		Config.Packages = map[string]Package{}
-	}
-
-	if len(PackageList) > 0 {
-		for _, pkg := range PackageList {
-			// pkg := &Package{}
-			// pkg.Origin = p
-			// fmt.Println("PKG ===", pkg)
-			Config.Packages[pkg.Name] = pkg
-		}
-	} else {
+	// Look for config file if no package manually added
+	if len(Config.Packages) == 0 || confirm("Ignore global configuration files?") != true {
 		err = handleConfig(&Config)
 		if err != nil {
 			handleError(err)
 		}
+	}
+
+	if len(Config.Packages) == 0 {
+		handleError(fmt.Errorf("empty package list"))
 	}
 
 	for name, pkg := range Config.Packages {
@@ -239,23 +242,20 @@ func main() {
 			handleError(err)
 		}
 	}
-
-	logInfo.Printf("%s\n", "[Done]")
 }
 
 func handleError(err error) {
 	if err != nil {
-		pc, fn, line, _ := runtime.Caller(1)
+		// pc, fn, line, _ := runtime.Caller(1)
+		// fmt.Fprintf(os.Stderr, "Error: %s[%s:%d] %v\n", runtime.FuncForPC(pc).Name(), fn, line, err)
 		// log.Printf("[error] %s:%d %v", fn, line, err)
-		fmt.Fprintf(os.Stderr, "Error: %s[%s:%d] %v\n", runtime.FuncForPC(pc).Name(), fn, line, err)
+		logError.Printf("%v", err)
 		os.Exit(1)
 	}
 }
 
 func handleConfig(Config *Configuration) error {
-	if ConfigFile != "" && Config.Source != CurrentDir {
-		return fmt.Errorf("Can not use --config " + ConfigFile + " with --source " + Config.Source)
-	}
+	// /etc/dotrc
 
 	if ConfigFile != "" {
 		Config.Source = filepath.Dir(ConfigFile)
@@ -330,24 +330,13 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	if pkg.Origin != "" {
-		remoteName := "origin"
-		branchName := "master"
 		if pkg.Path == pkg.Source || pkg.Path == "" {
 			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
 		}
-		pkg.GitRepo = git.New(pkg.Name, pkg.Path).AddRemote(remoteName, pkg.Origin)
-		if !pkg.GitRepo.IsCloned() {
-			err := pkg.GitRepo.Clone()
-			if err != nil {
-				return err
-			}
-		} else {
-			err := pkg.GitRepo.Pull(remoteName, branchName)
-			if err != nil {
-				return err
-			}
-		}
+		pkg.repo = git.New(pkg.Name, pkg.Path).AddRemote("origin", pkg.Origin)
+		pkg.repo.Branch = "master"
 	}
+	pkg.repo.CloneOrPull()
 
 	pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
 	err := readConfig(pkgConfigFile, &pkg)
@@ -386,6 +375,13 @@ func handlePackage(name string, pkg Package) error {
 
 	return nil
 }
+
+// func handle(name string, pkg Package, fn func(), args ...interface{}) error {
+// 	count := len(args)
+// 	logInfo.Printf("[%s] %d items\n", name, count)
+// 	fmt.Println("ARGS", count, args[count - 1])
+// 	return nil
+// }
 
 func syncPackage(name string, pkg Package) error {
 	if pkg.PreInstall != "" {
@@ -503,12 +499,10 @@ func expand(str string) string {
 	return str
 }
 
-var ConfigExtensions = []string{"", ".json", ".yml", ".yaml", ".toml"}
-
 func readConfig(path string, v interface{}) error {
 	var e error
 	var paths []string
-	for _, ext := range ConfigExtensions {
+	for _, ext := range ConfigExts {
 		p := path + ext
 		_, err := os.Stat(p)
 		if err != nil {
@@ -531,11 +525,11 @@ func readConfig(path string, v interface{}) error {
 	// if err != nil {
 	// 	return err
 	// }
-	// file, err := ioutil.ReadFile(path)
+	// fi, err := ioutil.ReadFile(path)
 	// if err != nil {
 	// 	return err
 	// }
-	// err = json.Unmarshal([]byte(string(file)), &v)
+	// err = json.Unmarshal([]byte(string(fi)), &v)
 	// if err != nil {
 	// 	return err
 	// }
