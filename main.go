@@ -23,8 +23,8 @@ const (
 
 var (
 	// OSTYPE = os.Getenv("OSTYPE")
-	HOME   = os.Getenv("HOME")
-	PWD    = os.Getenv("PWD")
+	HOME = os.Getenv("HOME")
+	PWD  = os.Getenv("PWD")
 	// User          = os.User()
 	DefaultSource = PWD
 	DefaultTarget = HOME
@@ -160,6 +160,10 @@ func init() {
 	// 	fmt.Fprintf(os.Stderr, "usage: %s [args]\n", os.Args[0])
 	// 	f.PrintDefaults()
 	// }
+
+	if ! filepath.IsAbs(Config.Source) {
+		Config.Source = filepath.Abs(Config.Source)
+	}
 }
 
 func main() {
@@ -167,6 +171,14 @@ func main() {
 	if err != nil {
 		handleError(err)
 	}
+
+	// logFlag := func(a *flag.Flag) {
+	//     fmt.Println(">", a.Name, "value=", a.Value)
+	// }
+	// f.Visit(logFlag)
+	// fmt.Println(OS, f.Args())
+
+	fmt.Printf("[OS: %s]\n", OS)
 
 	if Config.Packages == nil {
 		Config.Packages = map[string]Package{}
@@ -179,19 +191,11 @@ func main() {
 			// fmt.Println("PKG ===", pkg)
 			Config.Packages[pkg.Name] = pkg
 		}
-	}
-
-	// logFlag := func(a *flag.Flag) {
-	//     fmt.Println(">", a.Name, "value=", a.Value)
-	// }
-	// f.Visit(logFlag)
-	// fmt.Println(OS, f.Args())
-
-	fmt.Printf("[OS: %s]\n", OS)
-
-	err = handleConfig(&Config)
-	if err != nil {
-		handleError(err)
+	} else {
+		err = handleConfig(&Config)
+		if err != nil {
+			handleError(err)
+		}
 	}
 
 	for name, pkg := range Config.Packages {
@@ -283,6 +287,8 @@ func handlePackage(name string, pkg Package) error {
 	if pkg.Origin != "" {
 		repo := "https://github.com/" + pkg.Origin + ".git"
 		// repo := "git@github.com:" + pkg.Origin + ".git"
+		// switch pkg.Origin {
+		// }
 		if pkg.Path == pkg.Source || pkg.Path == "" {
 			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
 		}
@@ -308,7 +314,7 @@ func handlePackage(name string, pkg Package) error {
 		case OS: //, OSTYPE, OS + "-" + OSTYPE:
 			break
 		default:
-			fmt.Printf("[%s] %s: %s\n", name, osType, "skip (only for " + OS + ")")
+			fmt.Printf("[%s] %s: %s\n", name, osType, "skip (only for "+OS+")")
 			return nil
 		}
 	}

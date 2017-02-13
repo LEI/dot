@@ -13,26 +13,30 @@ func gitCloneOrPull(name string, repo string, dir string) error {
 		if err != nil {
 			return err
 		}
-		gitClone := exec.Command("git", "clone", repo, dir)
-		out, err := gitClone.CombinedOutput()
-		if len(out) > 0 {
-			fmt.Printf("%s: %s", name, out)
-		}
+		err := gitExec("clone", repo, dir)
 		if err != nil {
 			return err
 		}
 	} else {
-		gitPull := exec.Command("git",
-			"--git-dir", dir+"/.git",
-			"--work-tree", dir,
-			"pull")
-		out, err := gitPull.CombinedOutput()
-		if len(out) > 0 {
-			fmt.Printf("%s: %s", name, out)
-		}
+		// err := gitExec("-C", dir, "status")
+		err := gitExec("-C", dir, "pull")
+		// "--git-dir", dir+"/.git",
+		// "--work-tree", dir,
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func gitExec(args ...string) error {
+	cmd := exec.Command("git", args...)
+	out, err := cmd.CombinedOutput()
+	if len(out) > 0 {
+		fmt.Printf("%s: %s", name, out)
+	}
+	if err != nil {
+		return err
 	}
 	return nil
 }
