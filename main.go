@@ -22,9 +22,9 @@ const (
 )
 
 var (
-	OSTYPE        = os.Getenv("OSTYPE")
-	HOME          = os.Getenv("HOME")
-	PWD           = os.Getenv("PWD")
+	OSTYPE = os.Getenv("OSTYPE")
+	HOME   = os.Getenv("HOME")
+	PWD    = os.Getenv("PWD")
 	// User          = os.User()
 	DefaultSource = PWD
 	DefaultTarget = HOME
@@ -194,23 +194,21 @@ func main() {
 		handleError(err)
 	}
 
-	for name, pkg := range Config.Packages {
-		// Config.Packages[name] = pkg
-		switch true {
-		case Sync:
-			err = syncPackage(name, pkg)
-			if err != nil {
-				handleError(err)
-			}
-		case Remove:
-			err = removePackage(name, pkg)
-			if err != nil {
-				handleError(err)
-			}
-		}
+	err = handlePackages(&Config)
+	if err != nil {
+		handleError(err)
 	}
 
 	fmt.Printf("%s\n", "[Done]")
+}
+
+func handleError(err error) {
+	if err != nil {
+		pc, fn, line, _ := runtime.Caller(1)
+		// log.Printf("[error] %s:%d %v", fn, line, err)
+		fmt.Fprintf(os.Stderr, "Error: %s[%s:%d] %v\n", runtime.FuncForPC(pc).Name(), fn, line, err)
+		os.Exit(1)
+	}
 }
 
 func handleConfig(Config *Configuration) error {
@@ -257,37 +255,47 @@ func handleConfig(Config *Configuration) error {
 	return nil
 }
 
-func handleError(err error) {
-	if err != nil {
-		pc, fn, line, _ := runtime.Caller(1)
-		// log.Printf("[error] %s:%d %v", fn, line, err)
-		fmt.Fprintf(os.Stderr, "Error: %s[%s:%d] %v\n", runtime.FuncForPC(pc).Name(), fn, line, err)
-		os.Exit(1)
+func handlePackage(packages []*Package) error {
+	for name, pkg := range Config.Packages {
+		if pkg.Name == "" {
+			pkg.Name = name
+		}
+
+		if pkg.Source != "" {
+			pkg.Source = expand(pkg.Source)
+		} else {
+			pkg.Source = Config.Source
+		}
+
+		if pkg.Target != "" {
+			pkg.Target = expand(pkg.Target)
+		} else {
+			pkg.Target = Config.Target
+		}
+
+		if pkg.Path != "" {
+			pkg.Path = expand(pkg.Path)
+		} else {
+			pkg.Path = pkg.Source
+		}
+
+		// Config.Packages[name] = pkg
+		switch true {
+		case Sync:
+			err = syncPackage(name, pkg)
+			if err != nil {
+				handleError(err)
+			}
+		case Remove:
+			err = removePackage(name, pkg)
+			if err != nil {
+				handleError(err)
+			}
+		}
 	}
 }
 
 func syncPackage(name string, pkg Package) error {
-	if pkg.Name == "" {
-		pkg.Name = name
-	}
-
-	if pkg.Source != "" {
-		pkg.Source = expand(pkg.Source)
-	} else {
-		pkg.Source = Config.Source
-	}
-
-	if pkg.Target != "" {
-		pkg.Target = expand(pkg.Target)
-	} else {
-		pkg.Target = Config.Target
-	}
-
-	if pkg.Path != "" {
-		pkg.Path = expand(pkg.Path)
-	} else {
-		pkg.Path = pkg.Source
-	}
 
 	if pkg.Origin != "" {
 		repo := "https://github.com/" + pkg.Origin + ".git"
@@ -312,9 +320,11 @@ func syncPackage(name string, pkg Package) error {
 	// 	fmt.Printf("%+v\n", pkg)
 	// }
 
+	fmt.Println("OsType", pkg.Os)
 	for _, osType := range pkg.Os {
+		fmt.Println(osType, "vs", OS, OSTYPE)
 		switch osType {
-		case OS, os.Getenv("OSTYPE"):
+		case OS, OSTYPE, OS+"-"+OSTYPE:
 			break
 		default:
 			fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
