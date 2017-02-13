@@ -304,12 +304,12 @@ func handlePackage(name string, pkg Package) error {
 	// }
 
 	for _, osType := range pkg.Os {
-		fmt.Println(osType, "vs", OS, OSTYPE)
+		fmt.Println("OS:", OS, "OSTYPE:", OSTYPE, "OS+OSTYPE:", OS + "-" + OSTYPE)
 		switch osType {
 		case OS, OSTYPE, OS + "-" + OSTYPE:
 			break
 		default:
-			fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
+			fmt.Printf("[%s] %s: %s\n", name, osType, "skip (only for " + OS + ")")
 			return nil
 		}
 	}
