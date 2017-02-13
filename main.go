@@ -23,30 +23,28 @@ const (
 
 var (
 	// OSTYPE = os.Getenv("OSTYPE")
-	HOME = os.Getenv("HOME")
-	PWD  = os.Getenv("PWD")
-	// User          = os.User()
-	DefaultSource = PWD
-	DefaultTarget = HOME
+	HomeDir       = os.Getenv("HOME")
+	CurrentDir    = os.Getenv("PWD")
 	Sync          = true
 	Remove        = false
-	ConfigName    = ".dotrc"
-	Config        = Configuration{}
-	ConfigFile    string
-	ConfigDir     = ".dot"
+	Verbose       = 0
 	Debug         = false
 	ForceYes      = false
-	IgnoreFiles   = []string{".git", ".*\\.md"}
 	PackageList   PackageFlag
+	Config        = Configuration{}
+	ConfigFile    = ""
+	ConfigDir     = ".dot"
+	ConfigName    = ".dotrc"
+	IgnoreFiles   = []string{".git", ".*\\.md"}
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
 	SuccessSymbol = "✓" // ✓ ✔
 	ErrorSymbol   = "✘" // × ✕ ✖ ✗ ✘
 	WarnSymbol    = "!" // ⚠ !
-	InfoLogger    = log.New(os.Stdout, InfoSymbol + " ", log.Lshortfile)
-	SuccessLogger = log.New(os.Stdout, SuccessSymbol + " ", log.Lshortfile)
-	WarnLogger    = log.New(os.Stderr, WarnSymbol + " ", log.Lshortfile)
-	ErrorLogger   = log.New(os.Stderr, ErrorSymbol + " ", log.Lshortfile)
+	logInfo       = log.New(os.Stdout, InfoSymbol+" ", 0)
+	logSuccess    = log.New(os.Stdout, SuccessSymbol+" ", 0)
+	logWarn       = log.New(os.Stderr, WarnSymbol+" ", log.Lshortfile)
+	logError      = log.New(os.Stderr, ErrorSymbol+" ", log.Llongfile)
 	// Skip = fmt.Errorf("Skip this path")
 )
 
@@ -61,7 +59,7 @@ type Configuration struct {
 	Target string
 	// Debug, ForceYes
 	// Name string `default:"?"`
-	Packages PackageMap
+	Packages Packages
 	// Source string `required:"true"`
 	// Target string
 }
@@ -79,11 +77,13 @@ type Package struct {
 	Lines       map[string]string
 	PreInstall  string `json:"pre_install"`
 	PostInstall string `json:"post_install"`
+	PreRemove   string `json:"pre_remove"`
+	PostRemove  string `json:"post_remove"`
 	Os          OsType // `json:"os_type"`
 	GitRepo     *git.Repo
 }
 
-type PackageMap map[string]Package
+type Packages map[string]Package
 
 type Link struct {
 	Type string `json:"type"`
@@ -103,7 +103,7 @@ func (osType *OsType) Set(value interface{}) error {
 	case []string:
 		*osType = append(*osType, val...)
 	default:
-		fmt.Printf("could not set value of type %T: %+v\n", val, val)
+		logWarn.Printf("could not set value of type %T: %+v\n", val, val)
 	}
 	return nil
 }
@@ -160,12 +160,13 @@ func init() {
 	flagSet.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
 	flagSet.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
 
+	flagSet.StringVarP(&Config.Source, "source", "s", CurrentDir, "Source `directory`")
+	flagSet.StringVarP(&Config.Target, "target", "t", HomeDir, "Destination `directory`")
 	flagSet.StringVarP(&ConfigFile, "config", "c", "", "Configuration `file`")
-	flagSet.BoolVarP(&Debug, "debug", "d", Debug, "Print more")
+	flagSet.IntVarP(&Verbose, "verbose", "v", Verbose, "Print more")
+	flagSet.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
 	flagSet.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
 	flagSet.VarP(&PackageList, "add", "a", "List of packages: `[path=]user/repo`")
-	flagSet.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source `directory`")
-	flagSet.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination `directory`")
 
 	// flag.ErrHelp = errors.New("flag: help requested")
 	// flagSet.Usage = func() {
@@ -179,19 +180,17 @@ func init() {
 	}
 
 	parseFlag := func(f *flag.Flag) {
-		fmt.Println("-", f.Name, "=", f.Value)
 		switch f.Name {
 		case "remove":
 			Sync = false
 		}
 	}
-
 	flagSet.Visit(parseFlag)
 
 	// processed := flagSet.NFlag()
 	remaining := flagSet.NArg()
 	if remaining > 0 {
-		fmt.Printf("WARNING: %d arguments remaining in '%v'\n", remaining, os.Args)
+		logWarn.Printf("%d arguments remaining in '%v'\n", remaining, os.Args)
 	}
 }
 
@@ -202,10 +201,10 @@ func main() {
 	}
 
 	if Sync && Remove {
-		handleError(fmt.Errorf("Please use only --sync or --remove"))
+		handleError(fmt.Errorf("--sync and --remove cannot be used together"))
 	}
 
-	fmt.Printf("[OS: %s]\n", OS)
+	logInfo.Printf("[OS: %s]\n", OS)
 
 	if !filepath.IsAbs(Config.Source) {
 		str, err := filepath.Abs(Config.Source)
@@ -241,7 +240,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%s\n", "[Done]")
+	logInfo.Printf("%s\n", "[Done]")
 }
 
 func handleError(err error) {
@@ -254,13 +253,13 @@ func handleError(err error) {
 }
 
 func handleConfig(Config *Configuration) error {
-	if ConfigFile != "" && Config.Source != DefaultSource {
+	if ConfigFile != "" && Config.Source != CurrentDir {
 		return fmt.Errorf("Can not use --config " + ConfigFile + " with --source " + Config.Source)
 	}
 
 	if ConfigFile != "" {
 		Config.Source = filepath.Dir(ConfigFile)
-	} else if ConfigFile == "" && Config.Source != DefaultSource {
+	} else if ConfigFile == "" && Config.Source != CurrentDir {
 		ConfigFile = filepath.Join(Config.Source, ConfigName)
 	}
 	// if ConfigFile == "" {
@@ -284,7 +283,7 @@ func handleConfig(Config *Configuration) error {
 		err = readConfig(ConfigFile, &pkg)
 		if err != nil {
 			if os.IsNotExist(err) {
-				fmt.Printf("Config file not found: %s\n", err.Error())
+				logError.Printf("Config file not found: %s\n", err.Error())
 				os.Exit(1)
 			}
 			return err
@@ -298,6 +297,16 @@ func handleConfig(Config *Configuration) error {
 }
 
 func handlePackage(name string, pkg Package) error {
+	for _, osType := range pkg.Os {
+		switch osType {
+		case OS: //, OSTYPE, OS + "-" + OSTYPE:
+			break
+		default:
+			logInfo.Printf("[%s] %s: %s\n", name, osType, "skip (only for "+OS+")")
+			return nil
+		}
+	}
+
 	if pkg.Name == "" {
 		pkg.Name = name
 	}
@@ -345,19 +354,19 @@ func handlePackage(name string, pkg Package) error {
 		return err
 	}
 
-	fmt.Printf("Package: %+v\n", name)
-	// if Debug {
-	// 	fmt.Printf("%+v\n", pkg)
-	// }
+	logInfo.Printf("Package: %+v\n", name)
+	if Verbose > 2 {
+		logInfo.Printf("%+v\n", pkg)
+	}
 
-	for _, osType := range pkg.Os {
-		switch osType {
-		case OS: //, OSTYPE, OS + "-" + OSTYPE:
-			break
-		default:
-			fmt.Printf("[%s] %s: %s\n", name, osType, "skip (only for "+OS+")")
-			return nil
-		}
+	if pkg.Dir != "" {
+		pkg.Dirs = append(pkg.Dirs, pkg.Dir)
+		pkg.Dir = ""
+	}
+
+	if pkg.Link != nil && pkg.Link != "" {
+		pkg.Links = append(pkg.Links, pkg.Link)
+		pkg.Link = nil
 	}
 
 	// Config.Packages[name] = pkg
@@ -384,32 +393,25 @@ func syncPackage(name string, pkg Package) error {
 		preInstall := exec.Command("sh", "-c", pkg.PreInstall)
 		out, err := preInstall.CombinedOutput()
 		if len(out) > 0 {
-			fmt.Printf("%s: %s\n", "Pre-install:", out)
+			logInfo.Printf("%s: %s\n", "Pre-install", out)
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	if pkg.Dir != "" {
-		pkg.Dirs = append(pkg.Dirs, pkg.Dir)
-	}
 	nbDirs := len(pkg.Dirs)
 	if nbDirs > 0 {
-		fmt.Printf("[%s] %d directories\n", name, nbDirs)
+		logInfo.Printf("[%s] %d directories\n", name, nbDirs)
 		err := makeDirs(pkg.Target, pkg.Dirs)
 		if err != nil {
 			return err
 		}
 	}
 
-	if pkg.Link != nil && pkg.Link != "" {
-		pkg.Links = append(pkg.Links, pkg.Link)
-	}
 	nbLinks := len(pkg.Links)
 	if nbLinks > 0 {
-		fmt.Printf("[%s] %d symlink patterns\n", name, nbLinks)
-		fmt.Println("SOURCE", pkg.Path, "TARGET", pkg.Target)
+		logInfo.Printf("[%s] %d symlink patterns\n", name, nbLinks)
 		err := linkFiles(pkg.Path, pkg.Target, pkg.Links)
 		if err != nil {
 			return err
@@ -418,7 +420,7 @@ func syncPackage(name string, pkg Package) error {
 
 	nbLines := len(pkg.Lines)
 	if nbLines > 0 {
-		fmt.Printf("[%s] %d lines in files\n", name, nbLines)
+		logInfo.Printf("[%s] %d lines in files\n", name, nbLines)
 		err := linesInFiles(pkg.Path, pkg.Target, pkg.Lines)
 		if err != nil {
 			return err
@@ -429,7 +431,7 @@ func syncPackage(name string, pkg Package) error {
 		postInstall := exec.Command("sh", "-c", pkg.PostInstall)
 		out, err := postInstall.CombinedOutput()
 		if len(out) > 0 {
-			fmt.Printf("%s: %s\n", "Post-install:", out)
+			logInfo.Printf("%s: %s\n", "Post-install", out)
 		}
 		if err != nil {
 			return err
@@ -440,7 +442,56 @@ func syncPackage(name string, pkg Package) error {
 }
 
 func removePackage(name string, pkg Package) error {
-	fmt.Println(" ---> Should remove", name, pkg)
+	if pkg.PreRemove != "" {
+		// parts := string.Fields(pkg.PreRemove)
+		// exe = parts[0]; args = [1:len(parts)]
+		preRemove := exec.Command("sh", "-c", pkg.PreRemove)
+		out, err := preRemove.CombinedOutput()
+		if len(out) > 0 {
+			logInfo.Printf("%s: %s\n", "Pre-remove", out)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	nbDirs := len(pkg.Dirs)
+	if nbDirs > 0 {
+		logInfo.Printf("[%s] %d directories\n", name, nbDirs)
+		err := removeDirs(pkg.Target, pkg.Dirs)
+		if err != nil {
+			return err
+		}
+	}
+
+	nbLinks := len(pkg.Links)
+	if nbLinks > 0 {
+		logInfo.Printf("[%s] %d symlink patterns\n", name, nbLinks)
+		err := unlinkFiles(pkg.Path, pkg.Target, pkg.Links)
+		if err != nil {
+			return err
+		}
+	}
+
+	nbLines := len(pkg.Lines)
+	if nbLines > 0 {
+		logInfo.Printf("[%s] %d lines in files\n", name, nbLines)
+		err := linesOutFiles(pkg.Path, pkg.Target, pkg.Lines)
+		if err != nil {
+			return err
+		}
+	}
+
+	if pkg.PostRemove != "" {
+		postRemove := exec.Command("sh", "-c", pkg.PostRemove)
+		out, err := postRemove.CombinedOutput()
+		if len(out) > 0 {
+			logInfo.Printf("%s: %s\n", "Post-remove", out)
+		}
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -471,8 +522,8 @@ func readConfig(path string, v interface{}) error {
 	}
 	if len(paths) > 0 {
 		configor.Load(&v, paths...)
-		if Debug {
-			fmt.Printf("configor.Load %+v: %+v\n", paths, v)
+		if Verbose > 0 {
+			logInfo.Printf("configor.Load %+v: %+v\n", paths, v)
 		}
 	}
 	// _, err := os.Stat(path)

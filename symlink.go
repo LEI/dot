@@ -35,15 +35,20 @@ func linkFiles(source string, target string, globs []interface{}) error {
 				return err
 			}
 		default:
-			ErrorLogger.Printf("%s: unknown type '%s'\n", path, reflect.TypeOf(path))
+			logError.Printf("%s: unknown type '%s'\n", path, reflect.TypeOf(path))
 		}
 	}
 	return nil
 }
 
+func unlinkFiles(source string, target string, globs []interface{}) error {
+	fmt.Println("TODO", source, target, globs)
+	return nil
+}
+
 func findLinks(source string, target string, options *Link) error {
 	paths, _ := filepath.Glob(filepath.Join(source, expand(options.Path)))
-	if Debug {
+	if Verbose > 1 {
 		fmt.Printf("GLOB %s \t-> %s\nOPTIONS %+v\nPATHS %+v\n", source, target, options, paths)
 	}
 	// filePaths = append(filePaths, paths...)
@@ -93,7 +98,7 @@ func linkFile(src string, dst string, options *Link) error {
 	if shouldLink, err := checkLinkOptions(src, dst, options); !shouldLink {
 		return err
 	}
-	if Debug {
+	if Verbose > 1 {
 		fmt.Printf("LINK %s \t-> %s\nOPTIONS %+v\n", src, dst, options)
 	}
 	fi, err := os.Lstat(dst)
@@ -106,7 +111,7 @@ func linkFile(src string, dst string, options *Link) error {
 			return err
 		}
 		if link == src {
-			SuccessLogger.Printf("%s == %s\n", src, dst)
+			logSuccess.Printf("%s == %s\n", src, dst)
 			return nil
 		}
 		msg := dst + " is an existing symlink to " + link + ", replace it with " + src + "?"
@@ -130,6 +135,6 @@ func linkFile(src string, dst string, options *Link) error {
 	if err != nil {
 		return err
 	}
-	SuccessLogger.Printf("%s -> %s\n", src, dst)
+	logSuccess.Printf("%s -> %s\n", src, dst)
 	return nil
 }

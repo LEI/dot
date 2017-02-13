@@ -12,7 +12,7 @@ services:
     depends_on:
       - image
     # entrypoint: /bin/bash
-    command: -l -c 'run dot -s $$DOT && run dot --debug -s $$HOME/.dot/bash; bash -l'
+    command: -l -c 'run dot -s $$DOT && run dot -v 1 -s $$HOME/.dot/bash; bash -l'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
