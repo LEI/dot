@@ -330,7 +330,8 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	if pkg.Origin != "" {
-		remoteName := "https"
+		remoteName := "origin"
+		branchName := "master"
 		if pkg.Path == pkg.Source || pkg.Path == "" {
 			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
 		}
@@ -341,7 +342,7 @@ func handlePackage(name string, pkg Package) error {
 				return err
 			}
 		} else {
-			err := pkg.GitRepo.Pull(remoteName, "master")
+			err := pkg.GitRepo.Pull(remoteName, branchName)
 			if err != nil {
 				return err
 			}

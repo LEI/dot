@@ -15,7 +15,8 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN printf "%s\n" \
 'PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"' \
 'sep() { printf %${COLUMNS:-100}s |tr " " "${1:-=}"; printf "\n"; }' \
-'run() { sep "-"; printf "\n\t%s\n\n" "\$ $*"; sep "-"; "$@" || exit 1; }' >> ~/.bashrc
+'log() { sep "-"; printf "\n\t%s\n\n" "$@"; sep "-"; }' \
+'run() { log "\$ $*"; "$@" || exit $?; }' >> ~/.bashrc
 
 ENV DOT /go/src/github.com/LEI/dot
 WORKDIR $DOT

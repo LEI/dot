@@ -51,7 +51,7 @@ func linesOutFiles(src string, dest string, lines map[string]string) error {
 		if err != nil && os.IsExist(err) {
 			return err
 		}
-		
+
 		if err != nil && os.IsNotExist(err) {
 			// logSuccess.Printf("'%s' <= %s\n", line, dst)
 			return nil
@@ -67,8 +67,8 @@ func linesOutFiles(src string, dest string, lines map[string]string) error {
 				logInfo.Printf("%s: %s <- %s\n", "TODO LineOutFile", line, dst)
 				// logSuccess.Printf("'%s' <- %s\n", line, dst)
 			}
-		// } else {
-		// 	logSuccess.Printf("'%s' <= %s\n", line, dst)
+			// } else {
+			// 	logSuccess.Printf("'%s' <= %s\n", line, dst)
 		}
 	}
 	return nil
