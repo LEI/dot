@@ -279,15 +279,50 @@ func handlePackage(packages []*Package) error {
 			pkg.Path = pkg.Source
 		}
 
+		if pkg.Origin != "" {
+			repo := "https://github.com/" + pkg.Origin + ".git"
+			// repo := "git@github.com:" + pkg.Origin + ".git"
+			if pkg.Path == pkg.Source || pkg.Path == "" {
+				pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
+			}
+			err := gitCloneOrPull(pkg.Origin, repo, pkg.Path)
+			if err != nil {
+				return err
+			}
+		}
+
+		pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
+		err := readConfig(pkgConfigFile, &pkg)
+		if err != nil && os.IsExist(err) {
+			handleError(err)
+		}
+
+		fmt.Printf("Package: %+v\n", name)
+		// if Verbose > 0 {
+		// 	fmt.Printf("%+v\n", pkg)
+		// }
+
+		fmt.Println("OsType", pkg.Os)
+		for _, osType := range pkg.Os {
+			fmt.Println(osType, "vs", OS, OSTYPE)
+			switch osType {
+			case OS, OSTYPE, OS + "-" + OSTYPE:
+				break
+			default:
+				fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
+				return nil
+			}
+		}
+
 		// Config.Packages[name] = pkg
-		switch true {
+		switch {
 		case Sync:
-			err = syncPackage(name, pkg)
+			err := syncPackage(name, pkg)
 			if err != nil {
 				handleError(err)
 			}
 		case Remove:
-			err = removePackage(name, pkg)
+			err := removePackage(name, pkg)
 			if err != nil {
 				handleError(err)
 			}
@@ -296,42 +331,6 @@ func handlePackage(packages []*Package) error {
 }
 
 func syncPackage(name string, pkg Package) error {
-
-	if pkg.Origin != "" {
-		repo := "https://github.com/" + pkg.Origin + ".git"
-		// repo := "git@github.com:" + pkg.Origin + ".git"
-		if pkg.Path == pkg.Source || pkg.Path == "" {
-			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
-		}
-		err := gitCloneOrPull(pkg.Origin, repo, pkg.Path)
-		if err != nil {
-			return err
-		}
-	}
-
-	pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
-	err := readConfig(pkgConfigFile, &pkg)
-	if err != nil && os.IsExist(err) {
-		handleError(err)
-	}
-
-	fmt.Printf("Package: %+v\n", name)
-	// if Verbose > 0 {
-	// 	fmt.Printf("%+v\n", pkg)
-	// }
-
-	fmt.Println("OsType", pkg.Os)
-	for _, osType := range pkg.Os {
-		fmt.Println(osType, "vs", OS, OSTYPE)
-		switch osType {
-		case OS, OSTYPE, OS + "-" + OSTYPE:
-			break
-		default:
-			fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
-			return nil
-		}
-	}
-
 	if pkg.PreInstall != "" {
 		// parts := string.Fields(pkg.PreInstall)
 		// exe = parts[0]; args = [1:len(parts)]
