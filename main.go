@@ -82,7 +82,7 @@ type Package struct {
 	Lines       map[string]string
 	PreInstall  string `json:"pre_install"`
 	PostInstall string `json:"post_install"`
-	Os          OsType `json:"os_type"`
+	Os          OsType // `json:"os_type"`
 }
 
 type OsType []string
