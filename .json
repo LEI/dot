@@ -12,10 +12,6 @@
         },
         "tmux": {
             "origin": "LEI/dot-tmux",
-            "links": {
-                "type": "file",
-                "path": ".tmux/*darwin*"
-            }
         },
         "vim": {
             "origin": "LEI/dot-vim"

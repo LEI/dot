@@ -91,6 +91,10 @@ type Package struct {
 	repo        *git.Repo
 }
 
+// type Role struct {
+// 	Paths []string
+// }
+
 type PackageMap map[string]Package
 
 func (pkg *PackageMap) String() string {
@@ -225,7 +229,7 @@ func main() {
 	Config.Source = filepath.Clean(Config.Source)
 
 	// Look for config file if no package manually added
-	if len(Config.Packages) == 0 || confirm("Ignore global configuration files?") != true {
+	if len(Config.Packages) == 0 { // || !confirm("Ignore global configuration files?") {
 		err = handleConfig(&Config)
 		if err != nil {
 			handleError(err)
@@ -329,6 +333,11 @@ func handlePackage(name string, pkg Package) error {
 		pkg.Path = pkg.Source
 	}
 
+	logInfo.Printf("Package: %+v\n", name)
+	if Verbose > 2 {
+		logInfo.Printf("%+v\n", pkg)
+	}
+
 	if pkg.Origin != "" {
 		if pkg.Path == pkg.Source || pkg.Path == "" {
 			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
@@ -342,11 +351,6 @@ func handlePackage(name string, pkg Package) error {
 	err := readConfig(pkgConfigFile, &pkg)
 	if err != nil && os.IsExist(err) {
 		return err
-	}
-
-	logInfo.Printf("Package: %+v\n", name)
-	if Verbose > 2 {
-		logInfo.Printf("%+v\n", pkg)
 	}
 
 	if pkg.Dir != "" {
