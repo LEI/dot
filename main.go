@@ -257,7 +257,7 @@ func handleConfig(Config *Configuration) error {
 	return nil
 }
 
-func handlePackage(name string, pkg *Package) error {
+func handlePackage(name string, pkg Package) error {
 	if pkg.Name == "" {
 		pkg.Name = name
 	}
