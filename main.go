@@ -294,7 +294,7 @@ func handlePackage(packages []*Package) error {
 		pkgConfigFile := filepath.Join(pkg.Path, ConfigName)
 		err := readConfig(pkgConfigFile, &pkg)
 		if err != nil && os.IsExist(err) {
-			handleError(err)
+			return err
 		}
 
 		fmt.Printf("Package: %+v\n", name)
@@ -302,7 +302,6 @@ func handlePackage(packages []*Package) error {
 		// 	fmt.Printf("%+v\n", pkg)
 		// }
 
-		fmt.Println("OsType", pkg.Os)
 		for _, osType := range pkg.Os {
 			fmt.Println(osType, "vs", OS, OSTYPE)
 			switch osType {
@@ -319,15 +318,17 @@ func handlePackage(packages []*Package) error {
 		case Sync:
 			err := syncPackage(name, pkg)
 			if err != nil {
-				handleError(err)
+				return err
 			}
 		case Remove:
 			err := removePackage(name, pkg)
 			if err != nil {
-				handleError(err)
+				return err
 			}
 		}
 	}
+
+	return nil
 }
 
 func syncPackage(name string, pkg Package) error {
@@ -392,12 +393,13 @@ func syncPackage(name string, pkg Package) error {
 }
 
 func removePackage(name string, pkg Package) error {
-	fmt.Println("Should remove", name, pkg)
+	fmt.Println(" ---> Should remove", name, pkg)
 	return nil
 }
 
 func expand(str string) string {
 	str = os.ExpandEnv(str)
+	// for _, v := range []string{"OS", "OSTYPE"} ...
 	str = strings.Replace(str, "$OS", OS, -1)
 	return str
 }
