@@ -195,7 +195,7 @@ func main() {
 	}
 
 	for name, pkg := range Config.Packages {
-		err = handlePackage(&Config)
+		err = handlePackage(name, pkg)
 		if err != nil {
 			handleError(err)
 		}
@@ -257,7 +257,7 @@ func handleConfig(Config *Configuration) error {
 	return nil
 }
 
-func handlePackage(pkg *Package) error {
+func handlePackage(name string, pkg *Package) error {
 	if pkg.Name == "" {
 		pkg.Name = name
 	}
