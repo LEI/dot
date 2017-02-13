@@ -5,6 +5,7 @@ import (
 	// "encoding/json"
 	"fmt"
 	"github.com/jinzhu/configor"
+	// "github.com/LEI/dot/models"
 	flag "github.com/ogier/pflag"
 	// "io/ioutil"
 	// "log"
@@ -60,6 +61,12 @@ type Configuration struct {
 	// Source string `required:"true"`
 	// Target string
 }
+
+// func (*cfg Configuration) Set(value interface{}) error {
+// 	fmt.Print("SET CFG", value)
+// 	*cfg = value
+// 	return nil
+// }
 
 type Package struct {
 	Name        string
