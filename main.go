@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	OSTYPE = os.Getenv("OSTYPE")
+	// OSTYPE = os.Getenv("OSTYPE")
 	HOME   = os.Getenv("HOME")
 	PWD    = os.Getenv("PWD")
 	// User          = os.User()
@@ -304,9 +304,8 @@ func handlePackage(name string, pkg Package) error {
 	// }
 
 	for _, osType := range pkg.Os {
-		fmt.Println("OS:", OS, "OSTYPE:", OSTYPE, "OS+OSTYPE:", OS + "-" + OSTYPE)
 		switch osType {
-		case OS, OSTYPE, OS + "-" + OSTYPE:
+		case OS: //, OSTYPE, OS + "-" + OSTYPE:
 			break
 		default:
 			fmt.Printf("[%s] %s: %s\n", name, osType, "skip (only for " + OS + ")")
