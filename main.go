@@ -4,11 +4,11 @@ import (
 	// "errors"
 	// "encoding/json"
 	"fmt"
+	"github.com/LEI/dot/git"
 	"github.com/jinzhu/configor"
-	// "github.com/LEI/dot/models"
 	flag "github.com/ogier/pflag"
 	// "io/ioutil"
-	// "log"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,16 +34,19 @@ var (
 	Config        = Configuration{}
 	ConfigFile    string
 	ConfigDir     = ".dot"
-	Verbose       = 0
 	Debug         = false
 	ForceYes      = false
 	IgnoreFiles   = []string{".git", ".*\\.md"}
 	PackageList   PackageFlag
 	PathSeparator = string(os.PathSeparator)
 	InfoSymbol    = "›"
-	OkSymbol      = "✓" // ✓ ✔
-	ErrSymbol     = "✘" // × ✕ ✖ ✗ ✘
+	SuccessSymbol = "✓" // ✓ ✔
+	ErrorSymbol   = "✘" // × ✕ ✖ ✗ ✘
 	WarnSymbol    = "!" // ⚠ !
+	InfoLogger    = log.New(os.Stdout, InfoSymbol + " ", log.Lshortfile)
+	SuccessLogger = log.New(os.Stdout, SuccessSymbol + " ", log.Lshortfile)
+	WarnLogger    = log.New(os.Stderr, WarnSymbol + " ", log.Lshortfile)
+	ErrorLogger   = log.New(os.Stderr, ErrorSymbol + " ", log.Lshortfile)
 	// Skip = fmt.Errorf("Skip this path")
 )
 
@@ -56,18 +59,12 @@ var (
 type Configuration struct {
 	Source string
 	Target string
-	// Debug, ForceYes, Verbose
+	// Debug, ForceYes
 	// Name string `default:"?"`
 	Packages PackageMap
 	// Source string `required:"true"`
 	// Target string
 }
-
-// func (*cfg Configuration) Set(value interface{}) error {
-// 	fmt.Print("SET CFG", value)
-// 	*cfg = value
-// 	return nil
-// }
 
 type Package struct {
 	Name        string
@@ -83,6 +80,14 @@ type Package struct {
 	PreInstall  string `json:"pre_install"`
 	PostInstall string `json:"post_install"`
 	Os          OsType // `json:"os_type"`
+	GitRepo     *git.Repo
+}
+
+type PackageMap map[string]Package
+
+type Link struct {
+	Type string `json:"type"`
+	Path string `json:"path"`
 }
 
 type OsType []string
@@ -102,13 +107,6 @@ func (osType *OsType) Set(value interface{}) error {
 	}
 	return nil
 }
-
-type Link struct {
-	Type string `json:"type"`
-	Path string `json:"path"`
-}
-
-type PackageMap map[string]Package
 
 type PackageFlag []Package
 
@@ -135,50 +133,88 @@ func (pkg *PackageFlag) Set(origin string) error {
 	return nil
 }
 
-var f = flag.NewFlagSet("flag", flag.ExitOnError)
+// type IncrementFlag struct {
+// 	Bool  bool
+// 	Level int
+// }
+
+// func (i *IncrementFlag) String() string {
+// 	return fmt.Sprintf("%d", i.Level)
+// 	// return fmt.Sprintf("%t", *i.Level > 0)
+// }
+
+// func (i *IncrementFlag) Set(value string) error {
+// 	if value != "" {
+// 		i.Level++
+// 	} else {
+// 		i.Level = 0
+// 	}
+// 	i.Bool = i.Level > 0
+// 	return nil
+// }
 
 func init() {
-	err := os.Setenv("OS", OS)
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	// log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	flagSet.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
+	flagSet.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+
+	flagSet.StringVarP(&ConfigFile, "config", "c", "", "Configuration `file`")
+	flagSet.BoolVarP(&Debug, "debug", "d", Debug, "Print more")
+	flagSet.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
+	flagSet.VarP(&PackageList, "add", "a", "List of packages: `[path=]user/repo`")
+	flagSet.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source `directory`")
+	flagSet.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination `directory`")
+
+	// flag.ErrHelp = errors.New("flag: help requested")
+	// flagSet.Usage = func() {
+	// 	fmt.Fprintf(os.Stderr, "usage: %s [args]\n", os.Args[0])
+	// 	flagSet.PrintDefaults()
+	// }
+
+	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
 		handleError(err)
 	}
-	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	f.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
-	f.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+	parseFlag := func(f *flag.Flag) {
+		fmt.Println("-", f.Name, "=", f.Value)
+		switch f.Name {
+		case "remove":
+			Sync = false
+		}
+	}
 
-	f.StringVarP(&ConfigFile, "config", "c", "", "Configuration `file`")
-	f.IntVarP(&Verbose, "verbose", "v", Verbose, "Verbosity `level`")
-	f.BoolVarP(&Debug, "debug", "d", Debug, "Enable check-mode")
-	f.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
-	f.VarP(&PackageList, "add", "a", "List of packages: `[path=]user/repo`")
-	f.StringVarP(&Config.Source, "source", "s", DefaultSource, "Source `directory`")
-	f.StringVarP(&Config.Target, "target", "t", DefaultTarget, "Destination `directory`")
+	flagSet.Visit(parseFlag)
 
-	// flag.ErrHelp = errors.New("flag: help requested")
-	// f.Usage = func() {
-	// 	fmt.Fprintf(os.Stderr, "usage: %s [args]\n", os.Args[0])
-	// 	f.PrintDefaults()
-	// }
-
-	if ! filepath.IsAbs(Config.Source) {
-		Config.Source = filepath.Abs(Config.Source)
+	// processed := flagSet.NFlag()
+	remaining := flagSet.NArg()
+	if remaining > 0 {
+		fmt.Printf("WARNING: %d arguments remaining in '%v'\n", remaining, os.Args)
 	}
 }
 
 func main() {
-	err := f.Parse(os.Args[1:])
+	err := os.Setenv("OS", OS)
 	if err != nil {
 		handleError(err)
 	}
 
-	// logFlag := func(a *flag.Flag) {
-	//     fmt.Println(">", a.Name, "value=", a.Value)
-	// }
-	// f.Visit(logFlag)
-	// fmt.Println(OS, f.Args())
+	if Sync && Remove {
+		handleError(fmt.Errorf("Please use only --sync or --remove"))
+	}
 
 	fmt.Printf("[OS: %s]\n", OS)
+
+	if !filepath.IsAbs(Config.Source) {
+		str, err := filepath.Abs(Config.Source)
+		if err != nil {
+			handleError(err)
+		}
+		Config.Source = str
+	}
+	Config.Source = filepath.Clean(Config.Source)
 
 	if Config.Packages == nil {
 		Config.Packages = map[string]Package{}
@@ -285,16 +321,21 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	if pkg.Origin != "" {
-		repo := "https://github.com/" + pkg.Origin + ".git"
-		// repo := "git@github.com:" + pkg.Origin + ".git"
-		// switch pkg.Origin {
-		// }
+		remoteName := "https"
 		if pkg.Path == pkg.Source || pkg.Path == "" {
 			pkg.Path = filepath.Join(pkg.Target, ConfigDir, pkg.Name)
 		}
-		err := gitCloneOrPull(pkg.Origin, repo, pkg.Path)
-		if err != nil {
-			return err
+		pkg.GitRepo = git.New(pkg.Name, pkg.Path).AddRemote(remoteName, pkg.Origin)
+		if !pkg.GitRepo.IsCloned() {
+			err := pkg.GitRepo.Clone()
+			if err != nil {
+				return err
+			}
+		} else {
+			err := pkg.GitRepo.Pull(remoteName, "master")
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -305,7 +346,7 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	fmt.Printf("Package: %+v\n", name)
-	// if Verbose > 0 {
+	// if Debug {
 	// 	fmt.Printf("%+v\n", pkg)
 	// }
 
@@ -368,6 +409,7 @@ func syncPackage(name string, pkg Package) error {
 	nbLinks := len(pkg.Links)
 	if nbLinks > 0 {
 		fmt.Printf("[%s] %d symlink patterns\n", name, nbLinks)
+		fmt.Println("SOURCE", pkg.Path, "TARGET", pkg.Target)
 		err := linkFiles(pkg.Path, pkg.Target, pkg.Links)
 		if err != nil {
 			return err
@@ -409,12 +451,12 @@ func expand(str string) string {
 	return str
 }
 
-var ConfigExt = []string{"", ".json", ".yml", ".yaml"}
+var ConfigExtensions = []string{"", ".json", ".yml", ".yaml", ".toml"}
 
 func readConfig(path string, v interface{}) error {
 	var e error
 	var paths []string
-	for _, ext := range ConfigExt {
+	for _, ext := range ConfigExtensions {
 		p := path + ext
 		_, err := os.Stat(p)
 		if err != nil {
@@ -427,12 +469,12 @@ func readConfig(path string, v interface{}) error {
 	if len(paths) == 0 && e != nil {
 		return e
 	}
-
-	configor.Load(&v, paths...)
-	if Verbose > 1 {
-		fmt.Printf("configor.Load %+v: %+v\n", paths, v)
+	if len(paths) > 0 {
+		configor.Load(&v, paths...)
+		if Debug {
+			fmt.Printf("configor.Load %+v: %+v\n", paths, v)
+		}
 	}
-
 	// _, err := os.Stat(path)
 	// if err != nil {
 	// 	return err

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"os"
 	"path/filepath"
 )
@@ -13,7 +13,7 @@ func makeDirs(dst string, paths []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%s %s\n", OkSymbol, dir)
+		SuccessLogger.Printf("%s\n", dir)
 	}
 	return nil
 }

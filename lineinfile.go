@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -22,7 +22,7 @@ func linesInFiles(src string, dest string, lines map[string]string) error {
 				return err
 			}
 			if contains {
-				fmt.Printf("%s '%s' => %s\n", OkSymbol, line, dst)
+				SuccessLogger.Printf("'%s' => %s\n", line, dst)
 				return nil
 			}
 		} else { // os.IsNotExist(err)
@@ -38,7 +38,7 @@ func linesInFiles(src string, dest string, lines map[string]string) error {
 			return err
 		}
 
-		fmt.Printf("%s '%s' -> %s\n", OkSymbol, line, dst)
+		SuccessLogger.Printf("'%s' -> %s\n", line, dst)
 	}
 	return nil
 }

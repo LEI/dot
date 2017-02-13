@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
+	// "regexp"
 	"strings"
 )
 
@@ -35,7 +35,7 @@ func linkFiles(source string, target string, globs []interface{}) error {
 				return err
 			}
 		default:
-			fmt.Printf("%s: unknown type '%s'\n", path, reflect.TypeOf(path))
+			ErrorLogger.Printf("%s: unknown type '%s'\n", path, reflect.TypeOf(path))
 		}
 	}
 	return nil
@@ -43,8 +43,8 @@ func linkFiles(source string, target string, globs []interface{}) error {
 
 func findLinks(source string, target string, options *Link) error {
 	paths, _ := filepath.Glob(filepath.Join(source, expand(options.Path)))
-	if Verbose > 0 {
-		fmt.Printf("LINK %s \t-> %s\nOPTIONS %+v\nPATHS %+v\n", source, target, options, paths)
+	if Debug {
+		fmt.Printf("GLOB %s \t-> %s\nOPTIONS %+v\nPATHS %+v\n", source, target, options, paths)
 	}
 	// filePaths = append(filePaths, paths...)
 	for _, src := range paths {
@@ -61,10 +61,14 @@ func findLinks(source string, target string, options *Link) error {
 func checkLinkOptions(src string, dst string, options *Link) (bool, error) {
 	// name := strings.Replace(src, source+PathSeparator, "", 1)
 	for _, pattern := range IgnoreFiles {
-		re := regexp.MustCompile(pattern)
-		if re.FindStringIndex(filepath.Base(src)) != nil {
-			return false, nil
+		matched, err := filepath.Match(pattern, filepath.Base(src))
+		if err != nil || matched {
+			return false, err
 		}
+		// re := regexp.MustCompile(pattern)
+		// if re.FindStringIndex(filepath.Base(src)) != nil {
+		// 	return false, nil
+		// }
 	}
 	if options.Type != "" {
 		fi, err := os.Stat(src)
@@ -77,7 +81,7 @@ func checkLinkOptions(src string, dst string, options *Link) (bool, error) {
 				return false, nil
 			}
 		case "d", "directory":
-			if fi.IsDir() != true {
+			if !fi.IsDir() {
 				return false, nil
 			}
 		}
@@ -86,8 +90,11 @@ func checkLinkOptions(src string, dst string, options *Link) (bool, error) {
 }
 
 func linkFile(src string, dst string, options *Link) error {
-	if shouldLink, err := checkLinkOptions(src, dst, options); shouldLink == false {
+	if shouldLink, err := checkLinkOptions(src, dst, options); !shouldLink {
 		return err
+	}
+	if Debug {
+		fmt.Printf("LINK %s \t-> %s\nOPTIONS %+v\n", src, dst, options)
 	}
 	fi, err := os.Lstat(dst)
 	if err != nil && os.IsExist(err) {
@@ -99,7 +106,7 @@ func linkFile(src string, dst string, options *Link) error {
 			return err
 		}
 		if link == src {
-			fmt.Printf("%s %s == %s\n", OkSymbol, src, dst)
+			SuccessLogger.Printf("%s == %s\n", src, dst)
 			return nil
 		}
 		msg := dst + " is an existing symlink to " + link + ", replace it with " + src + "?"
@@ -123,6 +130,6 @@ func linkFile(src string, dst string, options *Link) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s %s -> %s\n", OkSymbol, src, dst)
+	SuccessLogger.Printf("%s -> %s\n", src, dst)
 	return nil
 }
