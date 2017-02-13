@@ -7,6 +7,6 @@ services:
       - image
     entrypoint: /bin/bash
     command: |
-      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
+      -l -c '
       run dot -a git=LEI/dot-git
       run test -f "$$HOME/.gitconfig"'

@@ -7,7 +7,7 @@ services:
       - image
     entrypoint: /bin/bash
     command: |
-      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
-      run dot -a termux=LEI/dot-vim
+      -l -c '
+      run dot -a vim=LEI/dot-vim
       run vim +PlugInstall +qall
       run test -d "$$HOME/.vim/plugged"'

@@ -11,8 +11,11 @@ vim
 # && rm -rf /var/lib/apt/lists/*
 
 ENV GOPATH /go
-ENV PATH "$GOPATH/bin:/usr/local/go/bin:$PATH"
-RUN printf "%s\n" 'PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"' >> ~/.bashrc
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+RUN printf "%s\n" \
+'PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"' \
+'sep() { printf %100s |tr " " "${1:-=}"; printf "\n"; }' \
+'run() { sep "-"; printf "\n%s\n\n" "\t\$ $*"; sep "-"; "$@" || exit 1; }' >> ~/.bashrc
 
 ENV DOT /go/src/github.com/LEI/dot
 WORKDIR $DOT

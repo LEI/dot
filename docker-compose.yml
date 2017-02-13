@@ -12,7 +12,7 @@ services:
     depends_on:
       - image
     # entrypoint: /bin/bash
-    command: -l -c 'dot -s $$DOT && echo "----------" && dot -v1 -s $$HOME/.dot/bash; bash -l'
+    command: -l -c 'run dot -s $$DOT && run dot -v1 -s $$HOME/.dot/bash; bash -l'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
@@ -21,7 +21,7 @@ services:
       - image
     # entrypoint: /bin/bash
     command: |
-      -l -c 'run() { printf "%s\n" "TEST: $$*"; "$$@" || exit 1; }
+      -l -c '
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
       run dot -s $$DOT
       run dot -c $$DOT/.json
