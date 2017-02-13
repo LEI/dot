@@ -334,9 +334,6 @@ func handlePackage(name string, pkg Package) error {
 	}
 
 	logInfo.Printf("Package: %+v\n", name)
-	if Verbose > 2 {
-		logInfo.Printf("%+v\n", pkg)
-	}
 
 	if pkg.Origin != "" {
 		if pkg.Path == pkg.Source || pkg.Path == "" {
@@ -361,6 +358,10 @@ func handlePackage(name string, pkg Package) error {
 	if pkg.Link != nil && pkg.Link != "" {
 		pkg.Links = append(pkg.Links, pkg.Link)
 		pkg.Link = nil
+	}
+
+	if Verbose > 2 {
+		logInfo.Printf("%+v\n", pkg)
 	}
 
 	// Config.Packages[name] = pkg
