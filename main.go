@@ -324,7 +324,7 @@ func syncPackage(name string, pkg Package) error {
 	for _, osType := range pkg.Os {
 		fmt.Println(osType, "vs", OS, OSTYPE)
 		switch osType {
-		case OS, OSTYPE, OS+"-"+OSTYPE:
+		case OS, OSTYPE, OS + "-" + OSTYPE:
 			break
 		default:
 			fmt.Printf("[%s] %s: %s\n", name, osType, "skip")
