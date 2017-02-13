@@ -25,6 +25,7 @@ var (
 	OSTYPE        = os.Getenv("OSTYPE")
 	HOME          = os.Getenv("HOME")
 	PWD           = os.Getenv("PWD")
+	// User          = os.User()
 	DefaultSource = PWD
 	DefaultTarget = HOME
 	Sync          = true
