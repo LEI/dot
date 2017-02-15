@@ -54,6 +54,7 @@ func init() {
 	flag.StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
 
 	flag.VarP(&Packages, "package", "p", "List of packages: `[path=]user/repo`")
+	// flag.StringSliceVarP(&Packages, "package", "p", Packages, "List of packages: `[path=]user/repo`")
 
 	flag.Parse(os.Args[1:])
 }
@@ -87,7 +88,7 @@ func main() {
 
 	fmt.Println(Source, "->", Target)
 	if Debug {
-		fmt.Printf("%s", viper.AllSettings())
+		fmt.Printf("%s\n", viper.AllSettings())
 	}
 	fmt.Printf("%s: %+v\n", "Packages", viper.Get("packages"))
 	fmt.Println(viper.Get("dir"), viper.Get("dirs"))

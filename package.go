@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	// "path/filepath"
+	// "strings"
+	"github.com/LEI/dot/git"
 )
 
 type Package struct {
@@ -10,6 +12,7 @@ type Package struct {
 	Origin string
 	Path string
 	// Os OsType
+	Repo *git.Repository
 }
 
 type PackageSlice []Package
@@ -22,16 +25,14 @@ func (list *PackageSlice) Type() string {
 	return fmt.Sprintf("%T", *list)
 }
 
-func (list *PackageSlice) Set(origin string) error {
+func (list *PackageSlice) Set(value string) error {
 	p := &Package{}
-	if strings.Contains(origin, "=") {
-		s := strings.Split(origin, "=")
-		p.Name = s[0]
-		p.Origin = s[1]
-	} else {
-		p.Name = origin
-		p.Origin = origin
+	repo, err := git.NewRepository(value)
+	if err != nil {
+		return err
 	}
+	p.Repo = repo
+	p.Name = repo.Name
 	*list = append(*list, *p)
 	// (*pkgMap)[p.Name] = *p
 	return nil

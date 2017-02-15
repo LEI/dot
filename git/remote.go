@@ -1,28 +1,38 @@
 package git
 
+import (
+	"strings"
+)
+
+var (
+	BaseUrl = "https://github.com"
+)
+
 type Remote struct {
-	// Name string
+	Name string
 	URL  string
 }
 
 func NewRemote(name string, url string) *Remote {
-	return &Remote{
-		// Name: name,
-		URL: UrlScheme(url),
-	}
+	r := &Remote{Name: name}
+	r.SetUrl(url)
+	return r
 }
 
-func (r *Remote) SetUrl(url string) *Remote {
+func (r *Remote) SetUrl(value string) *Remote {
+	var url string
 	switch {
-	case strings.HasPrefix(url, "git@"),
-		strings.HasPrefix(url, "git://"),
-		strings.HasPrefix(url, "https://"),
-		strings.HasPrefix(url, "ssh://"):
+	case strings.HasPrefix(value, "git@"),
+		strings.HasPrefix(value, "git://"),
+		// strings.HasPrefix(value, "http://"),
+		strings.HasPrefix(value, "https://"),
+		strings.HasPrefix(value, "ssh://"):
+		url = value
 	default:
-		url := "https://github.com/" + str + ".git"
+		url = BaseUrl + "/" + value
 	}
-	// if !strings.EndsWith(str, ".git") {
-	// 	url += ".git"
-	// }
+	if !strings.HasSuffix(url, ".git") {
+		url += ".git"
+	}
 	return r
 }

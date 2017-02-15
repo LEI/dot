@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"github.com/LEI/dot/fileutil"
 )
 
 type Repository struct {
@@ -14,14 +15,31 @@ type Repository struct {
 	Remotes map[string]*Remote
 }
 
-func NewRepository(name string, path string, remotes ...*Remote) *Repository {
-	return &Repository{
-		Name: name,
-		Branch: "master",
-		Path: path,
-		// Remotes: make(map[string]*Remote, 0),
-		Remotes: remotes
+func NewRepository(spec string/*, path string, remotes ...*Remote*/) (*Repository, error) {
+	repo := &Repository{Name: spec, Branch: "master"}
+	remote := ""
+	if strings.HasPrefix(spec, string(os.PathSeparator)) { // filepath.IsAbs(spec)
+		if !fileutil.Exists(spec) {
+			repo.Path = spec
+			// TODO find out branch
+			return repo, nil
+		} else {
+			return repo, fmt.Errorf("%s: No such repository\n", spec)
+		}
 	}
+	if strings.Contains(spec, "=") {
+		parts := strings.Split(spec, "=")
+		if len(parts) != 2 {
+			return repo, fmt.Errorf("%s: Invalid repository spec\n", spec)
+		}
+		repo.Name = parts[0]
+		remote = parts[1]
+	}
+	if remote != "" {
+		repo.AddRemote("origin", remote)
+	}
+
+	return repo, nil
 }
 
 func (repo *Repository) String() string {
