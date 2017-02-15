@@ -1,11 +1,14 @@
 package git
 
 import (
+	"fmt"
 	"strings"
 )
 
 var (
-	BaseUrl = "https://github.com"
+	User = "git"
+	Host = "github.com"
+	Https = true
 )
 
 type Remote struct {
@@ -29,7 +32,11 @@ func (r *Remote) SetUrl(value string) *Remote {
 		strings.HasPrefix(value, "ssh://"):
 		url = value
 	default:
-		url = BaseUrl + "/" + value
+		if Https {
+			url = fmt.Sprintf("https://%s/%s", Host, value)
+		} else {
+			url = fmt.Sprintf("%s@%s:%s", User, Host, value)
+		}
 	}
 	if !strings.HasSuffix(url, ".git") {
 		url += ".git"

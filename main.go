@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"github.com/spf13/pflag"
+	"github.com/LEI/dot/cmd"
 	"github.com/spf13/viper"
 	"os"
 	"runtime"
@@ -37,61 +37,77 @@ var (
 	logWarn       = log.New(os.Stderr, WarnSymbol+" ", log.Lshortfile)
 	logError      = log.New(os.Stderr, ErrorSymbol+" ", log.Llongfile)
 	// Skip = fmt.Errorf("Skip this path")
+	// viper = viper.New()
+	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 )
 
-var flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-
 func init() {
-	flag.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
-	flag.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+	flags := cmd.RootCmd.Flags()
+	gFlags := cmd.RootCmd.PersistentFlags()
 
-	flag.StringVarP(&Source, "source", "s", CurrentDir, "Source `directory`")
-	flag.StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
+	flags.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
+	flags.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
 
-	flag.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
-	flag.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
+	gFlags.StringVarP(&Source, "source", "s", CurrentDir, "Source `directory`")
+	gFlags.StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
 
-	flag.StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
+	flags.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
+	flags.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
+	flags.StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
+	flags.VarP(&Packages, "package", "p", "List of packages `[name=]user/repo`")
 
-	flag.VarP(&Packages, "package", "p", "List of packages: `[path=]user/repo`")
-	// flag.StringSliceVarP(&Packages, "package", "p", Packages, "List of packages: `[path=]user/repo`")
+	// Parse command line arguments
+	flags.Parse(os.Args[1:])
 
-	flag.Parse(os.Args[1:])
-}
-
-func main() {
 	// 	viper.SetDefault("Source", CurrentDir)
 	// 	viper.SetDefault("Target", HomeDir)
 
-	viper.RegisterAlias("src", "source")
-	viper.RegisterAlias("dst", "target")
+	// viper.RegisterAlias("src", "source")
+	// viper.RegisterAlias("dst", "target")
 
-	viper.BindPFlags(flag)
+	// Bind values to configuration
+	viper.BindPFlags(flags)
+	viper.BindPFlags(gFlags)
 
-	viper.SetConfigName(ConfigName)
-	viper.AddConfigPath(HomeDir)
-	viper.AddConfigPath(Source)
-	if CurrentDir != Source {
-		viper.AddConfigPath(".")
+	if ConfigFile != "" {
+		viper.SetConfigFile(ConfigFile)
 	}
-
-	viper.SetConfigFile(ConfigFile)
-	err := viper.ReadInConfig()
+	configPaths := []string{HomeDir, Source}
+	// if CurrentDir != Source {
+	// 	configPaths = append(configPaths, ".")
+	// }
+	err := ReadConfigFile(viper.GetViper(), ConfigName, configPaths...)
 	if err != nil {
-		panic(fmt.Errorf("Fatal error reading configuration: %s\n", err))
+		panic(err)
+	}
+}
+
+func main() {
+	configFileUsed := viper.ConfigFileUsed()
+	if configFileUsed != "" {
+		fmt.Printf("Used config file: %s\n", configFileUsed)
+	} else {
+		fmt.Printf("No config file found")
 	}
 
-	configFile := viper.ConfigFileUsed()
-	fmt.Printf("Used config file: %s\n", configFile)
-
-	// Packages = viper.Get("packages").(PackageSlice)
-
-	fmt.Println(Source, "->", Target)
 	if Debug {
-		fmt.Printf("%s\n", viper.AllSettings())
+		fmt.Println(Source, "->", Target)
+		fmt.Printf("Viper settings:\n%s\n", viper.AllSettings())
 	}
-	fmt.Printf("%s: %+v\n", "Packages", viper.Get("packages"))
-	fmt.Println(viper.Get("dir"), viper.Get("dirs"))
-	fmt.Println(viper.Get("link"), viper.Get("links"))
-	fmt.Println(viper.Get("line"), viper.Get("lines"))
+
+	if err := cmd.RootCmd.Execute(); err != nil {
+		panic(err)
+	}
+}
+
+func ReadConfigFile(v *viper.Viper, name string, paths ...string) error {
+	v.SetConfigName(name)
+	for _, path := range paths {
+		v.AddConfigPath(path)
+	}
+	err := v.ReadInConfig()
+	if err != nil {
+		return fmt.Errorf("Fatal error reading configuration: %s\n", err)
+	}
+	return nil
 }
