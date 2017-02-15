@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/LEI/dot/cmd"
+	"github.com/LEI/dot/role"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -15,13 +16,16 @@ const (
 )
 
 var (
+	// viper = viper.New()
+	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+	// Skip = fmt.Errorf("Skip this path")
 	HomeDir, CurrentDir string
 	Source, Target      string
 	Debug, ForceYes     bool
 	ConfigFile          = ""
 	ConfigName          = ".dotrc"
 	IgnoreFiles         = []string{".git", ".*\\.md"}
-	Packages            = make(PackageSlice, 0)
+	Packages            role.PackageSlice //= make(role.PackageSlice, 0)
 )
 
 var (
@@ -33,9 +37,6 @@ var (
 	logSuccess    = log.New(os.Stdout, SuccessSymbol+" ", 0)
 	logWarn       = log.New(os.Stderr, WarnSymbol+" ", log.Lshortfile)
 	logError      = log.New(os.Stderr, ErrorSymbol+" ", log.Llongfile)
-	// Skip = fmt.Errorf("Skip this path")
-	// viper = viper.New()
-	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 )
 
 func init() {

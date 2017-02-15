@@ -13,8 +13,8 @@ var RootCmd = &cobra.Command{
 	// PersistentPreRun: func(cmd *cobra.Command, args[]string) {
 	// },
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Error: no command specified", args)
-		err := cmd.RootCmd.Help()
+		fmt.Println("Warning: no command specified", args)
+		err := cmd.Help()
 		if err != nil {
 			er(err)
 		}

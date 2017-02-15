@@ -50,8 +50,10 @@ func NewRepository(spec string /*, path string, remotes ...*Remote*/) (*Reposito
 		}
 		repo.Name = parts[0]
 		remoteUrl = parts[1]
+	} else if strings.Contains(spec, "/") {
+		remoteUrl = spec
 	} else {
-		return repo, fmt.Errorf("%s: Unknown repository spec")
+		return repo, fmt.Errorf("%s: Unknown repository spec\n", spec)
 	}
 	if remoteUrl != "" {
 		repo.AddRemote(DefaultRemote, remoteUrl)

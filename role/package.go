@@ -1,4 +1,4 @@
-package main
+package role
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 )
 
 type Package struct {
-	Name   string
-	Origin string
-	Path   string
-	// Os OsType
+	Name string
+	Path string
 	Repo *git.Repository
+	// Origin string
+	// Os OsType
 }
 
 type PackageSlice []Package
@@ -31,8 +31,9 @@ func (list *PackageSlice) Set(value string) error {
 	if err != nil {
 		return err
 	}
-	p.Repo = repo
 	p.Name = repo.Name
+	p.Path = repo.Path
+	p.Repo = repo
 	*list = append(*list, *p)
 	// (*pkgMap)[p.Name] = *p
 	return nil
