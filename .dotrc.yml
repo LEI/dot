@@ -1,17 +1,17 @@
 packages:
 
-  bash:
+  - name: bash
     origin: LEI/dot-bash
 
-  git:
+  - name: git
     origin: LEI/dot-git
 
-  termux:
+  - name: termux
     os: ["android"]
     origin: LEI/dot-termux
 
-  tmux:
+  - name: tmux
     origin: LEI/dot-tmux
 
-  vim:
+  - name: vim
     origin: LEI/dot-vim

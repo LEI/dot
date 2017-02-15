@@ -1,107 +1,96 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"log"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"os"
 	"runtime"
-	"strings"
-	"github.com/spf13/viper"
-	"github.com/spf13/pflag"
 )
 
 const (
-	OS = runtime.GOOS
+	OS      = runtime.GOOS
 	version = "master"
 )
 
 var (
-	HomeDir     = os.Getenv("HOME")
-	CurrentDir  = os.Getenv("PWD")
-	Sync, Remove bool
-	Source, Target string
-	Verbose     = 0
-	Debug       = false
-	ForceYes    = false
-	ConfigName  = ".dotrc"
-	Packages    PackageMap //= make(PackageSlice, 0)
-	IgnoreFiles = []string{".git", ".*\\.md"}
+	HomeDir         = os.Getenv("HOME")
+	CurrentDir      = os.Getenv("PWD")
+	Sync            = true
+	Remove          = false
+	Source, Target  string
+	Debug, ForceYes bool
+	ConfigFile      = ""
+	ConfigName      = ".dotrc"
+	IgnoreFiles     = []string{".git", ".*\\.md"}
+	Packages        = make(PackageSlice, 0)
 )
 
-type Package struct {
-	Name string
-	Origin string
-	Path string
-}
+var (
+	InfoSymbol    = "›"
+	SuccessSymbol = "✓" // ✓ ✔
+	ErrorSymbol   = "✘" // × ✕ ✖ ✗ ✘
+	WarnSymbol    = "!" // ⚠ !
+	logInfo       = log.New(os.Stdout, InfoSymbol+" ", 0)
+	logSuccess    = log.New(os.Stdout, SuccessSymbol+" ", 0)
+	logWarn       = log.New(os.Stderr, WarnSymbol+" ", log.Lshortfile)
+	logError      = log.New(os.Stderr, ErrorSymbol+" ", log.Llongfile)
+	// Skip = fmt.Errorf("Skip this path")
+)
 
-type PackageMap map[string]Package
-
-func (pkg *PackageMap) String() string {
-	return fmt.Sprintf("%+v", *pkg)
-}
-
-func (pkg *PackageMap) Type() string {
-	return fmt.Sprintf("%T", *pkg)
-}
-
-func (pkg *PackageMap) Set(origin string) error {
-	p := &Package{}
-	if strings.Contains(origin, "=") {
-		s := strings.Split(origin, "=")
-		p.Name = s[0]
-		p.Origin = s[1]
-	} else {
-		p.Name = origin
-		p.Origin = origin
-	}
-	// *pkg = append(*pkg, *p)
-	(*pkg)[p.Name] = *p
-	return nil
-}
+var flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 
 func init() {
-	pflag.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
-	pflag.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+	flag.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
+	flag.BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
 
-	pflag.StringVarP(&Source, "source", "s", Source, "Source `directory`")
-	pflag.StringVarP(&Target, "target", "t", Target, "Destination `directory`")
-	// flag.StringVarP(&ConfigFile, "config", "c", "", "Configuration `file`")
+	flag.StringVarP(&Source, "source", "s", CurrentDir, "Source `directory`")
+	flag.StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
 
-	pflag.IntVarP(&Verbose, "verbose", "v", Verbose, "Print more")
-	pflag.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
-	pflag.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
+	flag.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
+	flag.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
 
-	// flag.VarP(&Packages, "add", "a", "List of packages: `[path=]user/repo`")
-	pflag.VarP(&Packages, "packages", "p", "List of packages: `[path=]user/repo`")
+	flag.StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
+
+	flag.VarP(&Packages, "package", "p", "List of packages: `[path=]user/repo`")
+
+	flag.Parse(os.Args[1:])
 }
 
 func main() {
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	flag.Parse()
+	// 	viper.SetDefault("Source", CurrentDir)
+	// 	viper.SetDefault("Target", HomeDir)
+
+	viper.RegisterAlias("src", "source")
+	viper.RegisterAlias("dst", "target")
+
+	viper.BindPFlags(flag)
 
 	viper.SetConfigName(ConfigName)
-	viper.AddConfigPath("/etc")
-	viper.AddConfigPath(".") // CurrentDir
-	// viper.AddConfigPath(Target)
+	viper.AddConfigPath(HomeDir)
+	viper.AddConfigPath(Source)
+	if CurrentDir != Source {
+		viper.AddConfigPath(".")
+	}
 
+	viper.SetConfigFile(ConfigFile)
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error reading configuration: %s\n", err))
 	}
 
-	// viper.SetDefault("Source", CurrentDir)
-	// viper.SetDefault("Target", HomeDir)
+	configFile := viper.ConfigFileUsed()
+	fmt.Printf("Used config file: %s\n", configFile)
+
+	// Packages = viper.Get("packages").(PackageSlice)
 
 	fmt.Println(Source, "->", Target)
-	fmt.Println(Verbose, Debug, ForceYes)
-	fmt.Printf("%s: %+v\n", "Packages", Packages)
-}
-
-func exists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
+	if Debug {
+		fmt.Printf("%s", viper.AllSettings())
 	}
-	return true
+	fmt.Printf("%s: %+v\n", "Packages", viper.Get("packages"))
+	fmt.Println(viper.Get("dir"), viper.Get("dirs"))
+	fmt.Println(viper.Get("link"), viper.Get("links"))
+	fmt.Println(viper.Get("line"), viper.Get("lines"))
 }

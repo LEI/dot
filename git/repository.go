@@ -7,57 +7,33 @@ import (
 	"strings"
 )
 
-type Repo struct {
+type Repository struct {
 	Name    string
 	Branch  string
 	Path    string
 	Remotes map[string]*Remote
 }
 
-type Remote struct {
-	Name string
-	URL  string
-}
-
-func New(name string, path string) *Repo {
-	return &Repo{
+func NewRepository(name string, path string, remotes ...*Remote) *Repository {
+	return &Repository{
 		Name: name,
 		Branch: "master",
 		Path: path,
-		Remotes: make(map[string]*Remote, 0),
+		// Remotes: make(map[string]*Remote, 0),
+		Remotes: remotes
 	}
 }
 
-func NewRemote(name string, url string) *Remote {
-	return &Remote{
-		Name: name,
-		URL: UrlScheme(url),
-	}
-}
-
-func UrlScheme(str string) string {
-	url := "https://github.com/" + str + ".git"
-	switch {
-	case strings.HasPrefix(str, "git@github.com"),
-		strings.HasPrefix(str, "git://"),
-		strings.HasPrefix(str, "http://"),
-		strings.HasPrefix(str, "https://"),
-		strings.HasPrefix(str, "ssh://"):
-		url = str
-	}
-	return url
-}
-
-func (repo *Repo) String() string {
+func (repo *Repository) String() string {
 	return fmt.Sprintf("%s@%s", repo.Name, repo.Branch)
 }
 
-func (repo *Repo) AddRemote(name string, url string) *Repo {
+func (repo *Repository) AddRemote(name string, url string) *Repository {
 	repo.Remotes[name] = NewRemote(name, url)
 	return repo
 }
 
-func (repo *Repo) CloneOrPull() error {
+func (repo *Repository) CloneOrPull() error {
 	if repo != nil {
 		if repo.IsCloned() {
 			err := repo.Pull()
@@ -74,15 +50,18 @@ func (repo *Repo) CloneOrPull() error {
 	return nil
 }
 
-func (repo *Repo) IsCloned() bool {
+func (repo *Repository) IsCloned() bool {
 	_, err := os.Stat(repo.Path)
-	if err != nil { // && os.IsNotExist(err)
+	if err != nil {
+		if os.IsExist(err) {
+			panic(err)
+		}
 		return false
 	}
 	return true
 }
 
-func (repo *Repo) Clone() error {
+func (repo *Repository) Clone() error {
 	for _, remote := range repo.Remotes {
 		cmd := exec.Command("git", "clone", remote.URL, repo.Path)
 		out, err := cmd.CombinedOutput()
@@ -96,7 +75,7 @@ func (repo *Repo) Clone() error {
 	return nil
 }
 
-func (repo *Repo) Pull(args ...string) error {
+func (repo *Repository) Pull(args ...string) error {
 	for _, remote := range repo.Remotes {
 		pull := []string{"-C", repo.Path, "pull"}
 		if len(args) == 0 {
