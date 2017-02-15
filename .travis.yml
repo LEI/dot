@@ -1,19 +1,23 @@
 sudo: required
 
+language: go
+
+os:
+  - linux
+  # - osx
+
 # services:
 #   - docker
-
-language: golang
 
 install:
   - pwd
   - ls -lah
+  - echo $PATH
+  - echo $GOPATH
   # - golint
   - go vet
   - go get github.com/LEI/dot
   - go install
-  - echo $PATH
-  - echo $GOPATH
   # - docker-compose build
 
 script:
@@ -21,9 +25,9 @@ script:
   # - docker-compose run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
-  - dot -h
   - cd
   - ls -lah
+  - dot -h
 
 notifications:
   email: false
