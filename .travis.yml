@@ -10,24 +10,19 @@ os:
 #   - docker
 
 install:
-  - pwd
-  - ls -lah
-  - echo $PATH
-  - echo $GOPATH
+  # - docker-compose build
   # - golint
   - go vet
   - go get github.com/LEI/dot
   - go install
-  # - docker-compose build
 
 script:
   # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
   # - docker-compose run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
-  - cd
-  - ls -lah
   - dot -h
+  - dot sync -s $DOT
 
 notifications:
   email: false

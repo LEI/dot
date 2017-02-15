@@ -1,7 +1,6 @@
 package main
 
-import (
-)
+import ()
 
 // https://github.com/docker/distribution
 

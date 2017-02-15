@@ -8,9 +8,9 @@ import (
 )
 
 type Package struct {
-	Name string
+	Name   string
 	Origin string
-	Path string
+	Path   string
 	// Os OsType
 	Repo *git.Repository
 }

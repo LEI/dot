@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	User = "git"
-	Host = "github.com"
+	User  = "git"
+	Host  = "github.com"
 	Https = true
 )
 
@@ -22,24 +22,23 @@ func NewRemote(name string, url string) *Remote {
 	return r
 }
 
-func (r *Remote) SetUrl(value string) *Remote {
-	var url string
+func (r *Remote) SetUrl(url string) *Remote {
 	switch {
-	case strings.HasPrefix(value, "git@"),
-		strings.HasPrefix(value, "git://"),
-		// strings.HasPrefix(value, "http://"),
-		strings.HasPrefix(value, "https://"),
-		strings.HasPrefix(value, "ssh://"):
-		url = value
+	case strings.HasPrefix(url, "git@"),
+		strings.HasPrefix(url, "git://"),
+		// strings.HasPrefix(url, "http://"),
+		strings.HasPrefix(url, "https://"),
+		strings.HasPrefix(url, "ssh://"):
+		r.URL = url
 	default:
 		if Https {
-			url = fmt.Sprintf("https://%s/%s", Host, value)
+			r.URL = fmt.Sprintf("https://%s/%s", Host, url)
 		} else {
-			url = fmt.Sprintf("%s@%s:%s", User, Host, value)
+			r.URL = fmt.Sprintf("%s@%s:%s", User, Host, url)
 		}
 	}
 	if !strings.HasSuffix(url, ".git") {
-		url += ".git"
+		r.URL += ".git"
 	}
 	return r
 }

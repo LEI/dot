@@ -2,48 +2,69 @@ package git
 
 import (
 	"fmt"
+	"github.com/LEI/dot/fileutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
-	"github.com/LEI/dot/fileutil"
+)
+
+var (
+	DefaultBranch = "master"
+	DefaultRemote = "origin"
+	DefaultClonePath = filepath.Join(os.Getenv("HOME"), ".dot")
+	// TODO init() viper.Get("target")
 )
 
 type Repository struct {
-	Name    string
-	Branch  string
-	Path    string
+	Name   string
+	Branch string
+	Path   string // Git work tree
+	GitDir string
 	Remotes map[string]*Remote
 }
 
-func NewRepository(spec string/*, path string, remotes ...*Remote*/) (*Repository, error) {
-	repo := &Repository{Name: spec, Branch: "master"}
-	remote := ""
+func NewRepository(spec string /*, path string, remotes ...*Remote*/) (*Repository, error) {
+	repo := &Repository{
+		Name:    spec,
+		Branch:  DefaultBranch,
+		Remotes: make(map[string]*Remote, 0),
+	}
+	remoteUrl := ""
 	if strings.HasPrefix(spec, string(os.PathSeparator)) { // filepath.IsAbs(spec)
-		if !fileutil.Exists(spec) {
-			repo.Path = spec
-			// TODO find out branch
-			return repo, nil
-		} else {
+		exists, err := fileutil.Exists(spec)
+		if err != nil {
+			return repo, err
+		}
+		if !exists {
 			return repo, fmt.Errorf("%s: No such repository\n", spec)
 		}
-	}
-	if strings.Contains(spec, "=") {
+		// TODO find out branch
+		repo.Path = spec
+		repo.Name = filepath.Dir(repo.Path)
+		// return repo, nil
+	} else if strings.Contains(spec, "=") {
 		parts := strings.Split(spec, "=")
 		if len(parts) != 2 {
 			return repo, fmt.Errorf("%s: Invalid repository spec\n", spec)
 		}
 		repo.Name = parts[0]
-		remote = parts[1]
+		remoteUrl = parts[1]
+	} else {
+		return repo, fmt.Errorf("%s: Unknown repository spec")
 	}
-	if remote != "" {
-		repo.AddRemote("origin", remote)
+	if remoteUrl != "" {
+		repo.AddRemote(DefaultRemote, remoteUrl)
 	}
-
+	if repo.Path == "" {
+		repo.Path = filepath.Join(DefaultClonePath, repo.Name)
+	}
+	repo.GitDir = filepath.Join(repo.Path, ".git")
 	return repo, nil
 }
 
 func (repo *Repository) String() string {
-	return fmt.Sprintf("%s@%s", repo.Name, repo.Branch)
+	return fmt.Sprintf("%s@%s [%s] %+v", repo.Name, repo.Branch, repo.Path, repo.Remotes)
 }
 
 func (repo *Repository) AddRemote(name string, url string) *Repository {
@@ -69,23 +90,21 @@ func (repo *Repository) CloneOrPull() error {
 }
 
 func (repo *Repository) IsCloned() bool {
-	_, err := os.Stat(repo.Path)
+	exists, err := fileutil.Exists(repo.GitDir) // repo.Path
 	if err != nil {
-		if os.IsExist(err) {
-			panic(err)
-		}
-		return false
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-	return true
+	return exists
 }
 
 func (repo *Repository) Clone() error {
 	for _, remote := range repo.Remotes {
+		fmt.Println("git", "clone", remote.URL, repo.Path)
 		cmd := exec.Command("git", "clone", remote.URL, repo.Path)
-		out, err := cmd.CombinedOutput()
-		if len(out) > 0 {
-			fmt.Printf("%s: %s", repo.Name, out)
-		}
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
 		if err != nil {
 			return err
 		}
@@ -100,13 +119,13 @@ func (repo *Repository) Pull(args ...string) error {
 			args = []string{remote.Name, repo.Branch}
 		}
 		pull = append(pull, args...)
+		fmt.Printf("git %s\n", strings.Join(pull, " "))
 		cmd := exec.Command("git", pull...)
 		// "--git-dir", dir+"/.git",
 		// "--work-tree", dir,
-		out, err := cmd.CombinedOutput()
-		if len(out) > 0 {
-			fmt.Printf("%s: %s", repo.Name, out)
-		}
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
 		if err != nil {
 			return err
 		}
