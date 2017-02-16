@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/LEI/dot/cmd"
-	"github.com/LEI/dot/role"
+	// "github.com/LEI/dot/role"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -25,7 +25,7 @@ var (
 	ConfigFile          = ""
 	ConfigName          = ".dotrc"
 	IgnoreFiles         = []string{".git", ".*\\.md"}
-	Packages            role.PackageSlice //= make(role.PackageSlice, 0)
+	// Packages            role.PackageSlice //= make(role.PackageSlice, 0)
 )
 
 var (
@@ -39,15 +39,18 @@ var (
 	logError      = log.New(os.Stderr, ErrorSymbol+" ", log.Llongfile)
 )
 
+// type Configuration struct {
+// 	Packages *role.PackageSlice
+// }
+
 func init() {
 	HomeDir = os.Getenv("HOME")   // user.Current().HomeDir
 	CurrentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		panic(err)
 	}
 
-	// flags := cmd.RootCmd.Flags()
+	// flags := RootCmd.Flags()
 	flags := cmd.RootCmd.PersistentFlags()
 
 	// flags.BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
@@ -59,10 +62,7 @@ func init() {
 	flags.BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
 	flags.BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
 	flags.StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
-	flags.VarP(&Packages, "package", "p", "List of packages `[name=]user/repo`")
-
-	// Parse command line arguments
-	flags.Parse(os.Args[1:])
+	// flags.VarP(&Packages, "package", "p", "List of packages `[name=]user/repo`")
 
 	// 	viper.SetDefault("Source", CurrentDir)
 	// 	viper.SetDefault("Target", HomeDir)
@@ -70,8 +70,8 @@ func init() {
 	// viper.RegisterAlias("src", "source")
 	// viper.RegisterAlias("dst", "target")
 
-	// Bind registered flags
 	viper.BindPFlags(flags)
+	flags.Parse(os.Args[1:])
 }
 
 func main() {
@@ -83,7 +83,7 @@ func main() {
 	// if CurrentDir != Source {
 	// 	configPaths = append(configPaths, ".")
 	// }
-	err := ReadConfigFile(viper.GetViper(), ConfigName, configPaths...)
+	err := readConfigFile(viper.GetViper(), ConfigName, configPaths...)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -103,7 +103,7 @@ func main() {
 	}
 }
 
-func ReadConfigFile(v *viper.Viper, name string, paths ...string) error {
+func readConfigFile(v *viper.Viper, name string, paths ...string) error {
 	v.SetConfigName(name)
 	for _, path := range paths {
 		v.AddConfigPath(path)

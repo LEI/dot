@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/spf13/cobra"
 	// "os"
 )
@@ -13,7 +13,6 @@ var RootCmd = &cobra.Command{
 	// PersistentPreRun: func(cmd *cobra.Command, args[]string) {
 	// },
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Warning: no command specified", args)
 		err := cmd.Help()
 		if err != nil {
 			er(err)

@@ -6,10 +6,10 @@ import (
 )
 
 func init() {
-	RootCmd.AddCommand(removeCmd)
+	RootCmd.AddCommand(RemoveCmd)
 }
 
-var removeCmd = &cobra.Command{
+var RemoveCmd = &cobra.Command{
 	// Hidden: true,
 	Use: "remove",
 	Short: "",
