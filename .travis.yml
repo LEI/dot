@@ -23,6 +23,8 @@ script:
   # - echo $PATH | tr -s ':' '\n'
   - dot -h
   - dot sync -s $DOT
+  - cd
+  - ls -la .dot || ls -la
 
 notifications:
   email: false

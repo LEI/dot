@@ -29,9 +29,6 @@ func NewRepository(spec string /*, path string, remotes ...*Remote*/) (*Reposito
 	if err != nil {
 		return nil, err
 	}
-	if path == "" {
-		path = filepath.Join(DefaultClonePath, name)
-	}
 	repo := &Repository{
 		Name:    name,
 		Branch:  DefaultBranch,
@@ -107,8 +104,8 @@ func (repo *Repository) IsCloned() bool {
 
 func (repo *Repository) Clone() error {
 	for _, remote := range repo.Remotes {
-		fmt.Println("git", "clone", remote.URL, repo.Path)
-		cmd := exec.Command("git", "clone", remote.URL, repo.Path)
+		// fmt.Println("git", "clone", remote.URL, repo.Path)
+		cmd := exec.Command("git", "clone", "--quiet", remote.URL, repo.Path)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -123,10 +120,10 @@ func (repo *Repository) Pull(args ...string) error {
 	for _, remote := range repo.Remotes {
 		pull := []string{"-C", repo.Path, "pull"}
 		if len(args) == 0 {
-			args = []string{remote.Name, repo.Branch}
+			args = []string{remote.Name} // , repo.Branch}
 		}
 		pull = append(pull, args...)
-		fmt.Printf("git %s\n", strings.Join(pull, " "))
+		// fmt.Printf("git %s\n", strings.Join(pull, " "))
 		cmd := exec.Command("git", pull...)
 		// "--git-dir", dir+"/.git",
 		// "--work-tree", dir,
@@ -169,6 +166,9 @@ func ParseSpec(str string) (string, string, string, error) {
 		}
 	} else {
 		err = fmt.Errorf("Unkown spec: '%s'", str)
+	}
+	if path == "" {
+		path = filepath.Join(DefaultClonePath, name)
 	}
 	return name, path, url, err
 }

@@ -5,6 +5,8 @@ import (
 	// "path/filepath"
 	// "strings"
 	"github.com/LEI/dot/git"
+	"github.com/spf13/viper"
+	"strings"
 )
 
 type Package struct {
@@ -12,22 +14,59 @@ type Package struct {
 	Path   string
 	Origin string
 	Repo   *git.Repository
-	// Os OsType
+	Config *viper.Viper
+	Os     []string
+
+	Dir string
+	Dirs []string
+
+	Link interface{}
+	Links []interface{}
+
+	Lines map[string]string
 }
 
-// func (*pkg Package) Set(value string)
-
-func NewPackage(s string) (*Package, error) {
-	repo, err := git.NewRepository(s)
+func NewPackage(spec string) (*Package, error) {
+	pkg := &Package{
+		Origin: spec,
+	}
+	err := pkg.InitRepo()
 	if err != nil {
 		return nil, err
 	}
-	p := &Package{
-		Name: repo.Name,
-		Path: repo.Path,
-		Repo: repo,
+	// repo, err := git.NewRepository(spec)
+	// p := &Package{
+	// 	Name: repo.Name,
+	// 	Path: repo.Path,
+	// 	Repo: repo,
+	// }
+	return pkg, nil
+}
+
+func (pkg *Package) String() string {
+	return fmt.Sprintf("%+v", *pkg)
+}
+
+// func (pkg *Package) Set(value string?) error {
+// }
+
+func (pkg *Package) InitRepo() error {
+	if pkg.Origin != "" && pkg.Repo == nil {
+		spec := pkg.Origin
+		if pkg.Name != "" && !strings.Contains(pkg.Origin, "=") {
+			spec = pkg.Name + "=" + pkg.Origin
+		}
+		repo, err := git.NewRepository(spec)
+		if err != nil {
+			return err
+		}
+		pkg.Repo = repo
+		pkg.Path = repo.Path
+		// if pkg.Name == "" {
+		// 	pkg.Name = repo.Name
+		// }
 	}
-	return p, nil
+	return nil
 }
 
 type PackageSlice []Package
@@ -46,6 +85,7 @@ func (slice *PackageSlice) Set(value string) error {
 		return err
 	}
 	*slice = append(*slice, *pkg)
-	// (*pkgMap)[p.Name] = *pkg
 	return nil
 }
+// type PackageMap map[string]Package
+// (*pkgMap)[p.Name] = *pkg

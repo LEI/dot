@@ -6,14 +6,14 @@ import (
 )
 
 func init() {
-	RootCmd.AddCommand(RemoveCmd)
+	RootCmd.AddCommand(removeCmd)
 }
 
-var RemoveCmd = &cobra.Command{
+var removeCmd = &cobra.Command{
 	// Hidden: true,
-	Use: "remove",
+	Use:   "remove",
 	Short: "",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("cmd: %+v\n", cmd)
 		fmt.Printf("args: %+v\n", args)

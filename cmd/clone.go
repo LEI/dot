@@ -9,30 +9,30 @@ import (
 
 var (
 	Worktree string
-	Pull bool
+	Pull     bool
 )
 
 func init() {
-	RootCmd.AddCommand(CloneCmd)
+	RootCmd.AddCommand(cloneCmd)
 
-	flags := CloneCmd.Flags()
+	flags := cloneCmd.Flags()
 
 	flags.StringVarP(&Worktree, "work-tree", "w", "", "Overwrite clone destination")
 	flags.BoolVarP(&Pull, "pull", "p", false, "Pull from branch master")
 }
 
-var CloneCmd = &cobra.Command{
+var cloneCmd = &cobra.Command{
 	// Hidden: true,
-	Use: "clone [repo]",
+	Use:   "clone [repo]",
 	Short: "",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			er("clone requires at least 1 argument")
+			fatal("clone requires at least 1 argument")
 		}
 		err := clone(args[0], Pull)
 		if err != nil {
-			er(err)
+			fatal(err)
 		}
 	},
 }
