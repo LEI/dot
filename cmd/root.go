@@ -92,9 +92,17 @@ var RootCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		err := cmd.Help()
-		if err != nil {
-			fatal(err)
+		if len(args) == 0 {
+			os.Args = append(os.Args, "sync")
+			if err := syncCmd.Execute(); err != nil {
+				fatal(err)
+			}
+		} else {
+			fmt.Println("Extra arguments: %s", args)
+			err := cmd.Help()
+			if err != nil {
+				fatal(err)
+			}
 		}
 	},
 }
@@ -162,7 +170,7 @@ func readConfig(v *viper.Viper, name string, paths ...string) error {
 	return err
 }
 
-func initPackage(pkg *role.Package) error {
+func InitPackage(pkg *role.Package) error {
 	err := pkg.InitRepo()
 	if err != nil {
 		return err

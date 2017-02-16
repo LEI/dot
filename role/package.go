@@ -4,8 +4,10 @@ import (
 	"fmt"
 	// "path/filepath"
 	// "strings"
+	"github.com/LEI/dot/cmd"
 	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
+	"os"
 	"strings"
 )
 
@@ -65,6 +67,39 @@ func (pkg *Package) InitRepo() error {
 		// if pkg.Name == "" {
 		// 	pkg.Name = repo.Name
 		// }
+	}
+	return nil
+}
+
+func (pkg *Package) Check(currentOs string) bool {
+	for _, osType := range pkg.Os {
+		switch osType {
+		case currentOs:
+			return true
+		default:
+			// if Debug {
+			// 	fmt.Fprintf(os.Stderr,
+			// 		"[%s] %s: unsupported platform, only for %+v\n",
+			// 		pkg.Name, OS, pkg.Os)
+			// }
+			return false
+		}
+	}
+	return true
+}
+
+func (pkg *Package) Sync(source string, target string) error {
+	fmt.Println(source, "->", target)
+	err := cmd.InitPackage(pkg)
+	if err != nil {
+		return err
+	}
+	if pkg.Config != nil {
+		fmt.Println("-> DIRS", pkg.Config.GetStringSlice("dirs"))
+		fmt.Println("-> LINKS", pkg.Config.Get("links"))
+		fmt.Println("-> LINES", pkg.Config.GetStringMapString("lines"))
+	} else {
+		fmt.Println("-> NIL")
 	}
 	return nil
 }
