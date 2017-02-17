@@ -10,10 +10,10 @@ os:
 #   - docker
 
 # before_install:
+#   - sudo apt-get -qq update
+#   - sudo apt-get install -y vim tmux
 
 install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y vim tmux
   # - golint
   - go vet
   - go get github.com/LEI/dot
@@ -26,6 +26,7 @@ script:
   - yes | dot -S --https
   - tmux new-session -n test "vim +PlugInstall +qall; exit"
   - test -d $HOME/.tmux/plugins/tpm
+  - tree ~/.vim || ls -la ~/.vim
   - test -d $HOME/.vim/plugged
 
 notifications:
