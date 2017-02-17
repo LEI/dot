@@ -10,10 +10,10 @@ os:
 #   - docker
 
 # before_install:
-#   - sudo apt-get -qq update
-#   - sudo apt-get install -y vim tmux
 
 install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y vim tmux
   # - golint
   - go vet
   - go get github.com/LEI/dot
@@ -23,10 +23,10 @@ install:
 script:
   # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
   # - docker-compose run test
-  - yes | dot -S
-  # - tmux new-session -n test "vim +PlugInstall +qall; exit"
-  # - test -d $HOME/.tmux/plugins/tpm
-  # - test -d $HOME/.vim/plugged
+  - yes | dot -S --https
+  - tmux new-session -n test "vim +PlugInstall +qall; exit"
+  - test -d $HOME/.tmux/plugins/tpm
+  - test -d $HOME/.vim/plugged
 
 notifications:
   email: false
