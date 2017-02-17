@@ -30,7 +30,7 @@ var syncCmd = &cobra.Command{
 
 func syncPackages(source string, target string, packages []*role.Package) error {
 	for _, pkg := range packages {
-		ok := pkg.Check(OS)
+		ok := pkg.CheckOS()
 		if !ok {
 			continue
 		}

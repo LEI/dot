@@ -8,8 +8,18 @@ import (
 	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
 	"os"
+	"runtime"
 	"strings"
 )
+
+const OS = runtime.GOOS
+
+func init() {
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		fmt.Printf("Could not set env OS=%s: %s", OS, err)
+	}
+}
 
 var Ignore = []string{".git", ".*\\.md"}
 
@@ -28,7 +38,7 @@ type Package struct {
 	Lines map[string]string // *Lines
 }
 
-type SLink struct {
+type Link struct {
 	Type string
 	Path string
 }
@@ -57,10 +67,10 @@ func (pkg *Package) String() string {
 // func (pkg *Package) Set(value string?) error {
 // }
 
-func (pkg *Package) Check(currentOs string) bool {
+func (pkg *Package) CheckOS() bool {
 	for _, osType := range pkg.Os {
 		switch osType {
-		case currentOs:
+		case OS:
 			return true
 		default:
 			// fmt.Fprintf(os.Stderr,
@@ -143,6 +153,7 @@ func (pkg *Package) GetDirs() []string {
 
 func (pkg *Package) SyncDirs(target string) error {
 	for _, dir := range pkg.GetDirs() {
+		dir = os.ExpandEnv(dir)
 		dir = filepath.Join(target, dir)
 		err := fileutil.MakeDir(dir)
 		if err != nil {
@@ -176,54 +187,69 @@ func (pkg *Package) GetLinks() []interface{} {
 }
 
 func (pkg *Package) SyncLinks(source string, target string) error {
-	for _, l := range pkg.GetLinks() {
-		var link *SLink
-		switch v := l.(type) {
+	for _, link := range pkg.GetLinks() {
+		var src *Link
+		switch v := link.(type) {
 		case string:
-			link = &SLink{Type: "", Path: v}
+			src = &Link{Type: "", Path: v}
 		case map[string]interface{}:
-			link = &SLink{Type: v["type"].(string), Path: v["path"].(string)}
+			src = &Link{Type: v["type"].(string), Path: v["path"].(string)}
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown type %T for %+v, skipping link\n", v, v)
 			continue
 		}
-		path := filepath.Join(pkg.Path, link.Path)
-		paths, err := filepath.Glob(path)
-		// fmt.Printf("Find: %s -> %+v\n", link.Path, paths)
+		src.Path = os.ExpandEnv(src.Path)
+		err := pkg.SyncLink(src, target)
 		if err != nil {
 			return err
 		}
-		GLOB:
-		for _, src := range paths {
-			for _, pattern := range Ignore {
-				matched, err := filepath.Match(pattern, filepath.Base(src))
-				if err != nil || matched {
-					fmt.Printf("Ignoring path: %s\n", src)
-					continue GLOB
-				}
-			}
-			fi, err := os.Stat(src)
-			if err != nil {
-				return nil
-			}
-			switch link.Type {
-			case "directory":
-				if !fi.IsDir() {
-					continue
-				}
-			case "file":
-				if fi.IsDir() {
-					continue
-				}
-			}
-			dst := strings.Replace(src, pkg.Path, target, 1)
-			err = fileutil.Link(src, dst)
+	}
+	return nil
+}
+
+func (pkg *Package) SyncLink(link *Link, target string) error {
+	path := filepath.Join(pkg.Path, link.Path)
+	paths, err := filepath.Glob(path)
+	// fmt.Printf("Find: %s -> %+v\n", link.Path, paths)
+	if err != nil {
+		return err
+	}
+	if len(paths) == 0 {
+		fmt.Fprintf(os.Stderr, "%s: No such file or directory\n", path)
+	}
+	GLOB:
+	for _, src := range paths {
+		for _, pattern := range Ignore {
+			matched, err := filepath.Match(pattern, filepath.Base(src))
 			if err != nil {
 				return err
 			}
-			// filepath.Rel(pkg.Path, dst)
-			fmt.Printf("Link: %s into %s\n", src, dst)
+			if matched {
+				fmt.Printf("Ignoring path: %s\n", src)
+				continue GLOB
+			}
 		}
+		fi, err := os.Stat(src)
+		if err != nil {
+			return nil
+		}
+		switch link.Type {
+		case "directory":
+			if !fi.IsDir() {
+				continue
+			}
+		case "file":
+			if fi.IsDir() {
+				continue
+			}
+		}
+		dst := strings.Replace(src, pkg.Path, target, 1)
+		err = fileutil.Link(src, dst)
+		if err != nil {
+			return err
+		}
+		// filepath.Rel(pkg.Path, dst)
+		fmt.Printf("Link: %s into %s\n", src, dst)
 	}
 	return nil
 }
@@ -239,6 +265,7 @@ func (pkg *Package) GetLines() map[string]string {
 
 func (pkg *Package) SyncLines(target string) error {
 	for file, line := range pkg.GetLines() {
+		file = os.ExpandEnv(file)
 		file = filepath.Join(target, file)
 		err := fileutil.LineInFile(file, line)
 		if err != nil {

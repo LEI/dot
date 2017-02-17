@@ -23,9 +23,9 @@ services:
     command: |
       -l -c '
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
-      run dot -S -s $$DOT
-      # run dot -S -c $$DOT/.dotrc.yml
-      # for d in $$HOME/.dot/*; do run dot "$${d##*/}"; done
+      yes | run dot -S -s $$DOT
+      # yes | run dot -S -c $$DOT/.dotrc.yml
+      # for d in $$HOME/.dot/*; do yes | run dot "$${d##*/}"; done
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
       run tmux new-session -n test "vim +PlugInstall +qall; exit"
       run test -d "$$HOME/.tmux/plugins/tpm"

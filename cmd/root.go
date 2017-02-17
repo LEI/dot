@@ -9,12 +9,12 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"runtime"
+	// "runtime"
 	"strings"
 )
 
 const (
-	OS      = runtime.GOOS
+	// OS = runtime.GOOS
 	version = "master"
 )
 
