@@ -36,7 +36,7 @@ func RemoveDir(path string) error {
 
 func Link(source string, target string) error {
 	fi, err := os.Lstat(target)
-	if err != nil {
+	if err != nil && os.IsExist(err) {
 		return err
 	}
 	if fi != nil && (fi.Mode() & os.ModeSymlink != 0) {
@@ -48,7 +48,8 @@ func Link(source string, target string) error {
 			fmt.Printf("%s already linked to %s", target, source)
 			return nil
 		}
-		msg := target + " is an existing symlink to " + link + ", replace it with " + source + "?"
+		// TODO check broken symlink?
+		msg := fmt.Sprintf("%s exists, linked to %s, replace with %s?", target, link, source)
 		if ok := confirm(msg); ok {
 			err := os.Remove(target)
 			if err != nil {
@@ -56,7 +57,8 @@ func Link(source string, target string) error {
 			}
 		}
 	} else if fi != nil {
-		msg := target + " is an existing file, move it to " + target + ".backup and replace it with " + source + "?"
+		backup := target+".backup"
+		msg := fmt.Sprintf("%s exists, move to %s and replace with %s?", target, backup, source)
 		if ok := confirm(msg); ok {
 			err := os.Rename(target, target+".backup")
 			if err != nil {
@@ -64,10 +66,10 @@ func Link(source string, target string) error {
 			}
 		}
 	}
-	// err = os.Symlink(source, target)
-	// if err != nil {
-	// 	return err
-	// }
+	err = os.Symlink(source, target)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
