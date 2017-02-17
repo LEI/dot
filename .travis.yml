@@ -26,8 +26,9 @@ script:
   - yes | dot sync --https -d
   - tmux new-session -n test "vim +PlugInstall +qall; exit"
   - test -d $HOME/.tmux/plugins/tpm
-  - tree ~/.vim || ls -la ~/.vim
-  - test -d $HOME/.vim/plugged
+  - ls -la ~/.vim
+  - curl -sfLo ~/.vim/autoload/plug.vim --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  - ls -la $HOME/.vim/plugged
 
 notifications:
   email: false
