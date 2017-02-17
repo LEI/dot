@@ -17,22 +17,6 @@ func Exists(path string) (bool, error) {
 	return false, err
 }
 
-func MakeDir(path string) error {
-	err := os.MkdirAll(path, 0755)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func RemoveDir(path string) error {
-	err := os.Remove(path)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func Link(source string, target string) error {
 	fi, err := os.Lstat(target)
 	if err != nil && os.IsExist(err) {
