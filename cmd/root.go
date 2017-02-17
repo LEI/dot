@@ -23,13 +23,18 @@ var (
 	// PkgConfig = make(map[string]*viper.Viper, 0)
 	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	// Skip = fmt.Errorf("Skip this path")
-	Sync, Remove        bool
-	HomeDir, CurrentDir string
-	Source, Target      string
-	Debug, ForceYes     bool
-	ConfigFile          = ""
-	ConfigName          = ".dotrc"
-	Packages            []*role.Package
+	Sync       bool
+	Remove     bool
+	HomeDir    string
+	CurrentDir string
+	Source     string
+	Target     string
+	Debug      bool
+	AssumeYes  bool
+	Https      bool
+	ConfigFile = ""
+	ConfigName = ".dotrc"
+	Packages   []*role.Package
 	// Packages            role.PackageSlice //= make(role.PackageSlice, 0)
 )
 
@@ -65,11 +70,13 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
 
 	RootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
-	RootCmd.PersistentFlags().BoolVarP(&ForceYes, "force-yes", "f", ForceYes, "Force yes")
+	RootCmd.PersistentFlags().BoolVarP(&AssumeYes, "assume-yes", "y", AssumeYes, "Force yes")
 
 	RootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
 	RootCmd.PersistentFlags().StringVarP(&ConfigName, "config-name", "", ConfigName, "Configuration `file`")
 	// RootCmd.PersistentFlags().VarP(&Packages, "package", "p", "List of packages `[name=]user/repo`")
+
+	RootCmd.PersistentFlags().BoolVarP(&Https, "https", "", false, "Force HTTPS for git clone")
 
 	// 	viper.SetDefault("Source", CurrentDir)
 	// 	viper.SetDefault("Target", HomeDir)
@@ -91,7 +98,7 @@ var RootCmd = &cobra.Command{
 		Source = Config.GetString("source")
 		Target = Config.GetString("target")
 		// Debug = Config.GetString("debug")
-		// ForceYes = Config.GetString("force-yes")
+		// AssumeYes = Config.GetString("force-yes")
 		// ConfigFile = Config.GetString("config")
 		// ConfigName = Config.GetString("config-name")
 		err := Config.UnmarshalKey("packages", &Packages)
@@ -105,14 +112,14 @@ var RootCmd = &cobra.Command{
 		}
 		switch {
 		case Remove:
-			if err := flagToArg("R", "remove"); err != nil {
+			if err := flagToCmd("R", "remove"); err != nil {
 				fatal(err)
 			}
 			if err := removeCmd.Execute(); err != nil {
 				fatal(err)
 			}
 		case Sync:
-			if err := flagToArg("S", "sync"); err != nil {
+			if err := flagToCmd("S", "sync"); err != nil {
 				fatal(err)
 			}
 			if err := syncCmd.Execute(); err != nil {
@@ -127,10 +134,9 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-// Only handle long and uppercase short flags
-func flagToArg(short string, long string) error {
-	var new = os.Args // []string{os.Args[0], os.Args[1]}
-	re := regexp.MustCompile("^-[a-z]*" + short + "[a-z]*$")
+func flagToCmd(short string, long string) error {
+	var new = []string{os.Args[0]}
+	re := regexp.MustCompile("^-[a-zA-Z]*" + short + "[a-zA-Z]*$")
 	for i, arg := range os.Args {
 		if i == 0 {
 			continue
@@ -141,8 +147,11 @@ func flagToArg(short string, long string) error {
 		}
 		matched := re.MatchString(arg)
 		if matched {
-			new[i] = strings.Replace(arg, short, "", 1)
 			new = append(new, long)
+			os.Args[i] = strings.Replace(arg, short, "", 1)
+			for _, a := range os.Args[1:] {
+				new = append(new, a)
+			}
 			break
 		}
 	}

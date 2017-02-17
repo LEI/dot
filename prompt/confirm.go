@@ -1,4 +1,4 @@
-package cli
+package prompt
 
 import (
 	"bufio"
@@ -13,10 +13,7 @@ func Confirm(str string) bool {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Printf("%s [y/n]: ", str)
-		// if ForceYes {
-		// 	fmt.Printf("%s", "Forced")
-		// 	return true
-		// }
+		// TODO Force / AssumeYes
 		res, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println(err)

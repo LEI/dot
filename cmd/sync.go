@@ -35,7 +35,7 @@ func syncPackages(source string, target string, packages []*role.Package) error 
 			continue
 		}
 		fmt.Printf("[%s]\n", pkg.Name)
-		err := pkg.InitRepo()
+		err := pkg.InitRepo(Https)
 		if err != nil {
 			return err
 		}

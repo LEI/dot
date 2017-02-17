@@ -8,7 +8,7 @@ import (
 var (
 	User  = "git"
 	Host  = "github.com"
-	Https = true
+	Https bool // = true
 )
 
 type Remote struct {

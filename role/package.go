@@ -53,7 +53,7 @@ func NewPackage(spec string) (*Package, error) {
 	pkg := &Package{
 		Origin: spec,
 	}
-	err := pkg.InitRepo()
+	err := pkg.InitRepo(git.Https)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,8 @@ func (pkg *Package) CheckOS() bool {
 	return true
 }
 
-func (pkg *Package) InitRepo() error {
+func (pkg *Package) InitRepo(useHttps bool) error {
+	git.Https = useHttps
 	if pkg.Origin == "" {
 		return fmt.Errorf("Empty origin in %+v\n", pkg)
 	}
