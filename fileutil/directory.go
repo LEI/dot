@@ -33,3 +33,17 @@ func RemoveDir(path string) error {
 	}
 	return nil
 }
+
+// func ReadDir(dirname string) ([]os.FileInfo, error) {
+// 	f, err := os.Open(dirname)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer f.Close()
+// 	paths, err := f.Readdir(-1) // names
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	// sort.Strings(paths)
+// 	return paths, nil
+// }

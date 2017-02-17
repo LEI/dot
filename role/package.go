@@ -38,6 +38,12 @@ type Package struct {
 	Lines map[string]string // *Lines
 }
 
+// type Role interface {
+// 	Get() interface{}
+// 	Check() bool
+// 	Sync(string, string) error
+// }
+
 type Link struct {
 	Type string
 	Path string
