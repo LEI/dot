@@ -2,7 +2,7 @@ package role
 
 import (
 	"fmt"
-	// "path/filepath"
+	"path/filepath"
 	// "strings"
 	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
@@ -23,6 +23,11 @@ type Package struct {
 	Link interface{}
 	Links []interface{}
 	Lines map[string]string // *Lines
+}
+
+type SLink struct {
+	Type string
+	Path string
 }
 
 func NewPackage(spec string) (*Package, error) {
@@ -114,11 +119,31 @@ func (pkg *Package) Sync(source string, target string) error {
 		for _, dir := range pkg.GetDirs() {
 			fmt.Printf("Create: %s/%s\n", target, dir)
 		}
-		for _, link := range pkg.GetLinks() {
-			fmt.Printf("Link: %s/%s into %s\n", source, link, target)
+		for _, l := range pkg.GetLinks() {
+			var link *SLink
+			switch v := l.(type) {
+			case string:
+				link = &SLink{Type: "", Path: v}
+			case map[string]interface{}:
+				link = &SLink{Type: v["type"].(string), Path: v["path"].(string)}
+			default:
+				fmt.Fprintf(os.Stderr, "Unknown type %T for %+v, skipping link\n", v, v)
+				continue
+			}
+			fmt.Printf("Find: %+v\n", link.Path)
+			paths, err := filepath.Glob(filepath.Join(source, link.Path))
+			if err != nil {
+				return err
+			}
+			for _, path := range paths {
+				if link.Type != "" {
+					fmt.Println("! Type:", link.Type)
+				}
+				fmt.Printf("Link: %s into %s\n", pkg.Path, path, target)
+			}
 		}
 		for file, line := range pkg.GetLines() {
-			fmt.Printf("Line: %s in %s\n", line, file)
+			fmt.Printf("Line: '%s' in %s\n", line, file)
 		}
 	} else {
 		fmt.Println("-> NIL")

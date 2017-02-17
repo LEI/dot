@@ -15,8 +15,8 @@ var syncCmd = &cobra.Command{
 	// Hidden: true,
 	Use:   "sync [flags]",
 	Aliases: []string{"s"},
-	Short: "",
-	Long:  ``,
+	Short: "-S",
+	Long:  `--sync`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// if Debug {
 		// 	fmt.Printf("Synchronize packages: %+v\n", Packages)
@@ -35,7 +35,6 @@ func syncPackages(source string, target string, packages []*role.Package) error 
 			continue
 		}
 		fmt.Printf("[%s]\n", pkg.Name)
-		// err := initPackage(pkg)
 		err := pkg.InitRepo()
 		if err != nil {
 			return err
@@ -52,7 +51,7 @@ func syncPackages(source string, target string, packages []*role.Package) error 
 		if err != nil {
 			return err
 		}
-		fmt.Printf("[%s] Done\n", pkg.Name)
+		// fmt.Printf("[%s] Done\n", pkg.Name)
 	}
 	return nil
 }
