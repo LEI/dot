@@ -8,18 +8,18 @@ import (
 	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
 	"os"
-	"runtime"
+	// "runtime"
 	"strings"
 )
 
-const OS = runtime.GOOS
+// const OS = runtime.GOOS
 
-func init() {
-	err := os.Setenv("OS", OS)
-	if err != nil {
-		fmt.Printf("Could not set env OS=%s: %s", OS, err)
-	}
-}
+// func init() {
+// 	err := os.Setenv("OS", OS)
+// 	if err != nil {
+// 		fmt.Printf("Could not set env OS=%s: %s", OS, err)
+// 	}
+// }
 
 var Ignore = []string{".git", ".*\\.md"}
 
@@ -73,19 +73,19 @@ func (pkg *Package) String() string {
 // func (pkg *Package) Set(value string?) error {
 // }
 
-func (pkg *Package) CheckOS() bool {
+func (pkg *Package) CheckOsType(types []string) bool {
+	if len(pkg.Os) == 0 {
+		return true
+	}
 	for _, osType := range pkg.Os {
-		switch osType {
-		case OS:
-			return true
-		default:
-			// fmt.Fprintf(os.Stderr,
-			// 	"[%s] %s: unsupported platform, only for %+v\n",
-			// 	pkg.Name, OS, pkg.Os)
-			return false
+		for _, t := range types {
+			if t == osType {
+				return true
+			}
 		}
 	}
-	return true
+	// fmt.Fprintf(os.Stderr, "[%s] %s: unsupported platform, only for %+v\n", pkg.Name, OS, pkg.Os)
+	return false
 }
 
 func (pkg *Package) InitRepo(useHttps bool) error {

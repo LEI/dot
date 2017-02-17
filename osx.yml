@@ -1,0 +1,11 @@
+---
+packages:
+
+  - name: hammerspoon
+    origin: LEI/dot-hammerspoon
+    os: ["darwin"]
+
+  - name: osx
+    origin: LEI/dot-osx
+    os: ["darwin16"]
+# El Capitan: darwin15.6.0

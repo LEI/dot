@@ -15,7 +15,7 @@ var syncCmd = &cobra.Command{
 	// Hidden: true,
 	Use:     "sync [flags]",
 	Aliases: []string{"s"},
-	Short:   "-S, --sync",
+	Short:   "",
 	Long:    ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		// if Debug {
@@ -30,7 +30,7 @@ var syncCmd = &cobra.Command{
 
 func syncPackages(source string, target string, packages []*role.Package) error {
 	for _, pkg := range packages {
-		ok := pkg.CheckOS()
+		ok := pkg.CheckOsType(OsTypes)
 		if !ok {
 			continue
 		}

@@ -6,12 +6,21 @@ packages:
   - name: git
     origin: LEI/dot-git
 
-  - name: termux
-    os: ["android"]
-    origin: LEI/dot-termux
-
   - name: tmux
     origin: LEI/dot-tmux
 
   - name: vim
     origin: LEI/dot-vim
+
+  - name: termux
+    os: ["android"]
+    origin: LEI/dot-termux
+
+  # El Capitan: darwin15.6.0
+  - name: osx
+    origin: LEI/dot-osx
+    os: ["darwin16"]
+
+  - name: hammerspoon
+    origin: LEI/dot-hammerspoon
+    os: ["darwin"]

@@ -9,23 +9,19 @@ import (
 	"log"
 	"os"
 	"regexp"
-	// "runtime"
+	"runtime"
 	"strings"
 )
 
 const (
-	// OS = runtime.GOOS
+	OS = runtime.GOOS
 	version = "master"
 )
 
 var (
-	Config = viper.New()
-	// PkgConfig = make(map[string]*viper.Viper, 0)
-	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-	// Skip = fmt.Errorf("Skip this path")
-	Sync       bool
-	Remove     bool
-	HomeDir    string
+	HOME = os.Getenv("HOME")   // user.Current().HomeDir
+	OSTYPE = os.Getenv("OSTYPE")
+	OsTypes = []string{OS, OSTYPE}
 	CurrentDir string
 	Source     string
 	Target     string
@@ -34,8 +30,12 @@ var (
 	Https      bool
 	ConfigFile = ""
 	ConfigName = ".dotrc"
+	Config = viper.New()
 	Packages   []*role.Package
 	// Packages            role.PackageSlice //= make(role.PackageSlice, 0)
+	// PkgConfig = make(map[string]*viper.Viper, 0)
+	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+	// Skip = fmt.Errorf("Skip this path")
 )
 
 var (
@@ -54,20 +54,24 @@ var (
 // }
 
 func init() {
+	fmt.Printf("OS: %+v\n", osTypes)
 	// cobra.OnInitialize(initConfig)
 
-	HomeDir = os.Getenv("HOME")   // user.Current().HomeDir
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		fmt.Printf("Could not set env OS=%s: %s", OS, err)
+	}
 	CurrentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
 		fatal(err)
 	}
 
 	// RootCmd.Flags().BoolVarP(&Clone, "clone", "C", Clone, "Clone remote packages")
-	RootCmd.Flags().BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
-	RootCmd.Flags().BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+	// RootCmd.Flags().BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
+	// RootCmd.Flags().BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
 
 	RootCmd.PersistentFlags().StringVarP(&Source, "source", "s", CurrentDir, "Source `directory`")
-	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
+	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", HOME, "Destination `directory`")
 
 	RootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
 	RootCmd.PersistentFlags().BoolVarP(&AssumeYes, "assume-yes", "y", AssumeYes, "Force yes")
@@ -78,14 +82,15 @@ func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&Https, "https", "", false, "Force HTTPS for git clone")
 
+	Config.BindPFlags(RootCmd.PersistentFlags())
+
 	// 	viper.SetDefault("Source", CurrentDir)
-	// 	viper.SetDefault("Target", HomeDir)
+	// 	viper.SetDefault("Target", HOME)
 
 	// viper.RegisterAlias("src", "source")
 	// viper.RegisterAlias("dst", "target")
 
-	Config.BindPFlags(RootCmd.PersistentFlags())
-	// RootCmd.PersistentFlags().Parse(os.Args[1:])
+	RootCmd.PersistentFlags().Parse(os.Args[1:])
 
 	initConfig()
 }
@@ -108,28 +113,11 @@ var RootCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			fatal(fmt.Errorf("Extra arguments: %s (TODO packages?)", args))
+			fmt.Printf("Extra arguments: %s", args)
 		}
-		switch {
-		case Remove:
-			if err := flagToCmd("R", "remove"); err != nil {
-				fatal(err)
-			}
-			if err := removeCmd.Execute(); err != nil {
-				fatal(err)
-			}
-		case Sync:
-			if err := flagToCmd("S", "sync"); err != nil {
-				fatal(err)
-			}
-			if err := syncCmd.Execute(); err != nil {
-				fatal(err)
-			}
-		default:
-			err := cmd.Help()
-			if err != nil {
-				fatal(err)
-			}
+		err := cmd.Help()
+		if err != nil {
+			fatal(err)
 		}
 	},
 }
@@ -191,44 +179,42 @@ func Execute() {
 // }
 
 func initConfig() {
-	// fmt.Println("INIT CONFIG")
-
-	if ConfigFile != "" {
-		Config.SetConfigFile(ConfigFile)
-	}
-
-	configPaths := []string{Source}
-	for _, dir := range []string{HomeDir, CurrentDir} {
-		if Source != dir {
-			configPaths = append(configPaths, dir)
-		}
-	}
-	fmt.Println(ConfigName, configPaths)
-	err := readConfig(Config, ConfigName, configPaths...)
+	err := readConfig(Config)
 	if err != nil && os.IsExist(err) {
 		fatal(err)
 	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
 }
 
-func readConfig(v *viper.Viper, name string, paths ...string) error {
-	v.SetConfigName(name)
-	for _, path := range paths {
-		v.AddConfigPath(path)
+func readConfig(c *viper.Viper) error {
+	var configPaths []string
+	if ConfigFile != "" {
+		c.SetConfigFile(ConfigFile)
+	} else { // ConfigName != ""
+		c.SetConfigName(ConfigName)
+		configPaths = []string{Source}
+		for _, dir := range []string{HOME, CurrentDir} {
+			if Source != dir {
+				configPaths = append(configPaths, dir)
+			}
+		}
+		for _, path := range configPaths {
+			c.AddConfigPath(path)
+		}
 	}
 	// Read in environment variables that match
-	v.AutomaticEnv()
-	// if err := v.ReadInConfig(); err != nil {
-	// 	return err
-	// }
-	err := v.ReadInConfig()
-	cfgPath := v.ConfigFileUsed()
-	if cfgPath != "" {
-		fmt.Printf("Using: %s\n", cfgPath)
+	c.AutomaticEnv()
+	err := c.ReadInConfig()
+	configUsed := c.ConfigFileUsed()
+	if configUsed != "" {
+		fmt.Printf("Using: %s\n", configUsed)
 		if Debug {
-			fmt.Printf("%s >>> %+v\n", name, v)
+			fmt.Printf("%s >>> %+v\n", ConfigName, configPaths)
 		}
-	} else {
-		fmt.Println(name, "not found in", paths)
+	} else if ConfigFile == "" {
+		fmt.Println(ConfigName, "not found in", configPaths)
 	}
 	return err
 }
