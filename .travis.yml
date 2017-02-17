@@ -9,6 +9,10 @@ os:
 # services:
 #   - docker
 
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y vim tmux
+
 install:
   # - docker-compose build
   # - golint
@@ -21,10 +25,11 @@ script:
   # - docker-compose run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
-  - dot -S
-  - ls -la $HOME/.dot
-  - ls -la $HOME
-  # - test -d $HOME/.dot
+  - cat $HOME/.gitconfig
+  - yes | dot -S
+  - tmux new-session -n test "vim +PlugInstall +qall; exit"
+  - test -d $HOME/.tmux/plugins/tpm
+  - test -d $HOME/.vim/plugged
 
 notifications:
   email: false
