@@ -9,9 +9,9 @@ os:
 # services:
 #   - docker
 
-# before_install:
-#   - sudo apt-get -qq update
-#   - sudo apt-get install -y vim tmux
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y curl # vim tmux
 
 install:
   # - golint

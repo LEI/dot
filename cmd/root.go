@@ -54,7 +54,7 @@ var (
 // }
 
 func init() {
-	fmt.Printf("OS: %+v\n", osTypes)
+	fmt.Printf("OS: %+v\n", OsTypes)
 	// cobra.OnInitialize(initConfig)
 
 	err := os.Setenv("OS", OS)
