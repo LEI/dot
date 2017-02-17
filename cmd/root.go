@@ -8,7 +8,9 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"regexp"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -21,11 +23,12 @@ var (
 	// PkgConfig = make(map[string]*viper.Viper, 0)
 	// flag = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	// Skip = fmt.Errorf("Skip this path")
+	Sync, Remove        bool
 	HomeDir, CurrentDir string
 	Source, Target      string
 	Debug, ForceYes     bool
-	cfgFile             = ""
-	cfgName             = ".dotrc"
+	ConfigFile          = ""
+	ConfigName          = ".dotrc"
 	IgnoreFiles         = []string{".git", ".*\\.md"}
 	Packages            []*role.Package
 	// Packages            role.PackageSlice //= make(role.PackageSlice, 0)
@@ -46,8 +49,9 @@ var (
 // 	Packages *role.PackageSlice
 // }
 
+
 func init() {
-	cobra.OnInitialize(initConfig)
+	// cobra.OnInitialize(initConfig)
 
 	HomeDir = os.Getenv("HOME")   // user.Current().HomeDir
 	CurrentDir, err := os.Getwd() // os.Getenv("PWD")
@@ -55,18 +59,18 @@ func init() {
 		fatal(err)
 	}
 
-	// flags := RootCmd.Flags()
-	// pflags := RootCmd.PersistentFlags()
-
-	// RootCmd.Flags().BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
-	// RootCmd.Flags().BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
+	// RootCmd.Flags().BoolVarP(&Clone, "clone", "C", Clone, "Clone remote packages")
+	RootCmd.Flags().BoolVarP(&Sync, "sync", "S", Sync, "Synchronize packages")
+	RootCmd.Flags().BoolVarP(&Remove, "remove", "R", Remove, "Remove packages")
 
 	RootCmd.PersistentFlags().StringVarP(&Source, "source", "s", CurrentDir, "Source `directory`")
 	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
 
 	RootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
 	RootCmd.PersistentFlags().BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
-	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", cfgFile, "Configuration `file`")
+
+	RootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
+	RootCmd.PersistentFlags().StringVarP(&ConfigName, "config-name", "", ConfigName, "Configuration `file`")
 	// RootCmd.PersistentFlags().VarP(&Packages, "package", "p", "List of packages `[name=]user/repo`")
 
 	// 	viper.SetDefault("Source", CurrentDir)
@@ -77,6 +81,8 @@ func init() {
 
 	Config.BindPFlags(RootCmd.PersistentFlags())
 	// RootCmd.PersistentFlags().Parse(os.Args[1:])
+
+	initConfig()
 }
 
 var RootCmd = &cobra.Command{
@@ -92,19 +98,58 @@ var RootCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			os.Args = append(os.Args, "sync")
+		if len(args) > 0 {
+			fatal(fmt.Errorf("Extra arguments: %s", args))
+		}
+		switch {
+		case Remove:
+			if err := flagToArg("R", "remove"); err != nil {
+				fatal(err)
+			}
+			if err := removeCmd.Execute(); err != nil {
+				fatal(err)
+			}
+		case Sync:
+			if err := flagToArg("S", "sync"); err != nil {
+				fatal(err)
+			}
 			if err := syncCmd.Execute(); err != nil {
 				fatal(err)
 			}
-		} else {
-			fmt.Println("Extra arguments: %s", args)
+		default:
 			err := cmd.Help()
 			if err != nil {
 				fatal(err)
 			}
 		}
 	},
+}
+
+// Only handle long and uppercase short flags
+func flagToArg(short string, long string) error {
+	var new = os.Args // []string{os.Args[0], os.Args[1]}
+	re := regexp.MustCompile("^-[a-z]*" + short + "[a-z]*$")
+	for i, arg := range os.Args {
+		if i == 0 {
+			continue
+		}
+		if arg == "-" + short || arg == "--" + long {
+			os.Args[i] = long
+			return nil
+		}
+		matched := re.MatchString(arg)
+		if matched {
+			new[i] = strings.Replace(arg, short, "", 1)
+			new = append(new, long)
+			break
+		}
+	}
+	if len(new) > len(os.Args) {
+		os.Args = new
+		return nil
+	}
+	return fmt.Errorf("Did not replace -%s or --%s in args: '%+v'", short, long, os.Args)
+
 }
 
 func Execute() {
@@ -135,8 +180,10 @@ func Execute() {
 // }
 
 func initConfig() {
-	if cfgFile != "" {
-		Config.SetConfigFile(cfgFile)
+	// fmt.Println("INIT CONFIG")
+
+	if ConfigFile != "" {
+		Config.SetConfigFile(ConfigFile)
 	}
 
 	configPaths := []string{HomeDir, Source}
@@ -144,7 +191,7 @@ func initConfig() {
 	// 	configPaths = append(configPaths, ".")
 	// }
 	// viper.GetViper()
-	err := readConfig(Config, cfgName, configPaths...)
+	err := readConfig(Config, ConfigName, configPaths...)
 	if err != nil && os.IsExist(err) {
 		fatal(err)
 	}
@@ -161,45 +208,20 @@ func readConfig(v *viper.Viper, name string, paths ...string) error {
 	// 	return err
 	// }
 	err := v.ReadInConfig()
-	cfgFileUsed := v.ConfigFileUsed()
-	if cfgFileUsed != "" {
-		fmt.Printf("Found config file: %s\n", cfgFileUsed)
+	cfgPath := v.ConfigFileUsed()
+	if cfgPath != "" {
+		fmt.Printf("Using: %s\n", cfgPath)
+		if Debug {
+			fmt.Printf("%s >>> %+v\n", name, v)
+		}
 	} else {
-		fmt.Println("No config file found")
+		fmt.Println(name, "not found in", paths)
 	}
 	return err
 }
 
-func InitPackage(pkg *role.Package) error {
-	err := pkg.InitRepo()
-	if err != nil {
-		return err
-	}
-	err = pkg.Repo.CloneOrPull()
-	if err != nil {
-		return err
-	}
-
-	pkg.Config = viper.New()
-	err = readConfig(pkg.Config, cfgName, pkg.Path)
-	if err != nil {
-		return err
-	}
-	dir := pkg.Config.GetString("dir")
-	if dir != "" {
-		pkg.Config.Set("dirs", append(pkg.Config.GetStringSlice("dirs"), dir))
-	}
-	link := pkg.Config.Get("link") // .(role.Link) // GetString
-	links := pkg.Config.Get("links")
-	if links == nil {
-		links = make([]interface{}, 0)
-	}
-	if link != nil {
-		// pkg.Config.Set("links", append(pkg.Config.GetStringSlice("links"), link))
-		// pkg.Config.Set("links", append(pkg.Config.Get("links").(role.Link), link))
-		pkg.Config.Set("links", append(links.([]interface{}), link))
-	}
-
-	// PkgConfig[pkg.Name] = pkg.Config
-	return nil
+func fatal(msg interface{}) {
+	// log.Fatal*
+	fmt.Fprintln(os.Stderr, "Error:", msg)
+	os.Exit(1)
 }

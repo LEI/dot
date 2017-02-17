@@ -14,3 +14,29 @@ func Exists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+func MakeDir(path string) error {
+	err := os.MkdirAll(path, 0755)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func MakeDirs(paths []string) error {
+	for _, path := range paths {
+		err := MakeDir(path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func RemoveDir(path string) error {
+	err := os.Remove(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}

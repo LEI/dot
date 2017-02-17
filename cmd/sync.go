@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
-	"os"
+	// "os"
 )
 
 func init() {
@@ -13,7 +13,8 @@ func init() {
 
 var syncCmd = &cobra.Command{
 	// Hidden: true,
-	Use:   "sync [clone...]",
+	Use:   "sync [flags]",
+	Aliases: []string{"s"},
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -34,7 +35,20 @@ func syncPackages(source string, target string, packages []*role.Package) error 
 			continue
 		}
 		fmt.Printf("[%s]\n", pkg.Name)
-		err := pkg.Sync(source, target)
+		// err := initPackage(pkg)
+		err := pkg.InitRepo()
+		if err != nil {
+			return err
+		}
+		err = pkg.Repo.CloneOrPull()
+		if err != nil {
+			return err
+		}
+		err = pkg.InitConfig(ConfigName)
+		if err != nil {
+			return err
+		}
+		err = pkg.Sync(source, target)
 		if err != nil {
 			return err
 		}
