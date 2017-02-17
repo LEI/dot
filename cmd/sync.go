@@ -48,7 +48,7 @@ func syncPackages(source string, target string, packages []*role.Package) error 
 			return err
 		}
 		if Debug {
-			fmt.Printf("[%s] Using: %s", pkg.Name, pkg.Config.ConfigFileUsed())
+			fmt.Printf("Using: %s for %s package\n", pkg.Config.ConfigFileUsed(), pkg.Name)
 		}
 		err = pkg.Sync(source, target)
 		if err != nil {

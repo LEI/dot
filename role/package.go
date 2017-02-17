@@ -187,18 +187,19 @@ func (pkg *Package) SyncLinks(source string, target string) error {
 			fmt.Fprintf(os.Stderr, "Unknown type %T for %+v, skipping link\n", v, v)
 			continue
 		}
-		// fmt.Printf("Find: %+v\n", link.Path)
 		path := filepath.Join(pkg.Path, link.Path)
 		paths, err := filepath.Glob(path)
+		// fmt.Printf("Find: %s -> %+v\n", link.Path, paths)
 		if err != nil {
 			return err
 		}
+		GLOB:
 		for _, src := range paths {
 			for _, pattern := range Ignore {
 				matched, err := filepath.Match(pattern, filepath.Base(src))
 				if err != nil || matched {
 					fmt.Printf("Ignoring path: %s\n", src)
-					return nil
+					continue GLOB
 				}
 			}
 			fi, err := os.Stat(src)
@@ -220,6 +221,7 @@ func (pkg *Package) SyncLinks(source string, target string) error {
 			if err != nil {
 				return err
 			}
+			// filepath.Rel(pkg.Path, dst)
 			fmt.Printf("Link: %s into %s\n", src, dst)
 		}
 	}

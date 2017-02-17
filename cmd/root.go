@@ -29,7 +29,6 @@ var (
 	Debug, ForceYes     bool
 	ConfigFile          = ""
 	ConfigName          = ".dotrc"
-	IgnoreFiles         = []string{".git", ".*\\.md"}
 	Packages            []*role.Package
 	// Packages            role.PackageSlice //= make(role.PackageSlice, 0)
 )
