@@ -13,8 +13,8 @@ var removeCmd = &cobra.Command{
 	// Hidden: true,
 	Use: "remove [flags]",
 	// Aliases: []string{"r"},
-	// Short: "-R",
-	// Long:  `--remove`,
+	Short: "-R, --remove",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("cmd: %+v\n", cmd)
 		fmt.Printf("args: %+v\n", args)

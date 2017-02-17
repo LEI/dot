@@ -67,7 +67,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", HomeDir, "Destination `directory`")
 
 	RootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", Debug, "Check mode")
-	RootCmd.PersistentFlags().BoolVarP(&ForceYes, "force", "f", ForceYes, "Force yes")
+	RootCmd.PersistentFlags().BoolVarP(&ForceYes, "force-yes", "f", ForceYes, "Force yes")
 
 	RootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", ConfigFile, "Configuration `file`")
 	RootCmd.PersistentFlags().StringVarP(&ConfigName, "config-name", "", ConfigName, "Configuration `file`")
@@ -92,6 +92,10 @@ var RootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args[]string) {
 		Source = Config.GetString("source")
 		Target = Config.GetString("target")
+		// Debug = Config.GetString("debug")
+		// ForceYes = Config.GetString("force-yes")
+		// ConfigFile = Config.GetString("config")
+		// ConfigName = Config.GetString("config-name")
 		err := Config.UnmarshalKey("packages", &Packages)
 		if err != nil {
 			fatal(err)

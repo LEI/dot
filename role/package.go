@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"path/filepath"
 	// "strings"
+	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
 	"os"
 	"strings"
 )
+
+var Ignore = []string{".git", ".*\\.md"}
 
 type Package struct {
 	Name   string
@@ -60,11 +63,9 @@ func (pkg *Package) Check(currentOs string) bool {
 		case currentOs:
 			return true
 		default:
-			// if Debug {
-			// 	fmt.Fprintf(os.Stderr,
-			// 		"[%s] %s: unsupported platform, only for %+v\n",
-			// 		pkg.Name, OS, pkg.Os)
-			// }
+			// fmt.Fprintf(os.Stderr,
+			// 	"[%s] %s: unsupported platform, only for %+v\n",
+			// 	pkg.Name, OS, pkg.Os)
 			return false
 		}
 	}
@@ -108,45 +109,25 @@ func (pkg *Package) InitConfig(name string) error {
 		fmt.Println("No config file, skip package init config")
 		return nil
 	}
-
-	fmt.Println(pkg.Name, "using", pkg.Config.ConfigFileUsed())
 	// PkgConfig[pkg.Name] = pkg.Config
 	return nil
 }
 
 func (pkg *Package) Sync(source string, target string) error {
-	if pkg.Config != nil {
-		for _, dir := range pkg.GetDirs() {
-			fmt.Printf("Create: %s/%s\n", target, dir)
-		}
-		for _, l := range pkg.GetLinks() {
-			var link *SLink
-			switch v := l.(type) {
-			case string:
-				link = &SLink{Type: "", Path: v}
-			case map[string]interface{}:
-				link = &SLink{Type: v["type"].(string), Path: v["path"].(string)}
-			default:
-				fmt.Fprintf(os.Stderr, "Unknown type %T for %+v, skipping link\n", v, v)
-				continue
-			}
-			fmt.Printf("Find: %+v\n", link.Path)
-			paths, err := filepath.Glob(filepath.Join(source, link.Path))
-			if err != nil {
-				return err
-			}
-			for _, path := range paths {
-				if link.Type != "" {
-					fmt.Println("! Type:", link.Type)
-				}
-				fmt.Printf("Link: %s into %s\n", pkg.Path, path, target)
-			}
-		}
-		for file, line := range pkg.GetLines() {
-			fmt.Printf("Line: '%s' in %s\n", line, file)
-		}
-	} else {
-		fmt.Println("-> NIL")
+	if pkg.Config == nil {
+		return fmt.Errorf("%s: no config", pkg.Name)
+	}
+	err := pkg.SyncDirs(target)
+	if err != nil {
+		return err
+	}
+	err = pkg.SyncLinks(source, target)
+	if err != nil {
+		return err
+	}
+	err = pkg.SyncLines(target)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -158,6 +139,18 @@ func (pkg *Package) GetDirs() []string {
 		pkg.Config.Set("dirs", pkg.Dirs)
 	}
 	return pkg.Config.GetStringSlice("dirs")
+}
+
+func (pkg *Package) SyncDirs(target string) error {
+	for _, dir := range pkg.GetDirs() {
+		dir = filepath.Join(target, dir)
+		err := fileutil.MakeDir(dir)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Directory: %s\n", dir)
+	}
+	return nil
 }
 
 func (pkg *Package) GetLinks() []interface{} {
@@ -182,6 +175,57 @@ func (pkg *Package) GetLinks() []interface{} {
 	return pkg.Links
 }
 
+func (pkg *Package) SyncLinks(source string, target string) error {
+	for _, l := range pkg.GetLinks() {
+		var link *SLink
+		switch v := l.(type) {
+		case string:
+			link = &SLink{Type: "", Path: v}
+		case map[string]interface{}:
+			link = &SLink{Type: v["type"].(string), Path: v["path"].(string)}
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown type %T for %+v, skipping link\n", v, v)
+			continue
+		}
+		// fmt.Printf("Find: %+v\n", link.Path)
+		path := filepath.Join(pkg.Path, link.Path)
+		paths, err := filepath.Glob(path)
+		if err != nil {
+			return err
+		}
+		for _, src := range paths {
+			for _, pattern := range Ignore {
+				matched, err := filepath.Match(pattern, filepath.Base(src))
+				if err != nil || matched {
+					fmt.Printf("Ignoring path: %s\n", src)
+					return nil
+				}
+			}
+			fi, err := os.Stat(src)
+			if err != nil {
+				return nil
+			}
+			switch link.Type {
+			case "directory":
+				if !fi.IsDir() {
+					continue
+				}
+			case "file":
+				if fi.IsDir() {
+					continue
+				}
+			}
+			dst := strings.Replace(src, pkg.Path, target, 1)
+			err = fileutil.Link(src, dst)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Link: %s into %s\n", src, dst)
+		}
+	}
+	return nil
+}
+
 func (pkg *Package) GetLines() map[string]string {
 	pkg.UnmarshalKey("lines", &pkg.Lines)
 	// if pkg.Lines == nil {
@@ -189,6 +233,18 @@ func (pkg *Package) GetLines() map[string]string {
 	// }
 	// fmt.Printf("lines (%T): %+v\n", lines)
 	return pkg.Lines
+}
+
+func (pkg *Package) SyncLines(target string) error {
+	for file, line := range pkg.GetLines() {
+		file = filepath.Join(target, file)
+		err := fileutil.LineInFile(line, file)
+		if err != nil {
+			return err
+		}	
+		fmt.Printf("Line: '%s' in %s\n", line, file)
+	}
+	return nil
 }
 
 func (pkg *Package) UnmarshalKey(k string, v interface{}) interface{} {

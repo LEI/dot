@@ -15,8 +15,8 @@ var syncCmd = &cobra.Command{
 	// Hidden: true,
 	Use:   "sync [flags]",
 	Aliases: []string{"s"},
-	Short: "-S",
-	Long:  `--sync`,
+	Short: "-S, --sync",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		// if Debug {
 		// 	fmt.Printf("Synchronize packages: %+v\n", Packages)
@@ -46,6 +46,9 @@ func syncPackages(source string, target string, packages []*role.Package) error 
 		err = pkg.InitConfig(ConfigName)
 		if err != nil {
 			return err
+		}
+		if Debug {
+			fmt.Printf("[%s] Using: %s", pkg.Name, pkg.Config.ConfigFileUsed())
 		}
 		err = pkg.Sync(source, target)
 		if err != nil {

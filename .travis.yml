@@ -21,8 +21,10 @@ script:
   # - docker-compose run test
   # - PATH="$PATH:$HOME/bin"
   # - echo $PATH | tr -s ':' '\n'
-  - dot
-  - test -d $HOME/.dot
+  - dot -S
+  - ls -la $HOME/.dot
+  - ls -la $HOME
+  # - test -d $HOME/.dot
 
 notifications:
   email: false
