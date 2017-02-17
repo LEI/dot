@@ -31,9 +31,9 @@ type Package struct {
 	Os     []string
 	Config *viper.Viper
 
-	Dir string
-	Dirs []string
-	Link interface{}
+	Dir   string
+	Dirs  []string
+	Link  interface{}
 	Links []interface{}
 	Lines map[string]string // *Lines
 }
@@ -223,7 +223,7 @@ func (pkg *Package) SyncLink(link *Link, target string) error {
 	if len(paths) == 0 {
 		fmt.Fprintf(os.Stderr, "%s: No such file or directory\n", path)
 	}
-	GLOB:
+GLOB:
 	for _, src := range paths {
 		for _, pattern := range Ignore {
 			matched, err := filepath.Match(pattern, filepath.Base(src))
@@ -308,5 +308,6 @@ func (slice *PackageSlice) Set(value string) error {
 	*slice = append(*slice, *pkg)
 	return nil
 }
+
 // type PackageMap map[string]Package
 // (*pkgMap)[p.Name] = *pkg

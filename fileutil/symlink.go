@@ -11,7 +11,7 @@ func Link(source string, target string) error {
 	if err != nil && os.IsExist(err) {
 		return err
 	}
-	if fi != nil && (fi.Mode() & os.ModeSymlink != 0) {
+	if fi != nil && (fi.Mode()&os.ModeSymlink != 0) {
 		link, err := os.Readlink(target)
 		if err != nil {
 			return err
@@ -29,7 +29,7 @@ func Link(source string, target string) error {
 			}
 		}
 	} else if fi != nil {
-		backup := target+".backup"
+		backup := target + ".backup"
 		msg := fmt.Sprintf("%s exists, move to %s and replace with %s?", target, backup, source)
 		if ok := cli.Confirm(msg); ok {
 			err := os.Rename(target, target+".backup")

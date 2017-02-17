@@ -5,8 +5,8 @@ import (
 )
 
 type Role struct {
-	Name string
-	Path string
+	Name  string
+	Path  string
 	Files []File
 }
 

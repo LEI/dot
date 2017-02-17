@@ -13,10 +13,10 @@ func init() {
 
 var syncCmd = &cobra.Command{
 	// Hidden: true,
-	Use:   "sync [flags]",
+	Use:     "sync [flags]",
 	Aliases: []string{"s"},
-	Short: "-S, --sync",
-	Long:  ``,
+	Short:   "-S, --sync",
+	Long:    ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		// if Debug {
 		// 	fmt.Printf("Synchronize packages: %+v\n", Packages)

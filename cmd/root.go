@@ -48,7 +48,6 @@ var (
 // 	Packages *role.PackageSlice
 // }
 
-
 func init() {
 	// cobra.OnInitialize(initConfig)
 
@@ -88,7 +87,7 @@ var RootCmd = &cobra.Command{
 	Use:   "dot",
 	Short: "Manage dotfiles",
 	Long:  ``,
-	PersistentPreRun: func(cmd *cobra.Command, args[]string) {
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		Source = Config.GetString("source")
 		Target = Config.GetString("target")
 		// Debug = Config.GetString("debug")
@@ -136,7 +135,7 @@ func flagToArg(short string, long string) error {
 		if i == 0 {
 			continue
 		}
-		if arg == "-" + short || arg == "--" + long {
+		if arg == "-"+short || arg == "--"+long {
 			os.Args[i] = long
 			return nil
 		}
