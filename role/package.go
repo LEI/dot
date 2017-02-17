@@ -238,10 +238,10 @@ func (pkg *Package) GetLines() map[string]string {
 func (pkg *Package) SyncLines(target string) error {
 	for file, line := range pkg.GetLines() {
 		file = filepath.Join(target, file)
-		err := fileutil.LineInFile(line, file)
+		err := fileutil.LineInFile(file, line)
 		if err != nil {
 			return err
-		}	
+		}
 		fmt.Printf("Line: '%s' in %s\n", line, file)
 	}
 	return nil

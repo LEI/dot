@@ -103,7 +103,7 @@ var RootCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			fatal(fmt.Errorf("Extra arguments: %s", args))
+			fatal(fmt.Errorf("Extra arguments: %s (TODO packages?)", args))
 		}
 		switch {
 		case Remove:
@@ -190,11 +190,13 @@ func initConfig() {
 		Config.SetConfigFile(ConfigFile)
 	}
 
-	configPaths := []string{HomeDir, Source}
-	// if CurrentDir != Source {
-	// 	configPaths = append(configPaths, ".")
-	// }
-	// viper.GetViper()
+	configPaths := []string{Source}
+	for _, dir := range []string{HomeDir, CurrentDir} {
+		if Source != dir {
+			configPaths = append(configPaths, dir)
+		}
+	}
+	fmt.Println(ConfigName, configPaths)
 	err := readConfig(Config, ConfigName, configPaths...)
 	if err != nil && os.IsExist(err) {
 		fatal(err)
