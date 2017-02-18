@@ -4,7 +4,7 @@ language: go
 
 os:
   - linux
-  # - osx
+  - osx
 
 # services:
 #   - docker
@@ -24,7 +24,7 @@ script:
   # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
   # - docker-compose run test
   - yes | dot sync --https -d
-  - curl -sfLo ~/.vim/autoload/plug.vim --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  # - curl -sfLo ~/.vim/autoload/plug.vim --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
   - ls -la ~/.vim/autoload
   - tmux new-session -n test "vim +PlugInstall +qall; exit"
   - test -d $HOME/.tmux/plugins/tpm

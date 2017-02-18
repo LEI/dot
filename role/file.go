@@ -41,10 +41,11 @@ func NewFile(value interface{}) (*File, error) {
 		file = &File{Type: "", Path: val}
 	case map[string]interface{}:
 		file = &File{Type: val["type"].(string), Path: val["path"].(string)}
-	// case *File:
-	default:
+	case *File:
 		file = val
-		// return nil, fmt.Errorf("Unknown type %T for %+v\n", val, val)
+	default:
+		// file = val
+		return nil, fmt.Errorf("Unknown type %T for %+v\n", val, val)
 	}
 	file.Path = os.ExpandEnv(file.Path)
 	return file, nil
