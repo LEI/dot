@@ -44,11 +44,6 @@ type Package struct {
 // 	Sync(string, string) error
 // }
 
-type Link struct {
-	Type string
-	Path string
-}
-
 func NewPackage(spec string) (*Package, error) {
 	pkg := &Package{
 		Origin: spec,
@@ -194,72 +189,74 @@ func (pkg *Package) GetLinks() []interface{} {
 }
 
 func (pkg *Package) SyncLinks(source string, target string) error {
-	for _, link := range pkg.GetLinks() {
-		var src *Link
-		switch v := link.(type) {
-		case string:
-			src = &Link{Type: "", Path: v}
-		case map[string]interface{}:
-			src = &Link{Type: v["type"].(string), Path: v["path"].(string)}
-		default:
-			fmt.Fprintf(os.Stderr, "Unknown type %T for %+v, skipping link\n", v, v)
-			continue
-		}
-		src.Path = os.ExpandEnv(src.Path)
-		err := pkg.SyncLink(src, target)
+	for _, glob := range pkg.GetLinks() {
+		f, err := NewFileBase(glob, pkg.Path)
 		if err != nil {
 			return err
+		}
+		files, err := f.Glob()
+		if err != nil {
+			return err
+		}
+		if len(files) == 0 {
+			fmt.Fprintf(os.Stderr, "%s: No match\n", f.Path)
+		}
+		LOOP:
+		for _, file := range files {
+			for _, pattern := range Ignore {
+				matched, err := filepath.Match(pattern, filepath.Base(file.Path))
+				if err != nil {
+					return err
+				}
+				if matched {
+					fmt.Printf("Ignoring path: %s\n", file)
+					continue LOOP
+				}
+			}
+			fi, err := os.Stat(file.Path)
+			if err != nil {
+				return nil
+			}
+			switch file.Type {
+			case "directory":
+				if !fi.IsDir() {
+					continue
+				}
+			case "file":
+				if fi.IsDir() {
+					continue
+				}
+			}
+			dst := strings.Replace(file.Path, pkg.Path, target, 1)
+			err = file.Link(dst)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Link: %s into %s\n", file.Path, dst)
 		}
 	}
 	return nil
 }
 
-func (pkg *Package) SyncLink(link *Link, target string) error {
-	path := filepath.Join(pkg.Path, link.Path)
-	paths, err := filepath.Glob(path)
-	// fmt.Printf("Find: %s -> %+v\n", link.Path, paths)
-	if err != nil {
-		return err
-	}
-	if len(paths) == 0 {
-		fmt.Fprintf(os.Stderr, "%s: No such file or directory\n", path)
-	}
-GLOB:
-	for _, src := range paths {
-		for _, pattern := range Ignore {
-			matched, err := filepath.Match(pattern, filepath.Base(src))
-			if err != nil {
-				return err
-			}
-			if matched {
-				fmt.Printf("Ignoring path: %s\n", src)
-				continue GLOB
-			}
-		}
-		fi, err := os.Stat(src)
-		if err != nil {
-			return nil
-		}
-		switch link.Type {
-		case "directory":
-			if !fi.IsDir() {
-				continue
-			}
-		case "file":
-			if fi.IsDir() {
-				continue
-			}
-		}
-		dst := strings.Replace(src, pkg.Path, target, 1)
-		err = fileutil.Link(src, dst)
-		if err != nil {
-			return err
-		}
-		// filepath.Rel(pkg.Path, dst)
-		fmt.Printf("Link: %s into %s\n", src, dst)
-	}
-	return nil
-}
+// func (pkg *Package) SyncLink(link *File, target string) error {
+// 	paths, err := filepath.Glob(path)
+// 	// fmt.Printf("Find: %s -> %+v\n", link.Path, paths)
+// 	if err != nil {
+// 		return err
+// 	}
+// GLOB:
+// 	for _, src := range paths {
+
+// 		// file := NewFile(src)
+// 		// file.Link(dst)
+// 		// err = fileutil.Link(src, dst)
+// 		// if err != nil {
+// 		// 	return err
+// 		// }
+// 		// filepath.Rel(pkg.Path, dst)
+// 	}
+// 	return nil
+// }
 
 func (pkg *Package) GetLines() map[string]string {
 	pkg.UnmarshalKey("lines", &pkg.Lines)

@@ -1,19 +1,24 @@
 package role
 
 import (
-	"os"
+	// "os"
 )
 
-type Role struct {
-	Name  string
-	Path  string
-	Files []File
+type Role interface {
+	// Set(interface{})
+	Sync() error
 }
 
-type File struct {
-	Path     string
-	FileInfo *os.FileInfo
-}
+// type Role struct {
+// 	Name  string
+// 	Path  string
+// 	Files []File
+// }
+
+// type File struct {
+// 	Path     string
+// 	FileInfo *os.FileInfo
+// }
 
 // func (role *Role) New(name string) Role {
 // 	return *Role{Name: name}

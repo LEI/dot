@@ -18,9 +18,9 @@ const (
 	version = "master"
 )
 
-var (
-	HOME = os.Getenv("HOME")   // user.Current().HomeDir
-	OSTYPE = os.Getenv("OSTYPE")
+var ( // os.Getenv("HOME") // user.Current().HomeDir
+	HOME = env("HOME")
+	OSTYPE = env("OSTYPE")
 	OsTypes = []string{OS, OSTYPE}
 	CurrentDir string
 	Source     string
@@ -157,26 +157,13 @@ func Execute() {
 	}
 }
 
-// func GetCommand(cmd *cobra.Command, name string) *cobra.Command {
-// 	subCommands := cmd.Commands()
-// 	index := GetCommandIndex(subCommands, func(i int) bool {
-// 		fmt.Println(subCommands[i])
-// 		return subCommands[i].name == name
-// 	})
-// 	if index < 0 {
-//		fatal(fmt.Errorf("%s: sub-command not found", name))
-// 	}
-// 	return subCommands[index]
-// }
-
-// func GetCommandIndex(slice []*cobra.Command, predicate func(i int) bool) int {
-// 	for index, _ := range slice {
-// 		if predicate(index) {
-// 			return index
-// 		}
-// 	}
-// 	return -1
-// }
+func env(key string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		fmt.Printf("%s is not set!\n", val)
+	}
+	return val
+}
 
 func initConfig() {
 	err := readConfig(Config)
@@ -210,9 +197,9 @@ func readConfig(c *viper.Viper) error {
 	configUsed := c.ConfigFileUsed()
 	if configUsed != "" {
 		fmt.Printf("Using: %s\n", configUsed)
-		if Debug {
-			fmt.Printf("%s >>> %+v\n", ConfigName, configPaths)
-		}
+		// if Debug {
+		// 	fmt.Printf("%s >>> %+v\n", ConfigName, configPaths)
+		// }
 	} else if ConfigFile == "" {
 		fmt.Println(ConfigName, "not found in", configPaths)
 	}
