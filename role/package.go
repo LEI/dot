@@ -125,7 +125,7 @@ func (pkg *Package) InitConfig(name string) error {
 	return nil
 }
 
-func (pkg *Package) Sync(source string, target string) error {
+func (pkg *Package) Sync(source, target string) error {
 	if pkg.Config == nil {
 		return fmt.Errorf("%s: no config", pkg.Name)
 	}
@@ -188,7 +188,7 @@ func (pkg *Package) GetLinks() []interface{} {
 	return pkg.Links
 }
 
-func (pkg *Package) SyncLinks(source string, target string) error {
+func (pkg *Package) SyncLinks(source, target string) error {
 	for _, glob := range pkg.GetLinks() {
 		link, err := NewLink(glob)
 		if err != nil {

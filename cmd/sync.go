@@ -28,7 +28,7 @@ var syncCmd = &cobra.Command{
 	},
 }
 
-func syncPackages(source string, target string, packages []*role.Package) error {
+func syncPackages(source, target string, packages []*role.Package) error {
 	for _, pkg := range packages {
 		ok := pkg.CheckOsType(OsTypes)
 		if !ok {

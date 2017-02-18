@@ -57,7 +57,7 @@ var (
 func init() {
 	fmt.Printf("OS: %+v\n", OsTypes)
 	if OSTYPE != "" {
-		OsType = append(OsTypes, OSTYPE)
+		OsTypes = append(OsTypes, OSTYPE)
 	}
 	// cobra.OnInitialize(initConfig)
 

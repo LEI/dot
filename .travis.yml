@@ -6,8 +6,8 @@ os:
   - linux
   - osx
 
-# services:
-#   - docker
+services:
+  - docker
 
 # before_install:
 #   - sudo apt-get -qq update
@@ -18,14 +18,14 @@ install:
   - go vet
   - go get github.com/LEI/dot
   - go install
-  # - docker-compose build
+  - docker-compose build
 
 script:
   # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
-  # - docker-compose run test
+  - docker-compose run test
   - yes | dot sync --https -d
   - curl -sfLo ~/.vim/autoload/plug.vim --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-  - ls -la ~/.vim/autoload
+  - ls -la ~/.vim
   - tmux new-session -n test "vim +PlugInstall +qall; exit"
   - test -d $HOME/.tmux/plugins/tpm
   - ls -la $HOME/.vim
