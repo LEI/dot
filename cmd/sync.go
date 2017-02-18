@@ -2,10 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
-	// "os"
+	"os"
+	"path/filepath"
+	"strings"
 )
+
+var Ignore = []string{".git", ".*\\.md"}
 
 func init() {
 	RootCmd.AddCommand(syncCmd)
@@ -50,9 +55,57 @@ func syncPackages(source, target string, packages []*role.Package) error {
 		if Debug {
 			fmt.Printf("Using: %s for %s package\n", pkg.Config.ConfigFileUsed(), pkg.Name)
 		}
-		err = pkg.Sync(source, target)
-		if err != nil {
-			return err
+		if pkg.Config == nil {
+			return fmt.Errorf("%s: no config", pkg.Name)
+		}
+		for _, dir := range pkg.GetDirs() {
+			dir = os.ExpandEnv(dir)
+			dir = filepath.Join(target, dir)
+			err := fileutil.MakeDir(dir)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Directory: %s\n", dir)
+		}
+		for _, glob := range pkg.GetLinks() {
+			link, err := role.NewLink(glob)
+			if err != nil {
+				return err
+			}
+			link.Path = filepath.Join(pkg.Path, link.Path)
+			links, err := link.GlobAsLink()
+			if err != nil {
+				return err
+			}
+			if len(links) == 0 {
+				fmt.Fprintf(os.Stderr, "%s: No match\n", link.Path)
+			}
+			LOOP:
+			for _, link := range links {
+				matched, err := link.NameMatches(Ignore)
+				if err != nil {
+					return err
+				}
+				if matched {
+					fmt.Printf("Ignoring link: %s\n", link)
+					continue LOOP
+				}
+				dst := strings.Replace(link.Path, pkg.Path, target, 1)
+				err = link.Sync(dst)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("Link: %s into %s\n", link.Path, dst)
+			}
+		}
+		for file, line := range pkg.GetLines() {
+			file = os.ExpandEnv(file)
+			file = filepath.Join(target, file)
+			err := fileutil.LineInFile(file, line)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Line: '%s' in %s\n", line, file)
 		}
 		// fmt.Printf("[%s] Done\n", pkg.Name)
 	}

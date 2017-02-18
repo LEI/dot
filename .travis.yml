@@ -4,7 +4,7 @@ language: go
 
 os:
   - linux
-  - osx
+  # - osx # brew install docker-compose
 
 services:
   - docker

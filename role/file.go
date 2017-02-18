@@ -7,31 +7,29 @@ import (
 	"os"
 )
 
-type Role struct {
-	Name string
-	Origin string
-	Source string
-	Target string
-	handlers []Handler
-}
+// type Role interface {
+// 	Get() interface{}
+// 	Check() bool
+// 	Sync(string, string) error
+// }
 
-func (r *Role) Sync() error {
-	for _, h := range r.handlers {
-		err := h.Sync(r.Target)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// func (r *Role) Sync() error {
+// 	for _, h := range r.handlers {
+// 		err := h.Sync(r.Target)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
-type Handler interface {
-	// Name() string
-	// Set(interface{})
-	Sync(target string) error
-	// Stat() (*os.FileInfo, error)
-	String() string
-}
+// type Handler interface {
+// 	// Name() string
+// 	// Set(interface{})
+// 	Sync(target string) error
+// 	// Stat() (*os.FileInfo, error)
+// 	String() string
+// }
 
 type File struct { // []string
 	Path string
@@ -53,9 +51,11 @@ func NewFile(value interface{}) (*File, error) {
 		file = &File{Type: val["type"].(string), Path: val["path"].(string)}
 	case *File:
 		file = val
+	// case interface{}:
 	default:
-		// file = val
-		return file, fmt.Errorf("Unknown type %T for %+v\n", val, val)
+		fmt.Printf("Unknown type %T for %+v\n", val, val)
+		file = val.(*File)
+		// return file, fmt.Errorf("Unknown type %T for %+v\n", val, val)
 	}
 	if file.Path == "" {
 		return file, fmt.Errorf("Empty File path\n")
@@ -169,7 +169,7 @@ func NewLink(value interface{}) (*Link, error) {
 }
 
 func (l *Link) Sync(target string) error {
-	fmt.Println("Sync Link", l, target)
+	// fmt.Println("Sync Link", l, target)
 	return fileutil.Link(l.Path, target)
 	// if err != nil {
 	// 	return err

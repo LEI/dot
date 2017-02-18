@@ -2,64 +2,40 @@ package role
 
 import (
 	"fmt"
-	"path/filepath"
-	// "strings"
-	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
 	"os"
-	// "runtime"
 	"strings"
 )
 
-// const OS = runtime.GOOS
+type Role struct {
+	// Origin string
+	Source string
+	Target string
+	Packages []*Package
+}
 
-// func init() {
-// 	err := os.Setenv("OS", OS)
-// 	if err != nil {
-// 		fmt.Printf("Could not set env OS=%s: %s", OS, err)
-// 	}
-// }
-
-var Ignore = []string{".git", ".*\\.md"}
+func (role *Role) String() string {
+	return fmt.Sprintf("%+v", *role)
+}
 
 type Package struct {
 	Name   string
 	Path   string
 	Origin string
-	Repo   *git.Repository
 	Os     []string
+	Repo   *git.Repository
 	Config *viper.Viper
 
-	Dir   string
-	Dirs  []string
-	Link  interface{}
+	Dir string
+	Dirs []string
+	Link  interface{} // *PackageLink
 	Links []interface{}
-	Lines map[string]string // *Lines
+	Lines map[string]string
+
 }
 
-// type Role interface {
-// 	Get() interface{}
-// 	Check() bool
-// 	Sync(string, string) error
-// }
-
-func NewPackage(spec string) (*Package, error) {
-	pkg := &Package{
-		Origin: spec,
-	}
-	err := pkg.InitRepo(git.Https)
-	if err != nil {
-		return nil, err
-	}
-	// repo, err := git.NewRepository(spec)
-	// p := &Package{
-	// 	Name: repo.Name,
-	// 	Path: repo.Path,
-	// 	Repo: repo,
-	// }
-	return pkg, nil
-}
+// type PackageLink interface{}
 
 func (pkg *Package) String() string {
 	return fmt.Sprintf("%+v", *pkg)
@@ -107,6 +83,7 @@ func (pkg *Package) InitRepo(useHttps bool) error {
 	// }
 	return nil
 }
+
 func (pkg *Package) InitConfig(name string) error {
 	if pkg.Config == nil {
 		pkg.Config = viper.New()
@@ -125,25 +102,6 @@ func (pkg *Package) InitConfig(name string) error {
 	return nil
 }
 
-func (pkg *Package) Sync(source, target string) error {
-	if pkg.Config == nil {
-		return fmt.Errorf("%s: no config", pkg.Name)
-	}
-	err := pkg.SyncDirs(target)
-	if err != nil {
-		return err
-	}
-	err = pkg.SyncLinks(source, target)
-	if err != nil {
-		return err
-	}
-	err = pkg.SyncLines(target)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (pkg *Package) GetDirs() []string {
 	pkg.Dir = pkg.Config.GetString("dir")
 	if pkg.Dir != "" {
@@ -151,19 +109,6 @@ func (pkg *Package) GetDirs() []string {
 		pkg.Config.Set("dirs", pkg.Dirs)
 	}
 	return pkg.Config.GetStringSlice("dirs")
-}
-
-func (pkg *Package) SyncDirs(target string) error {
-	for _, dir := range pkg.GetDirs() {
-		dir = os.ExpandEnv(dir)
-		dir = filepath.Join(target, dir)
-		err := fileutil.MakeDir(dir)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Directory: %s\n", dir)
-	}
-	return nil
 }
 
 func (pkg *Package) GetLinks() []interface{} {
@@ -188,40 +133,32 @@ func (pkg *Package) GetLinks() []interface{} {
 	return pkg.Links
 }
 
-func (pkg *Package) SyncLinks(source, target string) error {
-	for _, glob := range pkg.GetLinks() {
-		link, err := NewLink(glob)
-		if err != nil {
-			return err
-		}
-		link.Path = filepath.Join(pkg.Path, link.Path)
-		links, err := link.GlobAsLink()
-		if err != nil {
-			return err
-		}
-		if len(links) == 0 {
-			fmt.Fprintf(os.Stderr, "%s: No match\n", link.Path)
-		}
-		LOOP:
-		for _, link := range links {
-			matched, err := link.NameMatches(Ignore)
-			if err != nil {
-				return err
-			}
-			if matched {
-				fmt.Printf("Ignoring link: %s\n", link)
-				continue LOOP
-			}
-			dst := strings.Replace(link.Path, pkg.Path, target, 1)
-			err = link.Sync(dst)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("Link: %s into %s\n", link.Path, dst)
-		}
-	}
-	return nil
+func (pkg *Package) GetLines() map[string]string {
+	pkg.UnmarshalKey("lines", &pkg.Lines)
+	// if pkg.Lines == nil {
+	// 	pkg.Lines = make(Lines, 0)
+	// }
+	// fmt.Printf("lines (%T): %+v\n", lines)
+	return pkg.Lines
 }
+
+
+// func NewPackage(spec string) (*Package, error) {
+// 	pkg := &Package{
+// 		Origin: spec,
+// 	}
+// 	err := pkg.InitRepo(git.Https)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	// repo, err := git.NewRepository(spec)
+// 	// p := &Package{
+// 	// 	Name: repo.Name,
+// 	// 	Path: repo.Path,
+// 	// 	Repo: repo,
+// 	// }
+// 	return pkg, nil
+// }
 
 // func (pkg *Package) SyncLink(link *File, target string) error {
 // 	paths, err := filepath.Glob(path)
@@ -243,28 +180,6 @@ func (pkg *Package) SyncLinks(source, target string) error {
 // 	return nil
 // }
 
-func (pkg *Package) GetLines() map[string]string {
-	pkg.UnmarshalKey("lines", &pkg.Lines)
-	// if pkg.Lines == nil {
-	// 	pkg.Lines = make(Lines, 0)
-	// }
-	// fmt.Printf("lines (%T): %+v\n", lines)
-	return pkg.Lines
-}
-
-func (pkg *Package) SyncLines(target string) error {
-	for file, line := range pkg.GetLines() {
-		file = os.ExpandEnv(file)
-		file = filepath.Join(target, file)
-		err := fileutil.LineInFile(file, line)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Line: '%s' in %s\n", line, file)
-	}
-	return nil
-}
-
 func (pkg *Package) UnmarshalKey(k string, v interface{}) interface{} {
 	err := pkg.Config.UnmarshalKey(k, v)
 	if err != nil {
@@ -273,24 +188,24 @@ func (pkg *Package) UnmarshalKey(k string, v interface{}) interface{} {
 	return v
 }
 
-type PackageSlice []Package
+// type PackageSlice []Package
 
-func (slice *PackageSlice) String() string {
-	return fmt.Sprintf("%+v", *slice)
-}
+// func (slice *PackageSlice) String() string {
+// 	return fmt.Sprintf("%+v", *slice)
+// }
 
-func (slice *PackageSlice) Type() string {
-	return fmt.Sprintf("%T", *slice)
-}
+// func (slice *PackageSlice) Type() string {
+// 	return fmt.Sprintf("%T", *slice)
+// }
 
-func (slice *PackageSlice) Set(value string) error {
-	pkg, err := NewPackage(value)
-	if err != nil {
-		return err
-	}
-	*slice = append(*slice, *pkg)
-	return nil
-}
+// func (slice *PackageSlice) Set(value string) error {
+// 	pkg, err := NewPackage(value)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	*slice = append(*slice, *pkg)
+// 	return nil
+// }
 
 // type PackageMap map[string]Package
 // (*pkgMap)[p.Name] = *pkg

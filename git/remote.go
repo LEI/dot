@@ -22,6 +22,10 @@ func NewRemote(name string, url string) *Remote {
 	return r
 }
 
+func (r *Remote) String() string {
+	return fmt.Sprintf("%s %s", r.Name, r.URL)
+}
+
 func (r *Remote) SetUrl(url string) *Remote {
 	switch {
 	case strings.HasPrefix(url, "git@"),

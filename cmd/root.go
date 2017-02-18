@@ -114,6 +114,8 @@ var RootCmd = &cobra.Command{
 		if err != nil {
 			fatal(err)
 		}
+		// Role = &Role{Source: Source, Target: Target, Packages: Packages}
+		// fmt.Println(Role)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
