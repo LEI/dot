@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// ARCH = runtime.GOARCH
 	OS = runtime.GOOS
 	version = "master"
 )
@@ -21,7 +22,7 @@ const (
 var ( // os.Getenv("HOME") // user.Current().HomeDir
 	HOME = env("HOME")
 	OSTYPE = env("OSTYPE")
-	OsTypes = []string{OS, OSTYPE}
+	OsTypes = []string{OS}
 	CurrentDir string
 	Source     string
 	Target     string
@@ -55,6 +56,9 @@ var (
 
 func init() {
 	fmt.Printf("OS: %+v\n", OsTypes)
+	if OSTYPE != "" {
+		OsType = append(OsTypes, OSTYPE)
+	}
 	// cobra.OnInitialize(initConfig)
 
 	err := os.Setenv("OS", OS)
@@ -160,7 +164,7 @@ func Execute() {
 func env(key string) string {
 	val, ok := os.LookupEnv(key)
 	if !ok {
-		fmt.Printf("%s is not set!\n", val)
+		fmt.Printf("%s is not set!\n", key)
 	}
 	return val
 }

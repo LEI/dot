@@ -190,49 +190,34 @@ func (pkg *Package) GetLinks() []interface{} {
 
 func (pkg *Package) SyncLinks(source string, target string) error {
 	for _, glob := range pkg.GetLinks() {
-		f, err := NewFileBase(glob, pkg.Path)
+		link, err := NewLink(glob)
 		if err != nil {
 			return err
 		}
-		files, err := f.Glob()
+		link.Path = filepath.Join(pkg.Path, link.Path)
+		links, err := link.GlobAsLink()
 		if err != nil {
 			return err
 		}
-		if len(files) == 0 {
-			fmt.Fprintf(os.Stderr, "%s: No match\n", f.Path)
+		if len(links) == 0 {
+			fmt.Fprintf(os.Stderr, "%s: No match\n", link.Path)
 		}
 		LOOP:
-		for _, file := range files {
-			for _, pattern := range Ignore {
-				matched, err := filepath.Match(pattern, filepath.Base(file.Path))
-				if err != nil {
-					return err
-				}
-				if matched {
-					fmt.Printf("Ignoring path: %s\n", file)
-					continue LOOP
-				}
-			}
-			fi, err := os.Stat(file.Path)
-			if err != nil {
-				return nil
-			}
-			switch file.Type {
-			case "directory":
-				if !fi.IsDir() {
-					continue
-				}
-			case "file":
-				if fi.IsDir() {
-					continue
-				}
-			}
-			dst := strings.Replace(file.Path, pkg.Path, target, 1)
-			err = file.Link(dst)
+		for _, link := range links {
+			matched, err := link.NameMatches(Ignore)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Link: %s into %s\n", file.Path, dst)
+			if matched {
+				fmt.Printf("Ignoring link: %s\n", link)
+				continue LOOP
+			}
+			dst := strings.Replace(link.Path, pkg.Path, target, 1)
+			err = link.Sync(dst)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Link: %s into %s\n", link.Path, dst)
 		}
 	}
 	return nil
