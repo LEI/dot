@@ -19,11 +19,11 @@ var (
 )
 
 var (
-	Dot        *role.Meta
-	Config     *conf.Conf
-	ConfigName = ".dotrc"
+	Dot                   *role.Meta
+	Config                *conf.Conf
+	ConfigName            = ".dotrc"
 	debug, https, verbose bool
-	defaultDotDir = ".dot"
+	defaultDotDir         = ".dot"
 )
 
 var DotCmd = &cobra.Command{

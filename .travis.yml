@@ -26,7 +26,7 @@ script:
   - yes | dot --https
   # - curl -sfLo ~/.vim/autoload/plug.vim --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
   - ls -la ~/.vim/*
-  - tmux new-session -n test "vim +PlugInstall +qall; exit"
+  - tmux new-session -n test "vim -E -s -u $HOME/.vim/vimrc +PlugInstall +qall; exit"
   - test -d $HOME/.tmux/plugins/tpm
   - ls -la $HOME/.vim
 

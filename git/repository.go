@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	DefaultBranch    = "master"
-	DefaultRemote    = "origin"
-	DefaultPath      string
-	PathSep = string(os.PathSeparator)
+	DefaultBranch = "master"
+	DefaultRemote = "origin"
+	DefaultPath   string
+	PathSep       = string(os.PathSeparator)
 )
 
 type Repository struct {
@@ -24,7 +24,7 @@ type Repository struct {
 	gitdir  string
 }
 
-func NewRepository(spec string/*, clonePath string, remotes ...*Remote*/) (*Repository, error) {
+func NewRepository(spec string /*, clonePath string, remotes ...*Remote*/) (*Repository, error) {
 	name, dir, url, err := ParseSpec(spec)
 	if err != nil {
 		return nil, err
