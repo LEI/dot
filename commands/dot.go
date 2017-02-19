@@ -54,14 +54,16 @@ var DotCmd = &cobra.Command{
 		}
 
 		for _, r := range Dot.Roles {
-			err = r.Init(Dot.Source, Dot.Target)
+			r, err = r.New(Dot.Source, Dot.Target)
 			if err != nil {
 				return err
 			}
+			// Check platform
 			ok := r.IsOs([]string{OS, OSTYPE})
 			if !ok {
 				continue
 			}
+			// Filter roles by name
 			skip := len(args) > 0
 			for _, arg := range args {
 				if arg == r.Name {
@@ -72,11 +74,13 @@ var DotCmd = &cobra.Command{
 			if skip {
 				continue
 			}
+
 			fmt.Printf("--- Role %s\n", r.Name)
 			if Verbose {
-				fmt.Printf("--- %+v\n", r)
+				fmt.Printf("=== %+v\n", r)
 			}
 
+			// err := r.InitPackage()
 			repo, err := git.NewRepository(r.Origin)
 			if err != nil {
 				return err
@@ -87,42 +91,21 @@ var DotCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-
-			cfg := conf.New(ConfigName, []string{repo.Path})
-			cfgUsed, err := cfg.Read()
+			if repo.Path != "" {
+				r.Source = repo.Path
+			}
+			cfgUsed, err := r.ReadConfig(ConfigName, []string{r.Source})
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
 			if Verbose && cfgUsed != "" {
 				fmt.Printf("Using role config file: %s\n", cfgUsed)
 			}
-			err = cfg.Unmarshal(&r.Package)
-			if err != nil {
-				return err
-			}
 
-			// fmt.Printf("PKG: %+v\n", r.Package)
-			if r.Package == nil {
-				fmt.Println("PKG NIL", r)
-				continue
-			}
-
-			for _, dir := range r.Package.GetDirs() {
-				fmt.Println("Dir:", dir)
-			}
-			for _, link := range r.Package.GetLinks() {
-				fmt.Println("Link:", link)
-			}
-			for _, line := range r.Package.GetLines() {
-				fmt.Println("Line:", line)
-			}
+			r.Sync()
 			// viper.Sub()
 			// Dot.Roles = append(Dot.Roles, r)
 		}
-
-		// if err != nil {
-		// 	return err
-		// }
 		return nil
 	},
 }

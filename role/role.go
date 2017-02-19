@@ -2,6 +2,7 @@ package role
 
 import (
 	"fmt"
+	"github.com/LEI/dot/conf"
 	"os"
 	"path"
 	"strings"
@@ -24,7 +25,8 @@ type Role struct {
 	Name, Origin string
 	Source, Target string
 	Os []string
-	Package *Package
+	Config *conf.Conf
+	Package *Package // `mapstructure:",squash"`
 }
 
 // func (r *Role) New(v interface{}) *Role {
@@ -41,7 +43,10 @@ type Role struct {
 // 	return fmt.Sprintf("%s", origin)
 // }
 
-func (r *Role) Init(source, target string) error {
+func (r *Role) New(source, target string) (*Role, error) {
+	if r == nil {
+		r = &Role{}
+	}
 	switch {
 	case r.Name == "" && r.Origin != "":
 		r.Name = r.Origin
@@ -52,13 +57,40 @@ func (r *Role) Init(source, target string) error {
 		r.Origin = r.Name
 	}
 	if r.Name == "" || r.Origin == "" {
-		return fmt.Errorf("Invalid role: %+v\n", r)
+		return r, fmt.Errorf("Invalid role: %+v\n", r)
 	}
 	if r.Source == "" {
 		r.Source = source
 	}
 	if r.Target == "" {
 		r.Target = target
+	}
+	return r, nil
+}
+
+func (r *Role) ReadConfig(name string, paths []string) (string, error) {
+	r.Config = conf.New(name, paths)
+	return r.Config.Read()
+}
+
+func (r *Role) Sync() error {
+	for _, dir := range r.Dirs() {
+		err := dir.Sync(r.Target)
+		if err != nil {
+			return err
+		}
+	}
+	for _, link := range r.Links() {
+		err := link.Sync(r.Target)
+		if err != nil {
+			return err
+		}
+	}
+	for _, line := range r.Lines() {
+		err := line.Sync(r.Target)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -67,9 +99,13 @@ func (r *Role) IsOs(types []string) bool {
 	if len(r.Os) == 0 || len(types) == 0 {
 		return true
 	}
-	for _, o := range r.Os {
-		for _, s := range types {
-			if o == s {
+	return hasOne(r.Os, types)
+}
+
+func hasOne(in []string, list []string) bool {
+	for _, a := range in {
+		for _, b := range list {
+			if b == a {
 				return true
 			}
 		}
