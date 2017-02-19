@@ -24,11 +24,7 @@ type Role struct {
 	Name, Origin string
 	Source, Target string
 	Os []string
-	Dir string
-	Dirs []string
-	Link interface{}
-	Links []interface{}
-	Lines map[string]string
+	Package *Package
 }
 
 // func (r *Role) New(v interface{}) *Role {
@@ -36,7 +32,8 @@ type Role struct {
 // }
 
 // func (r *Role) String() string {
-// 	return fmt.Sprintf("%s: %s -> %s", r.Name, r.Source, r.Target)
+// 	return fmt.Sprintf("%s (%s) [%s -> %s] Dir: %s, Dirs: %v, Link: %s, Links: %v, Lines: %+v",
+// 		r.Name, r.Origin, r.Source, r.Target, r.Dir, r.Dirs, r.Link, r.Links, r.Lines)
 // }
 
 // func (r *Role) Origin() string {
@@ -78,12 +75,4 @@ func (r *Role) IsOs(types []string) bool {
 		}
 	}
 	return false
-}
-
-func (r *Role) GetDirs() []string {
-	if r.Dir != "" {
-		r.Dirs = append(r.Dirs, r.Dir)
-		r.Dir = ""
-	}
-	return r.Dirs
 }

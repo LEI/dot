@@ -105,6 +105,9 @@ func (repo *Repository) IsCloned() bool {
 }
 
 func (repo *Repository) Clone() error {
+	if repo.Path == "" {
+		repo.Path = filepath.Join(DefaultClonePath, repo.Name)
+	}
 	for _, remote := range repo.Remotes {
 		// fmt.Println("git", "clone", remote.URL, repo.Path)
 		cmd := exec.Command("git", "clone", "--quiet", remote.URL, repo.Path)
@@ -119,6 +122,9 @@ func (repo *Repository) Clone() error {
 }
 
 func (repo *Repository) Pull(args ...string) error {
+	if repo.Path == "" {
+		repo.Path = filepath.Join(DefaultClonePath, repo.Name)
+	}
 	for _, remote := range repo.Remotes {
 		pull := []string{"-C", repo.Path, "pull"}
 		if len(args) == 0 {
@@ -163,13 +169,11 @@ func ParseSpec(str string) (string, string, string, error) {
 			name = parts[0]
 			url = parts[1]
 		} else {
+			// name = filepath.Base(str)
 			url = str
 		}
 	} else {
 		err = fmt.Errorf("Unkown spec: '%s'", str)
-	}
-	if path == "" {
-		path = filepath.Join(DefaultClonePath, name)
 	}
 	return name, path, url, err
 }

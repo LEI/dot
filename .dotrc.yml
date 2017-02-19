@@ -26,5 +26,8 @@ roles:
     origin: LEI/dot-hammerspoon
     # target: /tmp/osx
     os: ["darwin"]
-    dir: .hammerspoon
-    link: .hammerspoon/*
+    # package:
+    #   dirs:
+    #     - .config
+    #   links:
+    #     - .hammerspoon/*.lua

@@ -22,6 +22,7 @@ var (
 	ConfigName = ".dotrc"
 	Dot *role.Meta
 	Https bool
+	Verbose bool
 )
 
 var DotCmd = &cobra.Command{
@@ -42,10 +43,10 @@ var DotCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) > 0 {
-			fmt.Printf("Warning: extra arguments %s\n", args)
-			return cmd.Help()
-		}
+		// if len(args) > 0 {
+		// 	fmt.Printf("Warning: extra arguments %s\n", args)
+		// 	return cmd.Help()
+		// }
 
 		err := os.Setenv("OS", OS)
 		if err != nil {
@@ -61,31 +62,59 @@ var DotCmd = &cobra.Command{
 			if !ok {
 				continue
 			}
-
-			fmt.Printf("--- Role %+v\n", r.Name)
+			skip := len(args) > 0
+			for _, arg := range args {
+				if arg == r.Name {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				continue
+			}
+			fmt.Printf("--- Role %s\n", r.Name)
+			if Verbose {
+				fmt.Printf("--- %+v\n", r)
+			}
 
 			repo, err := git.NewRepository(r.Origin)
 			if err != nil {
 				return err
 			}
 			// repo.Path = r.Source
+			repo.Name = r.Name
 			err = repo.CloneOrPull()
 			if err != nil {
 				return err
 			}
 
-			// var cfg *conf.Conf
 			cfg := conf.New(ConfigName, []string{repo.Path})
 			cfgUsed, err := cfg.Read()
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
-			if cfgUsed != "" {
-				fmt.Printf("Using config file: %s\n", cfgUsed)
+			if Verbose && cfgUsed != "" {
+				fmt.Printf("Using role config file: %s\n", cfgUsed)
+			}
+			err = cfg.Unmarshal(&r.Package)
+			if err != nil {
+				return err
 			}
 
-			for _, dir := range r.GetDirs() {
-				fmt.Println("DIR:", dir)
+			// fmt.Printf("PKG: %+v\n", r.Package)
+			if r.Package == nil {
+				fmt.Println("PKG NIL", r)
+				continue
+			}
+
+			for _, dir := range r.Package.GetDirs() {
+				fmt.Println("Dir:", dir)
+			}
+			for _, link := range r.Package.GetLinks() {
+				fmt.Println("Link:", link)
+			}
+			for _, line := range r.Package.GetLines() {
+				fmt.Println("Line:", line)
 			}
 			// viper.Sub()
 			// Dot.Roles = append(Dot.Roles, r)
@@ -115,14 +144,15 @@ func init() {
 	}
 
 	DotCmd.Flags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
+	// DotCmd.Flags().StringVarP(&Debug, "debug", "d", Debug, "check-mode")
 	DotCmd.Flags().BoolVarP(&Https, "https", "", Https, "Force HTTPS for git clone")
 	DotCmd.Flags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
 	DotCmd.Flags().StringVarP(&target, "target", "t", HOME, "Destination `directory`")
-	// DotCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
 
 	if configFile != "" {
-		Config = conf.NewFile(configFile) 
+		Config = conf.NewFile(configFile)
 	} else {
 		configPaths = []string{source}
 		for _, p := range []string{HOME, currentDir} {
@@ -137,7 +167,7 @@ func init() {
 	if err != nil && !os.IsNotExist(err) {
 		fatal(err)
 	}
-	if configUsed != "" {
+	if Verbose && configUsed != "" {
 		fmt.Printf("Using config file: %s\n", configUsed)
 	}
 }
