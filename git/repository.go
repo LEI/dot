@@ -10,18 +10,18 @@ import (
 )
 
 var (
-	DefaultBranch = "master"
-	DefaultRemote = "origin"
+	DefaultBranch    = "master"
+	DefaultRemote    = "origin"
 	DefaultClonePath = filepath.Join(os.Getenv("HOME"), ".dot")
 	// TODO init() viper.Get("target")
-	PathSep   = string(os.PathSeparator)
+	PathSep = string(os.PathSeparator)
 )
 
 type Repository struct {
-	Name   string
-	Branch string
-	Path   string // Git work tree
-	GitDir string
+	Name    string
+	Branch  string
+	Path    string // Git work tree
+	GitDir  string
 	Remotes map[string]*Remote
 }
 
@@ -148,11 +148,11 @@ func (repo *Repository) Pull(args ...string) error {
 // name=user/repo
 // user/repo
 func ParseSpec(str string) (string, string, string, error) {
-	var nameSep   = "="
-	var name      = str
-	var path      string
-	var url       string
-	var err       error
+	var nameSep = "="
+	var name = str
+	var path string
+	var url string
+	var err error
 	if strings.HasPrefix(str, PathSep) {
 		exists, err := fileutil.Exists(str)
 		if err != nil || !exists {

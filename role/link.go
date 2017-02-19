@@ -89,7 +89,7 @@ func castAsLink(value interface{}) *Link {
 		}
 		ln = &Link{
 			Pattern: pattern,
-			Type: fileType,
+			Type:    fileType,
 		}
 	case map[interface{}]interface{}:
 		pattern, ok := v[interface{}("pattern")].(string)
@@ -102,7 +102,7 @@ func castAsLink(value interface{}) *Link {
 		}
 		ln = &Link{
 			Pattern: pattern,
-			Type: fileType,
+			Type:    fileType,
 		}
 	default:
 		fatal(fmt.Errorf("(%T) %s\n", v, v))

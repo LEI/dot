@@ -21,7 +21,7 @@ type Dir struct {
 }
 
 type Link struct {
-	Path string
+	Path   string
 	Target string
 }
 
@@ -38,7 +38,7 @@ type Line struct {
 	Line string
 }
 
-func NewLink(src string, dst string) string{
+func NewLink(src string, dst string) string {
 	return &Link{Path: src, Target: dst}
 }
 

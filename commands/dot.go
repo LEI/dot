@@ -13,16 +13,16 @@ import (
 const OS = runtime.GOOS
 
 var (
-	HOME = env("HOME")
+	HOME   = env("HOME")
 	OSTYPE = env("OSTYPE")
 )
 
 var (
-	Config *conf.Conf
+	Config     *conf.Conf
 	ConfigName = ".dotrc"
-	Dot *role.Meta
-	Https bool
-	Verbose bool
+	Dot        *role.Meta
+	Https      bool
+	Verbose    bool
 )
 
 var DotCmd = &cobra.Command{

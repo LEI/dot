@@ -14,7 +14,7 @@ var (
 
 type Meta struct {
 	Source, Target string
-	Roles []*Role
+	Roles          []*Role
 }
 
 func (m *Meta) String() string {
@@ -22,11 +22,11 @@ func (m *Meta) String() string {
 }
 
 type Role struct {
-	Name, Origin string
+	Name, Origin   string
 	Source, Target string
-	Os []string
-	Config *conf.Conf
-	Package *Package // `mapstructure:",squash"`
+	Os             []string
+	Config         *conf.Conf
+	Package        *Package // `mapstructure:",squash"`
 }
 
 // func (r *Role) New(v interface{}) *Role {

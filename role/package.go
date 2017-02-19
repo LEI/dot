@@ -7,11 +7,11 @@ import (
 
 // type Package map[string]interface{}
 type Package struct {
-	Dir *Dir
-	Dirs []*Dir
-	Link *Link // interface{}
+	Dir   *Dir
+	Dirs  []*Dir
+	Link  *Link   // interface{}
 	Links []*Link // interface{}
-	Line *Line
+	Line  *Line
 	Lines []*Line
 	// Template interface{}
 }
