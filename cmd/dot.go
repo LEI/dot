@@ -11,26 +11,30 @@ import (
 	"path"
 	"runtime"
 	"strings"
-	"time"
+	// "time"
 )
 
 const OS = runtime.GOOS
 
+var OSTYPE string
+
 var (
-	Dot           = &role.Meta{}
-	Config        *config.Configuration
-	ConfigName    = ".dotrc"
-	defaultDotDir = ".dot"
-	debug         bool
-	https         bool
-	verbose       bool
-	OSTYPE        string
+	Dot        = &role.Meta{}
+	Config     *config.Configuration
+	configFile = ""
+	configName = ".dotrc"
+	RolesDir   = ".dot" // Default clone parent directory
+	HomeDir    = os.Getenv("HOME")
+	debug      bool
+	verbose    bool
+	source     string
+	target     string
 )
 
 var DotCmd = &cobra.Command{
 	Use:   "dot",
 	Short: "Manage dotfiles",
-	Long:  ``,
+	// Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return initCommand()
 	},
@@ -43,67 +47,71 @@ var DotCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
-	if err := DotCmd.Execute(); err != nil {
-		fmt.Println("Dot Cmd Executed, fatal error:", err)
-		fatal(err)
+func Execute() error {
+	err := DotCmd.Execute()
+	if err != nil {
+		if verbose {
+			fmt.Fprintf(os.Stderr, "Fatal error: %+v\n", err)
+		}
+		os.Exit(1)
 	}
+	return nil
 }
 
 func init() {
-	var (
-		configFile     string
-		configPaths    = []string{}
-		currentDir     string
-		homeDir        = os.Getenv("HOME")
-		source, target string
-	)
-
 	currentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
-		fatal(err)
+		fmt.Fprintf(os.Stderr, "os.Getcwd() Error: %s\n", err)
 	}
-
 	cobra.OnInitialize(initConfig)
-
 	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
 	DotCmd.PersistentFlags().BoolVarP(&debug, "dry-run", "d", debug, "Enable check-mode")
 	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Force HTTPS for git clone")
 	DotCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
-	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", homeDir, "Destination `directory`")
-	DotCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
+	DotCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
+	// DotCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
+	// Config.BindPFlags(DotCmd.Flags())
+}
 
+func initConfig() {
+	bindPFlags := []string{"source", "target"}
+	bindFlags := []string{}
+	// switch {
+	// case version:
+	// 	os.Args = []string{os.Args[0], "version"}
+	// 	err := versionCmd.Execute()
+	// 	if err != nil {
+	// 		fmt.Println("Error:", err)
+	// 		os.Exit(1)
+	// 	}
+	// 	os.Exit(0)
+	// }
 	if configFile != "" {
 		Config = config.NewFile(configFile)
 	} else {
-		configPaths = []string{"/etc", source, target} // Default: PWD, HOME
-		Config = config.New(ConfigName, configPaths)
+		configPath := []string{source, target, "/etc"}
+		Config = config.New(configName, configPath)
 	}
-
-	// viper.BindPFlag("sample", RootCmd.PersistentFlags().Lookup("sample"))
-	Config.BindPFlags(DotCmd.PersistentFlags())
-
+	for _, f := range bindPFlags {
+		Config.BindPFlag(f, DotCmd.PersistentFlags().Lookup(f))
+	}
+	for _, f := range bindFlags {
+		Config.BindPFlag(f, DotCmd.Flags().Lookup(f))
+	}
 	configUsed, err := Config.Read()
 	if err != nil {
-		fmt.Println("read error", os.IsNotExist(err), configPaths)
-		fatal(err)
+		fmt.Println("read error", os.IsNotExist(err))
+		fmt.Fprintf(os.Stderr, "Read config error: %s\n", err)
+		os.Exit(1)
 	}
 	if verbose && configUsed != "" {
 		fmt.Printf("Using config file: %s\n", configUsed)
 	}
 }
 
-func initConfig() {
-	fmt.Println("INIT CONFIG", time.Now())
-}
-
 func initCommand() error {
-	// Dot = &role.Meta{
-	// 	Config.GetString("source"),
-	// 	Config.GetString("target"),
-	// 	make([]*role.Role, 0),
-	// }
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
 	err := Config.UnmarshalKey("roles", &Dot.Roles)
@@ -156,7 +164,7 @@ func syncRole(r *role.Role) error {
 	// defer fmt.Printf("---\n")
 
 	// TODO func (r *Role) NewRepo() error?
-	git.DefaultPath = path.Join(r.Target, defaultDotDir)
+	git.DefaultPath = path.Join(r.Target, RolesDir)
 	repo, err := git.NewRepository(r.Origin)
 	if err != nil {
 		return err
@@ -169,7 +177,7 @@ func syncRole(r *role.Role) error {
 	if repo.Path != r.Source {
 		r.Source = repo.Path
 	}
-	cfgUsed, err := r.ReadConfig(ConfigName, []string{r.Source})
+	cfgUsed, err := r.ReadConfig(configName, []string{r.Source})
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -220,18 +228,4 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	return nil
-}
-
-func env(key string) string {
-	val, ok := os.LookupEnv(key)
-	if !ok {
-		fmt.Fprintf(os.Stderr, "Warning: %s is not set\n", key)
-	}
-	return val
-}
-
-func fatal(msg interface{}) {
-	// log.Fatal*
-	fmt.Fprintf(os.Stderr, "Error: %s\n", msg)
-	os.Exit(1)
 }

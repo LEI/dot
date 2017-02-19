@@ -16,7 +16,7 @@ var ()
 var removeCmd = &cobra.Command{
 	Use:   "remove [flags]",
 	Short: "Remove dotfiles",
-	Long:  ``,
+	// Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Not implemented")
 		if len(args) > 0 {
