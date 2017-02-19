@@ -46,6 +46,7 @@ var DotCmd = &cobra.Command{
 
 func Execute() {
 	if err := DotCmd.Execute(); err != nil {
+		fmt.Println("Dot Cmd Executed, fatal error:", err)
 		fatal(err)
 	}
 }
@@ -161,8 +162,10 @@ func syncRole(r *role.Role) error {
 	}
 
 	for _, d := range r.Dirs() {
-		fmt.Println("  - Create", d.Path)
-		// fmt.Printf("## Create %s\n", d)
+		fmt.Println("- Create", d.Path)
+		if Verbose {
+			fmt.Println("->", d)
+		}
 		d.Path = os.ExpandEnv(d.Path)
 		d.Path = path.Join(r.Target, d.Path)
 		err := fileutil.MakeDir(d.Path) // <- fileutil.MakeDir
@@ -171,8 +174,10 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Links() {
-		fmt.Println("  - Symlink", l.Pattern)
-		// fmt.Printf("## Symlink %s\n", l)
+		fmt.Println("- Symlink", l.Pattern)
+		if Verbose {
+			fmt.Println("->", l)
+		}
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		paths, err := l.GlobFiles(r.Source) // <- role.Link.GlobFiles(src string)
 		if err != nil {
@@ -187,8 +192,10 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Lines() {
-		fmt.Println("  - Line in", l.File)
-		// fmt.Printf("## Line in file %s\n", l)
+		fmt.Println("- Line in", l.File)
+		if Verbose {
+			fmt.Println("->", l)
+		}
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)
 		err := fileutil.LineInFile(l.File, l.Line) // <- fileutil.LineInFile
