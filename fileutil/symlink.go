@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Link(source, target string) error {
+func Symlink(source, target string) error {
 	fi, err := os.Lstat(target)
 	if err != nil && os.IsExist(err) {
 		return err

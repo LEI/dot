@@ -75,8 +75,6 @@ func (repo *Repository) WorkTree() string {
 		fmt.Printf("Warning: %s\n", "No default git clone path")
 	} else if repo.Path == "" {
 		repo.Path = filepath.Join(DefaultPath, repo.Name)
-	} else {
-		fmt.Println("git", repo.Name, "WorkTree path:", repo.Path)
 	}
 	return repo.Path
 }

@@ -2,10 +2,8 @@ package role
 
 import (
 	"fmt"
-	"github.com/LEI/dot/fileutil"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 var IgnoreNames = []string{".git", ".*\\.md"}
@@ -30,7 +28,7 @@ func (l *Link) String() string {
 	return fmt.Sprintf("%s", str)
 }
 
-func (l *Link) GlobPaths(source string) ([]string, error) {
+func (l *Link) GlobFiles(source string) ([]string, error) {
 	glob := filepath.Join(source, l.Pattern)
 	paths, err := filepath.Glob(glob)
 	if err != nil {
@@ -66,21 +64,6 @@ func (l *Link) GlobPaths(source string) ([]string, error) {
 	return l.Files, nil
 }
 
-func (l *Link) Sync(source, target string) error {
-	paths, err := l.GlobPaths(source)
-	if err != nil {
-		return err
-	}
-	for _, src := range paths {
-		dst := strings.Replace(src, source, target, 1)
-		err := fileutil.Link(src, dst)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (r *Role) Links() []*Link {
 	p := r.Package
 	if p == nil {
@@ -89,15 +72,15 @@ func (r *Role) Links() []*Link {
 	// r.Config.UnmarshalKey("link", &p.Link)
 	// r.Config.UnmarshalKey("links", &p.Links)
 	// p.Links := make([]interface{}, 0)
-	ln := r.Config.Get("link")
-	if ln != nil {
-		p.Links = append(p.Links, castAsLink(ln))
+	l := r.Config.Get("link")
+	if l != nil {
+		p.Links = append(p.Links, castAsLink(l))
 		p.Link = nil
 	}
-	lln := r.Config.Get("links")
-	if lln != nil {
-		for _, ln := range lln.([]interface{}) {
-			p.Links = append(p.Links, castAsLink(ln))
+	links := r.Config.Get("links")
+	if links != nil {
+		for _, l := range links.([]interface{}) {
+			p.Links = append(p.Links, castAsLink(l))
 		}
 	}
 	r.Config.Set("links", p.Links)
@@ -106,10 +89,10 @@ func (r *Role) Links() []*Link {
 }
 
 func castAsLink(value interface{}) *Link {
-	var ln *Link
+	var l *Link
 	switch v := value.(type) {
 	case string:
-		ln = &Link{Pattern: v}
+		l = &Link{Pattern: v}
 	case map[string]interface{}:
 		pattern, ok := v["pattern"].(string)
 		if !ok {
@@ -119,7 +102,7 @@ func castAsLink(value interface{}) *Link {
 		if !ok {
 			fileType = ""
 		}
-		ln = &Link{
+		l = &Link{
 			Pattern: pattern,
 			Type:    fileType,
 		}
@@ -132,13 +115,12 @@ func castAsLink(value interface{}) *Link {
 		if !ok {
 			fileType = ""
 		}
-		ln = &Link{
+		l = &Link{
 			Pattern: pattern,
 			Type:    fileType,
 		}
 	default:
 		fatal(fmt.Errorf("(%T) %s\n", v, v))
 	}
-	ln.Pattern = os.ExpandEnv(ln.Pattern)
-	return ln
+	return l
 }

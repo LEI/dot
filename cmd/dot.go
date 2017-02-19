@@ -1,14 +1,16 @@
-package commands
+package cmd
 
 import (
 	"fmt"
-	"github.com/LEI/dot/conf"
+	"github.com/LEI/dot/config"
+	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"os"
 	"path"
 	"runtime"
+	"strings"
 )
 
 const OS = runtime.GOOS
@@ -20,7 +22,7 @@ var (
 
 var (
 	Dot                   *role.Meta
-	Config                *conf.Conf
+	Config                *config.Configuration
 	ConfigName            = ".dotrc"
 	debug, https, verbose bool
 	defaultDotDir         = ".dot"
@@ -67,7 +69,7 @@ func init() {
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
 
 	if configFile != "" {
-		Config = conf.NewFile(configFile)
+		Config = config.NewFile(configFile)
 	} else {
 		configPaths = []string{source}
 		for _, p := range []string{HOME, currentDir} {
@@ -75,7 +77,7 @@ func init() {
 				configPaths = append(configPaths, p)
 			}
 		}
-		Config = conf.New(ConfigName, configPaths)
+		Config = config.New(ConfigName, configPaths)
 	}
 	Config.BindPFlags(DotCmd.Flags())
 	configUsed, err := Config.Read()
@@ -127,55 +129,71 @@ func syncCommand(args []string) error {
 		if skip {
 			continue
 		}
+		syncRole(r)
+	}
+	return nil
+}
 
-		fmt.Printf("### Role %s\n", r.Name)
-		if verbose {
-			fmt.Println(" ->", r)
-		}
+func syncRole(r *role.Role) error {
+	fmt.Printf("--- Role %s\n", r.Name)
+	// defer fmt.Printf("---\n")
 
-		// TODO func (r *Role) NewRepo() error?
-		git.DefaultPath = path.Join(r.Target, defaultDotDir)
-		repo, err := git.NewRepository(r.Origin)
+	// TODO func (r *Role) NewRepo() error?
+	git.DefaultPath = path.Join(r.Target, defaultDotDir)
+	repo, err := git.NewRepository(r.Origin)
+	if err != nil {
+		return err
+	}
+	repo.Name = r.Name
+	err = repo.CloneOrPull()
+	if err != nil {
+		return err
+	}
+	if repo.Path != r.Source {
+		r.Source = repo.Path
+	}
+	cfgUsed, err := r.ReadConfig(ConfigName, []string{r.Source})
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if verbose && cfgUsed != "" {
+		fmt.Printf("Using role config file: %s\n", cfgUsed)
+	}
+
+	for _, d := range r.Dirs() {
+		fmt.Println("  - Create", d.Path)
+		// fmt.Printf("## Create %s\n", d)
+		d.Path = os.ExpandEnv(d.Path)
+		d.Path = path.Join(r.Target, d.Path)
+		err := fileutil.MakeDir(d.Path) // <- fileutil.MakeDir
 		if err != nil {
 			return err
 		}
-		fmt.Println("Changing", repo.Name, "to", r.Name, "--", repo)
-		repo.Name = r.Name
-		err = repo.CloneOrPull()
+	}
+	for _, l := range r.Links() {
+		fmt.Println("  - Symlink", l.Pattern)
+		// fmt.Printf("## Symlink %s\n", l)
+		l.Pattern = os.ExpandEnv(l.Pattern)
+		paths, err := l.GlobFiles(r.Source) // <- role.Link.GlobFiles(src string)
 		if err != nil {
 			return err
 		}
-		if repo.Path != r.Source {
-			r.Source = repo.Path
+		for _, src := range paths {
+			dst := strings.Replace(src, r.Source, r.Target, 1)
+			err := fileutil.Symlink(src, dst) // <- fileutil.Symlink
+			if err != nil {
+				return err
+			}
 		}
-		cfgUsed, err := r.ReadConfig(ConfigName, []string{r.Source})
-		if err != nil && !os.IsNotExist(err) {
+	}
+	for _, l := range r.Lines() {
+		fmt.Println("  - Line in", l.File)
+		// fmt.Printf("## Line in file %s\n", l)
+		l.File = os.ExpandEnv(l.File)
+		l.File = path.Join(r.Target, l.File)
+		err := fileutil.LineInFile(l.File, l.Line) // <- fileutil.LineInFile
+		if err != nil {
 			return err
-		}
-		if verbose && cfgUsed != "" {
-			fmt.Printf("Using role config file: %s\n", cfgUsed)
-		}
-
-		for _, dir := range r.Dirs() {
-			fmt.Printf("## Create %s\n", dir)
-			err := dir.Create(r.Target)
-			if err != nil {
-				return err
-			}
-		}
-		for _, link := range r.Links() {
-			fmt.Printf("## Symlink %s\n", link)
-			err := link.Sync(r.Source, r.Target)
-			if err != nil {
-				return err
-			}
-		}
-		for _, line := range r.Lines() {
-			fmt.Printf("## Line in file %s\n", line)
-			err := line.InFile(r.Target)
-			if err != nil {
-				return err
-			}
 		}
 	}
 	return nil

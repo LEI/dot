@@ -2,7 +2,7 @@ package role
 
 import (
 	"fmt"
-	"github.com/LEI/dot/conf"
+	"github.com/LEI/dot/config"
 	"os"
 	"path"
 	"strings"
@@ -25,7 +25,7 @@ type Role struct {
 	Name, Origin   string
 	Source, Target string
 	Os             []string
-	Config         *conf.Conf
+	Config         *config.Configuration
 	Package        *Package // `mapstructure:",squash"`
 }
 
@@ -69,7 +69,7 @@ func (r *Role) New(source, target string) (*Role, error) {
 }
 
 func (r *Role) ReadConfig(name string, paths []string) (string, error) {
-	r.Config = conf.New(name, paths)
+	r.Config = config.New(name, paths)
 	return r.Config.Read()
 }
 

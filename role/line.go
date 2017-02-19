@@ -2,9 +2,6 @@ package role
 
 import (
 	"fmt"
-	"github.com/LEI/dot/fileutil"
-	"path/filepath"
-	"os"
 )
 
 type Line struct {
@@ -14,16 +11,6 @@ type Line struct {
 
 func (l *Line) String() string {
 	return fmt.Sprintf("%s`%s`", l.File, l.Line)
-}
-
-func (l *Line) InFile(target string) error {
-	l.File = os.ExpandEnv(l.File)
-	l.File = filepath.Join(target, l.File)
-	err := fileutil.LineInFile(l.File, l.Line)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *Role) Lines() []*Line {

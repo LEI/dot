@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/LEI/dot/commands"
+	"github.com/LEI/dot/cmd"
 )
 
 func main() {
-	commands.Execute()
+	cmd.Execute()
 }
