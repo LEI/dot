@@ -14,7 +14,7 @@ services:
     # entrypoint: /bin/bash
     command: |
       -l -c 'run dot --https; bash -l'
-      # -l -c 'run dot sync -d --https -c $$DOT/.dotrc.yml;
+      # -l -c 'run dot -d --https -c $$DOT/.dotrc.yml;
       # run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit";
       # bash --login'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
@@ -27,8 +27,8 @@ services:
     command: |
       -l -c '
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
-      yes | run dot sync -s $$DOT --https
-      # yes | run dot sync -c $$DOT/.dotrc.yml
+      yes | run dot -s $$DOT --https
+      # yes | run dot -c $$DOT/.dotrc.yml
       # for d in $$HOME/.dot/*; do yes | run dot "$${d##*/}"; done
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
       run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit"
