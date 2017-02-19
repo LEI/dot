@@ -14,6 +14,7 @@ var (
 	DefaultRemote = "origin"
 	DefaultClonePath = filepath.Join(os.Getenv("HOME"), ".dot")
 	// TODO init() viper.Get("target")
+	PathSep   = string(os.PathSeparator)
 )
 
 type Repository struct {
@@ -105,7 +106,7 @@ func (repo *Repository) IsCloned() bool {
 func (repo *Repository) Clone() error {
 	for _, remote := range repo.Remotes {
 		// fmt.Println("git", "clone", remote.URL, repo.Path)
-		cmd := exec.Command("git", "clone", "--quiet", remote.URL, repo.Path)
+		cmd := exec.Command("echo", "git", "clone", "--quiet", remote.URL, repo.Path)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -124,7 +125,7 @@ func (repo *Repository) Pull(args ...string) error {
 		}
 		pull = append(pull, args...)
 		// fmt.Printf("git %s\n", strings.Join(pull, " "))
-		cmd := exec.Command("git", pull...)
+		cmd := exec.Command("echo", pull...)
 		// "--git-dir", dir+"/.git",
 		// "--work-tree", dir,
 		cmd.Stdout = os.Stdout
@@ -137,23 +138,26 @@ func (repo *Repository) Pull(args ...string) error {
 	return nil
 }
 
+func (repo *Repository) Update() error {
+	return repo.Pull()
+}
+
 // name=user/repo
 // user/repo
 func ParseSpec(str string) (string, string, string, error) {
-	var pathSep   = string(os.PathSeparator)
 	var nameSep   = "="
 	var name      = str
 	var path      string
 	var url       string
 	var err       error
-	if strings.HasPrefix(str, pathSep) {
+	if strings.HasPrefix(str, PathSep) {
 		exists, err := fileutil.Exists(str)
 		if err != nil || !exists {
 			return name, path, url, err
 		}
 		path = str
 		name = filepath.Dir(path)
-	} else if strings.Contains(str, pathSep) {
+	} else if strings.Contains(str, PathSep) {
 		if strings.Contains(str, nameSep) {
 			parts := strings.Split(str, nameSep)
 			if len(parts) != 2 {

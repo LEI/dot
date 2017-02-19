@@ -27,3 +27,11 @@ func (c *Config) Read() (string, error) {
 	used := c.ConfigFileUsed()
 	return used, err
 }
+
+// func (c *Config) Key(key string, v interface{}) error {
+// 	err := c.UnmarshalKey(key, &v)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

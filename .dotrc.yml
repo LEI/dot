@@ -1,27 +1,32 @@
 target: /tmp/dot
-packages:
+roles:
 
   - name: bash
-    origin: LEI/dot-bash
+    source: LEI/dot-bash
 
   - name: git
-    origin: LEI/dot-git
+    source: LEI/dot-git
 
   - name: tmux
-    origin: LEI/dot-tmux
+    source: LEI/dot-tmux
 
   - name: vim
-    origin: LEI/dot-vim
+    source: LEI/dot-vim
 
   - name: termux
+    source: LEI/dot-termux
     os: ["android"]
-    origin: LEI/dot-termux
 
   # El Capitan: darwin15.6.0
   - name: osx
-    origin: LEI/dot-osx
+    source: LEI/dot-osx
     os: ["darwin16"]
 
   - name: hammerspoon
-    origin: LEI/dot-hammerspoon
-    os: ["darwin"]
+    source: LEI/dot-hammerspoon
+    # target: /tmp/osx
+    dir: .hammerspoon
+    link: .hammerspoon/*
+  # - name: hammerspoon
+  #   source: LEI/dot-hammerspoon
+  #   os: ["darwin"]
