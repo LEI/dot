@@ -17,11 +17,11 @@ func Symlink(source, target string) error {
 			return err
 		}
 		if link == source { // TODO os.SameFile
-			fmt.Printf("%s already linked to %s\n", target, source)
+			fmt.Printf("# ignore %s (%s is already a link)\n", source, target)
 			return nil
 		}
 		// TODO check broken symlink?
-		msg := fmt.Sprintf("%s exists, linked to %s, replace with %s?", target, link, source)
+		msg := fmt.Sprintf("! %s exists, linked to %s, replace with %s?", target, link, source)
 		if ok := prompt.Confirm(msg); ok {
 			err := os.Remove(target)
 			if err != nil {
@@ -30,7 +30,7 @@ func Symlink(source, target string) error {
 		}
 	} else if fi != nil {
 		backup := target + ".backup"
-		msg := fmt.Sprintf("%s exists, move to %s and replace with %s?", target, backup, source)
+		msg := fmt.Sprintf("! %s exists, move to %s to link %s?", target, backup, source)
 		if ok := prompt.Confirm(msg); ok {
 			err := os.Rename(target, target+".backup")
 			if err != nil {

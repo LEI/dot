@@ -46,7 +46,8 @@ func IsLineInFile(path string, line string) (bool, error) {
 	if fileContent != "" {
 		for _, str := range strings.Split(fileContent, "\n") {
 			if strings.Contains(str, line) {
-				fmt.Printf("%s: already contains the line '%s'\n", path, line)
+				// fmt.Printf("%s: already contains the line '%s'\n", path, line)
+				fmt.Printf("# already in %s\n", path)
 				return true, nil
 			}
 		}

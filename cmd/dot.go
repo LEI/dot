@@ -11,21 +11,20 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const OS = runtime.GOOS
 
 var (
-	HOME   = env("HOME")
-	OSTYPE = env("OSTYPE")
-)
-
-var (
-	Dot                   *role.Meta
-	Config                *config.Configuration
-	ConfigName            = ".dotrc"
-	debug, https, verbose bool
-	defaultDotDir         = ".dot"
+	Dot           = &role.Meta{}
+	Config        *config.Configuration
+	ConfigName    = ".dotrc"
+	defaultDotDir = ".dot"
+	debug         bool
+	https         bool
+	verbose       bool
+	OSTYPE        string
 )
 
 var DotCmd = &cobra.Command{
@@ -52,37 +51,42 @@ func Execute() {
 }
 
 func init() {
-	var source, target string
-	var currentDir, configFile string
-	var configPaths = []string{}
+	var (
+		configFile     string
+		configPaths    = []string{}
+		currentDir     string
+		homeDir        = os.Getenv("HOME")
+		source, target string
+	)
 
 	currentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
 		fatal(err)
 	}
 
-	DotCmd.Flags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
-	DotCmd.Flags().BoolVarP(&debug, "dry-run", "d", debug, "Enable check-mode")
-	DotCmd.Flags().BoolVarP(&git.Https, "https", "", git.Https, "Force HTTPS for git clone")
-	DotCmd.Flags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
-	DotCmd.Flags().StringVarP(&target, "target", "t", HOME, "Destination `directory`")
+	cobra.OnInitialize(initConfig)
+
+	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
+	DotCmd.PersistentFlags().BoolVarP(&debug, "dry-run", "d", debug, "Enable check-mode")
+	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Force HTTPS for git clone")
+	DotCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
+	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", homeDir, "Destination `directory`")
 	DotCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
 
 	if configFile != "" {
 		Config = config.NewFile(configFile)
 	} else {
-		configPaths = []string{source}
-		for _, p := range []string{HOME, currentDir} {
-			if source != p {
-				configPaths = append(configPaths, p)
-			}
-		}
+		configPaths = []string{"/etc", source, target} // Default: PWD, HOME
 		Config = config.New(ConfigName, configPaths)
 	}
-	Config.BindPFlags(DotCmd.Flags())
+
+	// viper.BindPFlag("sample", RootCmd.PersistentFlags().Lookup("sample"))
+	Config.BindPFlags(DotCmd.PersistentFlags())
+
 	configUsed, err := Config.Read()
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil {
+		fmt.Println("read error", os.IsNotExist(err), configPaths)
 		fatal(err)
 	}
 	if verbose && configUsed != "" {
@@ -90,27 +94,36 @@ func init() {
 	}
 }
 
+func initConfig() {
+	fmt.Println("INIT CONFIG", time.Now())
+}
+
 func initCommand() error {
-	Dot = &role.Meta{
-		Config.GetString("source"),
-		Config.GetString("target"),
-		make([]*role.Role, 0),
-	}
+	// Dot = &role.Meta{
+	// 	Config.GetString("source"),
+	// 	Config.GetString("target"),
+	// 	make([]*role.Role, 0),
+	// }
+	Dot.Source = Config.GetString("source")
+	Dot.Target = Config.GetString("target")
 	err := Config.UnmarshalKey("roles", &Dot.Roles)
 	if err != nil {
 		return err
+	}
+	err = os.Setenv("OS", OS)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not set OS to %s: %s\n", OS, err)
+	}
+	OSTYPE, ok := os.LookupEnv("OSTYPE")
+	if !ok || OSTYPE == "" {
+		fmt.Fprintln(os.Stderr, "Warning: OSTYPE is not set")
 	}
 	return nil
 }
 
 func syncCommand(args []string) error {
-	err := os.Setenv("OS", OS)
-	if err != nil {
-		fmt.Printf("Could not set env OS=%s: %s", OS, err)
-	}
-
 	for _, r := range Dot.Roles {
-		r, err = r.New(Dot.Source, Dot.Target)
+		r, err := r.New(Dot.Source, Dot.Target)
 		if err != nil {
 			return err
 		}
@@ -130,7 +143,10 @@ func syncCommand(args []string) error {
 		if skip {
 			continue
 		}
-		syncRole(r)
+		err = syncRole(r)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -163,7 +179,7 @@ func syncRole(r *role.Role) error {
 
 	for _, d := range r.Dirs() {
 		fmt.Println("- Create", d.Path)
-		if Verbose {
+		if verbose {
 			fmt.Println("->", d)
 		}
 		d.Path = os.ExpandEnv(d.Path)
@@ -175,7 +191,7 @@ func syncRole(r *role.Role) error {
 	}
 	for _, l := range r.Links() {
 		fmt.Println("- Symlink", l.Pattern)
-		if Verbose {
+		if verbose {
 			fmt.Println("->", l)
 		}
 		l.Pattern = os.ExpandEnv(l.Pattern)
@@ -193,7 +209,7 @@ func syncRole(r *role.Role) error {
 	}
 	for _, l := range r.Lines() {
 		fmt.Println("- Line in", l.File)
-		if Verbose {
+		if verbose {
 			fmt.Println("->", l)
 		}
 		l.File = os.ExpandEnv(l.File)

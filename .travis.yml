@@ -28,7 +28,7 @@ script:
   - ls -la ~/.vim/*
   - tmux new-session -n test "vim -E -s -u $HOME/.vim/vimrc +PlugInstall +qall; exit"
   - test -d $HOME/.tmux/plugins/tpm
-  - ls -la $HOME/.vim
+  - test -d $HOME/.vim/plugged
 
 notifications:
   email: false
