@@ -24,10 +24,6 @@ type Role struct {
 	Name, Origin string
 	Source, Target string
 	Os []string
-	Repo interface {
-		Clone() error
-		Update() error
-	}
 	Dir string
 	Dirs []string
 	Link interface{}
@@ -50,14 +46,15 @@ type Role struct {
 
 func (r *Role) Init(source, target string) error {
 	switch {
-	case r.Name != "" && r.Origin == "":
-		r.Origin = r.Name
 	case r.Name == "" && r.Origin != "":
 		r.Name = r.Origin
 		if strings.Contains(r.Name, PathSep) {
 			r.Name = path.Base(r.Name)
 		}
-	default:
+	case r.Name != "" && r.Origin == "":
+		r.Origin = r.Name
+	}
+	if r.Name == "" || r.Origin == "" {
 		return fmt.Errorf("Invalid role: %+v\n", r)
 	}
 	if r.Source == "" {
@@ -81,4 +78,12 @@ func (r *Role) IsOs(types []string) bool {
 		}
 	}
 	return false
+}
+
+func (r *Role) GetDirs() []string {
+	if r.Dir != "" {
+		r.Dirs = append(r.Dirs, r.Dir)
+		r.Dir = ""
+	}
+	return r.Dirs
 }

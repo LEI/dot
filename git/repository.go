@@ -78,17 +78,18 @@ func (repo *Repository) AddRemote(name string, url string) *Repository {
 }
 
 func (repo *Repository) CloneOrPull() error {
-	if repo != nil {
-		if repo.IsCloned() {
-			err := repo.Pull()
-			if err != nil {
-				return err
-			}
-		} else {
-			err := repo.Clone()
-			if err != nil {
-				return err
-			}
+	if repo == nil {
+		fmt.Printf("Repo is undefined!")
+	}
+	if repo.IsCloned() {
+		err := repo.Pull()
+		if err != nil {
+			return err
+		}
+	} else {
+		err := repo.Clone()
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -106,7 +107,7 @@ func (repo *Repository) IsCloned() bool {
 func (repo *Repository) Clone() error {
 	for _, remote := range repo.Remotes {
 		// fmt.Println("git", "clone", remote.URL, repo.Path)
-		cmd := exec.Command("echo", "git", "clone", "--quiet", remote.URL, repo.Path)
+		cmd := exec.Command("git", "clone", "--quiet", remote.URL, repo.Path)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -125,7 +126,7 @@ func (repo *Repository) Pull(args ...string) error {
 		}
 		pull = append(pull, args...)
 		// fmt.Printf("git %s\n", strings.Join(pull, " "))
-		cmd := exec.Command("echo", pull...)
+		cmd := exec.Command("git", pull...)
 		// "--git-dir", dir+"/.git",
 		// "--work-tree", dir,
 		cmd.Stdout = os.Stdout
@@ -136,10 +137,6 @@ func (repo *Repository) Pull(args ...string) error {
 		}
 	}
 	return nil
-}
-
-func (repo *Repository) Update() error {
-	return repo.Pull()
 }
 
 // name=user/repo

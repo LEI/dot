@@ -2,31 +2,29 @@ target: /tmp/dot
 roles:
 
   - name: bash
-    source: LEI/dot-bash
+    origin: LEI/dot-bash
 
   - name: git
-    source: LEI/dot-git
+    origin: LEI/dot-git
 
   - name: tmux
-    source: LEI/dot-tmux
+    origin: LEI/dot-tmux
 
   - name: vim
-    source: LEI/dot-vim
+    origin: LEI/dot-vim
 
   - name: termux
-    source: LEI/dot-termux
+    origin: LEI/dot-termux
     os: ["android"]
 
   # El Capitan: darwin15.6.0
   - name: osx
-    source: LEI/dot-osx
+    origin: LEI/dot-osx
     os: ["darwin16"]
 
   - name: hammerspoon
-    source: LEI/dot-hammerspoon
+    origin: LEI/dot-hammerspoon
     # target: /tmp/osx
+    os: ["darwin"]
     dir: .hammerspoon
     link: .hammerspoon/*
-  # - name: hammerspoon
-  #   source: LEI/dot-hammerspoon
-  #   os: ["darwin"]

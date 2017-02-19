@@ -18,7 +18,7 @@ var (
 )
 
 var (
-	Config *conf.Conf
+	Config *conf.Config
 	ConfigName = ".dotrc"
 	Dot *role.Meta
 	Https bool
@@ -30,14 +30,33 @@ var DotCmd = &cobra.Command{
 	Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		git.Https = Https
+		roles := make([]*role.Role, 0)
 		Dot = &role.Meta{
 			Config.GetString("source"),
 			Config.GetString("target"),
-			make([]*role.Role, 0),
+			roles,
 		}
-		err := Config.UnmarshalKey("roles", &Dot.Roles)
+		err := Config.UnmarshalKey("roles", &roles)
 		if err != nil {
 			return err
+		}
+		for _, r := range roles {
+			err = r.Init(Dot.Source, Dot.Target)
+			if err != nil {
+				return err
+			}
+			ok := r.IsOs([]string{OS, OSTYPE})
+			if !ok {
+				continue
+			}
+			repo, err := git.NewRepository(r.Origin)
+			if err != nil {
+				return err
+			}
+			repo.Path = r.Source
+			// r.Repo.Clone()
+			r.Repo.Update()
+			Dot.Roles = append(Dot.Roles, r)
 		}
 		return nil
 	},
@@ -47,50 +66,11 @@ var DotCmd = &cobra.Command{
 			return cmd.Help()
 		}
 
-		err := os.Setenv("OS", OS)
-		if err != nil {
-			fmt.Printf("Could not set env OS=%s: %s", OS, err)
-		}
-
+		fmt.Println(Dot)
 		for _, r := range Dot.Roles {
-			err = r.Init(Dot.Source, Dot.Target)
-			if err != nil {
-				return err
-			}
-			ok := r.IsOs([]string{OS, OSTYPE})
-			if !ok {
-				continue
-			}
-
-			fmt.Printf("--- Role %+v\n", r.Name)
-
-			repo, err := git.NewRepository(r.Origin)
-			if err != nil {
-				return err
-			}
-			// repo.Path = r.Source
-			err = repo.CloneOrPull()
-			if err != nil {
-				return err
-			}
-
-			// var cfg *conf.Conf
-			cfg := conf.New(ConfigName, []string{repo.Path})
-			cfgUsed, err := cfg.Read()
-			if err != nil && !os.IsNotExist(err) {
-				return err
-			}
-			if cfgUsed != "" {
-				fmt.Printf("Using config file: %s\n", cfgUsed)
-			}
-
-			for _, dir := range r.GetDirs() {
-				fmt.Println("DIR:", dir)
-			}
 			// viper.Sub()
-			// Dot.Roles = append(Dot.Roles, r)
+			fmt.Printf("Role %+v\n", r.Name)
 		}
-
 		// if err != nil {
 		// 	return err
 		// }
@@ -122,7 +102,7 @@ func init() {
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
 
 	if configFile != "" {
-		Config = conf.NewFile(configFile) 
+		Config.SetFile(configFile)
 	} else {
 		configPaths = []string{source}
 		for _, p := range []string{HOME, currentDir} {
@@ -130,8 +110,8 @@ func init() {
 				configPaths = append(configPaths, p)
 			}
 		}
-		Config = conf.New(ConfigName, configPaths)
 	}
+	Config = conf.New(ConfigName, configPaths)
 	Config.BindPFlags(DotCmd.Flags())
 	configUsed, err := Config.Read()
 	if err != nil && !os.IsNotExist(err) {
