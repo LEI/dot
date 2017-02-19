@@ -1,18 +1,20 @@
 package fileutil
 
 import (
+	"fmt"
 	"os"
 )
 
 func MakeDir(path string) error {
-	fi, err := os.Stat(path)
-	if err != nil && os.IsExist(err) {
-		return err
-	}
-	if fi != nil {
-		return nil
-	}
-	err = os.MkdirAll(path, 0755)
+	// fi, err := os.Stat(path)
+	// if err != nil && os.IsExist(err) {
+	// 	return err
+	// }
+	// if fi != nil {
+	// 	return nil
+	// }
+	fmt.Printf("$ mkdir -p %s\n", path)
+	err := os.MkdirAll(path, 0755)
 	if err != nil {
 		return err
 	}

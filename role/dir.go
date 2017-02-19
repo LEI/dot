@@ -2,6 +2,9 @@ package role
 
 import (
 	"fmt"
+	"github.com/LEI/dot/fileutil"
+	"path"
+	"os"
 )
 
 type Dir struct {
@@ -32,8 +35,13 @@ func (d *Dir) String() string {
 	return fmt.Sprintf("%s", d.Path)
 }
 
-func (d *Dir) Sync(target string) error {
-	fmt.Printf("Sync: Dir %s/%s\n", target, d)
+func (d *Dir) Create(target string) error {
+	d.Path = os.ExpandEnv(d.Path)
+	d.Path = path.Join(target, d.Path)
+	err := fileutil.MakeDir(d.Path)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

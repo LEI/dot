@@ -16,7 +16,7 @@ func Link(source, target string) error {
 		if err != nil {
 			return err
 		}
-		if link == source {
+		if link == source { // TODO os.SameFile
 			fmt.Printf("%s already linked to %s\n", target, source)
 			return nil
 		}
@@ -38,6 +38,7 @@ func Link(source, target string) error {
 			}
 		}
 	}
+	fmt.Printf("$ ln -s %s %s\n", source, target)
 	err = os.Symlink(source, target)
 	if err != nil {
 		return err

@@ -13,9 +13,10 @@ services:
       - image
     # entrypoint: /bin/bash
     command: |
-      -l -c 'run dot sync -d --https -c $$DOT/.dotrc.yml;
-      run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit";
-      bash --login'
+      -l -c 'run dot --https; bash -l'
+      # -l -c 'run dot sync -d --https -c $$DOT/.dotrc.yml;
+      # run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit";
+      # bash --login'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:

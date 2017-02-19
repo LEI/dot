@@ -73,28 +73,6 @@ func (r *Role) ReadConfig(name string, paths []string) (string, error) {
 	return r.Config.Read()
 }
 
-func (r *Role) Sync() error {
-	for _, dir := range r.Dirs() {
-		err := dir.Sync(r.Target)
-		if err != nil {
-			return err
-		}
-	}
-	for _, link := range r.Links() {
-		err := link.Sync(r.Target)
-		if err != nil {
-			return err
-		}
-	}
-	for _, line := range r.Lines() {
-		err := line.Sync(r.Target)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (r *Role) IsOs(types []string) bool {
 	if len(r.Os) == 0 || len(types) == 0 {
 		return true

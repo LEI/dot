@@ -2,38 +2,24 @@ package role
 
 import (
 	"fmt"
-	// "github.com/LEI/dot/fileutil"
+	"github.com/LEI/dot/fileutil"
 	"os"
+	"path/filepath"
+	"strings"
 )
+
+var IgnoreNames = []string{".git", ".*\\.md"}
 
 type Link struct {
 	Pattern string
+	// Source string
 	// Target string
 	Type string
+	Files []string // map[string]*os.FileInfo
 }
 
 func NewLink(pattern string) *Link {
 	return &Link{Pattern: pattern}
-}
-
-func (l *Link) Link(target string) error {
-	fmt.Println("DO LINK", l, target)
-	// return fileutil.Link(l.Path, target)
-	// if err != nil {
-	// 	return err
-	// }
-	return nil
-}
-
-func (l *Link) Set(value string) {
-	fmt.Println("Set", l, value)
-	// switch val := value.(type) {
-	// case string:
-	// 	l.Path = val
-	// 	// *l = append(*l, val)
-	// default:
-	// 	*l = val.(Link)
-	// }
 }
 
 func (l *Link) String() string {
@@ -44,8 +30,54 @@ func (l *Link) String() string {
 	return fmt.Sprintf("%s", str)
 }
 
-func (l *Link) Sync(target string) error {
-	fmt.Printf("Sync: Link %s/%s\n", target, l)
+func (l *Link) GlobPaths(source string) ([]string, error) {
+	glob := filepath.Join(source, l.Pattern)
+	paths, err := filepath.Glob(glob)
+	if err != nil {
+		return paths, err
+	}
+	GLOB:
+	for _, file := range paths {
+		base := filepath.Base(file)
+		for _, pattern := range IgnoreNames {
+			ignore, err := filepath.Match(pattern, base)
+			if err != nil {
+				return paths, err
+			}
+			if ignore {
+				fmt.Printf("# ignore: %s\n", file)
+				continue GLOB
+			}
+		}
+		fi, err := os.Stat(file)
+		if err != nil {
+			return paths, err
+		}
+		switch {
+		case l.Type == "directory" && !fi.IsDir(),
+			l.Type == "file" && fi.IsDir():
+			fmt.Printf("# ignore: %s (not a %s)\n", file, l.Type)
+			continue // GLOB
+		}
+		l.Files = append(l.Files, file)
+		// l.Files[file] = fi
+	}
+
+	return l.Files, nil
+}
+
+func (l *Link) Sync(source, target string) error {
+	paths, err := l.GlobPaths(source)
+	if err != nil {
+		return err
+	}
+	for _, src := range paths {
+		dst := strings.Replace(src, source, target, 1)
+		err := fileutil.Link(src, dst)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -107,14 +139,6 @@ func castAsLink(value interface{}) *Link {
 	default:
 		fatal(fmt.Errorf("(%T) %s\n", v, v))
 	}
+	ln.Pattern = os.ExpandEnv(ln.Pattern)
 	return ln
-}
-
-func fatal(msg interface{}) {
-	fmt.Fprintf(os.Stderr, "Error while parsing link: %s", msg)
-	os.Exit(64)
-}
-
-func fataln(msg interface{}) {
-	fatal(fmt.Sprintf("%s\n", msg))
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"os"
+	"path"
 	"runtime"
 )
 
@@ -18,11 +19,11 @@ var (
 )
 
 var (
+	Dot        *role.Meta
 	Config     *conf.Conf
 	ConfigName = ".dotrc"
-	Dot        *role.Meta
-	Https      bool
-	Verbose    bool
+	debug, https, verbose bool
+	defaultDotDir = ".dot"
 )
 
 var DotCmd = &cobra.Command{
@@ -30,83 +31,14 @@ var DotCmd = &cobra.Command{
 	Short: "Manage dotfiles",
 	Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		git.Https = Https
-		Dot = &role.Meta{
-			Config.GetString("source"),
-			Config.GetString("target"),
-			make([]*role.Role, 0),
-		}
-		err := Config.UnmarshalKey("roles", &Dot.Roles)
-		if err != nil {
-			return err
-		}
-		return nil
+		return initCommand()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if len(args) > 0 {
-		// 	fmt.Printf("Warning: extra arguments %s\n", args)
+		// 	fmt.Printf("Args: %s\n", args)
 		// 	return cmd.Help()
 		// }
-
-		err := os.Setenv("OS", OS)
-		if err != nil {
-			fmt.Printf("Could not set env OS=%s: %s", OS, err)
-		}
-
-		for _, r := range Dot.Roles {
-			r, err = r.New(Dot.Source, Dot.Target)
-			if err != nil {
-				return err
-			}
-			// Check platform
-			ok := r.IsOs([]string{OS, OSTYPE})
-			if !ok {
-				continue
-			}
-			// Filter roles by name
-			skip := len(args) > 0
-			for _, arg := range args {
-				if arg == r.Name {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				continue
-			}
-
-			fmt.Printf("--- Role %s\n", r.Name)
-			if Verbose {
-				fmt.Printf("=== %+v\n", r)
-			}
-
-			// err := r.InitPackage()
-			repo, err := git.NewRepository(r.Origin)
-			if err != nil {
-				return err
-			}
-			// repo.Path = r.Source
-			repo.Name = r.Name
-			err = repo.CloneOrPull()
-			if err != nil {
-				return err
-			}
-			if repo.Path != "" {
-				r.Source = repo.Path
-			}
-			cfgUsed, err := r.ReadConfig(ConfigName, []string{r.Source})
-			if err != nil && !os.IsNotExist(err) {
-				return err
-			}
-			if Verbose && cfgUsed != "" {
-				fmt.Printf("Using role config file: %s\n", cfgUsed)
-			}
-
-			r.Sync()
-			// viper.Sub()
-			// Dot.Roles = append(Dot.Roles, r)
-		}
-		return nil
+		return syncCommand(args)
 	},
 }
 
@@ -127,11 +59,11 @@ func init() {
 	}
 
 	DotCmd.Flags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
-	// DotCmd.Flags().StringVarP(&Debug, "debug", "d", Debug, "check-mode")
-	DotCmd.Flags().BoolVarP(&Https, "https", "", Https, "Force HTTPS for git clone")
+	DotCmd.Flags().BoolVarP(&debug, "dry-run", "d", debug, "Enable check-mode")
+	DotCmd.Flags().BoolVarP(&git.Https, "https", "", git.Https, "Force HTTPS for git clone")
 	DotCmd.Flags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
 	DotCmd.Flags().StringVarP(&target, "target", "t", HOME, "Destination `directory`")
-	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+	DotCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
 
 	if configFile != "" {
@@ -150,9 +82,103 @@ func init() {
 	if err != nil && !os.IsNotExist(err) {
 		fatal(err)
 	}
-	if Verbose && configUsed != "" {
+	if verbose && configUsed != "" {
 		fmt.Printf("Using config file: %s\n", configUsed)
 	}
+}
+
+func initCommand() error {
+	Dot = &role.Meta{
+		Config.GetString("source"),
+		Config.GetString("target"),
+		make([]*role.Role, 0),
+	}
+	err := Config.UnmarshalKey("roles", &Dot.Roles)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func syncCommand(args []string) error {
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		fmt.Printf("Could not set env OS=%s: %s", OS, err)
+	}
+
+	for _, r := range Dot.Roles {
+		r, err = r.New(Dot.Source, Dot.Target)
+		if err != nil {
+			return err
+		}
+		// Check platform
+		ok := r.IsOs([]string{OS, OSTYPE})
+		if !ok {
+			continue
+		}
+		// Filter roles by name
+		skip := len(args) > 0
+		for _, arg := range args {
+			if arg == r.Name {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			continue
+		}
+
+		fmt.Printf("### Role %s\n", r.Name)
+		if verbose {
+			fmt.Println(" ->", r)
+		}
+
+		// TODO func (r *Role) NewRepo() error?
+		git.DefaultPath = path.Join(r.Target, defaultDotDir)
+		repo, err := git.NewRepository(r.Origin)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Changing", repo.Name, "to", r.Name, "--", repo)
+		repo.Name = r.Name
+		err = repo.CloneOrPull()
+		if err != nil {
+			return err
+		}
+		if repo.Path != r.Source {
+			r.Source = repo.Path
+		}
+		cfgUsed, err := r.ReadConfig(ConfigName, []string{r.Source})
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		if verbose && cfgUsed != "" {
+			fmt.Printf("Using role config file: %s\n", cfgUsed)
+		}
+
+		for _, dir := range r.Dirs() {
+			fmt.Printf("## Create %s\n", dir)
+			err := dir.Create(r.Target)
+			if err != nil {
+				return err
+			}
+		}
+		for _, link := range r.Links() {
+			fmt.Printf("## Symlink %s\n", link)
+			err := link.Sync(r.Source, r.Target)
+			if err != nil {
+				return err
+			}
+		}
+		for _, line := range r.Lines() {
+			fmt.Printf("## Line in file %s\n", line)
+			err := line.InFile(r.Target)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func env(key string) string {

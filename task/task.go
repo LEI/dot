@@ -1,7 +1,7 @@
 package task
 
-import fmt (
-	"fmt"
+import (
+	// "fmt"
 )
 
 // type ResourceProvider interface {
@@ -9,11 +9,11 @@ import fmt (
 // 	Update(res *Res) error
 // }
 
-type Tasker interface {
+type Context interface {
 	Check() bool
 	Sync() error
 }
 
-func (t *Task) String() string {
-	return fmt.Sprintf("%+v", t)
-}
+// func (t *Task) String() string {
+// 	return fmt.Sprintf("%+v", t)
+// }

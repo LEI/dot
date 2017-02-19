@@ -1,4 +1,4 @@
-target: /tmp/dot
+# target: /tmp/dot
 roles:
 
   - name: bash
@@ -26,7 +26,7 @@ roles:
     origin: LEI/dot-hammerspoon
     os: ["darwin"]
     # target: /tmp/osx
-    package:
+    # package:
     #   dirs:
     #     - .config
     #   links:

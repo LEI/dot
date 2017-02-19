@@ -12,29 +12,27 @@ import (
 var (
 	DefaultBranch    = "master"
 	DefaultRemote    = "origin"
-	DefaultClonePath = filepath.Join(os.Getenv("HOME"), ".dot")
-	// TODO init() viper.Get("target")
+	DefaultPath      string
 	PathSep = string(os.PathSeparator)
 )
 
 type Repository struct {
 	Name    string
 	Branch  string
-	Path    string // Git work tree
-	GitDir  string
+	Path    string
 	Remotes map[string]*Remote
+	gitdir  string
 }
 
-func NewRepository(spec string /*, path string, remotes ...*Remote*/) (*Repository, error) {
-	name, path, url, err := ParseSpec(spec)
+func NewRepository(spec string/*, clonePath string, remotes ...*Remote*/) (*Repository, error) {
+	name, dir, url, err := ParseSpec(spec)
 	if err != nil {
 		return nil, err
 	}
 	repo := &Repository{
 		Name:    name,
 		Branch:  DefaultBranch,
-		Path:    path,
-		GitDir:  filepath.Join(path, ".git"),
+		Path:    dir,
 		Remotes: make(map[string]*Remote, 0),
 	}
 	if url != "" {
@@ -72,15 +70,31 @@ func (repo *Repository) String() string {
 	return fmt.Sprintf("%s@%s [%s] %+v", repo.Name, repo.Branch, repo.Path, repo.Remotes)
 }
 
+func (repo *Repository) WorkTree() string {
+	if DefaultPath == "" && repo.Path == "" {
+		fmt.Printf("Warning: %s\n", "No default git clone path")
+	} else if repo.Path == "" {
+		repo.Path = filepath.Join(DefaultPath, repo.Name)
+	} else {
+		fmt.Println("git", repo.Name, "WorkTree path:", repo.Path)
+	}
+	return repo.Path
+}
+
+func (repo *Repository) GitDir() string {
+	if repo.gitdir == "" {
+		repo.gitdir = filepath.Join(repo.WorkTree(), ".git")
+	}
+	return repo.gitdir
+}
+
 func (repo *Repository) AddRemote(name string, url string) *Repository {
 	repo.Remotes[name] = NewRemote(name, url)
 	return repo
 }
 
 func (repo *Repository) CloneOrPull() error {
-	if repo == nil {
-		fmt.Printf("Repo is undefined!")
-	}
+	repo.WorkTree()
 	if repo.IsCloned() {
 		err := repo.Pull()
 		if err != nil {
@@ -96,7 +110,7 @@ func (repo *Repository) CloneOrPull() error {
 }
 
 func (repo *Repository) IsCloned() bool {
-	exists, err := fileutil.Exists(repo.GitDir) // repo.Path
+	exists, err := fileutil.Exists(repo.GitDir())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -105,9 +119,7 @@ func (repo *Repository) IsCloned() bool {
 }
 
 func (repo *Repository) Clone() error {
-	if repo.Path == "" {
-		repo.Path = filepath.Join(DefaultClonePath, repo.Name)
-	}
+	repo.WorkTree()
 	for _, remote := range repo.Remotes {
 		// fmt.Println("git", "clone", remote.URL, repo.Path)
 		cmd := exec.Command("git", "clone", "--quiet", remote.URL, repo.Path)
@@ -122,9 +134,7 @@ func (repo *Repository) Clone() error {
 }
 
 func (repo *Repository) Pull(args ...string) error {
-	if repo.Path == "" {
-		repo.Path = filepath.Join(DefaultClonePath, repo.Name)
-	}
+	repo.WorkTree()
 	for _, remote := range repo.Remotes {
 		pull := []string{"-C", repo.Path, "pull"}
 		if len(args) == 0 {
@@ -150,21 +160,21 @@ func (repo *Repository) Pull(args ...string) error {
 func ParseSpec(str string) (string, string, string, error) {
 	var nameSep = "="
 	var name = str
-	var path string
+	var dir string
 	var url string
 	var err error
 	if strings.HasPrefix(str, PathSep) {
 		exists, err := fileutil.Exists(str)
 		if err != nil || !exists {
-			return name, path, url, err
+			return name, dir, url, err
 		}
-		path = str
-		name = filepath.Dir(path)
+		dir = str
+		name = filepath.Dir(dir)
 	} else if strings.Contains(str, PathSep) {
 		if strings.Contains(str, nameSep) {
 			parts := strings.Split(str, nameSep)
 			if len(parts) != 2 {
-				return name, path, url, fmt.Errorf("Invalid spec: '%s'", str)
+				return name, dir, url, fmt.Errorf("Invalid spec: '%s'", str)
 			}
 			name = parts[0]
 			url = parts[1]
@@ -175,5 +185,5 @@ func ParseSpec(str string) (string, string, string, error) {
 	} else {
 		err = fmt.Errorf("Unkown spec: '%s'", str)
 	}
-	return name, path, url, err
+	return name, dir, url, err
 }

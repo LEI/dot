@@ -28,6 +28,7 @@ func LineInFile(path string, line string) error {
 		}
 		defer fi.Close()
 	}
+	fmt.Printf("$ echo '%s' >> %s\n", line, path)
 	err = AppendStringToFile(path, line+"\n")
 	if err != nil {
 		return err
