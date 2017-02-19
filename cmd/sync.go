@@ -67,11 +67,36 @@ func syncPackages(source, target string, packages []*role.Package) error {
 			}
 			fmt.Printf("Directory: %s\n", dir)
 		}
-		for _, glob := range pkg.GetLinks() {
-			link, err := role.NewLink(glob)
-			if err != nil {
-				return err
+		for _, value := range pkg.GetLinks() {
+			var file *role.File
+			switch val := value.(type) {
+			case string:
+				file = &role.File{Type: "", Path: val}
+			case map[string]interface{}:
+				file = &role.File{Type: val["type"].(string), Path: val["path"].(string)}
+			case *role.File:
+				file = val
+			// case interface{}:
+			default:
+				fmt.Printf("Unknown type %T for %+v\n", val, val)
+				file = val.(*role.File)
+				// return file, fmt.Errorf("Unknown type %T for %+v\n", val, val)
 			}
+			if file.Path == "" {
+				return fmt.Errorf("Empty link path\n")
+			}
+			// if filepath.IsAbs(file.Path) {
+			// 	fmt.Printf("%s: file path is not absolute\n", file.Path)
+			// }
+			file.Path = os.ExpandEnv(file.Path)
+			// if err != nil {
+			// 	return err
+			// }
+			link := &role.Link{File: file}
+			// link, err := role.NewLink(glob)
+			// if err != nil {
+			// 	return err
+			// }
 			link.Path = filepath.Join(pkg.Path, link.Path)
 			links, err := link.GlobAsLink()
 			if err != nil {

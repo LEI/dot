@@ -128,10 +128,11 @@ func (f *File) GlobAsLink() ([]*Link, error) {
 	}
 	for _, src := range paths {
 		// f, err := &File{Path: src, Type: fileType} // NewFile(src)
-		link, err := NewLink(&File{Path: src, Type: f.Type})
-		if err != nil {
-			return result, err
-		}
+		link := &Link{File: &File{Path: src, Type: f.Type}}
+		// link, err := NewLink(&File{Path: src, Type: f.Type})
+		// if err != nil {
+		// 	return result, err
+		// }
 		switch link.Type {
 		case "directory":
 			if !link.IsDir() {
@@ -157,16 +158,6 @@ func (f *File) GlobAsLink() ([]*Link, error) {
 // 		*f = val.(File)
 // 	}
 // }
-
-// func NewLink(file *File, target string) error
-func NewLink(value interface{}) (*Link, error) {
-	file, err := NewFile(value)
-	if err != nil {
-		return nil, err
-	}
-	link := &Link{File: file}
-	return link, nil
-}
 
 func (l *Link) Sync(target string) error {
 	// fmt.Println("Sync Link", l, target)
