@@ -5,6 +5,8 @@ package log
 
 import (
 	"io"
+	"os"
+	"sync"
 )
 
 const (

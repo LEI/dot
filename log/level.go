@@ -1,8 +1,6 @@
 package log
 
-import (
-	"os"
-)
+import ()
 
 const (
 	PanicLevel Level = iota

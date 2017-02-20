@@ -3,10 +3,8 @@ package log
 import (
 	"fmt"
 	"io"
-	// "log"
 	"os"
 	"runtime"
-	"sync"
 	"time"
 )
 
