@@ -22,8 +22,9 @@ RUN printf "%s\n" \
 
 ENTRYPOINT ["/bin/bash"]
 
-RUN go get github.com/spf13/viper
+RUN go get github.com/Sirupsen/logrus
 RUN go get github.com/spf13/cobra
+RUN go get github.com/spf13/viper
 
 ADD . $DOT
 

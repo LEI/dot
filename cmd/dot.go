@@ -5,6 +5,7 @@ import (
 	"github.com/LEI/dot/config"
 	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
+	logger "github.com/LEI/dot/log"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"os"
@@ -26,9 +27,9 @@ var (
 	RolesDir   = ".dot" // Default clone parent directory
 	HomeDir    = os.Getenv("HOME")
 	debug      bool
-	verbose    bool
 	source     string
 	target     string
+	log        *logger.Logger
 )
 
 var DotCmd = &cobra.Command{
@@ -40,7 +41,6 @@ var DotCmd = &cobra.Command{
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if len(args) > 0 {
-		// 	fmt.Printf("Args: %s\n", args)
 		// 	return cmd.Help()
 		// }
 		return syncCommand(args)
@@ -48,12 +48,14 @@ var DotCmd = &cobra.Command{
 }
 
 func Execute() error {
+	// logrus.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
+	// log.Out = os.Stdout
+	// log.WithFields(logrus.Fields{
+	// 	"command": "dot",
+	// }).Info("Executing command...")
 	err := DotCmd.Execute()
 	if err != nil {
-		if verbose {
-			fmt.Fprintf(os.Stderr, "Fatal error: %+v\n", err)
-		}
-		os.Exit(1)
+		log.Fatal(err)
 	}
 	return nil
 }
@@ -61,21 +63,23 @@ func Execute() error {
 func init() {
 	currentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "os.Getcwd() Error: %s\n", err)
+		log.Error(err)
 	}
 	cobra.OnInitialize(initConfig)
 	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
-	DotCmd.PersistentFlags().BoolVarP(&debug, "dry-run", "d", debug, "Enable check-mode")
+	DotCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
 	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Force HTTPS for git clone")
 	DotCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
 	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
-	DotCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
 	// DotCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
 	// Config.BindPFlags(DotCmd.Flags())
 }
 
 func initConfig() {
+	// if debug {
+	// 	log.Level = logrus.DebugLevel
+	// }
 	bindPFlags := []string{"source", "target"}
 	bindFlags := []string{}
 	// switch {
@@ -83,8 +87,7 @@ func initConfig() {
 	// 	os.Args = []string{os.Args[0], "version"}
 	// 	err := versionCmd.Execute()
 	// 	if err != nil {
-	// 		fmt.Println("Error:", err)
-	// 		os.Exit(1)
+	// 		log.Fatal("Error:", err)
 	// 	}
 	// 	os.Exit(0)
 	// }
@@ -102,12 +105,10 @@ func initConfig() {
 	}
 	configUsed, err := Config.Read()
 	if err != nil {
-		fmt.Println("read error", os.IsNotExist(err))
-		fmt.Fprintf(os.Stderr, "Read config error: %s\n", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-	if verbose && configUsed != "" {
-		fmt.Printf("Using config file: %s\n", configUsed)
+	if configUsed != "" {
+		log.Debug("Using config file: %s" + configUsed)
 	}
 }
 
@@ -120,11 +121,11 @@ func initCommand() error {
 	}
 	err = os.Setenv("OS", OS)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not set OS to %s: %s\n", OS, err)
+		log.Warn(err)
 	}
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
 	if !ok || OSTYPE == "" {
-		fmt.Fprintln(os.Stderr, "Warning: OSTYPE is not set")
+		log.Warn("OSTYPE is not set")
 	}
 	return nil
 }
@@ -160,6 +161,9 @@ func syncCommand(args []string) error {
 }
 
 func syncRole(r *role.Role) error {
+	// log := log.WithFields(logrus.Fields{
+	// 	"role": r.Name,
+	// })
 	fmt.Printf("--- Role %s\n", r.Name)
 	// defer fmt.Printf("---\n")
 
@@ -181,15 +185,12 @@ func syncRole(r *role.Role) error {
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	if verbose && cfgUsed != "" {
-		fmt.Printf("Using role config file: %s\n", cfgUsed)
+	if cfgUsed != "" {
+		log.Debug("Using role config file: " + cfgUsed)
 	}
 
 	for _, d := range r.Dirs() {
-		fmt.Println("- Create", d.Path)
-		if verbose {
-			fmt.Println("->", d)
-		}
+		log.Info("- Create", d.Path)
 		d.Path = os.ExpandEnv(d.Path)
 		d.Path = path.Join(r.Target, d.Path)
 		err := fileutil.MakeDir(d.Path) // <- fileutil.MakeDir
@@ -198,10 +199,7 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Links() {
-		fmt.Println("- Symlink", l.Pattern)
-		if verbose {
-			fmt.Println("->", l)
-		}
+		log.Info("- Symlink", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		paths, err := l.GlobFiles(r.Source) // <- role.Link.GlobFiles(src string)
 		if err != nil {
@@ -216,10 +214,7 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Lines() {
-		fmt.Println("- Line in", l.File)
-		if verbose {
-			fmt.Println("->", l)
-		}
+		log.Info("- Line in", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)
 		err := fileutil.LineInFile(l.File, l.Line) // <- fileutil.LineInFile
