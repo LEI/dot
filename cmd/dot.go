@@ -30,11 +30,12 @@ var (
 	debug      bool
 	source     string
 	target     string
+	filter     []string
 	logger     = log.New(os.Stdout, "", 0)
 )
 
 var DotCmd = &cobra.Command{
-	Use:   os.Args[0], // [command] [flags]
+	Use: "dot",
 	Short: "Manage dotfiles",
 	// Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -46,10 +47,11 @@ var DotCmd = &cobra.Command{
 		return initCommand()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// if len(args) > 0 {
-		// 	return cmd.Help()
-		// }
-		return syncCommand(args)
+		if len(args) > 0 {
+			logger.Warnln("Extra arguments:", args)
+			return cmd.Help()
+		}
+		return syncCommand(Dot, filter)
 	},
 }
 
@@ -57,7 +59,7 @@ func Execute() error {
 	// logger.SetOutput(os.Stdout)
 	err := DotCmd.Execute()
 	if err != nil {
-		logger.Fatal(err)
+		return err
 	}
 	return nil
 }
@@ -68,9 +70,10 @@ func init() {
 		logger.Error(err)
 	}
 	cobra.OnInitialize(initConfig)
-	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
+	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	DotCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
-	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Force HTTPS for git clone")
+	DotCmd.PersistentFlags().StringSliceVarP(&filter, "filter", "f", filter, "Filter roles by `name`")
+	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Default to HTTPS for git remotes")
 	DotCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
 	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
 	// DotCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
@@ -82,17 +85,8 @@ func initConfig() {
 	if debug {
 		logger.SetLevel(log.DebugLevel)
 	}
-	bindPFlags := []string{"source", "target"}
-	bindFlags := []string{}
-	// switch {
-	// case version:
-	// 	os.Args = []string{os.Args[0], "version"}
-	// 	err := versionCmd.Execute()
-	// 	if err != nil {
-	// 		logger.Fatal("Error:", err)
-	// 	}
-	// 	os.Exit(0)
-	// }
+	bindPFlags := []string{"source", "target"} // Persistent flags
+	bindFlags := []string{} // Local flags
 	if configFile != "" {
 		Config.SetConfigFile(configFile)
 	} else {
@@ -137,9 +131,9 @@ func initCommand() error {
 	return nil
 }
 
-func syncCommand(args []string) error {
-	for _, r := range Dot.Roles {
-		r, err := r.New(Dot.Source, Dot.Target)
+func syncCommand(meta *role.Meta, roleFilters []string) error {
+	for _, r := range meta.Roles {
+		r, err := r.New(meta.Source, meta.Target)
 		if err != nil {
 			return err
 		}
@@ -149,9 +143,9 @@ func syncCommand(args []string) error {
 			continue
 		}
 		// Filter roles by name
-		skip := len(args) > 0
-		for _, arg := range args {
-			if arg == r.Name {
+		skip := len(roleFilters) > 0
+		for _, roleName := range roleFilters {
+			if roleName == r.Name {
 				skip = false
 				break
 			}
