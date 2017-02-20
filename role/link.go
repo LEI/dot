@@ -2,6 +2,7 @@ package role
 
 import (
 	"fmt"
+	// "github.com/LEI/dot/log"
 	"os"
 	"path/filepath"
 )
@@ -43,7 +44,7 @@ func (l *Link) GlobFiles(source string) ([]string, error) {
 				return paths, err
 			}
 			if ignore {
-				fmt.Printf("# ignore %s\n", base)
+				fmt.Printf("# ignore %s (filename)\n", base)
 				continue GLOB
 			}
 		}
@@ -54,7 +55,7 @@ func (l *Link) GlobFiles(source string) ([]string, error) {
 		switch {
 		case l.Type == "directory" && !fi.IsDir(),
 			l.Type == "file" && fi.IsDir():
-			fmt.Printf("# ignore %s\n", base)
+			fmt.Printf("# ignore %s (filetype)\n", base)
 			continue // GLOB
 		}
 		l.Files = append(l.Files, file)

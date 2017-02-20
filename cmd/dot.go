@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 	// "github.com/LEI/dot/config"
 	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
@@ -116,7 +116,7 @@ func initConfig() {
 
 func initCommand() error {
 	if Config.ConfigFileUsed() != "" {
-		logger.Debug("Using config file: " + Config.ConfigFileUsed())
+		logger.Debugln("Using config file:", Config.ConfigFileUsed())
 	}
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
@@ -130,9 +130,9 @@ func initCommand() error {
 	}
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
 	if !ok {
-		logger.Debug("OSTYPE is not set")
+		logger.Debugln("OSTYPE is not set")
 	} else if OSTYPE == "" {
-		logger.Debug("OSTYPE is empty")
+		logger.Debugln("OSTYPE is empty")
 	}
 	return nil
 }
@@ -171,7 +171,8 @@ func syncRole(r *role.Role) error {
 	// log := log.WithFields(logrus.Fields{
 	// 	"role": r.Name,
 	// })
-	fmt.Printf("--- Role %s\n", r.Name)
+	logger.Infof("--- Role %s\n", r.Name)
+	// logRole := log.New(os.Stdout, r.Name+": ", 0)
 	// defer fmt.Printf("---\n")
 
 	// TODO func (r *Role) NewRepo() error?
@@ -199,11 +200,11 @@ func syncRole(r *role.Role) error {
 	}
 	cfgUsed := r.Config.ConfigFileUsed()
 	if cfgUsed != "" {
-		logger.Debug("Using role config file: " + cfgUsed)
+		logger.Debugln("Using role config file:", cfgUsed)
 	}
 
 	for _, d := range r.Dirs() {
-		logger.Info("- Create", d.Path)
+		logger.Infof("- Create %s\n", d.Path)
 		d.Path = os.ExpandEnv(d.Path)
 		d.Path = path.Join(r.Target, d.Path)
 		err := fileutil.MakeDir(d.Path) // <- fileutil.MakeDir
@@ -212,7 +213,7 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Links() {
-		logger.Info("- Symlink", l.Pattern)
+		logger.Infof("- Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		paths, err := l.GlobFiles(r.Source) // <- role.Link.GlobFiles(src string)
 		if err != nil {
@@ -227,7 +228,7 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Lines() {
-		logger.Info("- Line in", l.File)
+		logger.Infof("- Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)
 		err := fileutil.LineInFile(l.File, l.Line) // <- fileutil.LineInFile

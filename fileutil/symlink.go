@@ -17,7 +17,7 @@ func Symlink(source, target string) error {
 			return err
 		}
 		if link == source { // TODO os.SameFile
-			fmt.Printf("# ignore %s (%s is already a link)\n", source, target)
+			fmt.Printf("# ignore %s (already a link)\n", target, link)
 			return nil
 		}
 		// TODO check broken symlink?
