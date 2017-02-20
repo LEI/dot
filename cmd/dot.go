@@ -5,7 +5,7 @@ import (
 	// "github.com/LEI/dot/config"
 	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
-	"github.com/LEI/dot/logger"
+	"github.com/LEI/dot/log"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,7 +30,7 @@ var (
 	debug      bool
 	source     string
 	target     string
-	log        = logger.New(os.Stdout, "", 0)
+	logger        = log.New(os.Stdout, "", 0)
 )
 
 var DotCmd = &cobra.Command{
@@ -54,10 +54,10 @@ var DotCmd = &cobra.Command{
 }
 
 func Execute() error {
-	// log.SetOutput(os.Stdout)
+	// logger.SetOutput(os.Stdout)
 	err := DotCmd.Execute()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	return nil
 }
@@ -65,7 +65,7 @@ func Execute() error {
 func init() {
 	currentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 	cobra.OnInitialize(initConfig)
 	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration `file`")
@@ -80,7 +80,7 @@ func init() {
 
 func initConfig() {
 	if debug {
-		log.SetLevel(logger.DebugLevel)
+		logger.SetLevel(log.DebugLevel)
 	}
 	bindPFlags := []string{"source", "target"}
 	bindFlags := []string{}
@@ -89,7 +89,7 @@ func initConfig() {
 	// 	os.Args = []string{os.Args[0], "version"}
 	// 	err := versionCmd.Execute()
 	// 	if err != nil {
-	// 		log.Fatal("Error:", err)
+	// 		logger.Fatal("Error:", err)
 	// 	}
 	// 	os.Exit(0)
 	// }
@@ -110,13 +110,13 @@ func initConfig() {
 	}
 	err := Config.ReadInConfig()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
 func initCommand() error {
 	if Config.ConfigFileUsed() != "" {
-		log.Debug("Using config file: " + Config.ConfigFileUsed())
+		logger.Debug("Using config file: " + Config.ConfigFileUsed())
 	}
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
@@ -126,13 +126,13 @@ func initCommand() error {
 	}
 	err = os.Setenv("OS", OS)
 	if err != nil {
-		log.Warn(err)
+		logger.Warn(err)
 	}
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
 	if !ok {
-		log.Debug("OSTYPE is not set")
+		logger.Debug("OSTYPE is not set")
 	} else if OSTYPE == "" {
-		log.Debug("OSTYPE is empty")
+		logger.Debug("OSTYPE is empty")
 	}
 	return nil
 }
@@ -199,11 +199,11 @@ func syncRole(r *role.Role) error {
 	}
 	cfgUsed := r.Config.ConfigFileUsed()
 	if cfgUsed != "" {
-		log.Debug("Using role config file: " + cfgUsed)
+		logger.Debug("Using role config file: " + cfgUsed)
 	}
 
 	for _, d := range r.Dirs() {
-		log.Info("- Create", d.Path)
+		logger.Info("- Create", d.Path)
 		d.Path = os.ExpandEnv(d.Path)
 		d.Path = path.Join(r.Target, d.Path)
 		err := fileutil.MakeDir(d.Path) // <- fileutil.MakeDir
@@ -212,7 +212,7 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Links() {
-		log.Info("- Symlink", l.Pattern)
+		logger.Info("- Symlink", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		paths, err := l.GlobFiles(r.Source) // <- role.Link.GlobFiles(src string)
 		if err != nil {
@@ -227,7 +227,7 @@ func syncRole(r *role.Role) error {
 		}
 	}
 	for _, l := range r.Lines() {
-		log.Info("- Line in", l.File)
+		logger.Info("- Line in", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)
 		err := fileutil.LineInFile(l.File, l.Line) // <- fileutil.LineInFile
