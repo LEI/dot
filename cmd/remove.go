@@ -11,8 +11,6 @@ import (
 	// "strings"
 )
 
-var ()
-
 var removeCmd = &cobra.Command{
 	Use:   "remove [flags]",
 	Short: "Remove dotfiles",
