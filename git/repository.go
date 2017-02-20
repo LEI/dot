@@ -181,7 +181,7 @@ func ParseSpec(str string) (string, string, string, error) {
 			url = str
 		}
 	} else {
-		err = fmt.Errorf("Unkown spec: '%s'", str)
+		err = fmt.Errorf("Unknown git origin: '%s'", str)
 	}
 	return name, dir, url, err
 }
