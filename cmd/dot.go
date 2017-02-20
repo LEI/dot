@@ -30,11 +30,11 @@ var (
 	debug      bool
 	source     string
 	target     string
-	logger        = log.New(os.Stdout, "", 0)
+	logger     = log.New(os.Stdout, "", 0)
 )
 
 var DotCmd = &cobra.Command{
-	Use:   "dot",
+	Use:   os.Args[0], // [command] [flags]
 	Short: "Manage dotfiles",
 	// Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
