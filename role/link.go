@@ -13,7 +13,7 @@ type Link struct {
 	Pattern string
 	// Source string
 	// Target string
-	Type string
+	Type  string
 	Files []string // map[string]*os.FileInfo
 }
 
@@ -35,7 +35,7 @@ func (l *Link) GlobFiles(source string) ([]string, error) {
 	if err != nil {
 		return paths, err
 	}
-	GLOB:
+GLOB:
 	for _, file := range paths {
 		base := filepath.Base(file)
 		for _, pattern := range IgnoreNames {

@@ -16,10 +16,6 @@ type Package struct {
 	// Template interface{}
 }
 
-func (p *Package) String() string {
-	return fmt.Sprintf("%v", p)
-}
-
 func getMapInterfaceKey(val map[interface{}]interface{}, key string) interface{} {
 	v, ok := val[interface{}(key)]
 	if !ok {

@@ -12,9 +12,9 @@ var (
 	PanicPrefix = "Panic: "
 	FatalPrefix = "Fatal: "
 	ErrorPrefix = "Error: " // × ✕ ✖ ✗ ✘
-	WarnPrefix = "Warn: " // ⚠ !
+	WarnPrefix  = "Warn: "  // ⚠ !
 	// SuccessPrefix = "✓" // ✔
-	InfoPrefix = "" // ›
+	InfoPrefix  = "" // ›
 	DebugPrefix = "Debug: "
 )
 

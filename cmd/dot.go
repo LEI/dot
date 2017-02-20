@@ -35,7 +35,7 @@ var (
 )
 
 var DotCmd = &cobra.Command{
-	Use: os.Args[0],
+	Use:   os.Args[0],
 	Short: "Manage dotfiles",
 	// Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -86,7 +86,7 @@ func initConfig() {
 		logger.SetLevel(log.DebugLevel)
 	}
 	bindPFlags := []string{"source", "target"} // Persistent flags
-	bindFlags := []string{} // Local flags
+	bindFlags := []string{}                    // Local flags
 	if configFile != "" {
 		Config.SetConfigFile(configFile)
 	} else {
