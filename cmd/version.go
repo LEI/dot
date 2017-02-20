@@ -9,6 +9,7 @@ import (
 var Version = "0.0.1"
 
 var versionCmd = &cobra.Command{
+	Hidden: true,
 	Use:   "version",
 	Short: "Print the version number",
 	// Long:  ``,

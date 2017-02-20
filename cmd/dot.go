@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/LEI/dot/config"
+	// "github.com/LEI/dot/config"
 	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
-	logger "github.com/LEI/dot/log"
+	"github.com/LEI/dot/logger"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"os"
 	"path"
 	"runtime"
@@ -21,7 +22,7 @@ var OSTYPE string
 
 var (
 	Dot        = &role.Meta{}
-	Config     *config.Configuration
+	Config     = viper.New()
 	configFile = ""
 	configName = ".dotrc"
 	RolesDir   = ".dot" // Default clone parent directory
@@ -29,7 +30,7 @@ var (
 	debug      bool
 	source     string
 	target     string
-	log        *logger.Logger
+	log        = logger.New(os.Stdout, "", 0)
 )
 
 var DotCmd = &cobra.Command{
@@ -37,6 +38,11 @@ var DotCmd = &cobra.Command{
 	Short: "Manage dotfiles",
 	// Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// fmt.Printf("COMMAND: %+v\n%s\n", cmd, args)
+		switch cmd {
+		case versionCmd:
+			return nil
+		}
 		return initCommand()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,11 +54,7 @@ var DotCmd = &cobra.Command{
 }
 
 func Execute() error {
-	// logrus.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
-	// log.Out = os.Stdout
-	// log.WithFields(logrus.Fields{
-	// 	"command": "dot",
-	// }).Info("Executing command...")
+	// log.SetOutput(os.Stdout)
 	err := DotCmd.Execute()
 	if err != nil {
 		log.Fatal(err)
@@ -77,9 +79,9 @@ func init() {
 }
 
 func initConfig() {
-	// if debug {
-	// 	log.Level = logrus.DebugLevel
-	// }
+	if debug {
+		log.SetLevel(logger.DebugLevel)
+	}
 	bindPFlags := []string{"source", "target"}
 	bindFlags := []string{}
 	// switch {
@@ -92,10 +94,13 @@ func initConfig() {
 	// 	os.Exit(0)
 	// }
 	if configFile != "" {
-		Config = config.NewFile(configFile)
+		Config.SetConfigFile(configFile)
 	} else {
+		Config.SetConfigName(configName)
 		configPath := []string{source, target, "/etc"}
-		Config = config.New(configName, configPath)
+		for _, p := range configPath {
+			Config.AddConfigPath(p)
+		}
 	}
 	for _, f := range bindPFlags {
 		Config.BindPFlag(f, DotCmd.PersistentFlags().Lookup(f))
@@ -103,16 +108,16 @@ func initConfig() {
 	for _, f := range bindFlags {
 		Config.BindPFlag(f, DotCmd.Flags().Lookup(f))
 	}
-	configUsed, err := Config.Read()
+	err := Config.ReadInConfig()
 	if err != nil {
 		log.Fatal(err)
-	}
-	if configUsed != "" {
-		log.Debug("Using config file: %s" + configUsed)
 	}
 }
 
 func initCommand() error {
+	if Config.ConfigFileUsed() != "" {
+		log.Debug("Using config file: " + Config.ConfigFileUsed())
+	}
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
 	err := Config.UnmarshalKey("roles", &Dot.Roles)
@@ -124,8 +129,10 @@ func initCommand() error {
 		log.Warn(err)
 	}
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	if !ok || OSTYPE == "" {
-		log.Warn("OSTYPE is not set")
+	if !ok {
+		log.Debug("OSTYPE is not set")
+	} else if OSTYPE == "" {
+		log.Debug("OSTYPE is empty")
 	}
 	return nil
 }
@@ -181,10 +188,16 @@ func syncRole(r *role.Role) error {
 	if repo.Path != r.Source {
 		r.Source = repo.Path
 	}
-	cfgUsed, err := r.ReadConfig(configName, []string{r.Source})
-	if err != nil && !os.IsNotExist(err) {
+	if r.Config == nil {
+		r.Config = viper.New()
+	}
+	r.Config.SetConfigName(configName)
+	r.Config.AddConfigPath(r.Source)
+	err = r.Config.ReadInConfig()
+	if err != nil { // && !os.IsNotExist(err)
 		return err
 	}
+	cfgUsed := r.Config.ConfigFileUsed()
 	if cfgUsed != "" {
 		log.Debug("Using role config file: " + cfgUsed)
 	}

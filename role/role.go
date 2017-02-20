@@ -2,7 +2,7 @@ package role
 
 import (
 	"fmt"
-	"github.com/LEI/dot/config"
+	"github.com/spf13/viper"
 	"os"
 	"path"
 	"strings"
@@ -25,7 +25,7 @@ type Role struct {
 	Name, Origin   string
 	Source, Target string
 	Os             []string
-	Config         *config.Configuration
+	Config         *viper.Viper
 	Package        *Package // `mapstructure:",squash"`
 }
 
@@ -66,11 +66,6 @@ func (r *Role) New(source, target string) (*Role, error) {
 		r.Target = target
 	}
 	return r, nil
-}
-
-func (r *Role) ReadConfig(name string, paths []string) (string, error) {
-	r.Config = config.New(name, paths)
-	return r.Config.Read()
 }
 
 func (r *Role) IsOs(types []string) bool {
