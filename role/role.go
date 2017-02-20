@@ -69,7 +69,7 @@ func (r *Role) New(source, target string) (*Role, error) {
 }
 
 func (r *Role) IsOs(types []string) bool {
-	if len(r.Os) == 0 || len(types) == 0 {
+	if len(r.Os) == 0 { // || len(types) == 0
 		return true
 	}
 	return hasOne(r.Os, types)

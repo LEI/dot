@@ -2,7 +2,7 @@ package role
 
 import (
 	"fmt"
-	// "github.com/LEI/dot/log"
+	"github.com/LEI/dot/log"
 	"os"
 	"path/filepath"
 )
@@ -17,9 +17,9 @@ type Link struct {
 	Files []string // map[string]*os.FileInfo
 }
 
-func NewLink(pattern string) *Link {
-	return &Link{Pattern: pattern}
-}
+// func NewLink(pattern string) *Link {
+// 	return &Link{Pattern: pattern}
+// }
 
 func (l *Link) String() string {
 	str := l.Pattern
@@ -97,7 +97,7 @@ func castAsLink(value interface{}) *Link {
 	case map[string]interface{}:
 		pattern, ok := v["pattern"].(string)
 		if !ok {
-			fatal(fmt.Errorf("'pattern' not found in %+v\n", v))
+			log.Fatal(fmt.Errorf("'pattern' not found in %+v\n", v))
 		}
 		fileType, ok := v["type"].(string)
 		if !ok {
@@ -110,7 +110,7 @@ func castAsLink(value interface{}) *Link {
 	case map[interface{}]interface{}:
 		pattern, ok := v[interface{}("pattern")].(string)
 		if !ok {
-			fatal(fmt.Errorf("'pattern' not found in %+v\n", v))
+			log.Fatal(fmt.Errorf("'pattern' not found in %+v\n", v))
 		}
 		fileType, ok := v[interface{}("type")].(string)
 		if !ok {
@@ -121,7 +121,7 @@ func castAsLink(value interface{}) *Link {
 			Type:    fileType,
 		}
 	default:
-		fatal(fmt.Errorf("(%T) %s\n", v, v))
+		log.Fatal(fmt.Errorf("(%T) %s\n", v, v))
 	}
 	return l
 }

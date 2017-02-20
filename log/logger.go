@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+var (
+	PanicPrefix = "Panic: "
+	FatalPrefix = "Fatal: "
+	ErrorPrefix = "Error: " // × ✕ ✖ ✗ ✘
+	WarnPrefix = "Warn: " // ⚠ !
+	// SuccessPrefix = "✓" // ✔
+	InfoPrefix = "" // ›
+	DebugPrefix = "Debug: "
+)
+
 func (l *Logger) Flags() int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -60,93 +70,93 @@ func (l *Logger) Print(v ...interface{}) { l.Output(2, fmt.Sprint(v...)) }
 
 func (l *Logger) Debugf(format string, v ...interface{}) {
 	if l.level >= DebugLevel {
-		l.Output(2, "Debug: "+fmt.Sprintf(format, v...))
+		l.Output(2, DebugPrefix+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Debugln(v ...interface{}) {
 	if l.level >= DebugLevel {
-		l.Output(2, "Debug: "+fmt.Sprintln(v...))
+		l.Output(2, DebugPrefix+fmt.Sprintln(v...))
 	}
 }
 
 func (l *Logger) Debug(v ...interface{}) {
 	if l.level >= DebugLevel {
-		l.Output(2, "Debug: "+fmt.Sprint(v...))
+		l.Output(2, DebugPrefix+fmt.Sprint(v...))
 	}
 }
 
 func (l *Logger) Infof(format string, v ...interface{}) {
 	if l.level >= InfoLevel {
-		l.Output(2, fmt.Sprintf(format, v...))
+		l.Output(2, InfoPrefix+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Infoln(v ...interface{}) {
 	if l.level >= InfoLevel {
-		l.Output(2, fmt.Sprintln(v...))
+		l.Output(2, InfoPrefix+fmt.Sprintln(v...))
 	}
 }
 
 func (l *Logger) Info(v ...interface{}) {
 	if l.level >= InfoLevel {
-		l.Output(2, fmt.Sprint(v...))
+		l.Output(2, InfoPrefix+fmt.Sprint(v...))
 	}
 }
 
 func (l *Logger) Warnf(format string, v ...interface{}) {
 	if l.level >= WarnLevel {
-		l.Output(2, "Warning: "+fmt.Sprintf(format, v...))
+		l.Output(2, WarnPrefix+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Warnln(v ...interface{}) {
 	if l.level >= WarnLevel {
-		l.Output(2, "Warning: "+fmt.Sprintln(v...))
+		l.Output(2, WarnPrefix+fmt.Sprintln(v...))
 	}
 }
 
 func (l *Logger) Warn(v ...interface{}) {
 	if l.level >= WarnLevel {
-		l.Output(2, "Warning: "+fmt.Sprint(v...))
+		l.Output(2, WarnPrefix+fmt.Sprint(v...))
 	}
 }
 
 func (l *Logger) Errorf(format string, v ...interface{}) {
 	if l.level >= ErrorLevel {
-		l.Output(2, "Error: "+fmt.Sprintf(format, v...))
+		l.Output(2, ErrorPrefix+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Errorln(v ...interface{}) {
 	if l.level >= ErrorLevel {
-		l.Output(2, "Error: "+fmt.Sprintln(v...))
+		l.Output(2, ErrorPrefix+fmt.Sprintln(v...))
 	}
 }
 
 func (l *Logger) Error(v ...interface{}) {
 	if l.level >= ErrorLevel {
-		l.Output(2, "Error: "+fmt.Sprint(v...))
+		l.Output(2, ErrorPrefix+fmt.Sprint(v...))
 	}
 }
 
 func (l *Logger) Fatalf(format string, v ...interface{}) {
 	if l.level >= FatalLevel {
-		l.Output(2, "Fatal: "+fmt.Sprintf(format, v...))
+		l.Output(2, FatalPrefix+fmt.Sprintf(format, v...))
 	}
 	os.Exit(1)
 }
 
 func (l *Logger) Fatalln(v ...interface{}) {
 	if l.level >= FatalLevel {
-		l.Output(2, "Fatal: "+fmt.Sprintln(v...))
+		l.Output(2, FatalPrefix+fmt.Sprintln(v...))
 	}
 	os.Exit(1)
 }
 
 func (l *Logger) Fatal(v ...interface{}) {
 	if l.level >= FatalLevel {
-		l.Output(2, "Fatal: "+fmt.Sprint(v...))
+		l.Output(2, FatalPrefix+fmt.Sprint(v...))
 	}
 	os.Exit(1)
 }
@@ -154,7 +164,7 @@ func (l *Logger) Fatal(v ...interface{}) {
 func (l *Logger) Panicf(format string, v ...interface{}) {
 	s := fmt.Sprint(v...)
 	if l.level >= PanicLevel {
-		l.Output(2, fmt.Sprintf(format, "Panic: "+s))
+		l.Output(2, PanicPrefix+fmt.Sprintf(format, s))
 	}
 	panic(s)
 }
@@ -162,7 +172,7 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 func (l *Logger) Panicln(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	if l.level >= PanicLevel {
-		l.Output(2, fmt.Sprintln("Panic: "+s))
+		l.Output(2, PanicPrefix+fmt.Sprintln(s))
 	}
 	panic(s)
 }
@@ -170,7 +180,7 @@ func (l *Logger) Panicln(v ...interface{}) {
 func (l *Logger) Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	if l.level >= PanicLevel {
-		l.Output(2, fmt.Sprint("Panic: "+s))
+		l.Output(2, PanicPrefix+fmt.Sprint(s))
 	}
 	panic(s)
 }

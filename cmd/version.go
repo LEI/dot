@@ -11,6 +11,7 @@ var Version = "0.0.1"
 var versionCmd = &cobra.Command{
 	Hidden: true,
 	Use:    "version",
+	Aliases: []string{"v"},
 	Short:  "Print the version number",
 	// Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {

@@ -35,7 +35,7 @@ var (
 )
 
 var DotCmd = &cobra.Command{
-	Use: "dot",
+	Use: os.Args[0],
 	Short: "Manage dotfiles",
 	// Long:  ``,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -104,7 +104,7 @@ func initConfig() {
 	}
 	err := Config.ReadInConfig()
 	if err != nil {
-		logger.Fatal(err)
+		logger.Warn(err)
 	}
 }
 

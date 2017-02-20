@@ -98,6 +98,9 @@ func Warn(v ...interface{})                  { std.Warn(v...) }
 func Errorf(format string, v ...interface{}) { std.Errorf(format, v...) }
 func Errorln(v ...interface{})               { std.Errorln(v...) }
 func Error(v ...interface{})                 { std.Error(v...) }
+func Fatalf(format string, v ...interface{}) { std.Fatalf(format, v...) }
+func Fatalln(v ...interface{})               { std.Fatalln(v...) }
+func Fatal(v ...interface{})                 { std.Fatal(v...) }
 func Panicf(format string, v ...interface{}) { std.Panicf(format, v...) }
 func Panicln(v ...interface{})               { std.Panicln(v...) }
 func Panic(v ...interface{})                 { std.Panic(v...) }
