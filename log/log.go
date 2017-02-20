@@ -8,28 +8,30 @@ import (
 
 type Logger log.Logger
 
-func (l *Logger) Debug(msg ...interface{}) {
+func (l *Logger) Debug(v ...interface{}) {
 	// if debug {}
-	fmt.Println("Debug:", fmt.Sprint(msg...))
+	log.Output(2, "Debug: " + fmt.Sprint(v...))
 }
 
-func (l *Logger) Info(msg ...interface{}) {
-	fmt.Println("Info:", fmt.Sprint(msg...))
+func (l *Logger) Info(v ...interface{}) {
+	log.Output(2, "Info: " + fmt.Sprint(v...))
 }
 
-func (l *Logger) Warn(msg ...interface{}) {
-	fmt.Println("Warning:", fmt.Sprint(msg...))
+func (l *Logger) Warn(v ...interface{}) {
+	log.Output(2, "Warning: " + fmt.Sprint(v...))
 }
 
-func (l *Logger) Error(msg ...interface{}) {
-	fmt.Println("Error:", fmt.Sprint(msg...))
+func (l *Logger) Error(v ...interface{}) {
+	log.Output(2, "Error: " + fmt.Sprint(v...))
 }
 
-func (l *Logger) Fatal(msg ...interface{}) {
-	fmt.Println("Fatal:", fmt.Sprint(msg...))
+func (l *Logger) Fatal(v ...interface{}) {
+	log.Output(2, "Fatal: " + fmt.Sprint(v...))
 	os.Exit(1)
 }
 
-func (l *Logger) Panic(msg ...interface{}) {
-	panic(fmt.Sprintf("Panic: %s\n", msg...))
+func (l *Logger) Panic(v ...interface{}) {
+	s := fmt.Sprintf("Panic:", v...)
+	log.Output(2, s)
+	panic(s)
 }
