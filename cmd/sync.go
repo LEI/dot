@@ -7,7 +7,7 @@ import (
 
 var syncCmd = &cobra.Command{
 	Hidden: true,
-	Use:    "Sync [flags]",
+	Use:    "sync [flags]",
 	Short:  "Sync dotfiles",
 	// Long:   ``,
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -20,6 +20,9 @@ func Confirm(str string) bool {
 			os.Exit(1)
 		}
 		res = strings.ToLower(strings.TrimSpace(res))
+		if res != "" {
+			fmt.Println()
+		}
 		switch res {
 		case "y", "yes":
 			return true
