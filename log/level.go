@@ -9,6 +9,16 @@ const (
 	DebugLevel
 )
 
+var (
+	PanicPrefix = "Panic: "
+	FatalPrefix = "Fatal: "
+	ErrorPrefix = "Error: " // × ✕ ✖ ✗ ✘
+	WarnPrefix  = "Warn: "  // ⚠ !
+	// SuccessPrefix = "✓" // ✔
+	InfoPrefix  = "" // ›
+	DebugPrefix = "Debug: "
+)
+
 type Level uint8
 
 func (level Level) String() string {

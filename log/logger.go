@@ -8,16 +8,6 @@ import (
 	"time"
 )
 
-var (
-	PanicPrefix = "Panic: "
-	FatalPrefix = "Fatal: "
-	ErrorPrefix = "Error: " // × ✕ ✖ ✗ ✘
-	WarnPrefix  = "Warn: "  // ⚠ !
-	// SuccessPrefix = "✓" // ✔
-	InfoPrefix  = "" // ›
-	DebugPrefix = "Debug: "
-)
-
 func (l *Logger) Flags() int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
