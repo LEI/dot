@@ -24,6 +24,17 @@ type Repository struct {
 	gitdir  string
 }
 
+func New(spec string, path string) (*Repository, error) {
+	repo, err := NewRepository(spec)
+	if err != nil {
+		return repo, err
+	}
+	if repo.Path == "" {
+		repo.Path = path
+	}
+	return repo, nil
+}
+
 func NewRepository(spec string /*, clonePath string, remotes ...*Remote*/) (*Repository, error) {
 	name, dir, url, err := ParseSpec(spec)
 	if err != nil {
@@ -37,6 +48,8 @@ func NewRepository(spec string /*, clonePath string, remotes ...*Remote*/) (*Rep
 	}
 	if url != "" {
 		repo.AddRemote(DefaultRemote, url)
+	} else {
+		return repo, fmt.Errorf("Empty remote url in %s", repo)
 	}
 	// remoteUrl := ""
 	// if strings.HasPrefix(spec, string(os.PathSeparator)) { // filepath.IsAbs(spec)
@@ -89,6 +102,19 @@ func (repo *Repository) GitDir() string {
 func (repo *Repository) AddRemote(name string, url string) *Repository {
 	repo.Remotes[name] = NewRemote(name, url)
 	return repo
+
+}
+
+func (repo *Repository) Status() error {
+	repo.WorkTree()
+	cmd := exec.Command("git", "-C", repo.Path, "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (repo *Repository) CloneOrPull() error {

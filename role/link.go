@@ -3,11 +3,9 @@ package role
 import (
 	"fmt"
 	"github.com/LEI/dot/log"
-	"os"
-	"path/filepath"
+	// "os"
+	// "path/filepath"
 )
-
-var IgnoreNames = []string{".git", ".*\\.md"}
 
 type Link struct {
 	Pattern string
@@ -29,41 +27,41 @@ func (l *Link) String() string {
 	return fmt.Sprintf("%s", str)
 }
 
-func (l *Link) GlobFiles(source string) ([]string, error) {
-	glob := filepath.Join(source, l.Pattern)
-	paths, err := filepath.Glob(glob)
-	if err != nil {
-		return paths, err
-	}
-GLOB:
-	for _, file := range paths {
-		base := filepath.Base(file)
-		for _, pattern := range IgnoreNames {
-			ignore, err := filepath.Match(pattern, base)
-			if err != nil {
-				return paths, err
-			}
-			if ignore {
-				fmt.Printf("# ignore %s (filename)\n", base)
-				continue GLOB
-			}
-		}
-		fi, err := os.Stat(file)
-		if err != nil {
-			return paths, err
-		}
-		switch {
-		case l.Type == "directory" && !fi.IsDir(),
-			l.Type == "file" && fi.IsDir():
-			fmt.Printf("# ignore %s (filetype)\n", base)
-			continue // GLOB
-		}
-		l.Files = append(l.Files, file)
-		// l.Files[file] = fi
-	}
+// func (l *Link) GlobFiles(source string) ([]string, error) {
+// 	glob := filepath.Join(source, l.Pattern)
+// 	paths, err := filepath.Glob(glob)
+// 	if err != nil {
+// 		return paths, err
+// 	}
+// GLOB:
+// 	for _, file := range paths {
+// 		base := filepath.Base(file)
+// 		for _, pattern := range IgnoreNames {
+// 			ignore, err := filepath.Match(pattern, base)
+// 			if err != nil {
+// 				return paths, err
+// 			}
+// 			if ignore {
+// 				fmt.Printf("# ignore %s (filename)\n", base)
+// 				continue GLOB
+// 			}
+// 		}
+// 		fi, err := os.Stat(file)
+// 		if err != nil {
+// 			return paths, err
+// 		}
+// 		switch {
+// 		case l.Type == "directory" && !fi.IsDir(),
+// 			l.Type == "file" && fi.IsDir():
+// 			fmt.Printf("# ignore %s (filetype)\n", base)
+// 			continue // GLOB
+// 		}
+// 		l.Files = append(l.Files, file)
+// 		// l.Files[file] = fi
+// 	}
 
-	return l.Files, nil
-}
+// 	return l.Files, nil
+// }
 
 func (r *Role) Links() []*Link {
 	p := r.Package

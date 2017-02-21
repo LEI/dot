@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
 	// "github.com/LEI/dot/config"
-	"github.com/LEI/dot/fileutil"
-	"github.com/LEI/dot/git"
 	"github.com/LEI/dot/log"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
-	"path"
 	"runtime"
-	"strings"
 	// "time"
 )
 
@@ -28,10 +24,16 @@ var (
 	RolesDir   = ".dot" // Default clone parent directory
 	HomeDir    = os.Getenv("HOME")
 	debug      bool
+	https      bool
 	source     string
 	target     string
 	filter     []string
 	logger     = log.New(os.Stdout, "", 0)
+)
+
+var (
+	IgnoreNames = []string{".git", ".*\\.md"}
+	Skip = fmt.Errorf("Skip")
 )
 
 var DotCmd = &cobra.Command{
@@ -51,7 +53,7 @@ var DotCmd = &cobra.Command{
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
 		}
-		return syncCommand(Dot, filter)
+		return installCommand(Dot.Source, Dot.Target, Dot.Roles)
 	},
 }
 
@@ -73,7 +75,7 @@ func init() {
 	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	DotCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
 	DotCmd.PersistentFlags().StringSliceVarP(&filter, "filter", "f", filter, "Filter roles by `name`")
-	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Default to HTTPS for git remotes")
+	DotCmd.PersistentFlags().BoolVarP(&https, "https", "", https, "Default to HTTPS for git remotes")
 	DotCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
 	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
 	// DotCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
@@ -127,108 +129,6 @@ func initCommand() error {
 		logger.Debugln("OSTYPE is not set")
 	} else if OSTYPE == "" {
 		logger.Debugln("OSTYPE is empty")
-	}
-	return nil
-}
-
-func syncCommand(meta *role.Meta, roleFilters []string) error {
-	for _, r := range meta.Roles {
-		r, err := r.New(meta.Source, meta.Target)
-		if err != nil {
-			return err
-		}
-		// Check platform
-		ok := r.IsOs([]string{OS, OSTYPE})
-		if !ok {
-			continue
-		}
-		// Filter roles by name
-		skip := len(roleFilters) > 0
-		for _, roleName := range roleFilters {
-			if roleName == r.Name {
-				skip = false
-				break
-			}
-		}
-		if skip {
-			continue
-		}
-		err = syncRole(r)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func syncRole(r *role.Role) error {
-	// log := log.WithFields(logrus.Fields{
-	// 	"role": r.Name,
-	// })
-	logger.Infof("--- Role %s\n", r.Name)
-	// logRole := log.New(os.Stdout, r.Name+": ", 0)
-	// defer fmt.Printf("---\n")
-
-	// TODO func (r *Role) NewRepo() error?
-	git.DefaultPath = path.Join(r.Target, RolesDir)
-	repo, err := git.NewRepository(r.Origin)
-	if err != nil {
-		return err
-	}
-	repo.Name = r.Name
-	err = repo.CloneOrPull()
-	if err != nil {
-		return err
-	}
-	if repo.Path != r.Source {
-		r.Source = repo.Path
-	}
-	if r.Config == nil {
-		r.Config = viper.New()
-	}
-	r.Config.SetConfigName(configName)
-	r.Config.AddConfigPath(r.Source)
-	err = r.Config.ReadInConfig()
-	if err != nil { // && !os.IsNotExist(err)
-		return err
-	}
-	cfgUsed := r.Config.ConfigFileUsed()
-	if cfgUsed != "" {
-		logger.Debugln("Using role config file:", cfgUsed)
-	}
-
-	for _, d := range r.Dirs() {
-		logger.Infof("- Create %s\n", d.Path)
-		d.Path = os.ExpandEnv(d.Path)
-		d.Path = path.Join(r.Target, d.Path)
-		err := fileutil.MakeDir(d.Path) // <- fileutil.MakeDir
-		if err != nil {
-			return err
-		}
-	}
-	for _, l := range r.Links() {
-		logger.Infof("- Symlink %s\n", l.Pattern)
-		l.Pattern = os.ExpandEnv(l.Pattern)
-		paths, err := l.GlobFiles(r.Source) // <- role.Link.GlobFiles(src string)
-		if err != nil {
-			return err
-		}
-		for _, src := range paths {
-			dst := strings.Replace(src, r.Source, r.Target, 1)
-			err := fileutil.Symlink(src, dst) // <- fileutil.Symlink
-			if err != nil {
-				return err
-			}
-		}
-	}
-	for _, l := range r.Lines() {
-		logger.Infof("- Line in %s\n", l.File)
-		l.File = os.ExpandEnv(l.File)
-		l.File = path.Join(r.Target, l.File)
-		err := fileutil.LineInFile(l.File, l.Line) // <- fileutil.LineInFile
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
