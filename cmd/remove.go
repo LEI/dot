@@ -26,7 +26,7 @@ var removeCmd = &cobra.Command{
 }
 
 func init() {
-	DotCmd.AddCommand(removeCmd)
+	RootCmd.AddCommand(removeCmd)
 
 	// removeCmd.Flags().BoolVarP(&, "", "", , "")
 	// Config.BindPFlags(removeCmd.Flags())

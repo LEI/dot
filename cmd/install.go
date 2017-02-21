@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	dot "github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
-	"strings"
+	// "strings"
 )
 
 var installCmd = &cobra.Command{
@@ -26,6 +27,16 @@ var installCmd = &cobra.Command{
 		}
 		return installCommand(Dot.Source, Dot.Target, Dot.Roles)
 	},
+}
+
+var handlers = []ContextHandlerFunc{
+	roleInit,
+	roleInitRepo,
+	roleInitConfig,
+	roleInstallDirs,
+	roleInstallLinks,
+	roleInstallLines,
+	roleDone,
 }
 
 type ContextHandler interface {
@@ -65,7 +76,7 @@ func register(h ContextHandler) ContextHandler {
 // }
 
 func init() {
-	DotCmd.AddCommand(installCmd)
+	RootCmd.AddCommand(installCmd)
 	// installCmd.Flags().BoolVarP(&, "", "", , "")
 	// Config.BindPFlags(installCmd.Flags())
 }
@@ -77,33 +88,25 @@ func installCommand(source, target string, roles []*role.Role) error {
 	ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
 
-	c := make(chan error, 1)
-	go func() {
-		c <- installRoles(ctx, source, target, roles)
-	}()
-	select {
-	case <-ctx.Done():
-		logger.Debugln("<-ctx.Done")
-		<-c
-		logger.Debugln("<-c")
-		return ctx.Err()
-	case err := <-c:
-		logger.Debugln("err := <-c", err)
+	err := installRoles(ctx, source, target, roles)
+	if err != nil {
 		return err
 	}
+	// c := make(chan error, 1)
+	// go func() {
+	// 	c <- installRoles(ctx, source, target, roles)
+	// }()
+	// select {
+	// case <-ctx.Done():
+	// 	<-c
+	// 	return ctx.Err()
+	// case err := <-c:
+	// 	return err
+	// }
 	return nil
 }
 
 func installRoles(ctx context.Context, source, target string, roles []*role.Role) error {
-	var handlers = []ContextHandlerFunc{
-		roleInit,
-		roleInitRepo,
-		roleInitConfig,
-		roleInstallDirs,
-		roleInstallLinks,
-		roleInstallLines,
-		roleDone,
-	}
 	ROLES:
 	for _, r := range roles {
 		r, err := r.New(source, target)
@@ -194,14 +197,13 @@ func roleInitConfig(ctx context.Context, r *role.Role) error {
 
 func roleInstallDirs(ctx context.Context, r *role.Role) error {
 	for _, d := range r.Dirs() {
-		// logger.Infof("- Create %s\n", d.Path)
 		d.Path = os.ExpandEnv(d.Path)
-		d.Path = filepath.Join(r.Target, d.Path)
-		logger.Infof("$ mkdir -p %s\n", d.Path)
-		err := os.MkdirAll(d.Path, 0755) // os.Remove(d.Path)
+		dst := filepath.Join(r.Target, d.Path)
+		f, err := dot.NewDir(dst, 0755)
 		if err != nil {
 			return err
 		}
+		logger.Infof("$ mkdir -p %s\n", f)
 	}
 	return nil
 }
@@ -210,72 +212,75 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 	for _, l := range r.Links() {
 		logger.Infof("- Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
-		paths, err := filepath.Glob(filepath.Join(r.Source, l.Pattern))
+		pattern := filepath.Join(r.Source, l.Pattern)
+		files, err := dot.List(pattern, func(f *dot.File) bool {
+			ignore, err := f.Match(DotIgnore...)
+			if err != nil {
+				logger.Error(err)
+			}
+			if ignore {
+				logger.Debugf("# .ignore %s\n", f.Base())
+				return false
+			}
+			return true
+		})
 		if err != nil {
 			return err
 		}
-GLOB:
-		for _, src := range paths {
-			base := filepath.Base(src)
-			for _, pattern := range IgnoreNames {
-				ignore, err := filepath.Match(pattern, base)
-				if err != nil {
-					return err
-				}
-				if ignore {
-					logger.Debugf("# ignore %s (filename)\n", base)
-					continue GLOB
-				}
-			}
-			fi, err := os.Stat(src)
+		for _, f := range files {
+			isDir, err := f.IsDir()
 			if err != nil {
 				return err
 			}
-			switch {
-				case l.Type == "directory" && !fi.IsDir(),
-				l.Type == "file" && fi.IsDir():
-				logger.Debugf("# ignore %s (filetype)\n", base)
-				continue // GLOB
+			if l.Type == "directory" && !isDir {
+				logger.Debugf("# ignore directory %s\n", f.Base())
+				continue
 			}
-			dst := strings.Replace(src, r.Source, r.Target, 1)
-
-			fi, err = os.Lstat(dst)
-			if err != nil && os.IsExist(err) {
+			if l.Type == "file" && isDir {
+				logger.Debugf("# ignore file %s\n", f.Base())
+				continue
+			}
+			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
+			isLink, err := ln.IsLink()
+			if err != nil {
 				return err
 			}
-			if fi != nil && (fi.Mode()&os.ModeSymlink != 0) {
-				link, err := os.Readlink(dst)
+			if isLink {
+				lnPath, err := os.Readlink(ln.Target())
 				if err != nil {
 					return err
 				}
-				if link == src { // TODO os.SameFile?
-					logger.Debugf("# ignore %s (already a link)\n", dst)
-					// logger.Infof("Already linked: %s", src)
-					return nil
+				if ln.Path() == lnPath {
+					logger.Infof("# already linked %s\n", ln.Base())
+					continue
 				}
-				// TODO check broken symlink?
-				msg := fmt.Sprintf("! %s exists, linked to %s, replace with %s?", dst, link, src)
+				msg := fmt.Sprintf("! %s exists, linked to %s, replace with %s?", ln.Target(), lnPath, ln.Path())
 				if ok := prompt.Confirm(msg); ok {
-					err := os.Remove(dst)
-					if err != nil {
-						return err
-					}
-				}
-			} else if fi != nil {
-				backup := dst + ".backup"
-				msg := fmt.Sprintf("! %s exists, move to %s to link %s?", dst, backup, src)
-				if ok := prompt.Confirm(msg); ok {
-					err := os.Rename(dst, dst+".backup")
+					err := os.Remove(ln.Target())
 					if err != nil {
 						return err
 					}
 				}
 			}
-			logger.Infof("$ ln -s %s %s\n", src, dst)
-			err = os.Symlink(src, dst)
+			exists, err := ln.Exists()
 			if err != nil {
 				return err
 			}
+			if exists {
+				backup := ln.Target() + ".backup"
+				msg := fmt.Sprintf("! %s exists, add .backup and link %s?", ln.Target(), ln.Path())
+				if ok := prompt.Confirm(msg); ok {
+					err := os.Rename(ln.Target(), backup)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
+			// err = os.Symlink(src, dst)
+			// if err != nil {
+			// 	return err
+			// }
 		}
 	}
 	return nil

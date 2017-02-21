@@ -2,6 +2,7 @@ package config
 
 // https://github.com/spf13/hugo/blob/master/config/configProvider.go
 
+// Provider provides the configuration settings
 type Provider interface {
 	GetString(key string) string
 	GetInt(key string) int

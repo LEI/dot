@@ -32,11 +32,11 @@ var (
 )
 
 var (
-	IgnoreNames = []string{".git", ".*\\.md"}
+	DotIgnore = []string{".git", ".*\\.md"}
 	Skip = fmt.Errorf("Skip")
 )
 
-var DotCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:   os.Args[0],
 	Short: "Manage dotfiles",
 	// Long:  ``,
@@ -59,7 +59,7 @@ var DotCmd = &cobra.Command{
 
 func Execute() error {
 	// logger.SetOutput(os.Stdout)
-	err := DotCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
 		return err
 	}
@@ -72,15 +72,15 @@ func init() {
 		logger.Error(err)
 	}
 	cobra.OnInitialize(initConfig)
-	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
-	DotCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
-	DotCmd.PersistentFlags().StringSliceVarP(&filter, "filter", "f", filter, "Filter roles by `name`")
-	DotCmd.PersistentFlags().BoolVarP(&https, "https", "", https, "Default to HTTPS for git remotes")
-	DotCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
-	DotCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
-	// DotCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
-	// DotCmd.PersistentFlags().Parse(os.Args[1:])
-	// Config.BindPFlags(DotCmd.Flags())
+	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
+	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
+	RootCmd.PersistentFlags().StringSliceVarP(&filter, "filter", "f", filter, "Filter roles by `name`")
+	RootCmd.PersistentFlags().BoolVarP(&https, "https", "", https, "Default to HTTPS for git remotes")
+	RootCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
+	RootCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
+	// RootCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
+	// RootCmd.PersistentFlags().Parse(os.Args[1:])
+	// Config.BindPFlags(RootCmd.Flags())
 }
 
 func initConfig() {
@@ -99,10 +99,10 @@ func initConfig() {
 		}
 	}
 	for _, f := range bindPFlags {
-		Config.BindPFlag(f, DotCmd.PersistentFlags().Lookup(f))
+		Config.BindPFlag(f, RootCmd.PersistentFlags().Lookup(f))
 	}
 	for _, f := range bindFlags {
-		Config.BindPFlag(f, DotCmd.Flags().Lookup(f))
+		Config.BindPFlag(f, RootCmd.Flags().Lookup(f))
 	}
 	err := Config.ReadInConfig()
 	if err != nil {
