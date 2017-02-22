@@ -257,7 +257,6 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-
 func roleSymlink(ln *dot.Link) error {
 	if ln.IsLink() {
 		err := readSymlink(ln)
