@@ -243,16 +243,14 @@ func roleSymlink(ctx context.Context, r *role.Role, f *dot.File) error {
 	linked, err := ln.IsLinked()
 	if err != nil {
 		return err
-	}
-	if linked {
+	} else linked {
 		logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
 		continue
 	}
 	link, err := ln.Readlink()
 	if err != nil && os.IsExist(err) {
 		return err
-	}
-	if link != "" {
+	} else link != "" {
 		msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link)
 		if ok := prompt.Confirm(msg); ok {
 			err := os.Remove(ln.Target())
@@ -264,8 +262,7 @@ func roleSymlink(ctx context.Context, r *role.Role, f *dot.File) error {
 	fi, err := ln.DestInfo()
 	if err != nil && os.IsExist(err) {
 		return err
-	}
-	if fi != nil {
+	} else fi != nil {
 		if err := backupFile(ln.Target); err != nil {
 			return err
 		}
