@@ -217,7 +217,7 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 			return err
 		}
 		for _, f := range files {
-			err := roleSymlink(ctx, r, f)
+			err := roleSymlink(ctx, r, f, l.Type)
 			if err != nil {
 				return err
 			}
@@ -226,16 +226,16 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleSymlink(ctx context.Context, r *role.Role, f *dot.File) error {
+func roleSymlink(ctx context.Context, r *role.Role, f *dot.File, ft string) error {
 	isDir, err := f.IsDir()
 	if err != nil {
 		return err
 	}
 	switch {
-	case l.Type == "directory" && !isDir:
+	case ft == "directory" && !isDir:
 		logger.Debugf("# ignore directory %s\n", f.Base())
 		continue
-	case l.Type == "file" && isDir:
+	case ft == "file" && isDir:
 		logger.Debugf("# ignore file %s\n", f.Base())
 		continue
 	}
