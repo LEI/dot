@@ -240,29 +240,12 @@ func roleSymlink(ctx context.Context, r *role.Role, f *dot.File) error {
 		continue
 	}
 	ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
-	linked, err := ln.IsLinked()
-	if err != nil {
-		return err
-	} else linked {
-		logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
-		continue
-	}
-	link, err := ln.Readlink()
-	if err != nil && os.IsExist(err) {
-		return err
-	} else link != "" {
-		msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link)
-		if ok := prompt.Confirm(msg); ok {
-			err := os.Remove(ln.Target())
-			if err != nil {
-				return err
-			}
-		}
-	}
+	err := checkSymlink(ln)
 	fi, err := ln.DestInfo()
 	if err != nil && os.IsExist(err) {
 		return err
-	} else fi != nil {
+	}
+	if fi != nil {
 		if err := backupFile(ln.Target); err != nil {
 			return err
 		}
@@ -273,6 +256,30 @@ func roleSymlink(ctx context.Context, r *role.Role, f *dot.File) error {
 		return err
 	}
 	return nil
+}
+
+func checkSymlink(ln *dot.Link) error {
+	linked, err := ln.IsLinked()
+	if err != nil {
+		return err
+	}
+	if linked {
+		logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
+		continue
+	}
+	link, err := ln.Readlink()
+	if err != nil && os.IsExist(err) {
+		return err
+	}
+	if link != "" {
+		msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link)
+		if ok := prompt.Confirm(msg); ok {
+			err := os.Remove(ln.Target())
+			if err != nil {
+				return err
+			}
+		}
+	}
 }
 
 func backupFile(path string) bool {
