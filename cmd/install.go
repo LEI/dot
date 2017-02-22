@@ -35,7 +35,6 @@ var handlers = []ContextHandlerFunc{
 	roleInstallDirs,
 	roleInstallLinks,
 	roleInstallLines,
-	roleDone,
 }
 
 type ContextHandler interface {
@@ -120,7 +119,7 @@ ROLES:
 			// fmt.Println("Handler #", i, f)
 			h := register(ContextHandlerFunc(f))
 			ctx = context.WithValue(ctx, "role", r.Name)
-			// logger = ctx.Value("logger").(*log.Logger)
+			logger.Infoln("---", ctx.Value("role"))
 			err := h.Next(ctx, r)
 			if err != nil {
 				switch err {
@@ -324,7 +323,7 @@ func roleInstallLines(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleDone(ctx context.Context, r *role.Role) error {
-	logger.Infoln("---", ctx.Value("role"))
-	return nil
-}
+// func done(ctx context.Context, r *role.Role) error {
+// 	logger.Infoln("---", ctx.Value("role"))
+// 	return nil
+// }
