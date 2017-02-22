@@ -238,8 +238,13 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 			if linked {
 				logger.Infof("# already linked %s\n", ln.Base())
 				continue
-			} else if link, _ := ln.Readlink(); link == ln.Path() {
-				msg := fmt.Sprintf("! %s exists, linked to %s, replace with %s?", ln.Target(), link, ln.Path())
+			}
+			link, err := ln.Readlink()
+			if err != nil && os.IsExist(err) {
+				return err
+			}
+			if link != "" {
+				msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link, ln.Path())
 				if ok := prompt.Confirm(msg); ok {
 					err := os.Remove(ln.Target())
 					if err != nil {
@@ -247,14 +252,13 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 					}
 				}
 			}
-			// exists, err := ln.Exists()
-			ti, err := ln.Tstat()
+			fi, err := ln.DestInfo()
 			if err != nil && os.IsExist(err) {
 				return err
 			}
-			if ti != nil {
+			if fi != nil {
 				backup := ln.Target() + ".backup"
-				msg := fmt.Sprintf("! %s exists, add .backup and link %s?", ln.Target(), ln.Path())
+				msg := fmt.Sprintf("! %s exists, backup?", ln.Target(), ln.Path())
 				if ok := prompt.Confirm(msg); ok {
 					err := os.Rename(ln.Target(), backup)
 					if err != nil {

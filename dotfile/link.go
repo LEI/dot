@@ -41,26 +41,25 @@ func (l *Link) Info() (os.FileInfo, error) {
 }
 
 func (l *Link) Lstat() (os.FileInfo, error) {
-	fi, err := os.Lstat(l.path)
+	fi, err := os.Lstat(l.target)
 	l.lstat = fi
 	return l.lstat, err
 }
 
-func (l *Link) Tstat() (os.FileInfo, error) {
+func (l *Link) DestInfo() (os.FileInfo, error) {
 	fi, err := os.Stat(l.target)
 	return fi, err
 }
 
 func (l *Link) IsLink() bool {
 	fi, err := l.Lstat()
-	if err != nil {
+	if err != nil && os.IsExist(err) {
 		log.Fatal(err)
-		return false //, err
 	}
 	if IsSymlink(fi) {
-		return true //, nil
+		return true
 	}
-	return false //, nil
+	return false
 }
 
 func (l *Link) IsLinked() (bool, error) {
@@ -71,13 +70,13 @@ func (l *Link) IsLinked() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if real == l.Path() {
+	if real == l.path {
 		return true, nil
 	}
 	return false, nil
 }
 
 func (l *Link) Readlink() (string, error) {
-	path, err := os.Readlink(l.Target())
+	path, err := os.Readlink(l.target)
 	return path, err
 }
