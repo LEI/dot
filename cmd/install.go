@@ -212,61 +212,12 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 		logger.Infof("- Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		pattern := filepath.Join(r.Source, l.Pattern)
-		files, err := dot.List(pattern, filterFile)
+		files, err := dot.List(pattern, filterIgnored)
 		if err != nil {
 			return err
 		}
 		for _, f := range files {
-			isDir, err := f.IsDir()
-			if err != nil {
-				return err
-			}
-			if l.Type == "directory" && !isDir {
-				logger.Debugf("# ignore directory %s\n", f.Base())
-				continue
-			}
-			if l.Type == "file" && isDir {
-				logger.Debugf("# ignore file %s\n", f.Base())
-				continue
-			}
-			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
-			linked, err := ln.IsLinked()
-			if err != nil {
-				return err
-			}
-			if linked {
-				logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
-				continue
-			}
-			link, err := ln.Readlink()
-			if err != nil && os.IsExist(err) {
-				return err
-			}
-			if link != "" {
-				msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link, ln.Path())
-				if ok := prompt.Confirm(msg); ok {
-					err := os.Remove(ln.Target())
-					if err != nil {
-						return err
-					}
-				}
-			}
-			fi, err := ln.DestInfo()
-			if err != nil && os.IsExist(err) {
-				return err
-			}
-			if fi != nil {
-				backup := ln.Target() + ".backup"
-				msg := fmt.Sprintf("! %s exists, backup?", ln.Target(), ln.Path())
-				if ok := prompt.Confirm(msg); ok {
-					err := os.Rename(ln.Target(), backup)
-					if err != nil {
-						return err
-					}
-				}
-			}
-			logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
-			err = os.Symlink(ln.Path(), ln.Target())
+			err := roleSymlink(ctx, r, f)
 			if err != nil {
 				return err
 			}
@@ -275,7 +226,71 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func filterFile(f *dot.File) bool {
+func roleSymlink(ctx context.Context, r *role.Role, f *dot.File) error {
+	isDir, err := f.IsDir()
+	if err != nil {
+		return err
+	}
+	switch {
+	case l.Type == "directory" && !isDir:
+		logger.Debugf("# ignore directory %s\n", f.Base())
+		continue
+	case l.Type == "file" && isDir:
+		logger.Debugf("# ignore file %s\n", f.Base())
+		continue
+	}
+	ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
+	linked, err := ln.IsLinked()
+	if err != nil {
+		return err
+	}
+	if linked {
+		logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
+		continue
+	}
+	link, err := ln.Readlink()
+	if err != nil && os.IsExist(err) {
+		return err
+	}
+	if link != "" {
+		msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link)
+		if ok := prompt.Confirm(msg); ok {
+			err := os.Remove(ln.Target())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	fi, err := ln.DestInfo()
+	if err != nil && os.IsExist(err) {
+		return err
+	}
+	if fi != nil {
+		if err := backupFile(ln.Target); err != nil {
+			return err
+		}
+	}
+	logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
+	err = os.Symlink(ln.Path(), ln.Target())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func backupFile(path string) bool {
+	backup := path + ".backup"
+	msg := fmt.Sprintf("! %s already exists, append .backup?", path)
+	if ok := prompt.Confirm(msg); ok {
+		err := os.Rename(path, backup)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func filterIgnored(f *dot.File) bool {
 	ignore, err := f.Match(DotIgnore...)
 	if err != nil {
 		logger.Error(err)
