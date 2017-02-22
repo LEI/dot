@@ -5,7 +5,6 @@ import (
 	"fmt"
 	dot "github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/prompt"
-	"github.com/LEI/dot/fileutil"
 	"github.com/LEI/dot/git"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
@@ -236,7 +235,7 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 				return err
 			}
 			if linked {
-				logger.Infof("# already linked %s\n", ln.Base())
+				logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
 				continue
 			}
 			link, err := ln.Readlink()
@@ -293,7 +292,7 @@ func roleInstallLines(ctx context.Context, r *role.Role) error {
 		logger.Infof("- Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = filepath.Join(r.Target, l.File)
-		changed, err := fileutil.LineInFile(l.File, l.Line)
+		changed, err := dot.LineInFile(l.File, l.Line)
 		if err != nil {
 			return err
 		}

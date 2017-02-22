@@ -43,18 +43,18 @@ func (f *File) Stat() (os.FileInfo, error) {
 	return f.stat, err
 }
 
-// func (f *File) Exists() (bool, error) {
-// 	fi, err := f.Stat()
-// 	switch {
-// 	case err != nil && os.IsExist(err):
-// 		return true, err
-// 	case err != nil: // os.IsNotExist(err)
-// 		return false, err
-// 	case fi == nil:
-// 		return false, err
-// 	}
-// 	return true, err
-// }
+func (f *File) Exists() (bool, error) {
+	fi, err := f.Stat()
+	switch {
+	case err != nil && os.IsExist(err), err == nil && fi != nil:
+		return true, err
+	case err != nil && os.IsNotExist(err), fi == nil:
+		return false, nil
+	case fi == nil:
+		return false, err
+	}
+	return true, err
+}
 
 func (f *File) IsDir() (bool, error) {
 	fi, err := f.Info()

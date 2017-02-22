@@ -19,6 +19,10 @@ func NewLink(src string, dst string) *Link {
 	}
 }
 
+func IsSymlink(fi os.FileInfo) bool {
+	return fi != nil && fi.Mode()&os.ModeSymlink != 0
+}
+
 func (l *Link) String() string {
 	return fmt.Sprintf("Link[%s][%s]", l.path, l.target)
 }

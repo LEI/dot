@@ -2,7 +2,7 @@ package dotfile
 
 import (
 	// "fmt"
-	"os"
+	// "os"
 	"path/filepath"
 )
 
@@ -50,10 +50,6 @@ func Match(name string, patterns ...string) (bool, error) {
 	}
 
 	return false, nil
-}
-
-func IsSymlink(fi os.FileInfo) bool {
-	return fi != nil && fi.Mode()&os.ModeSymlink != 0
 }
 
 // func Symlink(f *File, dst string) error {

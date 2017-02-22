@@ -1,4 +1,4 @@
-package fileutil
+package dotfile
 
 import (
 	// "fmt"
@@ -13,7 +13,7 @@ func LineInFile(path string, line string) (changed bool, err error) {
 		return false, err
 	}
 	if fi != nil {
-		contains, err := IsLineInFile(path, line)
+		contains, err := hasLineInFile(path, line)
 		if err != nil {
 			return false, err
 		}
@@ -28,10 +28,10 @@ func LineInFile(path string, line string) (changed bool, err error) {
 		}
 		defer fi.Close()
 	}
-	return AppendStringToFile(path, line+"\n")
+	return appendStringToFile(path, line+"\n")
 }
 
-func IsLineInFile(path string, line string) (bool, error) {
+func hasLineInFile(path string, line string) (bool, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return false, err
@@ -49,7 +49,7 @@ func IsLineInFile(path string, line string) (bool, error) {
 	return false, err
 }
 
-func AppendStringToFile(path string, str string) (changed bool, err error) {
+func appendStringToFile(path string, str string) (changed bool, err error) {
 	// fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
 	fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0611)
 	defer fi.Close()

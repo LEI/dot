@@ -2,7 +2,6 @@ package git
 
 import (
 	"fmt"
-	"github.com/LEI/dot/fileutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -134,12 +133,15 @@ func (repo *Repository) CloneOrPull() error {
 }
 
 func (repo *Repository) IsCloned() bool {
-	exists, err := fileutil.Exists(repo.GitDir())
-	if err != nil {
+	fi, err := os.Stat(repo.GitDir())
+	if err != nil && os.IsExist(err) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	return exists
+	if fi == nil {
+		return false
+	}
+	return true
 }
 
 func (repo *Repository) Clone() error {
@@ -188,12 +190,16 @@ func ParseSpec(str string) (string, string, string, error) {
 	var url string
 	var err error
 	if strings.HasPrefix(str, PathSep) {
-		exists, err := fileutil.Exists(str)
-		if err != nil || !exists {
-			return name, dir, url, err
-		}
 		dir = str
 		name = filepath.Dir(dir)
+		fi, err := os.Stat(str)
+		if err != nil && os.IsExist(err) {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err != nil || fi == nil {
+			return name, dir, url, err
+		}
 	} else if strings.Contains(str, PathSep) {
 		if strings.Contains(str, nameSep) {
 			parts := strings.Split(str, nameSep)
