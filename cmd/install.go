@@ -216,7 +216,28 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 			return err
 		}
 		for _, f := range files {
-			err := roleSymlink(ctx, r, f, l.Type)
+			isDir, err := f.IsDir()
+			if err != nil {
+				return err
+			}
+			switch {
+			case l.Type == "directory" && !isDir:
+				logger.Debugf("# ignore directory %s\n", f.Base())
+				continue
+			case l.Type == "file" && isDir:
+				logger.Debugf("# ignore file %s\n", f.Base())
+				continue
+			}
+			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
+			linked, err := ln.IsLinked()
+			if err != nil {
+				return err
+			}
+			if linked {
+				logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
+				continue
+			}
+			err = roleSymlink(ln)
 			if err != nil {
 				return err
 			}
@@ -225,27 +246,20 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleSymlink(ctx context.Context, r *role.Role, f *dot.File, ft string) error {
-	isDir, err := f.IsDir()
-	if err != nil {
-		return err
+
+func roleSymlink(ln *dot.Link) error {
+	if ln.IsLink() {
+		err := readSymlink(ln)
+		if err != nil {
+			return err
+		}
 	}
-	switch {
-	case ft == "directory" && !isDir:
-		logger.Debugf("# ignore directory %s\n", f.Base())
-		continue
-	case ft == "file" && isDir:
-		logger.Debugf("# ignore file %s\n", f.Base())
-		continue
-	}
-	ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
-	err := checkSymlink(ln)
 	fi, err := ln.DestInfo()
 	if err != nil && os.IsExist(err) {
 		return err
 	}
 	if fi != nil {
-		if err := backupFile(ln.Target); err != nil {
+		if err := backupFile(ln.Target()); err != nil {
 			return err
 		}
 	}
@@ -257,15 +271,7 @@ func roleSymlink(ctx context.Context, r *role.Role, f *dot.File, ft string) erro
 	return nil
 }
 
-func checkSymlink(ln *dot.Link) error {
-	linked, err := ln.IsLinked()
-	if err != nil {
-		return err
-	}
-	if linked {
-		logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
-		continue
-	}
+func readSymlink(ln *dot.Link) error {
 	link, err := ln.Readlink()
 	if err != nil && os.IsExist(err) {
 		return err
@@ -279,9 +285,10 @@ func checkSymlink(ln *dot.Link) error {
 			}
 		}
 	}
+	return nil
 }
 
-func backupFile(path string) bool {
+func backupFile(path string) error {
 	backup := path + ".backup"
 	msg := fmt.Sprintf("! %s already exists, append .backup?", path)
 	if ok := prompt.Confirm(msg); ok {
