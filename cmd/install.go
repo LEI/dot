@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
-	// "strings"
+	"strings"
 )
 
 var installCmd = &cobra.Command{
@@ -140,12 +140,14 @@ func roleInit(ctx context.Context, r *role.Role) error {
 	// Check platform
 	ok := r.IsOs([]string{OS, OSTYPE})
 	if !ok {
+		logger.Debugf("Skip %s, only for %s\n", r.Name, strings.Join(r.Os, ", "))
 		return Skip
 	}
 	// Filter by name
 	skip := len(filter) > 0
 	for _, roleName := range filter {
 		if roleName == r.Name {
+			logger.Debugf("Ignore %s\n", r.Name)
 			skip = false
 			break
 		}
@@ -153,10 +155,8 @@ func roleInit(ctx context.Context, r *role.Role) error {
 	if skip {
 		return Skip
 	}
-	// logger.SetPrefix(r.Name+": ")
-	if debug {
-		logger.Infof("[%s]\n", ctx.Value("role"))
-	}
+	// logger.SetPrefix(r.Name+": ") // ctx.Value("role")
+	logger.Infof("## %s\n", strings.Title(r.Name))
 	return nil
 }
 
@@ -317,7 +317,7 @@ func filterIgnored(f *dot.File) bool {
 		logger.Error(err)
 	}
 	if ignore {
-		logger.Debugf("# .ignore %s\n", f.Base())
+		logger.Debugf("# ignore %s\n", f.Base())
 		return false
 	}
 	return true
@@ -340,8 +340,3 @@ func roleInstallLines(ctx context.Context, r *role.Role) error {
 	}
 	return nil
 }
-
-// func done(ctx context.Context, r *role.Role) error {
-// 	logger.Infoln("---", ctx.Value("role"))
-// 	return nil
-// }
