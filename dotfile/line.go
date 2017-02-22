@@ -1,7 +1,6 @@
 package dotfile
 
 import (
-	// "fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -14,26 +13,21 @@ func LineInFile(path string, line string) (changed bool, err error) {
 	}
 	if fi != nil {
 		contains, err := hasLineInFile(path, line)
-		if err != nil {
+		if err != nil || contains {
 			return false, err
 		}
-		if contains {
-			// Already exists
-			return true, nil
-		}
-	} else {
-		fi, err := os.Create(path)
-		if err != nil {
-			return false, err
-		}
-		defer fi.Close()
 	}
+	// fi, err := os.Create(path)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// defer fi.Close()
 	return appendStringToFile(path, line+"\n")
 }
 
 func hasLineInFile(path string, line string) (bool, error) {
 	b, err := ioutil.ReadFile(path)
-	if err != nil {
+	if err != nil || len(b) == 0 {
 		return false, err
 	}
 	// defer b.Close()?
@@ -41,7 +35,6 @@ func hasLineInFile(path string, line string) (bool, error) {
 	if fileContent != "" {
 		for _, str := range strings.Split(fileContent, "\n") {
 			if strings.Contains(str, line) {
-				// fmt.Printf("# already in %s\n", path)
 				return true, nil
 			}
 		}
@@ -60,9 +53,12 @@ func appendStringToFile(path string, str string) (changed bool, err error) {
 		return false, err
 	}
 	defer fi.Close()
-	_, err = fi.WriteString(str)
+	n, err := fi.WriteString(str)
 	if err != nil {
 		return false, err
 	}
-	return true, nil
+	if n > 0 {
+		return true, nil
+	}
+	return false, nil
 }

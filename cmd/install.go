@@ -154,7 +154,9 @@ func roleInit(ctx context.Context, r *role.Role) error {
 		return Skip
 	}
 	// logger.SetPrefix(r.Name+": ")
-	logger.Infoln("---", ctx.Value("role"))
+	if debug {
+		logger.Infof("[%s]\n", ctx.Value("role"))
+	}
 	return nil
 }
 
@@ -197,18 +199,27 @@ func roleInstallDirs(ctx context.Context, r *role.Role) error {
 	for _, d := range r.Dirs() {
 		d.Path = os.ExpandEnv(d.Path)
 		dir := filepath.Join(r.Target, d.Path)
+		logger.Debugf("Create directory %s\n", dir)
+		fi, err := os.Stat(dir)
+		if err == nil {
+			if fi.IsDir() {
+				logger.Infof("# mkdir -p %s\n", dir)
+				return nil
+			}
+			// return &os.PathError{"dir", f.path, syscall.ENOTDIR}
+		}
 		f, err := dot.NewDir(dir, 0755)
 		if err != nil {
 			return err
 		}
-		logger.Infof("$ mkdir -p %s\n", f)
+		logger.Infof("$ mkdir -p %s\n", f.Path())
 	}
 	return nil
 }
 
 func roleInstallLinks(ctx context.Context, r *role.Role) error {
 	for _, l := range r.Links() {
-		logger.Infof("- Symlink %s\n", l.Pattern)
+		logger.Debugf("Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		pattern := filepath.Join(r.Source, l.Pattern)
 		files, err := dot.List(pattern, filterIgnored)
@@ -314,7 +325,7 @@ func filterIgnored(f *dot.File) bool {
 
 func roleInstallLines(ctx context.Context, r *role.Role) error {
 	for _, l := range r.Lines() {
-		logger.Infof("- Line in %s\n", l.File)
+		logger.Debugf("Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = filepath.Join(r.Target, l.File)
 		changed, err := dot.LineInFile(l.File, l.Line)
@@ -324,7 +335,7 @@ func roleInstallLines(ctx context.Context, r *role.Role) error {
 		if changed {
 			logger.Infof("$ echo '%s' >> %s\n", l.Line, l.File)
 		} else {
-			logger.Infof("# line '%s' already in file %s\n", l.Line, l.File)
+			logger.Infof("# echo '%s' >> %s\n", l.Line, l.File)
 		}
 	}
 	return nil

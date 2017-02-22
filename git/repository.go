@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -106,10 +105,7 @@ func (repo *Repository) AddRemote(name string, url string) *Repository {
 
 func (repo *Repository) Status() error {
 	repo.WorkTree()
-	cmd := exec.Command("git", "-C", repo.Path, "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err := Exec("-C", repo.Path, "status")
 	if err != nil {
 		return err
 	}
@@ -147,11 +143,8 @@ func (repo *Repository) IsCloned() bool {
 func (repo *Repository) Clone() error {
 	repo.WorkTree()
 	for _, remote := range repo.Remotes {
-		// fmt.Println("git", "clone", remote.URL, repo.Path)
-		cmd := exec.Command("git", "clone", "--quiet", remote.URL, repo.Path)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		clone := []string{"clone", "--quiet", remote.URL, repo.Path}
+		err := Exec(clone...)
 		if err != nil {
 			return err
 		}
@@ -162,18 +155,13 @@ func (repo *Repository) Clone() error {
 func (repo *Repository) Pull(args ...string) error {
 	repo.WorkTree()
 	for _, remote := range repo.Remotes {
-		pull := []string{"-C", repo.Path, "pull"}
+		pull := []string{"-C", repo.Path, "pull", "--quiet"}
+		// "--git-dir", dir+"/.git", "--work-tree", dir,
 		if len(args) == 0 {
 			args = []string{remote.Name} // , repo.Branch}
 		}
 		pull = append(pull, args...)
-		// fmt.Printf("git %s\n", strings.Join(pull, " "))
-		cmd := exec.Command("git", pull...)
-		// "--git-dir", dir+"/.git",
-		// "--work-tree", dir,
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		err := Exec(pull...)
 		if err != nil {
 			return err
 		}
