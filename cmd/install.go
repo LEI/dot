@@ -265,7 +265,7 @@ func roleSymlink(ln *dot.Link) error {
 			return err
 		}
 	}
-	fi, err := ln.DestInfo()
+	fi, err := ln.Dstat()
 	if err != nil && os.IsExist(err) {
 		return err
 	}

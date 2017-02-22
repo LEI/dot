@@ -50,7 +50,7 @@ func (l *Link) Lstat() (os.FileInfo, error) {
 	return l.lstat, err
 }
 
-func (l *Link) DestInfo() (os.FileInfo, error) {
+func (l *Link) Dstat() (os.FileInfo, error) {
 	fi, err := os.Stat(l.target)
 	return fi, err
 }
