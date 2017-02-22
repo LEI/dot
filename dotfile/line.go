@@ -1,11 +1,15 @@
 package dotfile
 
 import (
-	"fmt"
+	"bytes"
+	// "fmt"
+	"github.com/LEI/dot/prompt"
 	"io/ioutil"
 	"os"
 	"strings"
 )
+
+var RemoveEmptyFile bool
 
 func LineInFile(path string, line string) (changed bool, err error) {
 	fi, err := os.Stat(path)
@@ -28,11 +32,11 @@ func LineInFile(path string, line string) (changed bool, err error) {
 
 func LineOutFile(path string, line string) (changed bool, err error) {
 	fi, err := os.Stat(path)
-	if err != nil && os.IsExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
 		return false, err
-	}
-	if err != nil && os.IsNotExist(err) {
-		return false, nil
 	}
 	if fi != nil {
 		contains, err := hasLineInFile(path, line)
@@ -75,10 +79,10 @@ func appendStringInFile(path string, str string) (changed bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	if n > 0 {
-		return true, nil
+	if n == 0 {
+		return false, nil
 	}
-	return false, nil
+	return true, nil
 }
 
 func removeStringInFile(path string, str string) (changed bool, err error) {
@@ -87,17 +91,24 @@ func removeStringInFile(path string, str string) (changed bool, err error) {
 		return false, err
 	}
 	// defer b.Close()?
-	content := string(b)
-	// newContent := bytes.Replace(b, []byte(b), []byte(""), 1)
-	if content != "" {
-		for i, s := range strings.Split(content, "\n") {
-			fmt.Println("LIF >>> ", s, "IN >>>", str, "?")
-			if strings.Contains(s, str) {
-				fmt.Println("LINE IN FILE FOUND AT", i, s)
-				break
-				// return true, nil
+	new := bytes.Replace(b, []byte(str), []byte(""), 1)
+	// content := string(b)
+	// new := strings.Replace(content, str, "", 1)
+	if len(new) == len(b) {
+		return false, nil
+	}
+	err = ioutil.WriteFile(path, []byte(new), 0611)
+	if err != nil {
+		return false, err
+	}
+	if len(new) == 0 {
+		if RemoveEmptyFile || prompt.Confirm("Remove empty file %s?", path) {
+			err := os.Remove(path)
+			if err != nil {
+				return true, err
 			}
 		}
+		return true, nil
 	}
-	return false, nil
+	return true, nil
 }

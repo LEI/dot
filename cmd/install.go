@@ -14,10 +14,11 @@ import (
 )
 
 var installCmd = &cobra.Command{
-	Hidden: true,
-	Use:    "install [flags]",
-	Short:  "Install dotfiles",
-	// Long:   ``,
+	Hidden:  true,
+	Use:     "install [flags]",
+	Aliases: []string{"i"},
+	Short:   "Install dotfiles",
+	// Long:    ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
@@ -231,11 +232,11 @@ func roleSymlink(ln *dot.Link) error {
 			return err
 		}
 	}
-	logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
 	err = os.Symlink(ln.Path(), ln.Target())
 	if err != nil {
 		return err
 	}
+	logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
 	return nil
 }
 
@@ -245,7 +246,7 @@ func readSymlink(ln *dot.Link) error {
 		return err
 	}
 	if link != "" {
-		msg := fmt.Sprintf("! %s is a link to %s, remove?", ln.Target(), link)
+		msg := fmt.Sprintf("> %s is a link to %s, remove?", ln.Target(), link)
 		if ok := prompt.Confirm(msg); ok {
 			err := os.Remove(ln.Target())
 			if err != nil {
@@ -258,7 +259,7 @@ func readSymlink(ln *dot.Link) error {
 
 func backupFile(path string) error {
 	backup := path + ".backup"
-	msg := fmt.Sprintf("! %s already exists, append .backup?", path)
+	msg := fmt.Sprintf("> %s already exists, append .backup?", path)
 	if ok := prompt.Confirm(msg); ok {
 		err := os.Rename(path, backup)
 		if err != nil {
@@ -274,7 +275,7 @@ func filterIgnored(f *dot.File) bool {
 		logger.Error(err)
 	}
 	if ignore {
-		logger.Debugf("# ignore %s\n", f.Base())
+		logger.Debugf("Ignore %s\n", f.Base())
 		return false
 	}
 	return true
@@ -290,10 +291,11 @@ func installLines(r *role.Role) error {
 			return err
 		}
 		if changed {
-			logger.Infof("$ echo '%s' >> %s\n", l.Line, l.File)
+			prefix = "$"
 		} else {
-			logger.Infof("# echo '%s' >> %s\n", l.Line, l.File)
+			prefix = "#"
 		}
+		logger.Infof("%s echo '%s' >> %s\n", prefix, l.Line, l.File)
 	}
 	return nil
 }

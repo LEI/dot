@@ -9,10 +9,11 @@ import (
 
 // var interactive bool
 
-func Confirm(str string) bool {
+func Confirm(format string, v ...interface{}) bool {
+	msg := fmt.Sprintf(format, v...)
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Printf("%s [y/n]: ", str)
+		fmt.Printf("%s [y/n]: ", msg)
 		// TODO Force / AssumeYes
 		res, err := reader.ReadString('\n')
 		if err != nil {

@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 	// "github.com/LEI/dot/config"
 	dot "github.com/LEI/dot/dotfile"
 	// "github.com/LEI/dot/fileutil"
 	// "github.com/LEI/dot/log"
+	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"os"
@@ -13,10 +14,13 @@ import (
 	// "strings"
 )
 
+var RemoveEmpty bool
+
 var removeCmd = &cobra.Command{
-	Use:   "remove [flags]",
-	Short: "Remove dotfiles",
-	// Long:  ``,
+	Use:    "remove [flags]",
+	Aliases: []string{"rm"},
+	Short:  "Remove dotfiles",
+	// Long:   ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
@@ -28,18 +32,20 @@ var removeCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(removeCmd)
+	removeCmd.Flags().BoolVarP(&RemoveEmpty, "empty", "", RemoveEmpty, "Remove empty files")
 	// removeCmd.Flags().BoolVarP(&, "", "", , "")
 	// Config.BindPFlags(removeCmd.Flags())
 }
 
 func removeRoles(source, target string, roles []*role.Role) error {
+	dot.RemoveEmptyFile = RemoveEmpty
 	var handlers = []func(*role.Role) error{
 		validateRole,
 		initGitRepo, // TODO update role.Path without git pull?
 		initRoleConfig,
 		removeLinks,
 		removeLines,
-		// removeDirs, // TODO os.Remove directory not empty error
+		removeDirs,
 	}
 ROLES:
 	for _, r := range roles {
@@ -57,7 +63,6 @@ ROLES:
 				return err
 			}
 		}
-		fmt.Printf("Remove: %s\n", r.Name)
 	}
 	return nil
 }
@@ -66,8 +71,9 @@ func removeDirs(r *role.Role) error {
 	for _, d := range r.Dirs() {
 		d.Path = os.ExpandEnv(d.Path)
 		dir := path.Join(r.Target, d.Path)
-		logger.Debugf("Remove directory %s\n", dir)
-		fi, err := os.Stat(dir)
+		logger.Debugf("Remove directory %s\n", d.Path)
+
+		d, err := os.Open(dir)
 		if err != nil {
 			if os.IsNotExist(err) {
 				logger.Infof("# rmdir %s\n", dir)
@@ -75,17 +81,22 @@ func removeDirs(r *role.Role) error {
 			}
 			return err
 		}
-		if fi != nil {
-			// if !fi.IsDir() {
-			// 	return nil
-			// 	return &os.PathError{"rmdir", f.path, syscall.ENOTDIR}
-			// }
+		defer d.Close()
+		di, err := d.Readdir(-1)
+		if err != nil {
+			return err
+		}
+		if len(di) > 0 {
+			logger.Warnf("%s is not empty\n", dir)
+			break
+		}
+		if RemoveEmpty || prompt.Confirm("Remove empty directory %s?", dir) {
 			err := os.Remove(dir)
 			if err != nil {
 				return err
 			}
-			logger.Infof("$ rmdir %s\n", dir)
 		}
+		logger.Infof("$ rmdir %s\n", dir)
 	}
 	return nil
 }
@@ -106,10 +117,10 @@ func removeLinks(r *role.Role) error {
 			}
 			switch {
 			case l.Type == "directory" && !isDir:
-				logger.Debugf("# ignore directory %s\n", f.Base())
+				logger.Debugf("Ignore directory %s\n", f.Base())
 				continue
 			case l.Type == "file" && isDir:
-				logger.Debugf("# ignore file %s\n", f.Base())
+				logger.Debugf("Ignore file %s\n", f.Base())
 				continue
 			}
 			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
@@ -121,17 +132,18 @@ func removeLinks(r *role.Role) error {
 				logger.Infof("# rm %s\n", ln.Target())
 				continue
 			}
-			logger.Infof("$ rm %s\n", ln.Target())
 			err = os.Remove(ln.Target())
 			if err != nil {
 				return err
 			}
+			logger.Infof("$ rm %s\n", ln.Target())
 		}
 	}
 	return nil
 }
 
 func removeLines(r *role.Role) error {
+	var prefix string
 	for _, l := range r.Lines() {
 		logger.Debugf("Line out %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
@@ -141,10 +153,11 @@ func removeLines(r *role.Role) error {
 			return err
 		}
 		if changed {
-			logger.Infof("$ grep -v '%s' > %s\n", l.Line, l.File)
+			prefix = "$"
 		} else {
-			logger.Infof("# grep -v '%s' > %s\n", l.Line, l.File)
+			prefix = "#"
 		}
+		logger.Infof("%s grep -v '%s' > %s\n", prefix, l.Line, l.File)
 	}
 	return nil
 }

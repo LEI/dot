@@ -12,9 +12,7 @@ services:
     depends_on:
       - image
     # entrypoint: /bin/bash
-    command: |
-      -l -c 'run dot --https; bash -l'
-      # -l -c 'run dot -d --https -c $$DOT/.dotrc.yml;
+    command: -l -c 'run dot --https; run dot rm --empty; cd; run dot install -c $$DOT/.dotrc.yml; exec bash -l'
       # run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit";
       # bash --login'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
@@ -29,10 +27,9 @@ services:
       tail_bashrc="$$(tail -n1 ~/.bashrc)"
       yes | run dot -s $$DOT --https
       [[ "$$(tail -n1 ~/.bashrc)" != "$$tail_bashrc" ]] || exit 1
-      tail_bashrc="$$(tail -n1 ~/.bashrc)"
-      yes | run dot -s $$DOT --https
+      run yes | dot remove -d -c $$DOT/.dotrc.yml
       [[ "$$(tail -n1 ~/.bashrc)" == "$$tail_bashrc" ]] || exit 1
-      # yes | run dot -c $$DOT/.dotrc.yml
+      yes | run dot install -c $$DOT/.dotrc.yml
       # for d in $$HOME/.dot/*; do yes | run dot "$${d##*/}"; done
       run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit"
       for f in "$$HOME"/.gitconfig; do run test -f "$$f"; done
