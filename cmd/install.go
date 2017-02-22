@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	dot "github.com/LEI/dot/dotfile"
-	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/git"
+	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -106,7 +106,7 @@ func installCommand(source, target string, roles []*role.Role) error {
 }
 
 func installRoles(ctx context.Context, source, target string, roles []*role.Role) error {
-	ROLES:
+ROLES:
 	for _, r := range roles {
 		r, err := r.New(source, target)
 		if err != nil {

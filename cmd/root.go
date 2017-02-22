@@ -33,7 +33,7 @@ var (
 
 var (
 	DotIgnore = []string{".git", ".*\\.md"}
-	Skip = fmt.Errorf("Skip")
+	Skip      = fmt.Errorf("Skip")
 )
 
 var RootCmd = &cobra.Command{

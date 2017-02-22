@@ -9,12 +9,12 @@ import (
 type Link struct {
 	File
 	target string
-	lstat os.FileInfo
+	lstat  os.FileInfo
 }
 
 func NewLink(src string, dst string) *Link {
 	return &Link{
-		File: File{path: src},
+		File:   File{path: src},
 		target: dst,
 	}
 }
