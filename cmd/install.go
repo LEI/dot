@@ -119,7 +119,6 @@ ROLES:
 			// fmt.Println("Handler #", i, f)
 			h := register(ContextHandlerFunc(f))
 			ctx = context.WithValue(ctx, "role", r.Name)
-			logger.Infoln("---", ctx.Value("role"))
 			err := h.Next(ctx, r)
 			if err != nil {
 				switch err {
@@ -155,6 +154,7 @@ func roleInit(ctx context.Context, r *role.Role) error {
 		return Skip
 	}
 	// logger.SetPrefix(r.Name+": ")
+	logger.Infoln("---", ctx.Value("role"))
 	return nil
 }
 
