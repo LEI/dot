@@ -198,8 +198,8 @@ func roleInitConfig(ctx context.Context, r *role.Role) error {
 func roleInstallDirs(ctx context.Context, r *role.Role) error {
 	for _, d := range r.Dirs() {
 		d.Path = os.ExpandEnv(d.Path)
-		dst := filepath.Join(r.Target, d.Path)
-		f, err := dot.NewDir(dst, 0755)
+		dir := filepath.Join(r.Target, d.Path)
+		f, err := dot.NewDir(dir, 0755)
 		if err != nil {
 			return err
 		}
@@ -213,17 +213,7 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 		logger.Infof("- Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		pattern := filepath.Join(r.Source, l.Pattern)
-		files, err := dot.List(pattern, func(f *dot.File) bool {
-			ignore, err := f.Match(DotIgnore...)
-			if err != nil {
-				logger.Error(err)
-			}
-			if ignore {
-				logger.Debugf("# .ignore %s\n", f.Base())
-				return false
-			}
-			return true
-		})
+		files, err := dot.List(pattern, filterFile)
 		if err != nil {
 			return err
 		}
@@ -241,20 +231,15 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 				continue
 			}
 			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
-			isLink, err := ln.IsLink()
+			linked, err := ln.IsLinked()
 			if err != nil {
 				return err
 			}
-			if isLink {
-				lnPath, err := os.Readlink(ln.Target())
-				if err != nil {
-					return err
-				}
-				if ln.Path() == lnPath {
-					logger.Infof("# already linked %s\n", ln.Base())
-					continue
-				}
-				msg := fmt.Sprintf("! %s exists, linked to %s, replace with %s?", ln.Target(), lnPath, ln.Path())
+			if linked {
+				logger.Infof("# already linked %s\n", ln.Base())
+				continue
+			} else if link, _ := ln.Readlink(); link == ln.Path() {
+				msg := fmt.Sprintf("! %s exists, linked to %s, replace with %s?", ln.Target(), link, ln.Path())
 				if ok := prompt.Confirm(msg); ok {
 					err := os.Remove(ln.Target())
 					if err != nil {
@@ -262,11 +247,12 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 					}
 				}
 			}
-			exists, err := ln.Exists()
-			if err != nil {
+			// exists, err := ln.Exists()
+			ti, err := ln.Tstat()
+			if err != nil && os.IsExist(err) {
 				return err
 			}
-			if exists {
+			if ti != nil {
 				backup := ln.Target() + ".backup"
 				msg := fmt.Sprintf("! %s exists, add .backup and link %s?", ln.Target(), ln.Path())
 				if ok := prompt.Confirm(msg); ok {
@@ -277,13 +263,25 @@ func roleInstallLinks(ctx context.Context, r *role.Role) error {
 				}
 			}
 			logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
-			// err = os.Symlink(src, dst)
-			// if err != nil {
-			// 	return err
-			// }
+			err = os.Symlink(ln.Path(), ln.Target())
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
+}
+
+func filterFile(f *dot.File) bool {
+	ignore, err := f.Match(DotIgnore...)
+	if err != nil {
+		logger.Error(err)
+	}
+	if ignore {
+		logger.Debugf("# .ignore %s\n", f.Base())
+		return false
+	}
+	return true
 }
 
 func roleInstallLines(ctx context.Context, r *role.Role) error {

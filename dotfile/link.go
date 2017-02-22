@@ -2,6 +2,7 @@ package dotfile
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -45,13 +46,38 @@ func (l *Link) Lstat() (os.FileInfo, error) {
 	return l.lstat, err
 }
 
-func (l *Link) IsLink() (bool, error) {
+func (l *Link) Tstat() (os.FileInfo, error) {
+	fi, err := os.Stat(l.target)
+	return fi, err
+}
+
+func (l *Link) IsLink() bool {
 	fi, err := l.Lstat()
+	if err != nil {
+		log.Fatal(err)
+		return false //, err
+	}
+	if IsSymlink(fi) {
+		return true //, nil
+	}
+	return false //, nil
+}
+
+func (l *Link) IsLinked() (bool, error) {
+	if !l.IsLink() {
+		return false, nil
+	}
+	real, err := l.Readlink()
 	if err != nil {
 		return false, err
 	}
-	if IsSymlink(fi) {
+	if real == l.Path() {
 		return true, nil
 	}
 	return false, nil
+}
+
+func (l *Link) Readlink() (string, error) {
+	path, err := os.Readlink(l.Target())
+	return path, err
 }
