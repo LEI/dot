@@ -53,7 +53,7 @@ var RootCmd = &cobra.Command{
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
 		}
-		return installCommand(Dot.Source, Dot.Target, Dot.Roles)
+		return installRoles(Dot.Source, Dot.Target, Dot.Roles)
 	},
 }
 

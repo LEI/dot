@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	dot "github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/git"
@@ -10,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -24,54 +23,12 @@ var installCmd = &cobra.Command{
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
 		}
-		return installCommand(Dot.Source, Dot.Target, Dot.Roles)
+		return installRoles(Dot.Source, Dot.Target, Dot.Roles)
 	},
 }
 
-var handlers = []ContextHandlerFunc{
-	roleInit,
-	roleInitRepo,
-	roleInitConfig,
-	roleInstallDirs,
-	roleInstallLinks,
-	roleInstallLines,
-}
-
-type ContextHandler interface {
-	Next(ctx context.Context, r *role.Role) error
-}
-
-type ContextHandlerFunc func(context.Context, *role.Role) error
-
-func (h ContextHandlerFunc) Next(ctx context.Context, r *role.Role) error {
-	return h(ctx, r)
-}
-
-func register(h ContextHandler) ContextHandler {
-	return ContextHandlerFunc(func(ctx context.Context, r *role.Role) error {
-		// ctx = newContext(ctx, r)
-		return h.Next(ctx, r)
-	})
-}
-
-// func chain(f ContextHandlerFunc, m ...func(ContextHandlerFunc) ContextHandlerFunc) ContextHandlerFunc {
-// 	if len(m) == 0 {
-// 		return f
-// 	}
-// 	return m[0](chain(f, m[1:cap(m)]...))
-// }
-
-// func handleGitRepo(f HandlerContextFunc) HandlerContextFunc {
-// 	return func(ctx context.Context, *role.Role) error {
-// 		fmt.Println("Handle", r.Name, "Git Repo")
-// 		return nil
-// 	}
-// }
-
-// type ContextAdapter struct {
-// 	ctx context.Context
-// 	handler ContextHandler
-// }
+// type RoleHandler interface { Next(r *role.Role) error }
+// type RoleHandlerFunc func(*role.Role) error
 
 func init() {
 	RootCmd.AddCommand(installCmd)
@@ -79,16 +36,49 @@ func init() {
 	// Config.BindPFlags(installCmd.Flags())
 }
 
-func installCommand(source, target string, roles []*role.Role) error {
-	var ctx context.Context
-	var cancel context.CancelFunc
+func installRoles(source, target string, roles []*role.Role) error {
+	// var ctx context.Context
+	// var cancel context.CancelFunc
 
-	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
+	// ctx, cancel = context.WithCancel(context.Background())
+	// defer cancel()
 
-	err := installRoles(ctx, source, target, roles)
-	if err != nil {
-		return err
+	var handlers = []func(*role.Role) error{
+		validateRole,
+		initGitRepo,
+		initRoleConfig,
+		installDirs,
+		installLinks,
+		installLines,
+	}
+
+ROLES:
+	for _, r := range roles {
+		r, err := r.New(source, target)
+		if err != nil {
+			return err
+		}
+		// h := &ContextAdapter{
+		// 	handler: middleware(ContextHandlerFunc(handler)),
+		// }
+		// a := chain(handler, register(ContextHandlerFunc(checkHandler)))
+		for _, f := range handlers {
+			// fmt.Println("Handler #", i, f)
+			// h := register(ContextHandlerFunc(f))
+			// ctx = context.WithValue(ctx, "role", r.Name)
+			err := f(r)
+			if err != nil {
+				switch err {
+				case Skip:
+					continue ROLES
+				}
+				return err
+			}
+		}
+		// gh := register(ContextHandlerFunc(handler))
+		// gh.Next(ctx, r)
+
+		// err := installRole(ctx, r, func(rol *role.Role) error {
 	}
 	// c := make(chan error, 1)
 	// go func() {
@@ -104,39 +94,7 @@ func installCommand(source, target string, roles []*role.Role) error {
 	return nil
 }
 
-func installRoles(ctx context.Context, source, target string, roles []*role.Role) error {
-ROLES:
-	for _, r := range roles {
-		r, err := r.New(source, target)
-		if err != nil {
-			return err
-		}
-		// h := &ContextAdapter{
-		// 	handler: middleware(ContextHandlerFunc(handler)),
-		// }
-		// a := chain(handler, register(ContextHandlerFunc(checkHandler)))
-		for _, f := range handlers {
-			// fmt.Println("Handler #", i, f)
-			h := register(ContextHandlerFunc(f))
-			ctx = context.WithValue(ctx, "role", r.Name)
-			err := h.Next(ctx, r)
-			if err != nil {
-				switch err {
-				case Skip:
-					continue ROLES
-				}
-				return err
-			}
-		}
-		// gh := register(ContextHandlerFunc(handler))
-		// gh.Next(ctx, r)
-
-		// err := installRole(ctx, r, func(rol *role.Role) error {
-	}
-	return nil
-}
-
-func roleInit(ctx context.Context, r *role.Role) error {
+func validateRole(r *role.Role) error {
 	// Check platform
 	ok := r.IsOs([]string{OS, OSTYPE})
 	if !ok {
@@ -160,8 +118,8 @@ func roleInit(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleInitRepo(ctx context.Context, r *role.Role) error {
-	dir := filepath.Join(r.Target, RolesDir, r.Name) // git.DefaultPath
+func initGitRepo(r *role.Role) error {
+	dir := path.Join(r.Target, RolesDir, r.Name) // git.DefaultPath
 	git.Https = https
 	repo, err := git.New(r.Origin, dir)
 	if err != nil {
@@ -178,7 +136,7 @@ func roleInitRepo(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleInitConfig(ctx context.Context, r *role.Role) error {
+func initRoleConfig(r *role.Role) error {
 	if r.Config == nil {
 		r.Config = viper.New()
 	}
@@ -195,10 +153,10 @@ func roleInitConfig(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleInstallDirs(ctx context.Context, r *role.Role) error {
+func installDirs(r *role.Role) error {
 	for _, d := range r.Dirs() {
 		d.Path = os.ExpandEnv(d.Path)
-		dir := filepath.Join(r.Target, d.Path)
+		dir := path.Join(r.Target, d.Path)
 		logger.Debugf("Create directory %s\n", dir)
 		fi, err := os.Stat(dir)
 		if err == nil {
@@ -217,11 +175,11 @@ func roleInstallDirs(ctx context.Context, r *role.Role) error {
 	return nil
 }
 
-func roleInstallLinks(ctx context.Context, r *role.Role) error {
+func installLinks(r *role.Role) error {
 	for _, l := range r.Links() {
 		logger.Debugf("Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
-		pattern := filepath.Join(r.Source, l.Pattern)
+		pattern := path.Join(r.Source, l.Pattern)
 		files, err := dot.List(pattern, filterIgnored)
 		if err != nil {
 			return err
@@ -322,11 +280,11 @@ func filterIgnored(f *dot.File) bool {
 	return true
 }
 
-func roleInstallLines(ctx context.Context, r *role.Role) error {
+func installLines(r *role.Role) error {
 	for _, l := range r.Lines() {
 		logger.Debugf("Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
-		l.File = filepath.Join(r.Target, l.File)
+		l.File = path.Join(r.Target, l.File)
 		changed, err := dot.LineInFile(l.File, l.Line)
 		if err != nil {
 			return err
