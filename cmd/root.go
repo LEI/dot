@@ -33,7 +33,7 @@ var (
 )
 
 var (
-	DotIgnore = []string{".git", ".*\\.md"}
+	DotIgnore = []string{".git", "*.md", "*.tpl"}
 	Skip      = fmt.Errorf("Skip")
 )
 
@@ -110,13 +110,13 @@ func initConfig() {
 	case nil:
 	case viper.ConfigFileNotFoundError:
 		logger.Warn(err)
-		// err := Config.ReadConfig(os.Stdin)
 		// b, err := ioutil.ReadAll(os.Stdin)
 		// if err != nil {
 		// 	logger.Error(err)
 		// 	return
 		// }
 		// in := string(b)
+		// err := Config.ReadConfig(os.Stdin)
 	default:
 		logger.Error(err)
 	}

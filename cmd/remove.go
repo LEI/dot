@@ -143,7 +143,7 @@ func removeLinks(r *role.Role) error {
 }
 
 func removeLines(r *role.Role) error {
-	var prefix = "#"
+	var prefix string
 	for _, l := range r.Lines() {
 		logger.Debugf("Line out %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
@@ -154,6 +154,8 @@ func removeLines(r *role.Role) error {
 		}
 		if changed {
 			prefix = "$"
+		} else {
+			prefix = "#"
 		}
 		logger.Infof("%s grep -v '%s' > %s\n", prefix, l.Line, l.File)
 	}

@@ -76,6 +76,11 @@ func (f *File) Match(patterns ...string) (bool, error) {
 	return matched, err
 }
 
+func (f *File) BaseMatch(patterns ...string) (bool, error) {
+	matched, err := Match(f.Base(), patterns...)
+	return matched, err
+}
+
 func (f *File) Replace(old, new string) string {
 	return strings.Replace(f.path, old, new, 1)
 }

@@ -41,14 +41,10 @@ GLOB:
 func Match(name string, patterns ...string) (bool, error) {
 	for _, pattern := range patterns {
 		matched, err := filepath.Match(pattern, name)
-		if err != nil {
+		if err != nil || matched {
 			return matched, err
 		}
-		if matched {
-			return true, nil
-		}
 	}
-
 	return false, nil
 }
 

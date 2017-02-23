@@ -106,12 +106,12 @@ func validateRole(r *role.Role) error {
 	skip := len(filter) > 0
 	for _, roleName := range filter {
 		if roleName == r.Name {
-			logger.Debugf("Ignore %s\n", r.Name)
 			skip = false
 			break
 		}
 	}
 	if skip {
+		logger.Debugf("Skip %s\n", r.Name)
 		return Skip
 	}
 	// logger.SetPrefix(r.Name+": ") // ctx.Value("role")
@@ -270,7 +270,7 @@ func backupFile(path string) error {
 }
 
 func filterIgnored(f *dot.File) bool {
-	ignore, err := f.Match(DotIgnore...)
+	ignore, err := f.BaseMatch(DotIgnore...)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -282,7 +282,7 @@ func filterIgnored(f *dot.File) bool {
 }
 
 func installLines(r *role.Role) error {
-	var prefix = "#"
+	var prefix string
 	for _, l := range r.Lines() {
 		logger.Debugf("Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
@@ -293,6 +293,8 @@ func installLines(r *role.Role) error {
 		}
 		if changed {
 			prefix = "$"
+		} else {
+			prefix = "#"
 		}
 		logger.Infof("%s echo '%s' >> %s\n", prefix, l.Line, l.File)
 	}
