@@ -17,9 +17,9 @@ import (
 var RemoveEmpty bool
 
 var removeCmd = &cobra.Command{
-	Use:    "remove [flags]",
+	Use:     "remove [flags]",
 	Aliases: []string{"rm"},
-	Short:  "Remove dotfiles",
+	Short:   "Remove dotfiles",
 	// Long:   ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
@@ -143,7 +143,7 @@ func removeLinks(r *role.Role) error {
 }
 
 func removeLines(r *role.Role) error {
-	var prefix string
+	var prefix = "#"
 	for _, l := range r.Lines() {
 		logger.Debugf("Line out %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
@@ -154,8 +154,6 @@ func removeLines(r *role.Role) error {
 		}
 		if changed {
 			prefix = "$"
-		} else {
-			prefix = "#"
 		}
 		logger.Infof("%s grep -v '%s' > %s\n", prefix, l.Line, l.File)
 	}

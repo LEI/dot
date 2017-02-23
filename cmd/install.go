@@ -282,6 +282,7 @@ func filterIgnored(f *dot.File) bool {
 }
 
 func installLines(r *role.Role) error {
+	var prefix = "#"
 	for _, l := range r.Lines() {
 		logger.Debugf("Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
@@ -292,8 +293,6 @@ func installLines(r *role.Role) error {
 		}
 		if changed {
 			prefix = "$"
-		} else {
-			prefix = "#"
 		}
 		logger.Infof("%s echo '%s' >> %s\n", prefix, l.Line, l.File)
 	}

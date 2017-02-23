@@ -7,6 +7,7 @@ import (
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	// "io/ioutil"
 	"os"
 	"runtime"
 	// "time"
@@ -105,8 +106,19 @@ func initConfig() {
 		Config.BindPFlag(f, RootCmd.Flags().Lookup(f))
 	}
 	err := Config.ReadInConfig()
-	if err != nil {
+	switch err.(type) {
+	case nil:
+	case viper.ConfigFileNotFoundError:
 		logger.Warn(err)
+		// err := Config.ReadConfig(os.Stdin)
+		// b, err := ioutil.ReadAll(os.Stdin)
+		// if err != nil {
+		// 	logger.Error(err)
+		// 	return
+		// }
+		// in := string(b)
+	default:
+		logger.Error(err)
 	}
 }
 
