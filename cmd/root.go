@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 	// "io/ioutil"
 	"os"
+	"os/exec"
+	"os/user"
 	"runtime"
 	// "time"
 )
@@ -22,8 +24,9 @@ var (
 	Config     = viper.New()
 	configFile = ""
 	configName = ".dotrc"
-	RolesDir   = ".dot" // Default clone parent directory
-	HomeDir    = os.Getenv("HOME")
+	RolesDir   = ".dot" // Default clone parent directory relative to ~
+	User       *user.User
+	HomeDir    string // os.Getenv("HOME")
 	debug      bool
 	https      bool
 	source     string
@@ -68,6 +71,11 @@ func Execute() error {
 }
 
 func init() {
+	User, err := user.Current()
+	if err != nil {
+		logger.Error(err)
+	}
+	HomeDir = User.HomeDir
 	currentDir, err := os.Getwd() // os.Getenv("PWD")
 	if err != nil {
 		logger.Error(err)
@@ -123,24 +131,31 @@ func initConfig() {
 }
 
 func initCommand() error {
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		logger.Warn(err)
+	}
+	OSTYPE, ok := os.LookupEnv("OSTYPE")
+	if !ok { // logger.Debugln("OSTYPE is not set")
+		out, err := exec.Command("bash", "-c", "echo $OSTYPE").Output()
+		if err != nil {
+			return err
+		}
+		if len(out) > 0 {
+			OSTYPE = string(out)
+		}
+	}
+	if OSTYPE == "" {
+		logger.Warnln("OSTYPE is not set or empty")
+	}
 	if Config.ConfigFileUsed() != "" {
 		logger.Debugln("Using config file:", Config.ConfigFileUsed())
 	}
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
-	err := Config.UnmarshalKey("roles", &Dot.Roles)
+	err = Config.UnmarshalKey("roles", &Dot.Roles)
 	if err != nil {
 		return err
-	}
-	err = os.Setenv("OS", OS)
-	if err != nil {
-		logger.Warn(err)
-	}
-	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	if !ok {
-		logger.Debugln("OSTYPE is not set")
-	} else if OSTYPE == "" {
-		logger.Debugln("OSTYPE is empty")
 	}
 	return nil
 }
