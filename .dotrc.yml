@@ -16,10 +16,9 @@ roles:
     origin: LEI/dot-termux
     os: ["android"]
 
-  # El Capitan: darwin15.6.0
   - name: osx
     origin: LEI/dot-osx
-    os: ["darwin16"]
+    os: ["darwin16"] # Sierra
 
   - name: hammerspoon
     origin: LEI/dot-hammerspoon

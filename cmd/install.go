@@ -3,14 +3,11 @@ package cmd
 import (
 	"fmt"
 	dot "github.com/LEI/dot/dotfile"
-	"github.com/LEI/dot/git"
 	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"path"
-	"strings"
 )
 
 var installCmd = &cobra.Command{
@@ -92,65 +89,6 @@ ROLES:
 	// case err := <-c:
 	// 	return err
 	// }
-	return nil
-}
-
-func validateRole(r *role.Role) error {
-	// Check platform
-	ok := r.IsOs([]string{OS, OSTYPE})
-	if !ok {
-		logger.Debugf("Skip %s, only for %s\n", r.Name, strings.Join(r.Os, ", "))
-		return Skip
-	}
-	// Filter by name
-	skip := len(filter) > 0
-	for _, roleName := range filter {
-		if roleName == r.Name {
-			skip = false
-			break
-		}
-	}
-	if skip {
-		logger.Debugf("Skip %s\n", r.Name)
-		return Skip
-	}
-	// logger.SetPrefix(r.Name+": ") // ctx.Value("role")
-	logger.Infof("## %s\n", strings.Title(r.Name))
-	return nil
-}
-
-func initGitRepo(r *role.Role) error {
-	dir := path.Join(r.Target, RolesDir, r.Name) // git.DefaultPath
-	git.Https = https
-	repo, err := git.New(r.Origin, dir)
-	if err != nil {
-		return err
-	}
-	repo.Name = r.Name
-	err = repo.CloneOrPull()
-	if err != nil {
-		return err
-	}
-	if repo.Path != r.Source {
-		r.Source = repo.Path
-	}
-	return nil
-}
-
-func initRoleConfig(r *role.Role) error {
-	if r.Config == nil {
-		r.Config = viper.New()
-	}
-	r.Config.SetConfigName(configName)
-	r.Config.AddConfigPath(r.Source)
-	err := r.Config.ReadInConfig()
-	if err != nil { // && !os.IsNotExist(err)
-		return err
-	}
-	cfgUsed := r.Config.ConfigFileUsed()
-	if cfgUsed != "" {
-		logger.Debugln("Using role config file:", cfgUsed)
-	}
 	return nil
 }
 

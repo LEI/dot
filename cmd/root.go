@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	// "github.com/LEI/dot/config"
+	"github.com/LEI/dot/git"
 	"github.com/LEI/dot/log"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
@@ -11,15 +12,16 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path"
 	"runtime"
+	"strings"
 	// "time"
 )
 
 const OS = runtime.GOOS
 
-var OSTYPE string
-
 var (
+	OsFamily = []string{OS}
 	Dot        = &role.Meta{}
 	Config     = viper.New()
 	configFile = ""
@@ -27,6 +29,7 @@ var (
 	RolesDir   = ".dot" // Default clone parent directory relative to ~
 	User       *user.User
 	HomeDir    string // os.Getenv("HOME")
+	currentDir string // os.Getenv("PWD")
 	debug      bool
 	https      bool
 	source     string
@@ -71,7 +74,31 @@ func Execute() error {
 }
 
 func init() {
-	User, err := user.Current()
+	err := os.Setenv("OS", OS)
+	if err != nil {
+		logger.Warn(err)
+	}
+	osType, ok := os.LookupEnv("OSTYPE")
+	logger.Debugf("OSTYPE='%s' (%v)", osType, ok)
+	if !ok || osType == "" {
+		out, err := exec.Command("bash", "-c", "printf '%s' \"$OSTYPE\"").Output()
+		if err != nil {
+			logger.Error(err)
+		}
+		if len(out) > 0 {
+			osType = string(out)
+			ot := strings.Split(osType, ".")
+			if len(ot) > 0 {
+				OsFamily = append(OsFamily, ot[0])
+			}
+			OsFamily = append(OsFamily, osType)
+		}
+	}
+	if osType != "" {
+	} else {
+		logger.Warnln("OSTYPE is not set or empty")
+	}
+	User, err = user.Current()
 	if err != nil {
 		logger.Error(err)
 	}
@@ -80,6 +107,7 @@ func init() {
 	if err != nil {
 		logger.Error(err)
 	}
+
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
@@ -131,31 +159,76 @@ func initConfig() {
 }
 
 func initCommand() error {
-	err := os.Setenv("OS", OS)
-	if err != nil {
-		logger.Warn(err)
-	}
-	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	if !ok { // logger.Debugln("OSTYPE is not set")
-		out, err := exec.Command("bash", "-c", "echo $OSTYPE").Output()
-		if err != nil {
-			return err
-		}
-		if len(out) > 0 {
-			OSTYPE = string(out)
-		}
-	}
-	if OSTYPE == "" {
-		logger.Warnln("OSTYPE is not set or empty")
-	}
 	if Config.ConfigFileUsed() != "" {
 		logger.Debugln("Using config file:", Config.ConfigFileUsed())
 	}
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
-	err = Config.UnmarshalKey("roles", &Dot.Roles)
+	err := Config.UnmarshalKey("roles", &Dot.Roles)
 	if err != nil {
 		return err
+	}
+	if len(Dot.Roles) == 0 {
+		logger.Warnln("No role found")
+	}
+	return nil
+}
+
+func validateRole(r *role.Role) error {
+	// Check platform
+	ok := r.IsOs(OsFamily)
+	if !ok {
+		logger.Debugf("Skip role %s (only for %s)\n", r.Name, strings.Join(r.Os, ", "))
+		return Skip
+	}
+	// Filter by name
+	skip := len(filter) > 0
+	for _, roleName := range filter {
+		if roleName == r.Name {
+			skip = false
+			break
+		}
+	}
+	if skip {
+		logger.Debugf("Skip role %s (filtered)\n", r.Name)
+		return Skip
+	}
+	// logger.SetPrefix(r.Name+": ") // ctx.Value("role")
+	logger.Infof("## %s\n", strings.Title(r.Name))
+	return nil
+}
+
+func initGitRepo(r *role.Role) error {
+	dir := path.Join(r.Target, RolesDir, r.Name) // git.DefaultPath
+	git.Https = https
+	repo, err := git.New(r.Origin, dir)
+	if err != nil {
+		return err
+	}
+	repo.Name = r.Name
+	err = repo.CloneOrPull()
+	if err != nil {
+		return err
+	}
+	if repo.Path != r.Source {
+		r.Source = repo.Path
+	}
+	return nil
+}
+
+func initRoleConfig(r *role.Role) error {
+	if r.Config == nil {
+		r.Config = viper.New()
+	}
+	r.Config.SetConfigName(configName)
+	r.Config.AddConfigPath(r.Source)
+	err := r.Config.ReadInConfig()
+	if err != nil { // && !os.IsNotExist(err)
+		return err
+	}
+	cfgUsed := r.Config.ConfigFileUsed()
+	if cfgUsed != "" {
+		logger.Debugln("Using role config file:", cfgUsed)
 	}
 	return nil
 }
