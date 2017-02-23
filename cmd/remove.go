@@ -90,7 +90,7 @@ func removeDirs(r *role.Role) error {
 			logger.Warnf("%s is not empty\n", dir)
 			break
 		}
-		if RemoveEmpty || prompt.Confirm("Remove empty directory %s?", dir) {
+		if RemoveEmpty || prompt.Confirm("> Remove empty directory %s?", dir) {
 			err := os.Remove(dir)
 			if err != nil {
 				return err

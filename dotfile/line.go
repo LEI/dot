@@ -102,7 +102,7 @@ func removeStringInFile(path string, str string) (changed bool, err error) {
 		return false, err
 	}
 	if len(new) == 0 {
-		if RemoveEmptyFile || prompt.Confirm("Remove empty file %s?", path) {
+		if RemoveEmptyFile || prompt.Confirm("> Remove empty file %s?", path) {
 			err := os.Remove(path)
 			if err != nil {
 				return true, err

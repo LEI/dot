@@ -228,8 +228,13 @@ func roleSymlink(ln *dot.Link) error {
 		return err
 	}
 	if fi != nil {
-		if err := backupFile(ln.Target()); err != nil {
+		moved, err := backupFile(ln.Target())
+		if err != nil {
 			return err
+		}
+		if !moved {
+			logger.Warn("Ignore existing link: %s", ln.Target())
+			return nil
 		}
 	}
 	err = os.Symlink(ln.Path(), ln.Target())
@@ -257,16 +262,17 @@ func readSymlink(ln *dot.Link) error {
 	return nil
 }
 
-func backupFile(path string) error {
+func backupFile(path string) (bool, error) {
 	backup := path + ".backup"
-	msg := fmt.Sprintf("> %s already exists, append .backup?", path)
-	if ok := prompt.Confirm(msg); ok {
-		err := os.Rename(path, backup)
-		if err != nil {
-			return err
-		}
+	msg := fmt.Sprintf("> %s already exists, backup?", path)
+	if ok := prompt.Confirm(msg); !ok {
+		return false, nil
 	}
-	return nil
+	err := os.Rename(path, backup)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func filterIgnored(f *dot.File) bool {
