@@ -111,11 +111,10 @@ func removeOrBackup(path string, link string) (bool, error) {
 		new := path + ".backup"
 		msg := fmt.Sprintf("> %s already exists, backup?", path)
 		if ok := prompt.Confirm(msg); !ok {
-			logger.Warn("Ignore existing link: %s", path)
 			return false, nil
 		}
 		if dot.DryRun {
-			err := os.Rename(path, new)
+			err := os.Rename(target, new)
 			if err != nil {
 				return false, err
 			}
