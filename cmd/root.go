@@ -31,12 +31,10 @@ var (
 	User       *user.User
 	HomeDir    string // os.Getenv("HOME")
 	currentDir string // os.Getenv("PWD")
+	roleFilter []string
 	debug      bool
 	dryrun     bool //= true
 	https      bool
-	source     string
-	target     string
-	filter     []string
 	logger     = log.New(os.Stdout, "", 0)
 )
 
@@ -109,10 +107,10 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
 	RootCmd.PersistentFlags().BoolVarP(&dryrun, "dry-run", "D", dryrun, "Check-mode")
-	RootCmd.PersistentFlags().StringSliceVarP(&filter, "filter", "f", filter, "Filter roles by `name`")
+	RootCmd.PersistentFlags().StringSliceVarP(&roleFilter, "filter", "f", roleFilter, "Filter roles by `name`")
 	RootCmd.PersistentFlags().BoolVarP(&https, "https", "", https, "Default to HTTPS for git remotes")
-	RootCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
-	RootCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
+	RootCmd.PersistentFlags().StringVarP(&Dot.Source, "source", "s", currentDir, "Dot.Source `directory`")
+	RootCmd.PersistentFlags().StringVarP(&Dot.Target, "target", "t", HomeDir, "Destination `directory`")
 	// RootCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
 	// RootCmd.PersistentFlags().Parse(os.Args[1:])
 	// Config.BindPFlags(RootCmd.Flags())
@@ -128,7 +126,7 @@ func initConfig() {
 		Config.SetConfigFile(configFile)
 	} else {
 		Config.SetConfigName(configName)
-		configPath := []string{source, target, "/etc"}
+		configPath := []string{Dot.Source, Dot.Target, "/etc"}
 		for _, p := range configPath {
 			Config.AddConfigPath(p)
 		}
@@ -202,8 +200,8 @@ func validateRole(r *role.Role) error {
 		return dot.Skip
 	}
 	// Filter by name
-	skip := len(filter) > 0
-	for _, roleName := range filter {
+	skip := len(roleFilter) > 0
+	for _, roleName := range roleFilter {
 		if roleName == r.Name {
 			skip = false
 			break

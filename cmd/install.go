@@ -97,12 +97,12 @@ func installLinks(r *role.Role) error {
 
 func removeOrBackup(path string, link string) (bool, error) {
 	if link != "" {
-		msg := fmt.Sprintf("> %s is a link to %s, remove?", target, link)
+		msg := fmt.Sprintf("> %s is a link to %s, remove?", path, link)
 		if ok := prompt.Confirm(msg); !ok {
 			return false, nil
 		}
 		if !dot.DryRun {
-			err := os.Remove(target)
+			err := os.Remove(path)
 			if err != nil {
 				return false, err
 			}
@@ -113,8 +113,8 @@ func removeOrBackup(path string, link string) (bool, error) {
 		if ok := prompt.Confirm(msg); !ok {
 			return false, nil
 		}
-		if dot.DryRun {
-			err := os.Rename(target, new)
+		if !dot.DryRun {
+			err := os.Rename(path, new)
 			if err != nil {
 				return false, err
 			}
