@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path"
-	// "strings"
+	"strings"
 )
 
 var RemoveEmpty bool
@@ -22,11 +22,13 @@ var removeCmd = &cobra.Command{
 	Short:   "Remove dotfiles",
 	// Long:   ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		dot.DryRun = dryrun
+		dot.RemoveEmptyFile = RemoveEmpty
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
 		}
-		return removeRoles(Dot.Source, Dot.Target, Dot.Roles)
+		return removeRoles()
 	},
 }
 
@@ -37,8 +39,7 @@ func init() {
 	// Config.BindPFlags(removeCmd.Flags())
 }
 
-func removeRoles(source, target string, roles []*role.Role) error {
-	dot.RemoveEmptyFile = RemoveEmpty
+func removeRoles() error {
 	var handlers = []func(*role.Role) error{
 		validateRole,
 		initGitRepo, // TODO update role.Path without git pull?
@@ -47,96 +48,67 @@ func removeRoles(source, target string, roles []*role.Role) error {
 		removeLines,
 		removeDirs,
 	}
-ROLES:
-	for _, r := range roles {
-		r, err := r.New(source, target)
-		if err != nil {
-			return err
-		}
-		for _, f := range handlers {
-			err := f(r)
-			if err != nil {
-				switch err {
-				case Skip:
-					continue ROLES
-				}
-				return err
-			}
-		}
-	}
-	return nil
+	return apply(handlers...)
 }
 
 func removeDirs(r *role.Role) error {
+	var prefix string
 	for _, d := range r.Dirs() {
 		d.Path = os.ExpandEnv(d.Path)
-		dir := path.Join(r.Target, d.Path)
+		path := path.Join(r.Target, d.Path)
 		logger.Debugf("Remove directory %s\n", d.Path)
 
-		d, err := os.Open(dir)
+		di, err := dot.ReadDir(path)
 		if err != nil {
 			if os.IsNotExist(err) {
-				logger.Infof("# rmdir %s\n", dir)
+				logger.Infof("# rmdir %s\n", path)
 				continue
 			}
 			return err
 		}
-		defer d.Close()
-		di, err := d.Readdir(-1)
+		if len(di) > 0 {
+			logger.Warnf("%s is not empty\n", path)
+			break
+		}
+		if !RemoveEmpty || !prompt.Confirm("> Remove empty directory %s?", path) {
+			return nil
+		}
+		removed, err := dot.RemoveDir(path)
 		if err != nil {
 			return err
 		}
-		if len(di) > 0 {
-			logger.Warnf("%s is not empty\n", dir)
-			break
+		if removed {
+			prefix = "$"
+		} else {
+			prefix = "#"
 		}
-		if RemoveEmpty || prompt.Confirm("> Remove empty directory %s?", dir) {
-			err := os.Remove(dir)
-			if err != nil {
-				return err
-			}
-		}
-		logger.Infof("$ rmdir %s\n", dir)
+		logger.Infof("%s rmdir %s\n", prefix, path)
 	}
 	return nil
 }
 
 func removeLinks(r *role.Role) error {
+	var prefix string
 	for _, l := range r.Links() {
 		logger.Debugf("Unlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		pattern := path.Join(r.Source, l.Pattern)
-		files, err := dot.List(pattern, filterIgnored)
+		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
 		if err != nil {
 			return err
 		}
-		for _, f := range files {
-			isDir, err := f.IsDir()
+		for _, source := range paths {
+			target := strings.Replace(source, r.Source, r.Target, 1)
+			removed, err := dot.RemoveSymlink(source, target)
 			if err != nil {
 				return err
 			}
-			switch {
-			case l.Type == "directory" && !isDir:
-				logger.Debugf("Ignore directory %s\n", f.Base())
-				continue
-			case l.Type == "file" && isDir:
-				logger.Debugf("Ignore file %s\n", f.Base())
-				continue
+			if removed {
+				prefix = "$"
+			} else {
+				prefix = "#"
 			}
-			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
-			linked, err := ln.IsLinked()
-			if err != nil {
-				return err
-			}
-			if !linked {
-				logger.Infof("# rm %s\n", ln.Target())
-				continue
-			}
-			err = os.Remove(ln.Target())
-			if err != nil {
-				return err
-			}
-			logger.Infof("$ rm %s\n", ln.Target())
+			logger.Infof("%s rm %s\n", prefix, target)
 		}
 	}
 	return nil
