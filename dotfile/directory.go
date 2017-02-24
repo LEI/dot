@@ -33,10 +33,10 @@ func RemoveDir(path string) (bool, error) {
 		return false, err
 	case err != nil && os.IsNotExist(err):
 		return false, nil
-	// case fi != nil && !fi.IsDir():
-	// 	return false, &os.PathError{"dir", path, syscall.ENOTDIR}
-	// case fi == nil:
-	// 	return false, nil
+		// case fi != nil && !fi.IsDir():
+		// 	return false, &os.PathError{"dir", path, syscall.ENOTDIR}
+		// case fi == nil:
+		// 	return false, nil
 	}
 	if DryRun {
 		return true, nil

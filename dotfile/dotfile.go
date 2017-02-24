@@ -9,7 +9,7 @@ import (
 var (
 	DryRun bool // = true
 	// AlreadyLinked = fmt.Errorf("Already linked")
-	Skip      = fmt.Errorf("Skip")
+	Skip = fmt.Errorf("Skip")
 )
 
 type FileHandler func(string, os.FileInfo) error

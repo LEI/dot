@@ -21,9 +21,9 @@ import (
 const OS = runtime.GOOS
 
 var (
-	OsFamily = []string{OS}
+	OsFamily   = []string{OS}
 	Dot        = &role.Meta{}
-	DotIgnore = []string{".git", "*.md", "*.tpl"}
+	DotIgnore  = []string{".git", "*.md", "*.tpl"}
 	Config     = viper.New()
 	configFile = ""
 	configName = ".dotrc"
