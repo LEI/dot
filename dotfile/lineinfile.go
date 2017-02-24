@@ -27,6 +27,9 @@ func LineInFile(path string, line string) (changed bool, err error) {
 	// 	return false, err
 	// }
 	// defer fi.Close()
+	if DryRun {
+		return true, nil
+	}
 	return appendStringInFile(path, line+"\n")
 }
 
@@ -43,6 +46,9 @@ func LineOutFile(path string, line string) (changed bool, err error) {
 		if err != nil || !contains {
 			return false, err
 		}
+	}
+	if DryRun {
+		return true, nil
 	}
 	return removeStringInFile(path, line+"\n")
 }

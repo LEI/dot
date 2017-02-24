@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path"
+	"strings"
 )
 
 var installCmd = &cobra.Command{
@@ -17,11 +18,12 @@ var installCmd = &cobra.Command{
 	Short:   "Install dotfiles",
 	// Long:    ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		dot.DryRun = dryrun
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
 		}
-		return installRoles(Dot.Source, Dot.Target, Dot.Roles)
+		return installRoles()
 	},
 }
 
@@ -34,13 +36,7 @@ func init() {
 	// Config.BindPFlags(installCmd.Flags())
 }
 
-func installRoles(source, target string, roles []*role.Role) error {
-	// var ctx context.Context
-	// var cancel context.CancelFunc
-
-	// ctx, cancel = context.WithCancel(context.Background())
-	// defer cancel()
-
+func installRoles() error {
 	var handlers = []func(*role.Role) error{
 		validateRole,
 		initGitRepo,
@@ -51,180 +47,82 @@ func installRoles(source, target string, roles []*role.Role) error {
 		installLines,
 		// afterInstall,
 	}
-
-ROLES:
-	for _, r := range roles {
-		r, err := r.New(source, target)
-		if err != nil {
-			return err
-		}
-		// h := &ContextAdapter{
-		// 	handler: middleware(ContextHandlerFunc(handler)),
-		// }
-		// a := chain(handler, register(ContextHandlerFunc(checkHandler)))
-		for _, f := range handlers {
-			// fmt.Println("Handler #", i, f)
-			// h := register(ContextHandlerFunc(f))
-			// ctx = context.WithValue(ctx, "role", r.Name)
-			err := f(r)
-			if err != nil {
-				switch err {
-				case Skip:
-					continue ROLES
-				}
-				return err
-			}
-		}
-		// gh := register(ContextHandlerFunc(handler))
-		// gh.Next(ctx, r)
-
-		// err := installRole(ctx, r, func(rol *role.Role) error {
-	}
-	// c := make(chan error, 1)
-	// go func() {
-	// 	c <- installRoles(ctx, source, target, roles)
-	// }()
-	// select {
-	// case <-ctx.Done():
-	// 	<-c
-	// 	return ctx.Err()
-	// case err := <-c:
-	// 	return err
-	// }
-	return nil
+	return apply(handlers...)
 }
 
 func installDirs(r *role.Role) error {
+	var prefix string
 	for _, d := range r.Dirs() {
 		d.Path = os.ExpandEnv(d.Path)
-		dir := path.Join(r.Target, d.Path)
-		logger.Debugf("Create directory %s\n", dir)
-		fi, err := os.Stat(dir)
-		if err == nil {
-			if fi.IsDir() {
-				logger.Infof("# mkdir -p %s\n", dir)
-				return nil
-			}
-			// return &os.PathError{"dir", f.path, syscall.ENOTDIR}
-		}
-		f, err := dot.NewDir(dir, 0755)
+		path := path.Join(r.Target, d.Path)
+		logger.Debugf("Create directory %s\n", path)
+		created, err := dot.CreateDir(path, 0755)
 		if err != nil {
 			return err
 		}
-		logger.Infof("$ mkdir -p %s\n", f.Path())
+		if created {
+			prefix = "$"
+		} else {
+			prefix = "#"
+		}
+		logger.Infof("%s mkdir -p %s\n", prefix, path)
 	}
 	return nil
 }
 
 func installLinks(r *role.Role) error {
+	var prefix string
 	for _, l := range r.Links() {
 		logger.Debugf("Symlink %s\n", l.Pattern)
 		l.Pattern = os.ExpandEnv(l.Pattern)
 		pattern := path.Join(r.Source, l.Pattern)
-		files, err := dot.List(pattern, filterIgnored)
+		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
 		if err != nil {
 			return err
 		}
-		for _, f := range files {
-			isDir, err := f.IsDir()
-			if err != nil {
-				return err
-			}
-			switch {
-			case l.Type == "directory" && !isDir:
-				logger.Debugf("# ignore directory %s\n", f.Base())
-				continue
-			case l.Type == "file" && isDir:
-				logger.Debugf("# ignore file %s\n", f.Base())
-				continue
-			}
-			ln := dot.NewLink(f.Path(), f.Replace(r.Source, r.Target))
-			linked, err := ln.IsLinked()
+		for _, source := range paths {
+			target := strings.Replace(source, r.Source, r.Target, 1)
+			linked, err := dot.InstallSymlink(source, target, removeOrBackup)
 			if err != nil {
 				return err
 			}
 			if linked {
-				logger.Infof("# ln -s %s %s\n", ln.Path(), ln.Target())
-				continue
+				prefix = "$"
+			} else {
+				prefix = "#"
 			}
-			err = roleSymlink(ln)
-			if err != nil {
-				return err
-			}
+			logger.Infof("%s ln -s %s %s\n", prefix, source, target)
 		}
 	}
 	return nil
 }
 
-func roleSymlink(ln *dot.Link) error {
-	if ln.IsLink() {
-		err := readSymlink(ln)
-		if err != nil {
-			return err
-		}
-	}
-	fi, err := ln.Dstat()
-	if err != nil && os.IsExist(err) {
-		return err
-	}
-	if fi != nil {
-		moved, err := backupFile(ln.Target())
-		if err != nil {
-			return err
-		}
-		if !moved {
-			logger.Warn("Ignore existing link: %s", ln.Target())
-			return nil
-		}
-	}
-	err = os.Symlink(ln.Path(), ln.Target())
-	if err != nil {
-		return err
-	}
-	logger.Infof("$ ln -s %s %s\n", ln.Path(), ln.Target())
-	return nil
-}
-
-func readSymlink(ln *dot.Link) error {
-	link, err := ln.Readlink()
-	if err != nil && os.IsExist(err) {
-		return err
-	}
+func removeOrBackup(path string, link string) (bool, error) {
 	if link != "" {
-		msg := fmt.Sprintf("> %s is a link to %s, remove?", ln.Target(), link)
-		if ok := prompt.Confirm(msg); ok {
-			err := os.Remove(ln.Target())
+		msg := fmt.Sprintf("> %s is a link to %s, remove?", path, link)
+		if ok := prompt.Confirm(msg); !ok {
+			return false, nil
+		}
+		if !dot.DryRun {
+			err := os.Remove(path)
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
-	}
-	return nil
-}
-
-func backupFile(path string) (bool, error) {
-	backup := path + ".backup"
-	msg := fmt.Sprintf("> %s already exists, backup?", path)
-	if ok := prompt.Confirm(msg); !ok {
-		return false, nil
-	}
-	err := os.Rename(path, backup)
-	if err != nil {
-		return false, err
+	} else {
+		new := path + ".backup"
+		msg := fmt.Sprintf("> %s already exists, backup?", path)
+		if ok := prompt.Confirm(msg); !ok {
+			return false, nil
+		}
+		if !dot.DryRun {
+			err := os.Rename(path, new)
+			if err != nil {
+				return false, err
+			}
+		}
 	}
 	return true, nil
-}
-
-func filterIgnored(f *dot.File) bool {
-	ignore, err := f.BaseMatch(DotIgnore...)
-	if err != nil {
-		logger.Error(err)
-	}
-	if ignore {
-		logger.Debugf("Ignore %s\n", f.Base())
-		return false
-	}
-	return true
 }
 
 func installLines(r *role.Role) error {

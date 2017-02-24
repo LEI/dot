@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	// "github.com/LEI/dot/config"
+	dot "github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/git"
 	"github.com/LEI/dot/log"
 	"github.com/LEI/dot/role"
@@ -23,6 +23,7 @@ const OS = runtime.GOOS
 var (
 	OsFamily   = []string{OS}
 	Dot        = &role.Meta{}
+	DotIgnore  = []string{".git", "*.md", "*.tpl"}
 	Config     = viper.New()
 	configFile = ""
 	configName = ".dotrc"
@@ -30,17 +31,11 @@ var (
 	User       *user.User
 	HomeDir    string // os.Getenv("HOME")
 	currentDir string // os.Getenv("PWD")
+	roleFilter []string
 	debug      bool
+	dryrun     bool //= true
 	https      bool
-	source     string
-	target     string
-	filter     []string
 	logger     = log.New(os.Stdout, "", 0)
-)
-
-var (
-	DotIgnore = []string{".git", "*.md", "*.tpl"}
-	Skip      = fmt.Errorf("Skip")
 )
 
 var RootCmd = &cobra.Command{
@@ -60,7 +55,7 @@ var RootCmd = &cobra.Command{
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
 		}
-		return installRoles(Dot.Source, Dot.Target, Dot.Roles)
+		return installRoles()
 	},
 }
 
@@ -111,10 +106,11 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
-	RootCmd.PersistentFlags().StringSliceVarP(&filter, "filter", "f", filter, "Filter roles by `name`")
+	RootCmd.PersistentFlags().BoolVarP(&dryrun, "dry-run", "D", dryrun, "Check-mode")
+	RootCmd.PersistentFlags().StringSliceVarP(&roleFilter, "filter", "f", roleFilter, "Filter roles by `name`")
 	RootCmd.PersistentFlags().BoolVarP(&https, "https", "", https, "Default to HTTPS for git remotes")
-	RootCmd.PersistentFlags().StringVarP(&source, "source", "s", currentDir, "Source `directory`")
-	RootCmd.PersistentFlags().StringVarP(&target, "target", "t", HomeDir, "Destination `directory`")
+	RootCmd.PersistentFlags().StringVarP(&Dot.Source, "source", "s", currentDir, "Dot.Source `directory`")
+	RootCmd.PersistentFlags().StringVarP(&Dot.Target, "target", "t", HomeDir, "Destination `directory`")
 	// RootCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
 	// RootCmd.PersistentFlags().Parse(os.Args[1:])
 	// Config.BindPFlags(RootCmd.Flags())
@@ -130,7 +126,7 @@ func initConfig() {
 		Config.SetConfigFile(configFile)
 	} else {
 		Config.SetConfigName(configName)
-		configPath := []string{source, target, "/etc"}
+		configPath := []string{Dot.Source, Dot.Target, "/etc"}
 		for _, p := range configPath {
 			Config.AddConfigPath(p)
 		}
@@ -174,27 +170,49 @@ func initCommand() error {
 	return nil
 }
 
+func apply(handlers ...func(*role.Role) error) error {
+ROLES:
+	for _, r := range Dot.Roles {
+		r, err := r.New(Dot.Source, Dot.Target)
+		if err != nil {
+			return err
+		}
+		for _, f := range handlers {
+			err := f(r)
+			if err != nil {
+				switch err {
+				case dot.Skip:
+					continue ROLES
+				}
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func validateRole(r *role.Role) error {
+	title := strings.Title(r.Name)
 	// Check platform
 	ok := r.IsOs(OsFamily)
 	if !ok {
-		logger.Debugf("Skip role %s (only for %s)\n", r.Name, strings.Join(r.Os, ", "))
-		return Skip
+		logger.Debugf("## %s (only for %s)\n", title, strings.Join(r.Os, ", "))
+		return dot.Skip
 	}
 	// Filter by name
-	skip := len(filter) > 0
-	for _, roleName := range filter {
+	skip := len(roleFilter) > 0
+	for _, roleName := range roleFilter {
 		if roleName == r.Name {
 			skip = false
 			break
 		}
 	}
 	if skip {
-		logger.Debugf("Skip role %s (filtered)\n", r.Name)
-		return Skip
+		logger.Debugf("## %s (skipped)\n", title)
+		return dot.Skip
 	}
 	// logger.SetPrefix(r.Name+": ") // ctx.Value("role")
-	logger.Infof("## %s\n", strings.Title(r.Name))
+	logger.Infof("## %s\n", title)
 	return nil
 }
 
@@ -229,6 +247,34 @@ func initRoleConfig(r *role.Role) error {
 	cfgUsed := r.Config.ConfigFileUsed()
 	if cfgUsed != "" {
 		logger.Debugln("Using role config file:", cfgUsed)
+	}
+	return nil
+}
+
+func only(t string) dot.FileHandler {
+	return func(path string, fi os.FileInfo) error {
+		switch {
+		case t == "directory" && !fi.IsDir(),
+			 t == "file" && fi.IsDir():
+			logger.Debugf("# ignore %s (not a %s\n", fi.Name(), t)
+			return dot.Skip
+		// case t == "":
+		// 	logger.Errorf("! Invalid type: %s", t)
+		default:
+			logger.Debugln("default", fi.Name(), t)
+		}
+		return nil
+	}
+}
+
+func filterIgnored(path string, fi os.FileInfo) error {
+	ignore, err := dot.Match(fi.Name(), DotIgnore...)
+	if err != nil {
+		return err
+	}
+	if ignore {
+		logger.Debugf("Ignore %s\n", fi.Name())
+		return dot.Skip
 	}
 	return nil
 }
