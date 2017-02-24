@@ -45,9 +45,11 @@ func installRoles(source, target string, roles []*role.Role) error {
 		validateRole,
 		initGitRepo,
 		initRoleConfig,
+		// beforeInstall,
 		installDirs,
 		installLinks,
 		installLines,
+		// afterInstall,
 	}
 
 ROLES:

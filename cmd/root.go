@@ -21,7 +21,7 @@ import (
 const OS = runtime.GOOS
 
 var (
-	OsFamily = []string{OS}
+	OsFamily   = []string{OS}
 	Dot        = &role.Meta{}
 	Config     = viper.New()
 	configFile = ""
