@@ -254,14 +254,17 @@ func initRoleConfig(r *role.Role) error {
 func only(t string) dot.FileHandler {
 	return func(path string, fi os.FileInfo) error {
 		switch {
+		// case fi == nil:
+		// 	logger.Debugf("# ignore %s (does not exist)\n", fi.Name(), t)
+		// 	return dot.Skip
 		case t == "directory" && !fi.IsDir(),
 			 t == "file" && fi.IsDir():
-			logger.Debugf("# ignore %s (not a %s\n", fi.Name(), t)
+			logger.Debugf("# ignore %s (not a %s)\n", fi.Name(), t)
 			return dot.Skip
 		// case t == "":
 		// 	logger.Errorf("! Invalid type: %s", t)
-		default:
-			logger.Debugln("default", fi.Name(), t)
+		// default:
+		// 	logger.Debugln("default", fi.Name(), t)
 		}
 		return nil
 	}

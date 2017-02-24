@@ -11,8 +11,11 @@ func IsSymlink(fi os.FileInfo) bool {
 
 func IsLink(path string) (string, error) {
 	fi, err := os.Lstat(path)
-	if err != nil && os.IsExist(err) {
-		return path, err
+	if err != nil { // os.IsExist(err)
+		// if os.IsNotExist(err) {
+		// 	return path, nil
+		// }
+		return "", err
 	}
 	if !IsSymlink(fi) {
 		return "", nil
@@ -64,11 +67,11 @@ func InstallSymlink(source, target string, backup func(string, string) (bool, er
 
 func RemoveSymlink(source, target string) (bool, error) {
 	_, err := IsLink(target)
-	if err != nil && os.IsExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
 		return false, err
-	}
-	if err != nil && os.IsNotExist(err) {
-		return false, nil
 	}
 	if DryRun {
 		return true, nil

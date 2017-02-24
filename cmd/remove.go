@@ -70,17 +70,15 @@ func removeDirs(r *role.Role) error {
 			logger.Warnf("%s is not empty\n", path)
 			break
 		}
-		if !RemoveEmpty || !prompt.Confirm("> Remove empty directory %s?", path) {
-			return nil
-		}
-		removed, err := dot.RemoveDir(path)
-		if err != nil {
-			return err
-		}
-		if removed {
-			prefix = "$"
-		} else {
-			prefix = "#"
+		prefix = "#"
+		if RemoveEmpty || prompt.Confirm("> Remove empty directory %s?", path) {
+			removed, err := dot.RemoveDir(path)
+			if err != nil {
+				return err
+			}
+			if removed {
+				prefix = "$"
+			}
 		}
 		logger.Infof("%s rmdir %s\n", prefix, path)
 	}
