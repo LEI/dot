@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"text/template"
 )
 
 var installCmd = &cobra.Command{
@@ -18,7 +19,7 @@ var installCmd = &cobra.Command{
 	Short:   "Install dotfiles",
 	// Long:    ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dot.DryRun = dryrun
+		// dot.DryRun = dryrun
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
@@ -41,11 +42,12 @@ func installRoles() error {
 		validateRole,
 		initGitRepo,
 		initRoleConfig,
-		// beforeInstall,
+		// do("pre", "install"),
 		installDirs,
 		installLinks,
 		installLines,
-		// afterInstall,
+		// installTemplates,
+		// do("post", "install"),
 	}
 	return apply(handlers...)
 }
@@ -73,10 +75,10 @@ func installDirs(r *role.Role) error {
 func installLinks(r *role.Role) error {
 	var prefix string
 	for _, l := range r.Links() {
-		logger.Debugf("Symlink %s\n", l.Pattern)
-		l.Pattern = os.ExpandEnv(l.Pattern)
-		pattern := path.Join(r.Source, l.Pattern)
-		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
+		logger.Debugf("Symlink %s\n", l.Path)
+		l.Path = os.ExpandEnv(l.Path)
+		glob := path.Join(r.Source, l.Path)
+		paths, err := dot.List(glob, filterIgnored, only(l.Type))
 		if err != nil {
 			return err
 		}
@@ -141,6 +143,46 @@ func installLines(r *role.Role) error {
 			prefix = "#"
 		}
 		logger.Infof("%s echo '%s' >> %s\n", prefix, l.Line, l.File)
+	}
+	return nil
+}
+
+func installTemplates(r *role.Role) error {
+	var prefix string
+	for _, t := range r.Templates() {
+		logger.Debugf("Template %s\n", t.Path)
+		t.Path = os.ExpandEnv(t.Path)
+		glob := path.Join(r.Source, t.Path)
+		// dest := path.Join(r.Target, t.Path)
+		tmpl, err := template.ParseGlob(glob) // template.Must()
+		if err != nil {
+			return err
+		}
+		vars := map[string]string{}
+		for k, v := range t.Vars {
+			k = strings.Replace(k, "_", " ", -1)
+			k = strings.Title(k)
+			k = strings.Replace(k, " ", "", -1)
+			v = os.ExpandEnv(v)
+			// t, err := template.New(k).Parse(v)
+			// if err != nil {
+			// 	return err
+			// }
+			// err = t.Execute(os.Stdout, nil)
+			// if err != nil {
+			// 	return err
+			// }
+			vars[k] = v
+			logger.Infof("         %s -> %s\n", k, v)
+		}
+		if !dot.DryRun {
+			err := tmpl.Execute(os.Stdout, vars)
+			if err != nil {
+				return err
+			}
+		}
+		prefix = "@"
+		logger.Infof("%s template %s\n", prefix, t.Path)
 	}
 	return nil
 }

@@ -22,7 +22,7 @@ var removeCmd = &cobra.Command{
 	Short:   "Remove dotfiles",
 	// Long:   ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dot.DryRun = dryrun
+		// dot.DryRun = dryrun
 		dot.RemoveEmptyFile = RemoveEmpty
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
@@ -88,10 +88,10 @@ func removeDirs(r *role.Role) error {
 func removeLinks(r *role.Role) error {
 	var prefix string
 	for _, l := range r.Links() {
-		logger.Debugf("Unlink %s\n", l.Pattern)
-		l.Pattern = os.ExpandEnv(l.Pattern)
-		pattern := path.Join(r.Source, l.Pattern)
-		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
+		logger.Debugf("Unlink %s\n", l.Path)
+		l.Path = os.ExpandEnv(l.Path)
+		glob := path.Join(r.Source, l.Path)
+		paths, err := dot.List(glob, filterIgnored, only(l.Type))
 		if err != nil {
 			return err
 		}

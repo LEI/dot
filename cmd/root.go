@@ -33,7 +33,6 @@ var (
 	currentDir string // os.Getenv("PWD")
 	roleFilter []string
 	debug      bool
-	dryrun     bool //= true
 	https      bool
 	logger     = log.New(os.Stdout, "", 0)
 )
@@ -106,7 +105,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
-	RootCmd.PersistentFlags().BoolVarP(&dryrun, "dry-run", "D", dryrun, "Check-mode")
+	RootCmd.PersistentFlags().BoolVarP(&dot.DryRun, "dry-run", "D", dot.DryRun, "Check-mode")
 	RootCmd.PersistentFlags().StringSliceVarP(&roleFilter, "filter", "f", roleFilter, "Filter roles by `name`")
 	RootCmd.PersistentFlags().BoolVarP(&https, "https", "", https, "Default to HTTPS for git remotes")
 	RootCmd.PersistentFlags().StringVarP(&Dot.Source, "source", "s", currentDir, "Dot.Source `directory`")
@@ -249,6 +248,20 @@ func initRoleConfig(r *role.Role) error {
 		logger.Debugln("Using role config file:", cfgUsed)
 	}
 	return nil
+}
+
+func do(state string, action string) func(*role.Role) error {
+	key := state + "_" + action
+	return func(r *role.Role) error {
+		command := r.Config.GetString(key)
+		if command != "" {
+			if dot.DryRun {
+				return nil
+			}
+			logger.Infof(">>> %s -> %s", key, command)
+		}
+		return nil
+	}
 }
 
 func only(t string) dot.FileHandler {

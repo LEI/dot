@@ -6,6 +6,9 @@ services:
     build: .
     image: lei/dot
     container_name: dot
+    environment:
+      GIT_AUTHOR_NAME: Docker
+      GIT_AUTHOR_EMAIL: do@ck.er
 
   debug:
     image: lei/dot

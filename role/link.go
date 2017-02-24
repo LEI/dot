@@ -8,60 +8,19 @@ import (
 )
 
 type Link struct {
-	Pattern string
+	Path string
 	// Source string
 	// Target string
 	Type  string
-	Files []string // map[string]*os.FileInfo
 }
 
-// func NewLink(pattern string) *Link {
-// 	return &Link{Pattern: pattern}
-// }
-
 func (l *Link) String() string {
-	str := l.Pattern
+	str := l.Path
 	if l.Type != "" {
 		str += fmt.Sprintf("[%s]", l.Type)
 	}
 	return fmt.Sprintf("%s", str)
 }
-
-// func (l *Link) GlobFiles(source string) ([]string, error) {
-// 	glob := filepath.Join(source, l.Pattern)
-// 	paths, err := filepath.Glob(glob)
-// 	if err != nil {
-// 		return paths, err
-// 	}
-// GLOB:
-// 	for _, file := range paths {
-// 		base := filepath.Base(file)
-// 		for _, pattern := range IgnoreNames {
-// 			ignore, err := filepath.Match(pattern, base)
-// 			if err != nil {
-// 				return paths, err
-// 			}
-// 			if ignore {
-// 				fmt.Printf("# ignore %s (filename)\n", base)
-// 				continue GLOB
-// 			}
-// 		}
-// 		fi, err := os.Stat(file)
-// 		if err != nil {
-// 			return paths, err
-// 		}
-// 		switch {
-// 		case l.Type == "directory" && !fi.IsDir(),
-// 			l.Type == "file" && fi.IsDir():
-// 			fmt.Printf("# ignore %s (filetype)\n", base)
-// 			continue // GLOB
-// 		}
-// 		l.Files = append(l.Files, file)
-// 		// l.Files[file] = fi
-// 	}
-
-// 	return l.Files, nil
-// }
 
 func (r *Role) Links() []*Link {
 	p := r.Package
@@ -91,31 +50,31 @@ func castAsLink(value interface{}) *Link {
 	var l *Link
 	switch v := value.(type) {
 	case string:
-		l = &Link{Pattern: v}
+		l = &Link{Path: v}
 	case map[string]interface{}:
-		pattern, ok := v["pattern"].(string)
+		p, ok := v["path"].(string)
 		if !ok {
-			log.Fatal(fmt.Errorf("'pattern' not found in %+v\n", v))
+			log.Fatal(fmt.Errorf("'path' not found in %+v\n", v))
 		}
 		fileType, ok := v["type"].(string)
 		if !ok {
 			fileType = ""
 		}
 		l = &Link{
-			Pattern: pattern,
+			Path: p,
 			Type:    fileType,
 		}
 	case map[interface{}]interface{}:
-		pattern, ok := v[interface{}("pattern")].(string)
+		p, ok := v[interface{}("path")].(string)
 		if !ok {
-			log.Fatal(fmt.Errorf("'pattern' not found in %+v\n", v))
+			log.Fatal(fmt.Errorf("'path' not found in %+v\n", v))
 		}
 		fileType, ok := v[interface{}("type")].(string)
 		if !ok {
 			fileType = ""
 		}
 		l = &Link{
-			Pattern: pattern,
+			Path: p,
 			Type:    fileType,
 		}
 	default:

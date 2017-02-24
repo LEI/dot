@@ -13,7 +13,13 @@ type Package struct {
 	Links []*Link // interface{}
 	Line  *Line
 	Lines []*Line
+	Template *Template
+	Templates []*Template
 	// Template interface{}
+	PreInstall string `mapstructure:"pre_install"`
+	PostInstall string `mapstructure:"post_install"`
+	PreRemove string `mapstructure:"pre_remove"`
+	PostRemove string `mapstructure:"post_remove"`
 }
 
 func getMapInterfaceKey(val map[interface{}]interface{}, key string) interface{} {
