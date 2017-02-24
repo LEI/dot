@@ -24,11 +24,11 @@ func IsLink(path string) (string, error) {
 func InstallSymlink(source, target string, backup func(string, string) (bool, error)) (bool, error) {
 	link, err := IsLink(target)
 	if err != nil && os.IsExist(err) {
-		if link == source { // Already linked to this source
-			// logger.Infof("# ln -s %s %s\n", source, target)
-			return false, nil
-		}
 		return false, err
+	}
+	if link == source { // Already linked to this source
+		// logger.Infof("# ln -s %s %s\n", source, target)
+		return false, nil
 	}
 	if link != "" {
 		ok, err := backup(target, link)
