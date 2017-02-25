@@ -172,6 +172,7 @@ func installTemplates(r *role.Role) error {
 		source := path.Clean(pattern)
 		target := path.Join(r.Target, strings.TrimSuffix(t.Path, ".tpl"))
 		tmpl, err := template.ParseGlob(pattern)
+		tmpl = tmpl.Option("missingkey=zero")
 		if err != nil {
 			return err
 		}
