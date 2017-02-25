@@ -53,7 +53,7 @@ func removeRoles() error {
 
 func removeDirs(r *role.Role) error {
 	var prefix string
-	for _, d := range r.Dirs() {
+	for _, d := range r.GetDirs() {
 		d.Path = os.ExpandEnv(d.Path)
 		path := path.Join(r.Target, d.Path)
 		logger.Debugf("Remove directory %s\n", d.Path)
@@ -87,11 +87,11 @@ func removeDirs(r *role.Role) error {
 
 func removeLinks(r *role.Role) error {
 	var prefix string
-	for _, l := range r.Links() {
+	for _, l := range r.GetLinks() {
 		logger.Debugf("Unlink %s\n", l.Path)
 		l.Path = os.ExpandEnv(l.Path)
-		glob := path.Join(r.Source, l.Path)
-		paths, err := dot.List(glob, filterIgnored, only(l.Type))
+		pattern := path.Join(r.Source, l.Path)
+		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func removeLinks(r *role.Role) error {
 
 func removeLines(r *role.Role) error {
 	var prefix string
-	for _, l := range r.Lines() {
+	for _, l := range r.GetLines() {
 		logger.Debugf("Line out %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)

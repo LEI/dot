@@ -72,7 +72,7 @@ func hasLineInFile(path string, line string) (bool, error) {
 
 func appendStringInFile(path string, str string) (changed bool, err error) {
 	// fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
-	fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0611)
+	fi, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, FileMode)
 	defer fi.Close()
 	// if err != nil && os.IsNotExist(err) {
 	// 	fi, err = os.Create(path)
@@ -103,7 +103,7 @@ func removeStringInFile(path string, str string) (changed bool, err error) {
 	if len(new) == len(b) {
 		return false, nil
 	}
-	err = ioutil.WriteFile(path, []byte(new), 0611)
+	err = ioutil.WriteFile(path, []byte(new), FileMode)
 	if err != nil {
 		return false, err
 	}

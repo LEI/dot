@@ -20,6 +20,7 @@ type Package struct {
 	PostInstall string `mapstructure:"post_install"`
 	PreRemove string `mapstructure:"pre_remove"`
 	PostRemove string `mapstructure:"post_remove"`
+	Env map[string]string
 }
 
 func getMapInterfaceKey(val map[interface{}]interface{}, key string) interface{} {

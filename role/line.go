@@ -13,18 +13,20 @@ func (l *Line) String() string {
 	return fmt.Sprintf("%s`%s`", l.File, l.Line)
 }
 
-func (r *Role) Lines() []*Line {
-	p := r.Package
-	if p == nil {
-		p = &Package{}
+func (r *Role) GetLines() []*Line {
+	if r.Package == nil {
+		r.Package = &Package{}
 	}
-	r.Config.UnmarshalKey("line", &p.Line)
-	r.Config.UnmarshalKey("lines", &p.Lines)
-	if p.Line != nil {
-		p.Lines = append(p.Lines, p.Line) // .(map[string]interface{})
-		p.Line = nil
+	r.Config.UnmarshalKey("line", &r.Package.Line)
+	r.Config.UnmarshalKey("lines", &r.Package.Lines)
+	if r.Package.Lines == nil {
+		r.Package.Lines = make([]*Line, 0)
 	}
-	r.Config.Set("lines", p.Lines)
-	r.Config.Set("line", p.Line)
-	return p.Lines
+	if r.Package.Line != nil {
+		r.Package.Lines = append(r.Package.Lines, r.Package.Line) // .(map[string]interface{})
+		r.Package.Line = nil
+	}
+	r.Config.Set("lines", r.Package.Lines)
+	r.Config.Set("line", r.Package.Line)
+	return r.Package.Lines
 }

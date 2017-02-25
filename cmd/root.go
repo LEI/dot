@@ -22,7 +22,7 @@ const OS = runtime.GOOS
 
 var (
 	OsFamily   = []string{OS}
-	Dot        = &role.Meta{}
+	Dot        = role.Roles()
 	DotIgnore  = []string{".git", "*.md", "*.tpl"}
 	Config     = viper.New()
 	configFile = ""
@@ -154,8 +154,9 @@ func initConfig() {
 }
 
 func initCommand() error {
-	if Config.ConfigFileUsed() != "" {
-		logger.Debugln("Using config file:", Config.ConfigFileUsed())
+	configUsed := Config.ConfigFileUsed()
+	if configUsed != "" {
+		logger.Debugln("Using config file:", configUsed)
 	}
 	Dot.Source = Config.GetString("source")
 	Dot.Target = Config.GetString("target")
@@ -164,20 +165,17 @@ func initCommand() error {
 		return err
 	}
 	if len(Dot.Roles) == 0 {
-		logger.Warnln("No role found")
+		logger.Errorf("Error: no roles in %s", configUsed)
 	}
+	Dot.ParseRoles()
 	return nil
 }
 
 func apply(handlers ...func(*role.Role) error) error {
 ROLES:
-	for _, r := range Dot.Roles {
-		r, err := r.New(Dot.Source, Dot.Target)
-		if err != nil {
-			return err
-		}
+	for i, _ := range Dot.Roles {
 		for _, f := range handlers {
-			err := f(r)
+			err := f(Dot.Roles[i])
 			if err != nil {
 				switch err {
 				case dot.Skip:

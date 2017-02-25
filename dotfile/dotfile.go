@@ -8,6 +8,7 @@ import (
 
 var (
 	DryRun bool // = true
+	FileMode os.FileMode = 0644
 	// AlreadyLinked = fmt.Errorf("Already linked")
 	Skip = fmt.Errorf("Skip")
 )
@@ -63,6 +64,28 @@ GLOB:
 		result = append(result, p)
 	}
 	return result, nil
+}
+
+func WriteString(path string, str string) (bool, error) {
+	if DryRun {
+		if str != "" {
+			return true, nil
+		}
+		return false, nil
+	}
+	fi, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, FileMode)
+	defer fi.Close()
+	if err != nil {
+		return false, err
+	}
+	n, err := fi.WriteString(str)
+	if err != nil {
+		return false, err
+	}
+	if n == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 // func Symlink(f *File, dst string) error {

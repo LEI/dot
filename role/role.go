@@ -1,11 +1,13 @@
 package role
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
 	"path"
 	"strings"
+	"text/template"
 )
 
 var (
@@ -43,10 +45,23 @@ type Role struct {
 // 	return fmt.Sprintf("%s", origin)
 // }
 
-func (r *Role) New(source, target string) (*Role, error) {
-	if r == nil {
-		r = &Role{}
+func Roles() *Meta {
+	return &Meta{Roles:make([]*Role, 0)}
+}
+
+func (m *Meta) ParseRoles() error {
+	for i, r := range m.Roles {
+		r, err := r.Init(m.Source, m.Target)
+		if err != nil {
+			return err
+		}
+		m.Roles[i] = r
 	}
+	return nil
+}
+
+func (r *Role) Init(source, target string) (*Role, error) {
+	// r = &Role{Package: &Package{}}
 	switch {
 	case r.Name == "" && r.Origin != "":
 		r.Name = r.Origin
@@ -66,6 +81,42 @@ func (r *Role) New(source, target string) (*Role, error) {
 		r.Target = target
 	}
 	return r, nil
+}
+
+func (r *Role) GetEnv() (map[string]string, error) {
+	r.Config.UnmarshalKey("env", &r.Package.Env)
+	env := make(map[string]string, 0)
+	for k, v := range r.Package.Env {
+		k = strings.ToTitle(k)
+		if v == "" {
+			val, ok := os.LookupEnv(k)
+			if !ok {
+				fmt.Printf("Warn: LookupEnv failed for '%s'", k)
+			}
+			v = val
+		} // v = os.ExpandEnv(v)
+		templ, err := template.New(k).Option("missingkey=zero").Parse(v)
+		if err != nil {
+			return env, err
+		}
+		buf := &bytes.Buffer{}
+		err = templ.Execute(buf, Env())
+		if err != nil {
+			return env, err
+		}
+		v = buf.String()
+		env[k] = v
+	}
+	return env, nil
+}
+
+func Env() map[string]string {
+	env := make(map[string]string, 0)
+	for _, i := range os.Environ() {
+		sep := strings.Index(i, "=")
+		env[i[0:sep]] = i[sep+1:]
+	}
+	return env
 }
 
 func (r *Role) IsOs(types []string) bool {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	dot "github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/prompt"
@@ -42,19 +43,19 @@ func installRoles() error {
 		validateRole,
 		initGitRepo,
 		initRoleConfig,
-		// do("pre", "install"),
+		do("pre", "install"),
 		installDirs,
 		installLinks,
 		installLines,
-		// installTemplates,
-		// do("post", "install"),
+		installTemplates,
+		do("post", "install"),
 	}
 	return apply(handlers...)
 }
 
 func installDirs(r *role.Role) error {
 	var prefix string
-	for _, d := range r.Dirs() {
+	for _, d := range r.GetDirs() {
 		d.Path = os.ExpandEnv(d.Path)
 		path := path.Join(r.Target, d.Path)
 		logger.Debugf("Create directory %s\n", path)
@@ -74,11 +75,11 @@ func installDirs(r *role.Role) error {
 
 func installLinks(r *role.Role) error {
 	var prefix string
-	for _, l := range r.Links() {
+	for _, l := range r.GetLinks() {
 		logger.Debugf("Symlink %s\n", l.Path)
 		l.Path = os.ExpandEnv(l.Path)
-		glob := path.Join(r.Source, l.Path)
-		paths, err := dot.List(glob, filterIgnored, only(l.Type))
+		pattern := path.Join(r.Source, l.Path)
+		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
 		if err != nil {
 			return err
 		}
@@ -129,7 +130,7 @@ func removeOrBackup(path string, link string) (bool, error) {
 
 func installLines(r *role.Role) error {
 	var prefix string
-	for _, l := range r.Lines() {
+	for _, l := range r.GetLines() {
 		logger.Debugf("Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)
@@ -149,40 +150,47 @@ func installLines(r *role.Role) error {
 
 func installTemplates(r *role.Role) error {
 	var prefix string
-	for _, t := range r.Templates() {
+	for _, t := range r.GetTemplates() {
 		logger.Debugf("Template %s\n", t.Path)
-		t.Path = os.ExpandEnv(t.Path)
-		glob := path.Join(r.Source, t.Path)
-		// dest := path.Join(r.Target, t.Path)
-		tmpl, err := template.ParseGlob(glob) // template.Must()
+		vars, err := r.GetEnv()
 		if err != nil {
 			return err
 		}
-		vars := map[string]string{}
-		for k, v := range t.Vars {
-			k = strings.Replace(k, "_", " ", -1)
-			k = strings.Title(k)
-			k = strings.Replace(k, " ", "", -1)
-			v = os.ExpandEnv(v)
-			// t, err := template.New(k).Parse(v)
-			// if err != nil {
-			// 	return err
-			// }
-			// err = t.Execute(os.Stdout, nil)
-			// if err != nil {
-			// 	return err
-			// }
-			vars[k] = v
-			logger.Infof("         %s -> %s\n", k, v)
-		}
-		if !dot.DryRun {
-			err := tmpl.Execute(os.Stdout, vars)
-			if err != nil {
-				return err
+		for k, v := range vars {
+			logger.Debugf("%s=\"%s\"\n", k, v)
+			if v != "" {
+				err = os.Setenv(k, v)
+				if err != nil {
+					return err
+				}
+			} else {
+				logger.Warnf("Empty variable: %s", k)
 			}
 		}
-		prefix = "@"
-		logger.Infof("%s template %s\n", prefix, t.Path)
+		t.Path = os.ExpandEnv(t.Path)
+		pattern := path.Join(r.Source, t.Path)
+		source := path.Clean(pattern)
+		target := path.Join(r.Target, strings.TrimSuffix(t.Path, ".tpl"))
+		tmpl, err := template.ParseGlob(pattern)
+		if err != nil {
+			return err
+		}
+		buf := &bytes.Buffer{}
+		err = tmpl.Execute(buf, role.Env())
+		if err != nil {
+			return err
+		}
+		str := buf.String()
+		changed, err := dot.WriteString(target, str)
+		if err != nil {
+			return err
+		}
+		if changed {
+			prefix = "$"
+		} else {
+			prefix = "#"
+		}
+		logger.Infof("%s envsubst < %s | tee %s\n", prefix, source, target)
 	}
 	return nil
 }

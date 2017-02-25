@@ -12,22 +12,24 @@ func (d *Dir) String() string {
 	return fmt.Sprintf("%s", d.Path)
 }
 
-func (r *Role) Dirs() []*Dir {
-	p := r.Package
-	if p == nil {
-		p = &Package{}
+func (r *Role) GetDirs() []*Dir {
+	// r.Config.UnmarshalKey("dir", &r.Package.Dir)
+	// r.Config.UnmarshalKey("dirs", &r.Package.Dirs)
+	if r.Package == nil {
+		r.Package = &Package{}
 	}
-	// r.Config.UnmarshalKey("dir", &p.Dir)
-	// r.Config.UnmarshalKey("dirs", &p.Dirs)
+	if r.Package.Dirs == nil {
+		r.Package.Dirs = make([]*Dir, 0)
+	}
 	dir := r.Config.GetString("dir")
 	if dir != "" {
-		p.Dirs = append(p.Dirs, &Dir{Path: dir})
-		p.Dir = nil
+		r.Package.Dirs = append(r.Package.Dirs, &Dir{Path: dir})
+		r.Package.Dir = nil
 	}
 	for _, d := range r.Config.GetStringSlice("dirs") {
-		p.Dirs = append(p.Dirs, &Dir{Path: d})
+		r.Package.Dirs = append(r.Package.Dirs, &Dir{Path: d})
 	}
-	r.Config.Set("dirs", p.Dirs)
-	r.Config.Set("dir", p.Dir)
-	return p.Dirs
+	r.Config.Set("dirs", r.Package.Dirs)
+	r.Config.Set("dir", r.Package.Dir)
+	return r.Package.Dirs
 }

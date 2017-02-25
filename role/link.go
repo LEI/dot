@@ -22,28 +22,29 @@ func (l *Link) String() string {
 	return fmt.Sprintf("%s", str)
 }
 
-func (r *Role) Links() []*Link {
-	p := r.Package
-	if p == nil {
-		p = &Package{}
+func (r *Role) GetLinks() []*Link {
+	if r.Package == nil {
+		r.Package = &Package{}
 	}
-	// r.Config.UnmarshalKey("link", &p.Link)
-	// r.Config.UnmarshalKey("links", &p.Links)
-	// p.Links := make([]interface{}, 0)
-	l := r.Config.Get("link")
-	if l != nil {
-		p.Links = append(p.Links, castAsLink(l))
-		p.Link = nil
+	// r.Config.UnmarshalKey("link", &r.Package.Link)
+	// r.Config.UnmarshalKey("links", &r.Package.Links)
+	if r.Package.Links == nil {
+		r.Package.Links = make([]*Link, 0)
+	}
+	ln := r.Config.Get("link")
+	if ln != nil {
+		r.Package.Links = append(r.Package.Links, castAsLink(ln))
+		r.Package.Link = nil
 	}
 	links := r.Config.Get("links")
 	if links != nil {
-		for _, l := range links.([]interface{}) {
-			p.Links = append(p.Links, castAsLink(l))
+		for _, ln := range links.([]interface{}) {
+			r.Package.Links = append(r.Package.Links, castAsLink(ln))
 		}
 	}
-	r.Config.Set("links", p.Links)
-	r.Config.Set("link", p.Link)
-	return p.Links
+	r.Config.Set("links", r.Package.Links)
+	r.Config.Set("link", r.Package.Link)
+	return r.Package.Links
 }
 
 func castAsLink(value interface{}) *Link {

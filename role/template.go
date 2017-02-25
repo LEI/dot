@@ -1,30 +1,42 @@
 package role
 
 import (
+	// "bytes"
 	"fmt"
+	// "os"
+	// "strings"
+	// "text/template"
 )
 
 type Template struct {
 	Path string
-	Vars map[string]string
+	// Vars map[string]string
+	// Tmpl template.Template
 }
 
 func (t *Template) String() string {
 	return fmt.Sprintf("%s", t.Path)
 }
 
-func (r *Role) Templates() []*Template {
-	p := r.Package
-	if p == nil {
-		p = &Package{}
+func (r *Role) GetTemplates() []*Template {
+	if r.Package == nil {
+		r.Package = &Package{}
 	}
-	r.Config.UnmarshalKey("template", &p.Template)
-	r.Config.UnmarshalKey("templates", &p.Templates)
-	if p.Template != nil {
-		p.Templates = append(p.Templates, p.Template) // .(map[string]interface{})
-		p.Template = nil
+	// r.Config.UnmarshalKey("template", &r.Package.Template)
+	// r.Config.UnmarshalKey("templates", &r.Package.Templates)
+	// if r.Package.Template != nil {
+	// 	r.Package.Templates = append(r.Package.Templates, r.Package.Template) // .(map[string]interface{})
+	// 	r.Package.Template = nil
+	// }
+	tpl := r.Config.GetString("template")
+	if tpl != "" {
+		r.Package.Templates = append(r.Package.Templates, &Template{Path: tpl})
+		r.Package.Template = nil
 	}
-	r.Config.Set("templates", p.Templates)
-	r.Config.Set("template", p.Template)
-	return p.Templates
+	for _, t := range r.Config.GetStringSlice("templates") {
+		r.Package.Templates = append(r.Package.Templates, &Template{Path: t})
+	}
+	r.Config.Set("templates", r.Package.Templates)
+	r.Config.Set("template", r.Package.Template)
+	return r.Package.Templates
 }
