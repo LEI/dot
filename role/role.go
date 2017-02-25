@@ -46,7 +46,7 @@ type Role struct {
 // }
 
 func Roles() *Meta {
-	return &Meta{Roles:make([]*Role, 0)}
+	return &Meta{Roles: make([]*Role, 0)}
 }
 
 func (m *Meta) ParseRoles() error {

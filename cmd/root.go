@@ -173,7 +173,7 @@ func initCommand() error {
 
 func apply(handlers ...func(*role.Role) error) error {
 ROLES:
-	for i, _ := range Dot.Roles {
+	for i := range Dot.Roles {
 		for _, f := range handlers {
 			err := f(Dot.Roles[i])
 			if err != nil {
@@ -269,13 +269,13 @@ func only(t string) dot.FileHandler {
 		// 	logger.Debugf("# ignore %s (does not exist)\n", fi.Name(), t)
 		// 	return dot.Skip
 		case t == "directory" && !fi.IsDir(),
-			 t == "file" && fi.IsDir():
+			t == "file" && fi.IsDir():
 			logger.Debugf("# ignore %s (not a %s)\n", fi.Name(), t)
 			return dot.Skip
-		// case t == "":
-		// 	logger.Errorf("! Invalid type: %s", t)
-		// default:
-		// 	logger.Debugln("default", fi.Name(), t)
+			// case t == "":
+			// 	logger.Errorf("! Invalid type: %s", t)
+			// default:
+			// 	logger.Debugln("default", fi.Name(), t)
 		}
 		return nil
 	}

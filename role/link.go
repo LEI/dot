@@ -11,7 +11,7 @@ type Link struct {
 	Path string
 	// Source string
 	// Target string
-	Type  string
+	Type string
 }
 
 func (l *Link) String() string {
@@ -63,7 +63,7 @@ func castAsLink(value interface{}) *Link {
 		}
 		l = &Link{
 			Path: p,
-			Type:    fileType,
+			Type: fileType,
 		}
 	case map[interface{}]interface{}:
 		p, ok := v[interface{}("path")].(string)
@@ -76,7 +76,7 @@ func castAsLink(value interface{}) *Link {
 		}
 		l = &Link{
 			Path: p,
-			Type:    fileType,
+			Type: fileType,
 		}
 	default:
 		log.Fatal(fmt.Errorf("(%T) %s\n", v, v))

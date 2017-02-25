@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	DryRun bool // = true
+	DryRun   bool        // = true
 	FileMode os.FileMode = 0644
 	// AlreadyLinked = fmt.Errorf("Already linked")
 	Skip = fmt.Errorf("Skip")

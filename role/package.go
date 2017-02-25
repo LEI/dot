@@ -7,20 +7,20 @@ import (
 
 // type Package map[string]interface{}
 type Package struct {
-	Dir   *Dir
-	Dirs  []*Dir
-	Link  *Link   // interface{}
-	Links []*Link // interface{}
-	Line  *Line
-	Lines []*Line
-	Template *Template
+	Dir       *Dir
+	Dirs      []*Dir
+	Link      *Link   // interface{}
+	Links     []*Link // interface{}
+	Line      *Line
+	Lines     []*Line
+	Template  *Template
 	Templates []*Template
 	// Template interface{}
-	PreInstall string `mapstructure:"pre_install"`
+	PreInstall  string `mapstructure:"pre_install"`
 	PostInstall string `mapstructure:"post_install"`
-	PreRemove string `mapstructure:"pre_remove"`
-	PostRemove string `mapstructure:"post_remove"`
-	Env map[string]string
+	PreRemove   string `mapstructure:"pre_remove"`
+	PostRemove  string `mapstructure:"post_remove"`
+	Env         map[string]string
 }
 
 func getMapInterfaceKey(val map[interface{}]interface{}, key string) interface{} {
