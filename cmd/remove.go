@@ -19,6 +19,7 @@ var RemoveEmpty bool
 var removeCmd = &cobra.Command{
 	Use:     "remove [flags]",
 	Aliases: []string{"rm"},
+	SuggestFor: []string{"delete", "uninstall"},
 	Short:   "Remove dotfiles",
 	// Long:   ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
