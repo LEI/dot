@@ -75,9 +75,8 @@ func installDirs(r *role.Role) error {
 }
 
 func installLinks(r *role.Role) error {
-	var prefix string
+	var targetDir, prefix string
 	for _, l := range r.GetLinks() {
-		var targetDir string
 		logger.Debugf("Symlink %s\n", l.Path)
 		l.Path = os.ExpandEnv(l.Path)
 		if strings.Contains(l.Path, ":") {
@@ -94,10 +93,13 @@ func installLinks(r *role.Role) error {
 			return err
 		}
 		for _, source := range paths {
-			target := strings.Replace(source, r.Source, r.Target, 1)
+			s := r.Source
+			t := r.Target
 			if targetDir != "" {
-				target = path.Join(target, targetDir)
+				s = path.Dir(source)
+				t = path.Join(t, targetDir)
 			}
+			target := strings.Replace(source, s, t, 1)
 			linked, err := dot.SyncLink(source, target, removeOrBackup)
 			if err != nil {
 				return err
@@ -144,10 +146,10 @@ func removeOrBackup(path string, link string) (bool, error) {
 func installLines(r *role.Role) error {
 	var prefix string
 	for _, l := range r.GetLines() {
-		logger.Debugf("Line in %s\n", l.File)
-		l.File = os.ExpandEnv(l.File)
-		l.File = path.Join(r.Target, l.File)
-		changed, err := dot.LineInFile(l.File, l.Line)
+		logger.Debugf("Line in %s\n", l.Path)
+		l.Path = os.ExpandEnv(l.Path)
+		l.Path = path.Join(r.Target, l.Path)
+		changed, err := dot.LineInFile(l.Path, l.Line)
 		if err != nil {
 			return err
 		}
@@ -156,7 +158,7 @@ func installLines(r *role.Role) error {
 		} else {
 			prefix = "#"
 		}
-		logger.Infof("%s echo '%s' >> %s\n", prefix, l.Line, l.File)
+		logger.Infof("%s echo '%s' >> %s\n", prefix, l.Line, l.Path)
 	}
 	return nil
 }

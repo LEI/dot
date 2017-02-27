@@ -52,8 +52,8 @@ func removeRoles() error {
 		do("pre", "remove"),
 		removeLinks,
 		removeLines,
-		removeDirs,
 		removeTemplates,
+		removeDirs,
 		do("post", "remove"),
 	}
 	return apply(Dot.Roles, handlers...)
@@ -98,11 +98,9 @@ func removeDir(path string) (bool, error) {
 }
 
 func removeLinks(r *role.Role) error {
-	var prefix string
+	var targetDir, prefix string
 	for _, l := range r.GetLinks() {
-		var targetDir string
 		logger.Debugf("Unlink %s\n", l.Path)
-		l.Path = os.ExpandEnv(l.Path)
 		l.Path = os.ExpandEnv(l.Path)
 		if strings.Contains(l.Path, ":") {
 			s := strings.Split(l.Path, ":")
@@ -118,10 +116,13 @@ func removeLinks(r *role.Role) error {
 			return err
 		}
 		for _, source := range paths {
-			target := strings.Replace(source, r.Source, r.Target, 1)
+			s := r.Source
+			t := r.Target
 			if targetDir != "" {
-				target = path.Join(target, targetDir)
+				s = path.Dir(source)
+				t = path.Join(t, targetDir)
 			}
+			target := strings.Replace(source, s, t, 1)
 			removed, err := dot.RemoveLink(source, target)
 			if err != nil {
 				return err
@@ -140,10 +141,10 @@ func removeLinks(r *role.Role) error {
 func removeLines(r *role.Role) error {
 	var prefix string
 	for _, l := range r.GetLines() {
-		logger.Debugf("Line in %s\n", l.File)
-		l.File = os.ExpandEnv(l.File)
-		l.File = path.Join(r.Target, l.File)
-		changed, err := dot.LineOutFile(l.File, l.Line)
+		logger.Debugf("Line in %s\n", l.Path)
+		l.Path = os.ExpandEnv(l.Path)
+		l.Path = path.Join(r.Target, l.Path)
+		changed, err := dot.LineOutFile(l.Path, l.Line)
 		if err != nil {
 			return err
 		}
@@ -153,7 +154,7 @@ func removeLines(r *role.Role) error {
 			prefix = "#"
 		}
 		// grep -v 'line' "file" > "tmpfile" && mv "tmpfile" "file"
-		logger.Infof("%s grep -v '%s' %s << %s\n", prefix, l.Line, l.File, l.File)
+		logger.Infof("%s grep -v '%s' %s << %s\n", prefix, l.Line, l.Path, l.Path)
 	}
 	return nil
 }

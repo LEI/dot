@@ -7,7 +7,7 @@ import (
 type Meta struct {
 	Source string
 	Target string
-	Roles []*Role
+	Roles  []*Role
 	// cfg   *config.Provider
 }
 

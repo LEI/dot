@@ -25,7 +25,7 @@ var (
 
 var (
 	Dot        = &role.Meta{}
-	DotIgnore  = []string{".git", "*.md", "*.tpl"}
+	DotIgnore  = []string{".git", "*.md", "*.tpl", "*.json", "*.yml", "*.yaml"}
 	Config     = viper.New()
 	configFile = ""
 	configName = ".dotrc"

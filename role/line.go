@@ -5,12 +5,12 @@ import (
 )
 
 type Line struct {
-	File string
+	Path string
 	Line string
 }
 
 func (l *Line) String() string {
-	return fmt.Sprintf("%s`%s`", l.File, l.Line)
+	return fmt.Sprintf("%s`%s`", l.Path, l.Line)
 }
 
 func (r *Role) GetLines() []*Line {
