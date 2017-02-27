@@ -7,6 +7,7 @@ import (
 	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -198,14 +199,19 @@ func installTemplates(r *role.Role) error {
 			return err
 		}
 		str := buf.String()
-		changed, err := dot.WriteString(target, str)
-		if err != nil {
+		b, err := ioutil.ReadFile(target)
+		if err != nil && os.IsExist(err) {
 			return err
 		}
-		if changed {
-			prefix = "$"
-		} else {
-			prefix = "#"
+		prefix = "#"
+		if str != string(b) {
+			changed, err := dot.WriteString(target, str)
+			if err != nil {
+				return err
+			}
+			if changed {
+				prefix = "$"
+			}
 		}
 		logger.Infof("%s envsubst < %s | tee %s\n", prefix, source, target)
 	}

@@ -10,7 +10,7 @@ services:
     environment:
       GIT_AUTHOR_NAME: Docker
       GIT_AUTHOR_EMAIL: do@ck.er
-    command: -l -c 'run dot --https; exec bash -l'
+    command: -l -c 'run dot --https; run dot rm --empty -f vim; exec bash -l'
       # run tmux new-session -n test "vim -E -s -u $$HOME/.vim/vimrc +PlugInstall +qall; exit";
       # bash --login'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'

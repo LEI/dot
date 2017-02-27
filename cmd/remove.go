@@ -9,6 +9,7 @@ import (
 	"github.com/LEI/dot/prompt"
 	"github.com/LEI/dot/role"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -22,12 +23,12 @@ var removeCmd = &cobra.Command{
 	SuggestFor: []string{"delete", "uninstall"},
 	Short:   "Remove dotfiles",
 	// Long:   ``,
-	// PreRunE: func(cmd *cobra.Command, args []string) error {
-	// 	// dot.DryRun = dryrun
-	// 	return nil
-	// },
-	RunE: func(cmd *cobra.Command, args []string) error {
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		// dot.DryRun = dryrun
 		dot.RemoveEmptyFile = RemoveEmpty
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
@@ -91,11 +92,11 @@ func removeDir(path string) (bool, error) {
 		logger.Warnf("%s is not empty\n", path)
 		return false, nil
 	}
-	if !RemoveEmpty || !prompt.Confirm("> Remove empty directory %s?", path) {
-		return false, nil
+	if RemoveEmpty || prompt.Confirm("> Remove empty directory %s?", path) {
+		removed, err := dot.RemoveDir(path)
+		return removed, err
 	}
-	removed, err := dot.RemoveDir(path)
-	return removed, err
+	return false, nil
 }
 
 func removeLinks(r *role.Role) error {
@@ -155,14 +156,33 @@ func removeLines(r *role.Role) error {
 			prefix = "#"
 		}
 		// grep -v 'line' "file" > "tmpfile" && mv "tmpfile" "file"
-		logger.Infof("%s grep -v '%s' %s << %s\n", prefix, l.Line, l.Path, l.Path)
+		logger.Infof("%s sed -i '/%s/d' %s\n", prefix, l.Line, l.Path)
 	}
 	return nil
 }
 
 func removeTemplates(r *role.Role) error {
+	var prefix string
 	for _, t := range r.GetTemplates() {
 		logger.Debugf("Template %s\n", t.Path)
+		t.Path = os.ExpandEnv(t.Path)
+		// pattern := path.Join(r.Source, t.Path)
+		// source := path.Clean(pattern)
+		target := path.Join(r.Target, strings.TrimSuffix(t.Path, ".tpl"))
+		_, err := ioutil.ReadFile(target)
+		if err != nil && os.IsExist(err) {
+			return err
+		}
+		if err != nil && os.IsNotExist(err) {
+			prefix = "#"
+		} else {
+			prefix = "$"
+			err := os.Remove(target)
+			if err != nil {
+				return err
+			}
+		}
+		logger.Infof("%s rm %s\n", prefix, target)
 	}
 	return nil
 }

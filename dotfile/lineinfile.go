@@ -2,7 +2,6 @@ package dotfile
 
 import (
 	"bytes"
-	// "fmt"
 	"github.com/LEI/dot/prompt"
 	"io/ioutil"
 	"os"
@@ -111,7 +110,7 @@ func removeStringInFile(path string, str string) (changed bool, err error) {
 		if RemoveEmptyFile || prompt.Confirm("> Remove empty file %s?", path) {
 			err := os.Remove(path)
 			if err != nil {
-				return true, err
+				return false, err
 			}
 		}
 		return true, nil

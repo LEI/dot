@@ -41,7 +41,7 @@ func do(state string, action string) func(*role.Role) error {
 		if dot.DryRun {
 			return nil
 		}
-		cmd := exec.Command("bash", "-c", command)
+		cmd := exec.Command(shell, "-c", command)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		return cmd.Run()

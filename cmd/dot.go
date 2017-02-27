@@ -16,6 +16,7 @@ import (
 )
 
 const OS = runtime.GOOS
+const shell = "bash"
 
 var (
 	User       *user.User
@@ -148,7 +149,7 @@ func osTypes() []string {
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
 	logger.Debugf("OSTYPE='%s' (%v)", OSTYPE, ok)
 	if !ok || OSTYPE == "" {
-		out, err := exec.Command("bash", "-c", "printf '%s' \"$OSTYPE\"").Output()
+		out, err := exec.Command(shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
 		if err != nil {
 			logger.Error(err)
 		}
