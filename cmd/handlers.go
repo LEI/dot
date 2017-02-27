@@ -44,10 +44,7 @@ func do(state string, action string) func(*role.Role) error {
 		cmd := exec.Command("bash", "-c", command)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			return err
-		}
+		return cmd.Run()
 	}
 }
 
