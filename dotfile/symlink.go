@@ -24,7 +24,7 @@ func IsLink(path string) (string, error) {
 	return real, err
 }
 
-func InstallSymlink(source, target string, backup func(string, string) (bool, error)) (bool, error) {
+func SyncLink(source, target string, backup func(string, string) (bool, error)) (bool, error) {
 	link, err := IsLink(target)
 	if err != nil && os.IsExist(err) {
 		return false, err
@@ -65,7 +65,7 @@ func InstallSymlink(source, target string, backup func(string, string) (bool, er
 	return true, nil
 }
 
-func RemoveSymlink(source, target string) (bool, error) {
+func RemoveLink(source, target string) (bool, error) {
 	_, err := IsLink(target)
 	if err != nil {
 		if os.IsNotExist(err) {

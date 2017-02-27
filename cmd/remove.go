@@ -21,8 +21,11 @@ var removeCmd = &cobra.Command{
 	Aliases: []string{"rm"},
 	Short:   "Remove dotfiles",
 	// Long:   ``,
+	// PreRunE: func(cmd *cobra.Command, args []string) error {
+	// 	// dot.DryRun = dryrun
+	// 	return nil
+	// },
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// dot.DryRun = dryrun
 		dot.RemoveEmptyFile = RemoveEmpty
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
@@ -33,7 +36,7 @@ var removeCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(removeCmd)
+	// DotCmd.AddCommand(removeCmd)
 	removeCmd.Flags().BoolVarP(&RemoveEmpty, "empty", "", RemoveEmpty, "Remove empty files")
 	// removeCmd.Flags().BoolVarP(&, "", "", , "")
 	// Config.BindPFlags(removeCmd.Flags())
@@ -41,55 +44,74 @@ func init() {
 
 func removeRoles() error {
 	var handlers = []func(*role.Role) error{
-		validateRole,
-		initGitRepo, // TODO update role.Path without git pull?
+		func(r *role.Role) error {
+			logger.Infof("## Removing %s...\n", r.Title())
+			return nil
+		},
 		initRoleConfig,
+		do("pre", "remove"),
 		removeLinks,
 		removeLines,
 		removeDirs,
+		removeTemplates,
+		do("post", "remove"),
 	}
-	return apply(handlers...)
+	return apply(Dot.Roles, handlers...)
 }
 
 func removeDirs(r *role.Role) error {
-	var prefix string
 	for _, d := range r.GetDirs() {
+		prefix := "#"
 		d.Path = os.ExpandEnv(d.Path)
 		path := path.Join(r.Target, d.Path)
 		logger.Debugf("Remove directory %s\n", d.Path)
-
-		di, err := dot.ReadDir(path)
+		changed, err := removeDir(path)
 		if err != nil {
-			if os.IsNotExist(err) {
-				logger.Infof("# rmdir %s\n", path)
-				continue
-			}
 			return err
 		}
-		if len(di) > 0 {
-			logger.Warnf("%s is not empty\n", path)
-			break
-		}
-		prefix = "#"
-		if RemoveEmpty || prompt.Confirm("> Remove empty directory %s?", path) {
-			removed, err := dot.RemoveDir(path)
-			if err != nil {
-				return err
-			}
-			if removed {
-				prefix = "$"
-			}
+		if changed {
+			prefix = "$"
 		}
 		logger.Infof("%s rmdir %s\n", prefix, path)
 	}
 	return nil
 }
 
+func removeDir(path string) (bool, error) {
+	di, err := dot.ReadDir(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+			// continue
+		}
+		return false, err
+	}
+	if len(di) > 0 {
+		logger.Warnf("%s is not empty\n", path)
+		return false, nil
+	}
+	if !RemoveEmpty || !prompt.Confirm("> Remove empty directory %s?", path) {
+		return false, nil
+	}
+	removed, err := dot.RemoveDir(path)
+	return removed, err
+}
+
 func removeLinks(r *role.Role) error {
 	var prefix string
 	for _, l := range r.GetLinks() {
+		var targetDir string
 		logger.Debugf("Unlink %s\n", l.Path)
 		l.Path = os.ExpandEnv(l.Path)
+		l.Path = os.ExpandEnv(l.Path)
+		if strings.Contains(l.Path, ":") {
+			s := strings.Split(l.Path, ":")
+			if len(s) != 2 {
+				logger.Errorf("%s: Invalid link path", l.Path)
+			}
+			l.Path = s[0]
+			targetDir = s[1]
+		}
 		pattern := path.Join(r.Source, l.Path)
 		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
 		if err != nil {
@@ -97,7 +119,10 @@ func removeLinks(r *role.Role) error {
 		}
 		for _, source := range paths {
 			target := strings.Replace(source, r.Source, r.Target, 1)
-			removed, err := dot.RemoveSymlink(source, target)
+			if targetDir != "" {
+				target = path.Join(target, targetDir)
+			}
+			removed, err := dot.RemoveLink(source, target)
 			if err != nil {
 				return err
 			}
@@ -115,7 +140,7 @@ func removeLinks(r *role.Role) error {
 func removeLines(r *role.Role) error {
 	var prefix string
 	for _, l := range r.GetLines() {
-		logger.Debugf("Line out %s\n", l.File)
+		logger.Debugf("Line in %s\n", l.File)
 		l.File = os.ExpandEnv(l.File)
 		l.File = path.Join(r.Target, l.File)
 		changed, err := dot.LineOutFile(l.File, l.Line)
@@ -127,7 +152,15 @@ func removeLines(r *role.Role) error {
 		} else {
 			prefix = "#"
 		}
-		logger.Infof("%s grep -v '%s' > %s\n", prefix, l.Line, l.File)
+		// grep -v 'line' "file" > "tmpfile" && mv "tmpfile" "file"
+		logger.Infof("%s grep -v '%s' %s << %s\n", prefix, l.Line, l.File, l.File)
+	}
+	return nil
+}
+
+func removeTemplates(r *role.Role) error {
+	for _, t := range r.GetTemplates() {
+		logger.Debugf("Template %s\n", t.Path)
 	}
 	return nil
 }

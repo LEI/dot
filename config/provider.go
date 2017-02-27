@@ -4,12 +4,14 @@ package config
 
 // Provider provides the configuration settings
 type Provider interface {
-	GetString(key string) string
-	GetInt(key string) int
+	Get(key string) interface{}
 	GetBool(key string) bool
+	GetInt(key string) int
+	GetString(key string) string
 	GetStringMap(key string) map[string]interface{}
 	GetStringMapString(key string) map[string]string
-	Get(key string) interface{}
-	Set(key string, value interface{})
+	GetStringSlice(key string) []string
 	IsSet(key string) bool
+	Set(key string, value interface{})
+	UnmarshalKey(key string, value interface{})
 }

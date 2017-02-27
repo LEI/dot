@@ -3,6 +3,8 @@ package role
 import (
 	"bytes"
 	"fmt"
+	// "github.com/LEI/dot/config"
+	"github.com/LEI/git"
 	"github.com/spf13/viper"
 	"os"
 	"path"
@@ -14,26 +16,18 @@ var (
 	PathSep = string(os.PathSeparator)
 )
 
-type Meta struct {
-	Source, Target string
-	Roles          []*Role
-}
-
-func (m *Meta) String() string {
-	return fmt.Sprintf("%s -> %s = %+v", m.Source, m.Target, m.Roles)
-}
-
 type Role struct {
 	Name, Origin   string
 	Source, Target string
 	Os             []string
-	Config         *viper.Viper
 	Package        *Package // `mapstructure:",squash"`
+	Config         *viper.Viper
+	Repo           *git.Repository
 }
 
-// func (r *Role) New(v interface{}) *Role {
-// 	return &Role{}
-// }
+func (r *Role) Title() string {
+	return strings.Title(r.Name)
+}
 
 // func (r *Role) String() string {
 // 	return fmt.Sprintf("%s (%s) [%s -> %s] Dir: %s, Dirs: %v, Link: %s, Links: %v, Lines: %+v",
@@ -44,21 +38,6 @@ type Role struct {
 // 	origin := r.Source
 // 	return fmt.Sprintf("%s", origin)
 // }
-
-func Roles() *Meta {
-	return &Meta{Roles: make([]*Role, 0)}
-}
-
-func (m *Meta) ParseRoles() error {
-	for i, r := range m.Roles {
-		r, err := r.Init(m.Source, m.Target)
-		if err != nil {
-			return err
-		}
-		m.Roles[i] = r
-	}
-	return nil
-}
 
 func (r *Role) Init(source, target string) (*Role, error) {
 	// r = &Role{Package: &Package{}}
@@ -81,6 +60,42 @@ func (r *Role) Init(source, target string) (*Role, error) {
 		r.Target = target
 	}
 	return r, nil
+}
+
+// name=user/repo
+// user/repo
+func ParseOrigin(str string) (name string, dir string, url string, err error) {
+	var nameSep = "="
+	name = str
+	if strings.HasPrefix(str, PathSep) {
+		dir = str
+		name = path.Dir(dir)
+		fi, err := os.Stat(str)
+		if err != nil && os.IsExist(err) {
+			return name, dir, url, err
+			// fmt.Fprintln(os.Stderr, err)
+			// os.Exit(1)
+		}
+		if err != nil || fi == nil {
+			return name, dir, url, err
+		}
+	} else if strings.Contains(str, PathSep) {
+		if strings.Contains(str, nameSep) {
+			parts := strings.Split(str, nameSep)
+			if len(parts) != 2 {
+				err = fmt.Errorf("Invalid spec: '%s'", str)
+				return
+			}
+			name = parts[0]
+			url = parts[1]
+		} else {
+			// name = path.Base(str)
+			url = str
+		}
+	} else {
+		err = fmt.Errorf("Unknown git origin: '%s'", str)
+	}
+	return
 }
 
 func (r *Role) GetEnv() (map[string]string, error) {

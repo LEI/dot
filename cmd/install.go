@@ -20,7 +20,6 @@ var installCmd = &cobra.Command{
 	Short:   "Install dotfiles",
 	// Long:    ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// dot.DryRun = dryrun
 		if len(args) > 0 {
 			logger.Warnln("Extra arguments:", args)
 			return cmd.Help()
@@ -33,15 +32,17 @@ var installCmd = &cobra.Command{
 // type RoleHandlerFunc func(*role.Role) error
 
 func init() {
-	RootCmd.AddCommand(installCmd)
+	// DotCmd.AddCommand(installCmd)
 	// installCmd.Flags().BoolVarP(&, "", "", , "")
 	// Config.BindPFlags(installCmd.Flags())
 }
 
 func installRoles() error {
 	var handlers = []func(*role.Role) error{
-		validateRole,
-		initGitRepo,
+		func(r *role.Role) error {
+			logger.Infof("## Installing %s...\n", r.Title())
+			return r.Repo.CloneOrPull()
+		},
 		initRoleConfig,
 		do("pre", "install"),
 		installDirs,
@@ -50,7 +51,7 @@ func installRoles() error {
 		installTemplates,
 		do("post", "install"),
 	}
-	return apply(handlers...)
+	return apply(Dot.Roles, handlers...)
 }
 
 func installDirs(r *role.Role) error {
@@ -76,8 +77,17 @@ func installDirs(r *role.Role) error {
 func installLinks(r *role.Role) error {
 	var prefix string
 	for _, l := range r.GetLinks() {
+		var targetDir string
 		logger.Debugf("Symlink %s\n", l.Path)
 		l.Path = os.ExpandEnv(l.Path)
+		if strings.Contains(l.Path, ":") {
+			s := strings.Split(l.Path, ":")
+			if len(s) != 2 {
+				logger.Errorf("%s: Invalid link path", l.Path)
+			}
+			l.Path = s[0]
+			targetDir = s[1]
+		}
 		pattern := path.Join(r.Source, l.Path)
 		paths, err := dot.List(pattern, filterIgnored, only(l.Type))
 		if err != nil {
@@ -85,7 +95,10 @@ func installLinks(r *role.Role) error {
 		}
 		for _, source := range paths {
 			target := strings.Replace(source, r.Source, r.Target, 1)
-			linked, err := dot.InstallSymlink(source, target, removeOrBackup)
+			if targetDir != "" {
+				target = path.Join(target, targetDir)
+			}
+			linked, err := dot.SyncLink(source, target, removeOrBackup)
 			if err != nil {
 				return err
 			}
