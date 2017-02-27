@@ -8,6 +8,7 @@ import (
 	"github.com/LEI/dot/role"
 	// "io/ioutil"
 	"os"
+	"os/exec"
 	// "path"
 	// "time"
 )
@@ -34,12 +35,19 @@ func do(state string, action string) func(*role.Role) error {
 	return func(r *role.Role) error {
 		command := r.Config.GetString(key)
 		if command != "" {
-			if dot.DryRun {
-				return nil
-			}
-			logger.Infof("# %s -> %+v\n", key, command)
+			return nil
 		}
-		return nil
+		logger.Infof("$ %s\n", command)
+		if dot.DryRun {
+			return nil
+		}
+		cmd := exec.Command("bash", "-c", command)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			return err
+		}
 	}
 }
 

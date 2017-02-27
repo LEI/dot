@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	Quiet bool // = true
+	Quiet bool = true
 	Https bool
 )
 
