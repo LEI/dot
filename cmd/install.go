@@ -19,7 +19,7 @@ var installCmd = &cobra.Command{
 	Use:     "install [flags]",
 	Aliases: []string{"i"},
 	// SuggestFor: []string{},
-	Short:   "Install dotfiles",
+	Short: "Install dotfiles",
 	// Long:    ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {

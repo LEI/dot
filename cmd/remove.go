@@ -18,10 +18,10 @@ import (
 var RemoveEmpty bool
 
 var removeCmd = &cobra.Command{
-	Use:     "remove [flags]",
-	Aliases: []string{"rm"},
+	Use:        "remove [flags]",
+	Aliases:    []string{"rm"},
 	SuggestFor: []string{"delete", "uninstall"},
-	Short:   "Remove dotfiles",
+	Short:      "Remove dotfiles",
 	// Long:   ``,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// dot.DryRun = dryrun
