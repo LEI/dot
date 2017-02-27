@@ -34,7 +34,7 @@ func do(state string, action string) func(*role.Role) error {
 	key := state + "_" + action
 	return func(r *role.Role) error {
 		command := r.Config.GetString(key)
-		if command != "" {
+		if command == "" {
 			return nil
 		}
 		logger.Infof("$ %s\n", command)
