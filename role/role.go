@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	// "github.com/LEI/dot/config"
-	"github.com/LEI/git"
+	"github.com/LEI/dot/git"
 	"github.com/spf13/viper"
 	"os"
 	"path"

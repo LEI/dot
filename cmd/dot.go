@@ -4,7 +4,7 @@ import (
 	dot "github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/log"
 	"github.com/LEI/dot/role"
-	"github.com/LEI/git"
+	"github.com/LEI/dot/git"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
