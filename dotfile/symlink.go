@@ -1,7 +1,7 @@
 package dotfile
 
 import (
-	// "fmt"
+	"fmt"
 	"os"
 )
 
@@ -66,12 +66,17 @@ func SyncLink(source, target string, backup func(string, string) (bool, error)) 
 }
 
 func RemoveLink(source, target string) (bool, error) {
-	_, err := IsLink(target)
+	link, err := IsLink(target)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
 		}
 		return false, err
+	}
+	if link == "" {
+		return false, fmt.Errorf("%s is not a symlink to %s", target, source)
+	} else if link != source {
+		return false, fmt.Errorf("%s is a symlink to %s", target, link)
 	}
 	if DryRun {
 		return true, nil
