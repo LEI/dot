@@ -16,8 +16,11 @@ func LineInFile(path string, line string) (changed bool, err error) {
 		return false, err
 	}
 	if fi != nil {
-		contains, err := hasLineInFile(path, line)
-		if err != nil || contains {
+		b, err := ioutil.ReadFile(path)
+		if err != nil || len(b) == 0 {
+			return false, err
+		}
+		if Contains(string(b), line) {
 			return false, err
 		}
 	}
@@ -41,8 +44,24 @@ func LineOutFile(path string, line string) (changed bool, err error) {
 		return false, err
 	}
 	if fi != nil {
-		contains, err := hasLineInFile(path, line)
-		if err != nil || !contains {
+		b, err := ioutil.ReadFile(path)
+		if err != nil || len(b) == 0 {
+			return false, err
+		}
+		if len(b) == 0 {
+			if RemoveEmptyFile || prompt.Confirm("> Remove empty file %s?", path) {
+				if DryRun {
+					return true, nil
+				}
+				err := os.Remove(path)
+				if err != nil {
+					return false, err
+				}
+				return true, nil
+			}
+			return false, nil
+		}
+		if !Contains(string(b), line) {
 			return false, err
 		}
 	}
@@ -52,21 +71,16 @@ func LineOutFile(path string, line string) (changed bool, err error) {
 	return removeStringInFile(path, line+"\n")
 }
 
-func hasLineInFile(path string, line string) (bool, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil || len(b) == 0 {
-		return false, err
+func Contains(file string, line string) bool {
+	if file == "" {
+		return false
 	}
-	// defer b.Close()?
-	content := string(b)
-	if content != "" {
-		for _, s := range strings.Split(content, "\n") {
-			if strings.Contains(s, line) {
-				return true, nil
-			}
+	for _, s := range strings.Split(file, "\n") {
+		if strings.Contains(s, line) {
+			return true
 		}
 	}
-	return false, err
+	return false
 }
 
 func appendStringInFile(path string, str string) (changed bool, err error) {
