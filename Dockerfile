@@ -6,7 +6,7 @@ ca-certificates \
 curl \
 git-core \
 tmux \
-vim
+vim-nox
 # && rm -rf /var/lib/apt/lists/*
 
 # ENV GOPATH /go
