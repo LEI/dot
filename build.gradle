@@ -1,0 +1,6 @@
+// https://docs.travis-ci.com/user/languages/groovy
+task hello {
+    doLast {
+        println 'Hello world!'
+    }
+}
