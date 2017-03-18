@@ -1,22 +1,26 @@
 package cmd
 
 import (
-	dot "github.com/LEI/dot/dotfile"
-	"github.com/LEI/dot/git"
-	"github.com/LEI/dot/log"
-	"github.com/LEI/dot/role"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"os/exec"
 	"os/user"
 	"path"
 	"runtime"
 	"strings"
+
+	dot "github.com/LEI/dot/dotfile"
+	"github.com/LEI/dot/git"
+	"github.com/LEI/dot/log"
+	"github.com/LEI/dot/role"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-const OS = runtime.GOOS
-const shell = "bash"
+const (
+	OS = runtime.GOOS
+	shell = "bash"
+)
 
 var (
 	User       *user.User
