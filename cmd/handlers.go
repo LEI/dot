@@ -68,7 +68,15 @@ func only(t string) dot.FileHandler {
 }
 
 func filterIgnored(path string, fi os.FileInfo) error {
-	ignore, err := dot.Match(fi.Name(), DotIgnore...)
+	ignore, err := dot.Match(path, DotExclude...)
+	if err != nil {
+		return err
+	}
+	if ignore {
+		logger.Debugf("Ignore %s\n", fi.Name())
+		return dot.Skip
+	}
+	ignore, err = dot.Match(fi.Name(), DotIgnore...)
 	if err != nil {
 		return err
 	}

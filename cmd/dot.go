@@ -31,6 +31,7 @@ var (
 var (
 	Dot        = &role.Meta{}
 	DotIgnore  = []string{".git", "*.md", "*.tpl", "*.json", "*.yml", "*.yaml"}
+	DotExclude = []string{}
 	Config     = viper.New()
 	configFile = ""
 	configName = ".dotrc"
@@ -104,6 +105,7 @@ func initPersistentFlags(cmd *cobra.Command) {
 	DotCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "Configuration file `path`")
 	DotCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", debug, "Verbose output")
 	DotCmd.PersistentFlags().BoolVarP(&dot.DryRun, "dry-run", "D", dot.DryRun, "Check-mode")
+	DotCmd.PersistentFlags().StringSliceVarP(&DotExclude, "exclude", "x", DotExclude, "Exclude `pattern`")
 	DotCmd.PersistentFlags().StringSliceVarP(&roleFilter, "filter", "f", roleFilter, "Filter roles by `name`")
 	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Default to HTTPS for git remotes")
 	DotCmd.PersistentFlags().StringVarP(&Dot.Source, "source", "s", CurrentDir, "Dot.Source `directory`")
