@@ -12,7 +12,7 @@ services:
       GIT_AUTHOR_EMAIL: do@ck.er
     command: |
       -l -c '
-      run dot --https;
+      # run dot --https;
       # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +PlugInstall +qall; exit";
       exec bash -l;'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
@@ -23,8 +23,7 @@ services:
       - dotimg
     # entrypoint: /bin/bash
     command: |
-      -l -c '
-      dot -h'
+      -l -c 'dot -h;
       # tail_bashrc="$$(tail -n1 ~/.bashrc)"
       # yes | run dot -s $$DOT --https
       # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +PlugInstall +qall; exit"
