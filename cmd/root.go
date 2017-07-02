@@ -17,12 +17,18 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
+
+var (
+	Directory string
+)
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -51,14 +57,11 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
+	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "config file")
+	RootCmd.PersistentFlags().StringVarP(&Directory, "dir", "d", "", "Directory path")
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "c", "config file (default is $HOME/.dot.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Local flags will onlt run when this action is called directly.
+	// RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -68,11 +71,48 @@ func initConfig() {
 	}
 
 	viper.SetConfigName(".dot") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")  // adding home directory as first search path
-	viper.AutomaticEnv()          // read in environment variables that match
+	viper.AddConfigPath("$HOME") // adding home directory as first search path
+	viper.AddConfigPath(Directory)
+	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func parseArgs(args []string, cb func(string, string) error) error {
+	for _, arg := range args {
+		parts := strings.Split(arg, ":")
+		if len(parts) != 2 {
+			fmt.Println("Invalid arg", arg)
+			os.Exit(1)
+		}
+		source := os.ExpandEnv(parts[0])
+		if !path.IsAbs(source) {
+			source = path.Join(Directory, source)
+		}
+		source = path.Clean(source)
+		target := os.ExpandEnv(parts[1])
+		_, err := createDir(target)
+		if err != nil {
+			return err
+		}
+		err = cb(source, target)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createDir(dir string) (bool, error) {
+	fi, err := os.Stat(dir)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	if err == nil && fi.IsDir() {
+		return false, nil
+	}
+	return true, os.MkdirAll(dir, defaultDirMode)
 }

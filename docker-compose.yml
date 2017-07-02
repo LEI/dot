@@ -21,9 +21,36 @@ services:
     image: lei/dot
     depends_on:
       - dotimg
+    container_name: dot_test
     # entrypoint: /bin/bash
     command: |
-      -l -c 'dot -h;
+      -l -c '
+      touch ~/.dot/git;
+      touch ~/.gitconfig;
+      touch ~/.gitconfig.local;
+      dot clone -u "https://github.com/LEI/dot-git" -d "$$HOME/.dot/git";
+      dot clone -u "https://github.com/LEI/dot-tmux" -d "$$HOME/.dot/tmux";
+      dot clone -u "https://github.com/LEI/dot-vim" -d "$$HOME/.dot/vim";
+      dot link -d "$$HOME/.dot/git" \
+        ".gitconfig:$$HOME" \
+        ".gitignore:$$HOME";
+      dot template -d "$$HOME/.dot/git" \
+        ".gitconfig.local.tpl:$$HOME";
+      dot link -d "$$HOME/.dot/tmux" \
+        "tmux.conf:$$HOME/.tmux" \
+        "tmux-*.conf:$$HOME/.tmux" \
+        "tmux.\$$OS.conf:$$HOME/.tmux" \
+        "colors:$$HOME/.tmux";
+      dot link -d "$$HOME/.dot/vim" \
+        "autoload/*:$$HOME/.vim/autoload" \
+        "*.vim:$$HOME/.vim" \
+        "config:$$HOME/.vim" \
+        "ftdetect:$$HOME/.vim" \
+        "ftplugin:$$HOME/.vim" \
+        "plugin:$$HOME/.vim";
+        #"[^.]*[^\.md]?:$$HOME/.vim"
+      ls -la ~
+      cat ~/.git*
       # tail_bashrc="$$(tail -n1 ~/.bashrc)"
       # yes | run dot -s $$DOT --https
       # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +PlugInstall +qall; exit"
