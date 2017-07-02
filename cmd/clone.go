@@ -48,7 +48,7 @@ func init() {
 
 func cloneRepository(url string, dir string) error {
 	// fmt.Printf("git clone %s %s --recursive\n", url, dir)
-	args := []string{"clone", url, dir, "--recursive"} // --quiet
+	args := []string{"clone", url, dir, "--recursive", "--quiet"}
 	err := executeCmd("git", args...)
 	if err != nil {
 		return err
