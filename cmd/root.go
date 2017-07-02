@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -115,4 +116,13 @@ func createDir(dir string) (bool, error) {
 		return false, nil
 	}
 	return true, os.MkdirAll(dir, defaultDirMode)
+}
+
+
+func executeCmd(name string, args ...string) error {
+	fmt.Printf("%s %s\n", name, strings.Join(args, " "))
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
