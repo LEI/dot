@@ -28,7 +28,7 @@ var (
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
 	Short: "Clone a git repository",
-	Long: ``,
+	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		_, err := cloneRepository(URL, Directory)
 		if err != nil {
@@ -50,7 +50,7 @@ func cloneRepository(url string, dir string) (*git.Repository, error) {
 	var isBare = false
 	fmt.Printf("git clone %s %s --recursive\n", url, dir)
 	r, err := git.PlainClone(dir, isBare, &git.CloneOptions{
-		URL: url,
+		URL:               url,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 	})
 	if err != nil {

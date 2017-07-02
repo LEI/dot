@@ -29,8 +29,8 @@ const (
 )
 
 var (
-	Target string
-	OnlyDirs bool
+	Target         string
+	OnlyDirs       bool
 	defaultDirMode os.FileMode = 0755
 )
 
@@ -38,9 +38,9 @@ var (
 var linkCmd = &cobra.Command{
 	Use:   "link",
 	Short: "Symlink",
-	Long: ``,
+	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return parseArgs(args, func (source, target string) error {
+		return parseArgs(args, func(source, target string) error {
 			_, err := linkPattern(source, target, Directory)
 			if err != nil {
 				return err
