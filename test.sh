@@ -12,10 +12,10 @@ run() { log "\$ $*"; "$@" || exit $?; }
 
 dot clone -u "https://github.com/LEI/dot-git" -d "$HOME/.dot/git"
 dot link -d "$HOME/.dot/git" \
-	".gitconfig:$HOME" \
-	".gitignore:$HOME"
+	".gitconfig" \
+	".gitignore"
 dot template -d "$HOME/.dot/git" \
-	".gitconfig.local.tpl:$HOME"
+	".gitconfig.local.tpl"
 
 dot clone -u "https://github.com/LEI/dot-tmux" -d "$HOME/.dot/tmux"
 dot link -d "$HOME/.dot/tmux" \

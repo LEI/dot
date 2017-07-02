@@ -85,7 +85,9 @@ func initConfig() {
 func parseArgs(args []string, cb func(string, string) error) error {
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
-		if len(parts) != 2 {
+		if len(parts) == 1 {
+			parts[1] = "$HOME"
+		} else if len(parts) != 2 {
 			fmt.Println("Invalid arg", arg)
 			os.Exit(1)
 		}
