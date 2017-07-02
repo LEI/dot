@@ -1,5 +1,5 @@
 sudo: required
-group: deprecated-2017Q2
+#group: deprecated-2017Q2
 
 language: go
 
@@ -16,9 +16,9 @@ before_install:
 
 install:
   # - golint
-  - go vet
-  - go get github.com/LEI/dot
-  - go install
+  # - go vet
+  # - go get github.com/LEI/dot
+  # - go install
   - docker-compose build
 
 script:
