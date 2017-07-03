@@ -15,7 +15,9 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -32,7 +34,7 @@ const (
 
 var (
 	Directory string
-	cfgFile string
+	cfgFile   string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -82,6 +84,8 @@ func initConfig() {
 
 	viper.SetConfigName(".dot")  // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
+	viper.AddConfigPath("$HOME/.dot")
+	viper.AddConfigPath("/etc/dot")
 	viper.AddConfigPath(Directory)
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -91,7 +95,16 @@ func initConfig() {
 	}
 }
 
-func parseArgs(args []string, cb func(string, string) error) error {
+func parseArgs(key string, args []string, cb func(string, string) error) error {
+	if len(args) == 1 && args[0] == "-" {
+		viper.SetConfigType("json")
+		stdin, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("Error occured while reading from stdin: %s.", err)
+		}
+		viper.ReadConfig(bytes.NewBuffer(stdin))
+		args = viper.GetStringSlice(key)
+	}
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
 		if len(parts) == 1 {
@@ -128,7 +141,6 @@ func createDir(dir string) (bool, error) {
 	}
 	return true, os.MkdirAll(dir, defaultDirMode)
 }
-
 
 func executeCmd(name string, args ...string) error {
 	fmt.Printf("%s %s\n", name, strings.Join(args, " "))

@@ -69,7 +69,7 @@ var templateCmd = &cobra.Command{
 				fmt.Fprintf(os.Stderr, "Empty variable '%s'", k)
 			}
 		}
-		return parseArgs(args, func(source, target string) error {
+		return parseArgs("template", args, func(source, target string) error {
 			err := templatePattern(source, target, Directory)
 			if err != nil {
 				return err

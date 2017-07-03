@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	Target         string
-	OnlyDirs       bool
+	// Source, Target         string
+	// OnlyDirs       bool
 	defaultDirMode os.FileMode = 0755
 )
 
@@ -35,7 +35,7 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return parseArgs(args, func(source, target string) error {
+		return parseArgs("link", args, func(source, target string) error {
 			err := linkParse(source, target, Directory)
 			if err != nil {
 				return err
@@ -49,7 +49,7 @@ func init() {
 	RootCmd.AddCommand(linkCmd)
 
 	// linkCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory")
-	linkCmd.Flags().StringVarP(&Target, "target", "t", "", "Target `path`, directory or file")
+	// linkCmd.Flags().StringVarP(&Target, "target", "t", "", "Target `path`, directory or file")
 	// linkCmd.Flags().BoolVarP(&OnlyDirs, "only-dirs", "", OnlyDirs, "Ignore files")
 }
 

@@ -11,11 +11,13 @@ run() { log "\$ $*"; "$@" || exit $?; }
 #touch ~/.gitconfig.local;
 
 dot clone -u "https://github.com/LEI/dot-git" -d "$HOME/.dot/git"
-dot link -d "$HOME/.dot/git" \
-	".gitconfig" \
-	".gitignore"
-dot template -d "$HOME/.dot/git" \
-	".gitconfig.local.tpl"
+# dot link -d "$HOME/.dot/git" \
+# 	".gitconfig" \
+# 	".gitignore"
+# dot template -d "$HOME/.dot/git" \
+# 	".gitconfig.local.tpl"
+dot link -d "$HOME/.dot/git" - <<< '{"link": [".gitconfig", ".gitignore"]}'
+dot template -d "$HOME/.dot/git" - <<< '{"template": [".gitconfig.local.tpl"]}'
 
 dot clone -u "https://github.com/LEI/dot-tmux" -d "$HOME/.dot/tmux"
 dot link -d "$HOME/.dot/tmux" \
