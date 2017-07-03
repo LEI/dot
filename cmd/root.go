@@ -19,16 +19,20 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+const (
+	OS = runtime.GOOS
+)
 
 var (
 	Directory string
+	cfgFile string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -56,6 +60,11 @@ func Execute() {
 }
 
 func init() {
+	// err := os.Setenv("OS", OS)
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, err)
+	// }
+
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "config file")
@@ -86,7 +95,7 @@ func parseArgs(args []string, cb func(string, string) error) error {
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
 		if len(parts) == 1 {
-			parts[1] = "$HOME"
+			parts = append(parts, "$HOME")
 		} else if len(parts) != 2 {
 			fmt.Println("Invalid arg", arg)
 			os.Exit(1)

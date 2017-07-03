@@ -35,6 +35,40 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// vars := map[string]string{"OS": OS}
+		env := Env()
+		env["OS"] = OS
+		for k, v := range env {
+			if v == "" { // Lookup environment if the variable is empty
+				val, ok := os.LookupEnv(k)
+				if !ok {
+					fmt.Fprintf(os.Stderr, "LookupEnv failed for '%s'", k)
+					continue
+				}
+				v = val
+			}
+			if v != "" { // Parse string as a template
+				templ, err := template.New(k).Option("missingkey=zero").Parse(v)
+				if err != nil {
+					return err
+				}
+				buf := &bytes.Buffer{}
+				err = templ.Execute(buf, Env())
+				if err != nil {
+					return err
+				}
+				v = buf.String()
+			}
+			// fmt.Printf("%s=\"%s\"\n", k, v)
+			if v != "" {
+				err := os.Setenv(k, v)
+				if err != nil {
+					return err
+				}
+			} else {
+				fmt.Fprintf(os.Stderr, "Empty variable '%s'", k)
+			}
+		}
 		return parseArgs(args, func(source, target string) error {
 			err := templatePattern(source, target, Directory)
 			if err != nil {
@@ -83,7 +117,7 @@ func templatePattern(source, target, dir string) error {
 			return err
 		}
 	}
-	fmt.Println("gg", source, target)
+	fmt.Printf("envsubst < %s | tee %s\n", source, target)
 	return nil
 }
 

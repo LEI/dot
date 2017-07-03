@@ -15,6 +15,7 @@ package cmd
 
 import (
 	// "fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	// "gopkg.in/src-d/go-git.v4"
@@ -30,11 +31,16 @@ var cloneCmd = &cobra.Command{
 	Short: "Clone a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := cloneRepository(URL, Directory)
-		if err != nil {
+		fi, err := os.Stat(Directory)
+		if err != nil && os.IsExist(err) {
+			// fmt.Fprintln(os.Stderr, err)
+			// os.Exit(1)
 			return err
 		}
-		return nil
+		if fi != nil {
+			return pullRepository(Directory, "origin", "master")
+		}
+		return cloneRepository(URL, Directory)
 	},
 }
 
@@ -47,8 +53,16 @@ func init() {
 }
 
 func cloneRepository(url string, dir string) error {
-	// fmt.Printf("git clone %s %s --recursive\n", url, dir)
 	args := []string{"clone", url, dir, "--recursive", "--quiet"}
+	err := executeCmd("git", args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func pullRepository(dir string, remote string, branch string) error {
+	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
 	err := executeCmd("git", args...)
 	if err != nil {
 		return err

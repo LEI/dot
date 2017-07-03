@@ -18,14 +18,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	// "strings"
 
 	"github.com/spf13/cobra"
-)
-
-const (
-	OS = runtime.GOOS
 )
 
 var (
@@ -41,7 +36,7 @@ var linkCmd = &cobra.Command{
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return parseArgs(args, func(source, target string) error {
-			_, err := linkPattern(source, target, Directory)
+			err := linkParse(source, target, Directory)
 			if err != nil {
 				return err
 			}
@@ -51,11 +46,6 @@ var linkCmd = &cobra.Command{
 }
 
 func init() {
-	err := os.Setenv("OS", OS)
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	RootCmd.AddCommand(linkCmd)
 
 	// linkCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory")
@@ -63,19 +53,67 @@ func init() {
 	// linkCmd.Flags().BoolVarP(&OnlyDirs, "only-dirs", "", OnlyDirs, "Ignore files")
 }
 
-func linkPattern(source, target, dir string) (bool, error) {
+func linkParse(source, target, dir string) error {
 	paths, err := filepath.Glob(source)
 	if err != nil {
-		return false, err
+		return err // false
 	}
 	for _, p := range paths {
 		_, f := path.Split(p)
 		t := path.Join(target, f)
-		fmt.Printf("ln -s %s %s\n", p, t)
-		err := os.Symlink(p, t)
+		err := linkFile(p, t)
 		if err != nil {
-			return false, err
+			return err
 		}
 	}
-	return true, nil
+	return nil // true
+}
+
+func linkFile(source, target string) error {
+	real, err := readLink(target)
+	if err != nil && os.IsExist(err) {
+		return err
+	}
+	if real == source { // Symlink already exists
+		fmt.Printf("ln -s %s %s\n", source, target)
+		return nil
+	}
+	if real != "" {
+		fmt.Fprintf(os.Stderr, "[WARN] target %s is a link to %s\n", target, real)
+		// return nil
+	}
+	fi, err := os.Stat(target)
+	if err != nil && os.IsExist(err) {
+		return err
+	}
+	if fi != nil {
+		fmt.Fprintf(os.Stderr, "[WARN] target %s exists\n", target)
+		// os.Exit(1)
+		return nil
+	}
+	fmt.Printf("ln -s %s %s\n", source, target)
+	err = os.Symlink(source, target)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func isSymlink(fi os.FileInfo) bool {
+	return fi != nil && fi.Mode()&os.ModeSymlink != 0
+}
+
+func readLink(path string) (string, error) {
+	fi, err := os.Lstat(path)
+	if err != nil { // os.IsExist(err)
+		// if os.IsNotExist(err) {
+		// return path, nil
+		// }
+		return "", err
+	}
+	if !isSymlink(fi) {
+		return "", nil
+	}
+	real, err := os.Readlink(path)
+	return real, err
 }
