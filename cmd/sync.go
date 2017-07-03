@@ -23,50 +23,74 @@ import (
 
 var (
 	URL string
+	Remote = "origin"
+	Branch = "master"
+	SkipSync bool
+	synced []string
 )
 
-// cloneCmd represents the clone command
-var cloneCmd = &cobra.Command{
-	Use:   "clone",
-	Short: "Clone a git repository",
+// syncCmd represents the sync command
+var syncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fi, err := os.Stat(Directory)
-		if err != nil && os.IsExist(err) {
-			// fmt.Fprintln(os.Stderr, err)
-			// os.Exit(1)
-			return err
-		}
-		if fi != nil {
-			return pullRepository(Directory, "origin", "master")
-		}
-		return cloneRepository(URL, Directory)
+		return cloneOrPull(Directory) // args...
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(cloneCmd)
+	RootCmd.AddCommand(syncCmd)
 
-	// cloneCmd.PersistentFlags().String("foo", "", "A help for foo")
+	RootCmd.PersistentFlags().BoolVarP(&SkipSync, "no-sync", "n", SkipSync, "Skip repo update")
 
-	cloneCmd.Flags().StringVarP(&URL, "url", "u", "", "Repository URL")
+	syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
+	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
 }
 
-func cloneRepository(url string, dir string) error {
-	args := []string{"clone", url, dir, "--recursive", "--quiet"}
-	err := executeCmd("git", args...)
-	if err != nil {
+func cloneOrPull(dir string) error {
+	if SkipSync {
+		return nil
+	}
+	for _, c := range synced {
+		if c == dir {
+			// Already updated
+			return nil
+		}
+	}
+	fi, err := os.Stat(dir)
+	if err != nil && os.IsExist(err) {
+		// fmt.Fprintln(os.Stderr, err)
+		// os.Exit(1)
+		return err
+	}
+	if fi != nil {
+		return pullRepo(dir, Remote, Branch)
+	}
+	if err = cloneRepo(URL, dir); err != nil {
 		return err
 	}
 	return nil
 }
 
-func pullRepository(dir string, remote string, branch string) error {
+func cloneRepo(url string, dir string) error {
+	args := []string{"clone", url, dir, "--recursive", "--quiet"}
+	err := executeCmd("git", args...)
+	if err != nil {
+		return err
+	}
+	synced = append(synced, dir)
+	return nil
+}
+
+func pullRepo(dir string, remote string, branch string) error {
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
 	err := executeCmd("git", args...)
 	if err != nil {
 		return err
 	}
+	synced = append(synced, dir)
 	return nil
 }
 

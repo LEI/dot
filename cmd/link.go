@@ -35,6 +35,10 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		err := cloneOrPull(Directory)
+		if err != nil {
+			return err
+		}
 		return parseArgs("link", args, func(source, target string) error {
 			err := linkParse(source, target, Directory)
 			if err != nil {

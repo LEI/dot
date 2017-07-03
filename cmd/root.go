@@ -23,6 +23,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,16 +48,27 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := cloneOrPull(Directory); err != nil {
+			return err
+		}
+		linkList := viper.GetStringSlice("link")
+		if err := linkCmd.RunE(linkCmd, linkList); err != nil {
+			return err
+		}
+		templateList := viper.GetStringSlice("template")
+		if err := templateCmd.RunE(templateCmd, templateList); err != nil {
+			return err
+		}
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
 	}
 }
@@ -97,12 +109,15 @@ func initConfig() {
 
 func parseArgs(key string, args []string, cb func(string, string) error) error {
 	if len(args) == 1 && args[0] == "-" {
-		viper.SetConfigType("json")
+		format := "json"
+		viper.SetConfigType(format)
 		stdin, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("Error occured while reading from stdin: %s.", err)
 		}
 		viper.ReadConfig(bytes.NewBuffer(stdin))
+		args = viper.GetStringSlice(key)
+	} else if viper.ConfigFileUsed() != "" {
 		args = viper.GetStringSlice(key)
 	}
 	for _, arg := range args {
@@ -129,6 +144,59 @@ func parseArgs(key string, args []string, cb func(string, string) error) error {
 		}
 	}
 	return nil
+}
+
+func GetEnv() (map[string]string, error) {
+	env := Env() // make(map[string]string, 0)
+	for key, val := range Env() {
+		env[key] = val
+	}
+	for k, v := range viper.GetStringMapString("env") {
+		k = strings.ToTitle(k)
+		if v == "" { // Lookup environment if the variable is empty
+			val, ok := os.LookupEnv(k)
+			if !ok {
+				fmt.Fprintf(os.Stderr, "# LookupEnv failed for '%s'", k)
+				continue
+			}
+			v = val
+		}
+		if v != "" { // Parse string as a template
+			templ, err := template.New(k).Option("missingkey=zero").Parse(v)
+			if err != nil {
+				return env, err
+			}
+			buf := &bytes.Buffer{}
+			err = templ.Execute(buf, Env())
+			if err != nil {
+				return env, err
+			}
+			v = buf.String()
+		}
+		// fmt.Printf("%s=\"%s\"\n", k, v)
+		if v != "" { // Set the environment variable
+			err := os.Setenv(k, v)
+			if err != nil {
+				return env, err
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "# Empty environment variable '%s'", k)
+		}
+		env[k] = v
+	}
+	return env, nil
+}
+
+func Env() map[string]string {
+	env := make(map[string]string, 0)
+	for _, i := range os.Environ() {
+		sep := strings.Index(i, "=")
+		env[i[0:sep]] = i[sep+1:]
+	}
+	if _, ok := env["OS"]; !ok {
+		env["OS"] = OS
+	}
+	return env
 }
 
 func createDir(dir string) (bool, error) {

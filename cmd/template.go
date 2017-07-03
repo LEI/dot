@@ -35,39 +35,9 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// vars := map[string]string{"OS": OS}
-		env := Env()
-		env["OS"] = OS
-		for k, v := range env {
-			if v == "" { // Lookup environment if the variable is empty
-				val, ok := os.LookupEnv(k)
-				if !ok {
-					fmt.Fprintf(os.Stderr, "LookupEnv failed for '%s'", k)
-					continue
-				}
-				v = val
-			}
-			if v != "" { // Parse string as a template
-				templ, err := template.New(k).Option("missingkey=zero").Parse(v)
-				if err != nil {
-					return err
-				}
-				buf := &bytes.Buffer{}
-				err = templ.Execute(buf, Env())
-				if err != nil {
-					return err
-				}
-				v = buf.String()
-			}
-			// fmt.Printf("%s=\"%s\"\n", k, v)
-			if v != "" {
-				err := os.Setenv(k, v)
-				if err != nil {
-					return err
-				}
-			} else {
-				fmt.Fprintf(os.Stderr, "Empty variable '%s'", k)
-			}
+		err := cloneOrPull(Directory)
+		if err != nil {
+			return err
 		}
 		return parseArgs("template", args, func(source, target string) error {
 			err := templatePattern(source, target, Directory)
@@ -102,7 +72,11 @@ func templatePattern(source, target, dir string) error {
 		return err
 	}
 	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, Env())
+	env, err := GetEnv()
+	if err != nil {
+		return err
+	}
+	err = tmpl.Execute(buf, env)
 	if err != nil {
 		return err
 	}
@@ -112,7 +86,7 @@ func templatePattern(source, target, dir string) error {
 		return err
 	}
 	if str != string(b) {
-		_, err := WriteString(target, str)
+		err := ioutil.WriteFile(target, []byte(str), defaultFileMode)
 		if err != nil {
 			return err
 		}
@@ -135,13 +109,4 @@ func WriteString(path string, str string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
-}
-
-func Env() map[string]string {
-	env := make(map[string]string, 0)
-	for _, i := range os.Environ() {
-		sep := strings.Index(i, "=")
-		env[i[0:sep]] = i[sep+1:]
-	}
-	return env
 }
