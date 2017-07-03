@@ -35,6 +35,7 @@ const (
 
 var (
 	Directory string
+	StdinFormat = "json"
 	cfgFile   string
 )
 
@@ -52,12 +53,10 @@ to quickly create a Cobra application.`,
 		if err := cloneOrPull(Directory); err != nil {
 			return err
 		}
-		linkList := viper.GetStringSlice("link")
-		if err := linkCmd.RunE(linkCmd, linkList); err != nil {
+		if err := linkCmd.RunE(linkCmd, viper.GetStringSlice("link")); err != nil {
 			return err
 		}
-		templateList := viper.GetStringSlice("template")
-		if err := templateCmd.RunE(templateCmd, templateList); err != nil {
+		if err := templateCmd.RunE(templateCmd, viper.GetStringSlice("template")); err != nil {
 			return err
 		}
 		return nil
@@ -83,6 +82,7 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "config file")
 	RootCmd.PersistentFlags().StringVarP(&Directory, "dir", "d", "", "Directory path")
+	RootCmd.PersistentFlags().StringVarP(&StdinFormat, "format", "f", StdinFormat, "Stdin format (json|toml|yaml)")
 
 	// Local flags will onlt run when this action is called directly.
 	// RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -101,6 +101,8 @@ func initConfig() {
 	viper.AddConfigPath(Directory)
 	viper.AutomaticEnv() // read in environment variables that match
 
+	// viper.WatchConfig() // Read config file while running
+
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
@@ -108,18 +110,18 @@ func initConfig() {
 }
 
 func parseArgs(key string, args []string, cb func(string, string) error) error {
-	if len(args) == 1 && args[0] == "-" {
-		format := "json"
-		viper.SetConfigType(format)
-		stdin, err := ioutil.ReadAll(os.Stdin)
+	if len(args) >= 1 && args[0] == "-" { // Read config from stdin
+		viper.SetConfigType(StdinFormat)
+		in, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("Error occured while reading from stdin: %s.", err)
 		}
-		viper.ReadConfig(bytes.NewBuffer(stdin))
+		viper.ReadConfig(bytes.NewBuffer(in))
 		args = viper.GetStringSlice(key)
 	} else if viper.ConfigFileUsed() != "" {
 		args = viper.GetStringSlice(key)
 	}
+	args = viper.GetStringSlice(key)
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
 		if len(parts) == 1 {

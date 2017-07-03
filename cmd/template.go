@@ -39,6 +39,7 @@ var templateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		fmt.Println("tpl =>", args)
 		return parseArgs("template", args, func(source, target string) error {
 			err := templatePattern(source, target, Directory)
 			if err != nil {

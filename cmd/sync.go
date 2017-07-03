@@ -42,9 +42,9 @@ var syncCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(syncCmd)
 
+	RootCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	RootCmd.PersistentFlags().BoolVarP(&SkipSync, "no-sync", "n", SkipSync, "Skip repo update")
 
-	syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
 }
@@ -70,6 +70,10 @@ func cloneOrPull(dir string) error {
 	}
 	if err = cloneRepo(URL, dir); err != nil {
 		return err
+	}
+	if dir == Directory {
+		// Read config file
+		initConfig()
 	}
 	return nil
 }
