@@ -31,7 +31,7 @@ var (
 var execCmd = &cobra.Command{
 	Use:   "exec",
 	Short: "Execute",
-	Long: ``,
+	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		err := cloneOrPull(Directory)
 		if err != nil {

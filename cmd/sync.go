@@ -22,10 +22,10 @@ import (
 )
 
 var (
-	URL string
+	URL    string
 	Remote = "origin"
 	Branch = "master"
-	NoPull bool
+	Pull   bool
 	synced []string
 )
 
@@ -42,8 +42,8 @@ var syncCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(syncCmd)
 
-	RootCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Upstream repository")
-	RootCmd.PersistentFlags().BoolVarP(&NoPull, "no-pull", "n", NoPull, "Skip update")
+	RootCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	RootCmd.PersistentFlags().BoolVarP(&Pull, "pull", "n", Pull, "Update if already cloned")
 
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
@@ -86,7 +86,7 @@ func cloneRepo(url string, dir string) error {
 }
 
 func pullRepo(dir string, remote string, branch string) error {
-	if NoPull {
+	if !Pull {
 		return nil
 	}
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}

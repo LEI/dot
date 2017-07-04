@@ -34,10 +34,10 @@ const (
 )
 
 var (
-	HomeDir = os.Getenv("HOME")
-	Directory string
+	HomeDir     = os.Getenv("HOME")
+	Directory   string
 	StdinFormat = "json"
-	cfgFile   string
+	cfgFile     string
 )
 
 // RootCmd represents the base command when called without any subcommands
