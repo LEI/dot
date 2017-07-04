@@ -23,9 +23,9 @@ import (
 
 var (
 	URL    string
-	Remote = "origin"
-	Branch = "master"
-	Pull   bool
+	Remote string = "origin"
+	Branch string = "master"
+	Pull bool = true
 	synced []string
 )
 
@@ -68,10 +68,9 @@ func cloneOrPull(dir string) error {
 	if err = cloneRepo(URL, dir); err != nil {
 		return err
 	}
-	if dir == Directory {
-		// Read config file
-		initConfig()
-	}
+	// if dir == Directory {}
+	// Read config file
+	initConfig()
 	return nil
 }
 

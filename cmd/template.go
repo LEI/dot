@@ -35,10 +35,10 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := cloneOrPull(Directory)
-		if err != nil {
-			return err
-		}
+		// err := cloneOrPull(Directory)
+		// if err != nil {
+		// 	return err
+		// }
 		return parseArgs("template", args, func(source, target string) error {
 			err := templatePattern(source, target, Directory)
 			if err != nil {
