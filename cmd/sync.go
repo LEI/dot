@@ -36,7 +36,7 @@ var syncCmd = &cobra.Command{
 	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cloneOrPull(Directory, URL) // args...
+		return syncCommand(Directory, URL) // args...
 	},
 }
 
@@ -52,7 +52,8 @@ func init() {
 	// viper.BindPFlag("url", RootCmd.PersistentFlags().Lookup("url"))
 }
 
-func cloneOrPull(dir, url string) error {
+// syncCommand clone or pull
+func syncCommand(dir, url string) error {
 	for _, c := range synced {
 		if c == dir {
 			// Already updated

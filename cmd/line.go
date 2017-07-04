@@ -33,7 +33,7 @@ var lineCmd = &cobra.Command{
 	Short: "Add or remove a line in file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return doLine(viper.GetStringMapString("line"))
+		return lineCommand(viper.GetStringMapString("line"))
 	},
 }
 
@@ -43,7 +43,7 @@ func init() {
 	// lineCmd.Flags().BoolVarP(&Bool, "bool", "b", Bool, "Example boolean")
 }
 
-func doLine(in map[string]string) error {
+func lineCommand(in map[string]string) error {
 	for dst, str := range in {
 		dst = os.ExpandEnv(dst)
 		if !path.IsAbs(dst) {

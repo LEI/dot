@@ -33,14 +33,7 @@ var execCmd = &cobra.Command{
 	Short: "Execute",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// err := cloneOrPull(Directory, URL)
-		// if err != nil {
-		// 	return err
-		// }
-		// if len(args) == 0 {
-		// 	args = append(args, viper.GetStringSlice("exec")...)
-		// }
-		return doExec(args)
+		return execCommand(args)
 	},
 }
 
@@ -51,7 +44,10 @@ func init() {
 }
 
 
-func doExec(in []string) error {
+func execCommand(in []string) error {
+	// if len(args) == 0 {
+	// 	args = append(args, viper.GetStringSlice("exec")...)
+	// }
 	// args = append([]string{"-c"}, str)
 	for _, str := range in {
 		err := executeCmd(Shell, []string{"-c", str}...)

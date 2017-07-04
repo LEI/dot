@@ -34,11 +34,7 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// err := cloneOrPull(Directory, URL)
-		// if err != nil {
-		// 	return err
-		// }
-		return doLink(args)
+		return linkCommand(args)
 	},
 }
 
@@ -49,14 +45,20 @@ func init() {
 	// linkCmd.Flags().StringVarP(&Target, "target", "t", "", "Target `path`, directory or file")
 }
 
-func doLink(in []string) error {
-	return initArgs("link", in, func(source, target string) error {
-		err := linkParse(source, target, Directory)
+func linkCommand(in []string) error {
+	for _, arg := range in {
+		err := parseArg(arg, func(source, target string) error {
+			err := linkParse(source, target, Directory)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-		return nil
-	})
+	}
+	return nil
 }
 
 func linkParse(source, target, dir string) error {

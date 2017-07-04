@@ -55,7 +55,7 @@ roles:
   - name: termux
     url: "https://github.com/LEI/dot-termux"
     os: ["android"]
-    # exec: "termux-setup-storage"
+    exec: "termux-setup-storage"
     link:
       - ".termux/*:.termux"
     done: "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \\;"

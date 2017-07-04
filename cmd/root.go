@@ -56,6 +56,7 @@ type role struct {
 	Link []string
 	Template []string
 	Line map[string]string
+	Done []string
 	Env map[string]string
 }
 
@@ -136,7 +137,7 @@ func initConfig() {
 	}
 }
 
-func initArgs(key string, args []string, cb func(string, string) error) error {
+/*func readStdin(args []string, cb func(string, string) error) error {
 	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
 	// 	in, err := ioutil.ReadAll(os.Stdin)
 	// 	if err != nil {
@@ -147,33 +148,30 @@ func initArgs(key string, args []string, cb func(string, string) error) error {
 	// } else if viper.ConfigFileUsed() != "" {
 	// 	args = viper.GetStringSlice(key)
 	// }
-	for _, arg := range args {
-		parts := strings.Split(arg, ":")
-		if len(parts) == 1 {
-			parts = append(parts, Target)
-		} else if len(parts) != 2 {
-			fmt.Println("Invalid arg", arg)
-			os.Exit(1)
-		}
-		source := os.ExpandEnv(parts[0])
-		if !path.IsAbs(source) {
-			source = path.Join(Directory, source)
-		}
-		source = path.Clean(source)
-		target := os.ExpandEnv(parts[1])
-		if !path.IsAbs(target) {
-			target = path.Join(Target, target)
-		}
-		_, err := createDir(target)
-		if err != nil {
-			return err
-		}
-		err = cb(source, target)
-		if err != nil {
-			return err
-		}
+}*/
+
+func parseArg(arg string, cb func(string, string) error) error {
+	parts := strings.Split(arg, ":")
+	if len(parts) == 1 {
+		parts = append(parts, Target)
+	} else if len(parts) != 2 {
+		fmt.Println("Invalid arg", arg)
+		os.Exit(1)
 	}
-	return nil
+	source := os.ExpandEnv(parts[0])
+	if !path.IsAbs(source) {
+		source = path.Join(Directory, source)
+	}
+	source = path.Clean(source)
+	target := os.ExpandEnv(parts[1])
+	if !path.IsAbs(target) {
+		target = path.Join(Target, target)
+	}
+	_, err := createDir(target)
+	if err != nil {
+		return err
+	}
+	return cb(source, target)
 }
 
 func initRole(role role) (role, error) {
@@ -201,19 +199,22 @@ func initRole(role role) (role, error) {
 
 	Directory = role.Directory
 
-	if err := cloneOrPull(role.Directory, role.URL); err != nil {
+	if err := syncCommand(role.Directory, role.URL); err != nil {
 		return role, err
 	}
-	if err := doExec(role.Exec); err != nil {
+	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}
-	if err := doLink(role.Link); err != nil {
+	if err := linkCommand(role.Link); err != nil {
 		return role, err
 	}
-	if err := doTemplate(role.Template); err != nil {
+	if err := templateCommand(role.Template); err != nil {
 		return role, err
 	}
-	if err := doLine(role.Line); err != nil {
+	if err := lineCommand(role.Line); err != nil {
+		return role, err
+	}
+	if err := execCommand(role.Done); err != nil {
 		return role, err
 	}
 	return role, nil

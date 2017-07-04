@@ -35,11 +35,7 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// err := cloneOrPull(Directory, URL)
-		// if err != nil {
-		// 	return err
-		// }
-		return doTemplate(args)
+		return templateCommand(args)
 	},
 }
 
@@ -57,14 +53,20 @@ func init() {
 	// templateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func doTemplate(in []string) error {
-	return initArgs("template", in, func(source, target string) error {
-		err := templatePattern(source, target, Directory)
+func templateCommand(in []string) error {
+	for _, arg := range in {
+		err := parseArg(arg, func(source, target string) error {
+			err := templatePattern(source, target, Directory)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-		return nil
-	})
+	}
+	return nil
 }
 
 func templatePattern(source, target, dir string) error {
