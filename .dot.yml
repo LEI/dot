@@ -1,0 +1,39 @@
+---
+
+roles:
+  - name: git
+    url: "https://github.com/LEI/dot-git"
+    link:
+      - ".gitconfig"
+      - ".gitignore"
+    template:
+      - ".gitconfig.local.tpl"
+    env:
+      # git_author_name:
+      # git_author_email:
+      credential_helper: '{{if eq "$OS" "darwin"}}osxkeychain{{else}}cache{{end}}'
+
+  - name: vim
+    url: "https://github.com/LEI/dot-vim"
+    link:
+      # - "[^.]*:.vim"
+      # - "autoload/*:.vim/autoload"
+      - "*.vim:.vim"
+      - "autoload:.vim"
+      - "config:.vim"
+      - "ftdetect:.vim"
+      - "ftplugin:.vim"
+      - "plugin:.vim"
+    line:
+      ".vimrc": "source $HOME/.vim/init.vim"
+      ".gvimrc": "source $HOME/.vim/ginit.vim"
+
+  - name: tmux
+    url: "https://github.com/LEI/dot-tmux"
+    link:
+      - "tmux.conf:.tmux"
+      - "tmux-*.conf:.tmux"
+      - "tmux.$OS.conf:.tmux"
+      - "colors:.tmux"
+    line:
+      ".tmux.conf": "source-file $HOME/.tmux/tmux.conf"
