@@ -12,7 +12,7 @@ run dot
 
 run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vim/vimrc +PlugInstall +qall; exit";
 
-ls -la ~ ~/.git ~/.vim ~/.tmux
+ls -la ~ ~/.git* ~/.vim ~/.tmux
 
 # tail_bashrc="$(tail -n1 ~/.bashrc)"
 # yes | run dot -s $DOT --https
