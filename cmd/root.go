@@ -50,6 +50,7 @@ type config struct {
 type role struct {
 	Name string
 	URL string `mapstructure:"url"`
+	OS []string
 	Directory string
 	Exec []string
 	Link []string
@@ -73,39 +74,12 @@ to quickly create a Cobra application.`,
 			fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
 			os.Exit(1)
 		}
-		for _, role := range Config.Roles {
-			if role.Name == "" {
-				fmt.Fprintln(os.Stderr, "Missing role name")
-				os.Exit(1)
-			}
-			if role.URL == "" {
-				fmt.Fprintln(os.Stderr, "Missing role url")
-				os.Exit(1)
-			}
-
-			URL = role.URL
-
-			if role.Directory == "" {
-				role.Directory = path.Join(Target, dotDir, role.Name)
-			}
-
-			Directory = role.Directory
-
-			if err := cloneOrPull(role.Directory, role.URL); err != nil {
+		for index, role := range Config.Roles {
+			r, err := initRole(role)
+			if err != nil {
 				return err
 			}
-			if err := doExec(role.Exec); err != nil {
-				return err
-			}
-			if err := doLink(role.Link); err != nil {
-				return err
-			}
-			if err := doTemplate(role.Template); err != nil {
-				return err
-			}
-			if err := doLine(role.Line); err != nil {
-				return err
-			}
+			Config.Roles[index] = r
 		}
 		return nil
 	},
@@ -162,7 +136,7 @@ func initConfig() {
 	}
 }
 
-func parseArgs(key string, args []string, cb func(string, string) error) error {
+func initArgs(key string, args []string, cb func(string, string) error) error {
 	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
 	// 	in, err := ioutil.ReadAll(os.Stdin)
 	// 	if err != nil {
@@ -200,6 +174,75 @@ func parseArgs(key string, args []string, cb func(string, string) error) error {
 		}
 	}
 	return nil
+}
+
+func initRole(role role) (role, error) {
+	if len(role.OS) > 0 {
+		if ok := hasOne(role.OS, getOS()); !ok {
+			fmt.Printf("## Skipping %s (OS: %s)\n", role.Name, strings.Join(role.OS, ", "))
+			return role, nil
+		}
+	}
+
+	if role.Name == "" {
+		fmt.Fprintln(os.Stderr, "Missing role name")
+		os.Exit(1)
+	}
+	if role.URL == "" {
+		fmt.Fprintln(os.Stderr, "Missing role url")
+		os.Exit(1)
+	}
+
+	URL = role.URL
+
+	if role.Directory == "" {
+		role.Directory = path.Join(Target, dotDir, role.Name)
+	}
+
+	Directory = role.Directory
+
+	if err := cloneOrPull(role.Directory, role.URL); err != nil {
+		return role, err
+	}
+	if err := doExec(role.Exec); err != nil {
+		return role, err
+	}
+	if err := doLink(role.Link); err != nil {
+		return role, err
+	}
+	if err := doTemplate(role.Template); err != nil {
+		return role, err
+	}
+	if err := doLine(role.Line); err != nil {
+		return role, err
+	}
+	return role, nil
+}
+
+func getOS() []string {
+	types := []string{OS}
+	OSTYPE, ok := os.LookupEnv("OSTYPE")
+	if ok && OSTYPE != "" {
+		types = append(types, OSTYPE)
+	} else { // !ok || OSTYPE == ""
+		// fmt.Printf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
+		out, err := exec.Command(Shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		if len(out) > 0 {
+			OSTYPE = string(out)
+			o := strings.Split(OSTYPE, ".")
+			if len(o) > 0 {
+				types = append(types, o[0])
+			}
+			types = append(types, OSTYPE)
+		}
+	}
+	if OSTYPE == "" {
+		fmt.Println("OSTYPE is not set or empty")
+	}
+	return types
 }
 
 func GetEnv() (map[string]string, error) {
@@ -272,4 +315,15 @@ func executeCmd(name string, args ...string) error {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	return c.Run()
+}
+
+func hasOne(in []string, list []string) bool {
+	for _, a := range in {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+	}
+	return false
 }

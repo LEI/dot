@@ -58,7 +58,7 @@ func init() {
 }
 
 func doTemplate(in []string) error {
-	return parseArgs("template", in, func(source, target string) error {
+	return initArgs("template", in, func(source, target string) error {
 		err := templatePattern(source, target, Directory)
 		if err != nil {
 			return err

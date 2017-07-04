@@ -50,7 +50,7 @@ func init() {
 }
 
 func doLink(in []string) error {
-	return parseArgs("link", in, func(source, target string) error {
+	return initArgs("link", in, func(source, target string) error {
 		err := linkParse(source, target, Directory)
 		if err != nil {
 			return err
