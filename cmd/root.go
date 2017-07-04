@@ -34,6 +34,7 @@ const (
 )
 
 var (
+	HomeDir = os.Getenv("HOME")
 	Directory string
 	StdinFormat = "json"
 	cfgFile   string
@@ -57,6 +58,9 @@ to quickly create a Cobra application.`,
 			return err
 		}
 		if err := templateCmd.RunE(templateCmd, viper.GetStringSlice("template")); err != nil {
+			return err
+		}
+		if err := execCmd.RunE(execCmd, viper.GetStringSlice("exec")); err != nil {
 			return err
 		}
 		return nil
@@ -121,11 +125,10 @@ func parseArgs(key string, args []string, cb func(string, string) error) error {
 	} else if viper.ConfigFileUsed() != "" {
 		args = viper.GetStringSlice(key)
 	}
-	args = viper.GetStringSlice(key)
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
 		if len(parts) == 1 {
-			parts = append(parts, "$HOME")
+			parts = append(parts, HomeDir)
 		} else if len(parts) != 2 {
 			fmt.Println("Invalid arg", arg)
 			os.Exit(1)
@@ -136,6 +139,9 @@ func parseArgs(key string, args []string, cb func(string, string) error) error {
 		}
 		source = path.Clean(source)
 		target := os.ExpandEnv(parts[1])
+		if !path.IsAbs(target) {
+			target = path.Join(HomeDir, target)
+		}
 		_, err := createDir(target)
 		if err != nil {
 			return err
@@ -214,8 +220,8 @@ func createDir(dir string) (bool, error) {
 
 func executeCmd(name string, args ...string) error {
 	fmt.Printf("%s %s\n", name, strings.Join(args, " "))
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	c := exec.Command(name, args...)
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
 }
