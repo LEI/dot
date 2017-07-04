@@ -109,7 +109,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		fmt.Println("# Using config file:", viper.ConfigFileUsed())
 	}
 }
 
@@ -181,8 +181,8 @@ func GetEnv() (map[string]string, error) {
 			}
 			v = buf.String()
 		}
-		// fmt.Printf("%s=\"%s\"\n", k, v)
 		if v != "" { // Set the environment variable
+			fmt.Printf("%s=\"%s\"\n", k, v)
 			err := os.Setenv(k, v)
 			if err != nil {
 				return env, err

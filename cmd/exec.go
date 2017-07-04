@@ -43,10 +43,12 @@ var execCmd = &cobra.Command{
 		if len(args) == 0 {
 			return nil
 		}
-		args = append([]string{"-c"}, args...)
-		err = executeCmd(Shell, args...)
-		if err != nil {
-			return err
+		// args = append([]string{"-c"}, a)
+		for _, a := range args {
+			err = executeCmd(Shell, []string{"-c", a}...)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	},

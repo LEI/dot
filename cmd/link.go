@@ -83,16 +83,16 @@ func linkFile(source, target string) error {
 		return nil
 	}
 	if real != "" {
-		fmt.Fprintf(os.Stderr, "[WARN] target %s is a link to %s\n", target, real)
-		// return nil
+		fmt.Fprintf(os.Stderr, "# %s is a link to %s\n", target, real)
+		os.Exit(1)
 	}
 	fi, err := os.Stat(target)
 	if err != nil && os.IsExist(err) {
 		return err
 	}
 	if fi != nil {
-		fmt.Fprintf(os.Stderr, "[WARN] target %s exists\n", target)
-		// os.Exit(1)
+		fmt.Fprintf(os.Stderr, "# %s is already a file\n", target)
+		os.Exit(1)
 		return nil
 	}
 	fmt.Printf("ln -s %s %s\n", source, target)
