@@ -50,7 +50,7 @@ type config struct {
 type role struct {
 	Name string
 	URL string `mapstructure:"url"`
-	OS []string
+	OS interface{}
 	Directory string
 	Exec []string
 	Link []string
@@ -150,6 +150,26 @@ func initConfig() {
 	// }
 }*/
 
+func getSlice(arg interface{}) []string {
+	var slice []string
+	switch v := arg.(type) {
+	case []interface {}:
+		// fmt.Println("[]interface")
+		for _, r := range v {
+			slice = append(slice, r.(string))
+		}
+	case interface {}:
+		// fmt.Println("interface")
+		slice = append(slice, v.(string))
+	case string:
+		// fmt.Println("string")
+		slice = append(slice, v)
+	// default:
+	// 	fmt.Println("other:", v)
+	}
+	return slice
+}
+
 func parseArg(arg string, cb func(string, string) error) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
@@ -175,9 +195,10 @@ func parseArg(arg string, cb func(string, string) error) error {
 }
 
 func initRole(role role) (role, error) {
-	if len(role.OS) > 0 {
-		if ok := hasOne(role.OS, getOS()); !ok {
-			fmt.Printf("## Skipping %s (OS: %s)\n", role.Name, strings.Join(role.OS, ", "))
+	if role.OS != nil {
+		roleOS := getSlice(role.OS)
+		if ok := hasOne(roleOS, getOS()); !ok {
+			fmt.Printf("## Skipping %s (OS: %s)\n", role.Name, strings.Join(roleOS, ", "))
 			return role, nil
 		}
 	}
