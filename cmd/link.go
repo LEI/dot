@@ -24,8 +24,7 @@ import (
 )
 
 var (
-	// Source, Target         string
-	// OnlyDirs       bool
+	// Source, Target string
 	defaultDirMode os.FileMode = 0755
 )
 
@@ -35,17 +34,11 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// err := cloneOrPull(Directory)
+		// err := cloneOrPull(Directory, URL)
 		// if err != nil {
 		// 	return err
 		// }
-		return parseArgs("link", args, func(source, target string) error {
-			err := linkParse(source, target, Directory)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		return doLink(args)
 	},
 }
 
@@ -54,7 +47,16 @@ func init() {
 
 	// linkCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory")
 	// linkCmd.Flags().StringVarP(&Target, "target", "t", "", "Target `path`, directory or file")
-	// linkCmd.Flags().BoolVarP(&OnlyDirs, "only-dirs", "", OnlyDirs, "Ignore files")
+}
+
+func doLink(in []string) error {
+	return parseArgs("link", in, func(source, target string) error {
+		err := linkParse(source, target, Directory)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func linkParse(source, target, dir string) error {
@@ -83,8 +85,9 @@ func linkFile(source, target string) error {
 		return nil
 	}
 	if real != "" {
-		fmt.Fprintf(os.Stderr, "# %s is a link to %s\n", target, real)
+		fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", target, real, source)
 		os.Exit(1)
+		return nil
 	}
 	fi, err := os.Stat(target)
 	if err != nil && os.IsExist(err) {
@@ -92,7 +95,7 @@ func linkFile(source, target string) error {
 	}
 	if fi != nil {
 		fmt.Fprintf(os.Stderr, "# %s is already a file\n", target)
-		os.Exit(1)
+		// os.Exit(1)
 		return nil
 	}
 	fmt.Printf("ln -s %s %s\n", source, target)

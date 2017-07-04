@@ -35,17 +35,11 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// err := cloneOrPull(Directory)
+		// err := cloneOrPull(Directory, URL)
 		// if err != nil {
 		// 	return err
 		// }
-		return parseArgs("template", args, func(source, target string) error {
-			err := templatePattern(source, target, Directory)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		return doTemplate(args)
 	},
 }
 
@@ -61,6 +55,16 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// templateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func doTemplate(in []string) error {
+	return parseArgs("template", in, func(source, target string) error {
+		err := templatePattern(source, target, Directory)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func templatePattern(source, target, dir string) error {

@@ -20,7 +20,7 @@ import (
 	// "strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	// "github.com/spf13/viper"
 )
 
 var (
@@ -33,24 +33,14 @@ var execCmd = &cobra.Command{
 	Short: "Execute",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// err := cloneOrPull(Directory)
+		// err := cloneOrPull(Directory, URL)
 		// if err != nil {
 		// 	return err
 		// }
-		if len(args) == 0 {
-			args = append(args, viper.GetStringSlice("exec")...)
-		}
-		if len(args) == 0 {
-			return nil
-		}
-		// args = append([]string{"-c"}, a)
-		for _, a := range args {
-			err := executeCmd(Shell, []string{"-c", a}...)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		// if len(args) == 0 {
+		// 	args = append(args, viper.GetStringSlice("exec")...)
+		// }
+		return doExec(args)
 	},
 }
 
@@ -58,4 +48,16 @@ func init() {
 	RootCmd.AddCommand(execCmd)
 
 	execCmd.Flags().StringVarP(&Shell, "shell", "s", Shell, "Shell (bash|sh)")
+}
+
+
+func doExec(in []string) error {
+	// args = append([]string{"-c"}, str)
+	for _, str := range in {
+		err := executeCmd(Shell, []string{"-c", str}...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

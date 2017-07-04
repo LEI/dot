@@ -6,13 +6,13 @@ sep() { printf %${COLUMNS:-100}s |tr " " "${1:-=}"; printf "\n"; }
 log() { sep "-"; printf "\n\t%s\n\n" "$@"; sep "-"; }
 run() { log "\$ $*"; "$@" || exit $?; }
 
-run dot -u "https://github.com/LEI/dot-git" -d "$HOME/.dot/git"
-run dot -u "https://github.com/LEI/dot-tmux" -d "$HOME/.dot/tmux"
-run dot -u "https://github.com/LEI/dot-vim" -d "$HOME/.dot/vim"
+ln -s $DOT/.dot.yml $HOME/.dot.yml
+
+run dot
 
 run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vim/vimrc +PlugInstall +qall; exit";
 
-ls -la ~
+ls -la ~ ~/.git ~/.vim ~/.tmux
 
 # tail_bashrc="$(tail -n1 ~/.bashrc)"
 # yes | run dot -s $DOT --https

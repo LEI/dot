@@ -17,7 +17,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	// "io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -35,10 +35,28 @@ const (
 
 var (
 	HomeDir     = os.Getenv("HOME")
+	Target      = HomeDir
 	Directory   string
-	StdinFormat = "json"
+	Config      config
+	cfgFormat   string
 	cfgFile     string
+	dotDir      = ".dot"
 )
+
+type config struct {
+	Roles []role
+}
+
+type role struct {
+	Name string
+	URL string `mapstructure:"url"`
+	Directory string
+	Exec []string
+	Link []string
+	Template []string
+	Line map[string]string
+	Env map[string]string
+}
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -51,17 +69,43 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := cloneOrPull(Directory); err != nil {
-			return err
+		if err := viper.Unmarshal(&Config); err != nil {
+			fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+			os.Exit(1)
 		}
-		if err := linkCmd.RunE(linkCmd, viper.GetStringSlice("link")); err != nil {
-			return err
-		}
-		if err := templateCmd.RunE(templateCmd, viper.GetStringSlice("template")); err != nil {
-			return err
-		}
-		if err := execCmd.RunE(execCmd, viper.GetStringSlice("exec")); err != nil {
-			return err
+		for _, role := range Config.Roles {
+			if role.Name == "" {
+				fmt.Fprintln(os.Stderr, "Missing role name")
+				os.Exit(1)
+			}
+			if role.URL == "" {
+				fmt.Fprintln(os.Stderr, "Missing role url")
+				os.Exit(1)
+			}
+
+			URL = role.URL
+
+			if role.Directory == "" {
+				role.Directory = path.Join(Target, dotDir, role.Name)
+			}
+
+			Directory = role.Directory
+
+			if err := cloneOrPull(role.Directory, role.URL); err != nil {
+				return err
+			}
+			if err := doExec(role.Exec); err != nil {
+				return err
+			}
+			if err := doLink(role.Link); err != nil {
+				return err
+			}
+			if err := doTemplate(role.Template); err != nil {
+				return err
+			}
+			if err := doLine(role.Line); err != nil {
+				return err
+			}
 		}
 		return nil
 	},
@@ -85,11 +129,14 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "config file")
-	RootCmd.PersistentFlags().StringVarP(&Directory, "dir", "d", "", "Directory path")
-	RootCmd.PersistentFlags().StringVarP(&StdinFormat, "format", "f", StdinFormat, "Stdin format (json|toml|yaml)")
+	RootCmd.PersistentFlags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
+	RootCmd.PersistentFlags().StringVarP(&cfgFormat, "format", "f", cfgFormat, "Data format (json|toml|yaml)")
 
-	// Local flags will onlt run when this action is called directly.
+	// Local flags will only run when this action is called directly.
 	// RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	// viper.BindPFlag("directory", RootCmd.PersistentFlags().Lookup("directory"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -97,7 +144,9 @@ func initConfig() {
 	if cfgFile != "" { // enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
 	}
-
+	if cfgFormat != "" {
+		viper.SetConfigType(cfgFormat)
+	}
 	viper.SetConfigName(".dot")  // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
 	viper.AddConfigPath("$HOME/.dot")
@@ -105,7 +154,7 @@ func initConfig() {
 	viper.AddConfigPath(Directory)
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// viper.WatchConfig() // Read config file while running
+	viper.WatchConfig() // Read config file while running
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -114,21 +163,20 @@ func initConfig() {
 }
 
 func parseArgs(key string, args []string, cb func(string, string) error) error {
-	if len(args) >= 1 && args[0] == "-" { // Read config from stdin
-		viper.SetConfigType(StdinFormat)
-		in, err := ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			return fmt.Errorf("Error occured while reading from stdin: %s.", err)
-		}
-		viper.ReadConfig(bytes.NewBuffer(in))
-		args = viper.GetStringSlice(key)
-	} else if viper.ConfigFileUsed() != "" {
-		args = viper.GetStringSlice(key)
-	}
+	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
+	// 	in, err := ioutil.ReadAll(os.Stdin)
+	// 	if err != nil {
+	// 		return fmt.Errorf("Error occured while reading from stdin: %s.", err)
+	// 	}
+	// 	viper.ReadConfig(bytes.NewBuffer(in))
+	// 	args = viper.GetStringSlice(key)
+	// } else if viper.ConfigFileUsed() != "" {
+	// 	args = viper.GetStringSlice(key)
+	// }
 	for _, arg := range args {
 		parts := strings.Split(arg, ":")
 		if len(parts) == 1 {
-			parts = append(parts, HomeDir)
+			parts = append(parts, Target)
 		} else if len(parts) != 2 {
 			fmt.Println("Invalid arg", arg)
 			os.Exit(1)
@@ -140,7 +188,7 @@ func parseArgs(key string, args []string, cb func(string, string) error) error {
 		source = path.Clean(source)
 		target := os.ExpandEnv(parts[1])
 		if !path.IsAbs(target) {
-			target = path.Join(HomeDir, target)
+			target = path.Join(Target, target)
 		}
 		_, err := createDir(target)
 		if err != nil {

@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	// "github.com/spf13/viper"
 	// "gopkg.in/src-d/go-git.v4"
 )
 
@@ -35,7 +36,7 @@ var syncCmd = &cobra.Command{
 	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cloneOrPull(Directory) // args...
+		return cloneOrPull(Directory, URL) // args...
 	},
 }
 
@@ -47,9 +48,11 @@ func init() {
 
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
+
+	// viper.BindPFlag("url", RootCmd.PersistentFlags().Lookup("url"))
 }
 
-func cloneOrPull(dir string) error {
+func cloneOrPull(dir, url string) error {
 	for _, c := range synced {
 		if c == dir {
 			// Already updated
@@ -65,16 +68,16 @@ func cloneOrPull(dir string) error {
 	if fi != nil {
 		return pullRepo(dir, Remote, Branch)
 	}
-	if err = cloneRepo(URL, dir); err != nil {
+	if err = cloneRepo(dir, url); err != nil {
 		return err
 	}
 	// if dir == Directory {}
 	// Read config file
-	initConfig()
+	// initConfig()
 	return nil
 }
 
-func cloneRepo(url string, dir string) error {
+func cloneRepo(dir, url string) error {
 	args := []string{"clone", url, dir, "--recursive", "--quiet"}
 	err := executeCmd("git", args...)
 	if err != nil {
@@ -84,7 +87,7 @@ func cloneRepo(url string, dir string) error {
 	return nil
 }
 
-func pullRepo(dir string, remote string, branch string) error {
+func pullRepo(dir, remote, branch string) error {
 	if !Pull {
 		return nil
 	}
