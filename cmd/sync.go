@@ -25,7 +25,7 @@ var (
 	URL string
 	Remote = "origin"
 	Branch = "master"
-	SkipSync bool
+	NoPull bool
 	synced []string
 )
 
@@ -42,17 +42,14 @@ var syncCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(syncCmd)
 
-	RootCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Repository URL")
-	RootCmd.PersistentFlags().BoolVarP(&SkipSync, "no-sync", "n", SkipSync, "Skip repo update")
+	RootCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Upstream repository")
+	RootCmd.PersistentFlags().BoolVarP(&NoPull, "no-pull", "n", NoPull, "Skip update")
 
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
 }
 
 func cloneOrPull(dir string) error {
-	if SkipSync {
-		return nil
-	}
 	for _, c := range synced {
 		if c == dir {
 			// Already updated
@@ -89,6 +86,9 @@ func cloneRepo(url string, dir string) error {
 }
 
 func pullRepo(dir string, remote string, branch string) error {
+	if NoPull {
+		return nil
+	}
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
 	err := executeCmd("git", args...)
 	if err != nil {
