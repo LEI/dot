@@ -100,19 +100,3 @@ func templateGlob(source, target string, env map[string]string) (bool, error) {
 	}
 	return true, nil
 }
-
-func WriteString(path string, str string) (bool, error) {
-	fi, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, FileMode)
-	defer fi.Close()
-	if err != nil {
-		return false, err
-	}
-	n, err := fi.WriteString(str)
-	if err != nil {
-		return false, err
-	}
-	if n == 0 {
-		return false, nil
-	}
-	return true, nil
-}
