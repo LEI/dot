@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	// "strconv"
 	"strings"
 	"text/template"
 
@@ -51,27 +52,37 @@ type role struct {
 	Name     string
 	Dir      string `mapstructure:"directory"`
 	URL      string `mapstructure:"url"`
-	OS       interface{}
-	Exec     interface{}
-	Link     interface{}
-	Template interface{}
+	OS       stringSlice
+	Exec     stringSlice
+	Link     stringSlice
+	Template stringSlice
 	Line     map[string]string
-	Done     interface{}
+	Done     stringSlice
 	Env      map[string]string
 }
 
-func (r *role) GetDir() string {
-	if r.Dir == "" {
-		r.Dir = path.Join(Target, dotDir, r.Name)
-	}
-	return r.Dir
+// type Value interface {
+// 	String() string
+// 	Set(string) error
+// }
+
+type stringSlice []string
+
+func (s *stringSlice) String() string {
+	return fmt.Sprintf("%v", *s)
 }
-func (r *role) GetExec() []string          { return getSlice(r.Exec) }
-func (r *role) GetLink() []string          { return getSlice(r.Link) }
-func (r *role) GetTemplate() []string      { return getSlice(r.Template) }
-func (r *role) GetLine() map[string]string { return r.Line }
-func (r *role) GetDone() []string          { return getSlice(r.Done) }
-func (r *role) GetEnv() map[string]string  { return r.Env }
+func (s *stringSlice) Set(value string) error {
+	fmt.Printf("%s\n", value)
+	fmt.Printf("TYPE %t\n", value)
+	*s = append(*s, value)
+	// tmp, err := strconv.Atoi(value)
+	// if err != nil {
+	// 	*s = append(*s, -1)
+	// } else {
+	// 	*s = append(*s, tmp)
+	// }
+	return nil
+}
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -89,14 +100,6 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 		for index, role := range Config.Roles {
-			if role.Name == "" {
-				fmt.Fprintln(os.Stderr, "Missing role name")
-				os.Exit(1)
-			}
-			if role.URL == "" {
-				fmt.Fprintln(os.Stderr, "Missing role url")
-				os.Exit(1)
-			}
 			r, err := initRole(role)
 			if err != nil {
 				return err
@@ -171,26 +174,6 @@ func initConfig() {
 	// }
 }*/
 
-func getSlice(arg interface{}) []string {
-	var slice []string
-	switch v := arg.(type) {
-	case []interface{}:
-		// fmt.Println("[]interface")
-		for _, r := range v {
-			slice = append(slice, r.(string))
-		}
-	case interface{}:
-		// fmt.Println("interface")
-		slice = append(slice, v.(string))
-	case string:
-		// fmt.Println("string")
-		slice = append(slice, v)
-		// default:
-		// 	fmt.Println("other:", v)
-	}
-	return slice
-}
-
 func parseArg(arg string, cb func(string, string) error) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
@@ -216,33 +199,41 @@ func parseArg(arg string, cb func(string, string) error) error {
 }
 
 func initRole(role role) (role, error) {
+	if role.Name == "" {
+		fmt.Fprintln(os.Stderr, "Missing role name")
+		os.Exit(1)
+	}
+	if role.URL == "" {
+		fmt.Fprintln(os.Stderr, "Missing role url")
+		os.Exit(1)
+	}
 	if role.OS != nil {
-		roleOS := getSlice(role.OS)
-		if ok := hasOne(roleOS, getOS()); !ok {
-			fmt.Printf("## Skipping %s (OS: %s)\n", role.Name, strings.Join(roleOS, ", "))
+		if ok := hasOne(role.OS, getOS()); !ok {
+			fmt.Printf("## Skipping %s (OS: %s)\n", role.Name, strings.Join(role.OS, ", "))
 			return role, nil
 		}
 	}
-
-	Directory = role.GetDir()
+	if role.Dir == "" {
+		role.Dir = path.Join(Target, dotDir, role.Name)
+	}
+	Directory = role.Dir
 	URL = role.URL
-
 	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
-	if err := execCommand(role.GetExec()); err != nil {
+	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}
-	if err := linkCommand(role.GetLink()); err != nil {
+	if err := linkCommand(role.Link); err != nil {
 		return role, err
 	}
-	if err := templateCommand(role.GetTemplate(), role.GetEnv()); err != nil {
+	if err := templateCommand(role.Template, role.Env); err != nil {
 		return role, err
 	}
-	if err := lineCommand(role.GetLine()); err != nil {
+	if err := lineCommand(role.Line); err != nil {
 		return role, err
 	}
-	if err := execCommand(role.GetDone()); err != nil {
+	if err := execCommand(role.Done); err != nil {
 		return role, err
 	}
 	return role, nil
@@ -357,3 +348,23 @@ func hasOne(in []string, list []string) bool {
 	}
 	return false
 }
+
+/*func getSlice(arg interface{}) []string {
+	var slice []string
+	switch v := arg.(type) {
+	case []interface{}:
+		// fmt.Println("[]interface")
+		for _, r := range v {
+			slice = append(slice, r.(string))
+		}
+	case interface{}:
+		// fmt.Println("interface")
+		slice = append(slice, v.(string))
+	case string:
+		// fmt.Println("string")
+		slice = append(slice, v)
+		// default:
+		// 	fmt.Println("other:", v)
+	}
+	return slice
+}*/
