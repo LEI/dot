@@ -43,7 +43,6 @@ func init() {
 	execCmd.Flags().StringVarP(&Shell, "shell", "s", Shell, "Shell (bash|sh)")
 }
 
-
 func execCommand(in []string) error {
 	// if len(args) == 0 {
 	// 	args = append(args, viper.GetStringSlice("exec")...)

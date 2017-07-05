@@ -34,13 +34,13 @@ const (
 )
 
 var (
-	HomeDir     = os.Getenv("HOME")
-	Target      = HomeDir
-	Directory   string
-	Config      config
-	cfgFormat   string
-	cfgFile     string
-	dotDir      = ".dot"
+	HomeDir   = os.Getenv("HOME")
+	Target    = HomeDir
+	Directory string
+	Config    config
+	cfgFormat string
+	cfgFile   string
+	dotDir    = ".dot"
 )
 
 type config struct {
@@ -48,17 +48,30 @@ type config struct {
 }
 
 type role struct {
-	Name string
-	URL string `mapstructure:"url"`
-	OS interface{}
-	Directory string
-	Exec []string
-	Link []string
-	Template []string
-	Line map[string]string
-	Done []string
-	Env map[string]string
+	Name     string
+	Dir      string `mapstructure:"directory"`
+	URL      string `mapstructure:"url"`
+	OS       interface{}
+	Exec     interface{}
+	Link     interface{}
+	Template interface{}
+	Line     map[string]string
+	Done     interface{}
+	Env      map[string]string
 }
+
+func (r *role) GetDir() string {
+	if r.Dir == "" {
+		r.Dir = path.Join(Target, dotDir, r.Name)
+	}
+	return r.Dir
+}
+func (r *role) GetExec() []string          { return getSlice(r.Exec) }
+func (r *role) GetLink() []string          { return getSlice(r.Link) }
+func (r *role) GetTemplate() []string      { return getSlice(r.Template) }
+func (r *role) GetLine() map[string]string { return r.Line }
+func (r *role) GetDone() []string          { return getSlice(r.Done) }
+func (r *role) GetEnv() map[string]string  { return r.Env }
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -76,6 +89,14 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 		for index, role := range Config.Roles {
+			if role.Name == "" {
+				fmt.Fprintln(os.Stderr, "Missing role name")
+				os.Exit(1)
+			}
+			if role.URL == "" {
+				fmt.Fprintln(os.Stderr, "Missing role url")
+				os.Exit(1)
+			}
 			r, err := initRole(role)
 			if err != nil {
 				return err
@@ -153,19 +174,19 @@ func initConfig() {
 func getSlice(arg interface{}) []string {
 	var slice []string
 	switch v := arg.(type) {
-	case []interface {}:
+	case []interface{}:
 		// fmt.Println("[]interface")
 		for _, r := range v {
 			slice = append(slice, r.(string))
 		}
-	case interface {}:
+	case interface{}:
 		// fmt.Println("interface")
 		slice = append(slice, v.(string))
 	case string:
 		// fmt.Println("string")
 		slice = append(slice, v)
-	// default:
-	// 	fmt.Println("other:", v)
+		// default:
+		// 	fmt.Println("other:", v)
 	}
 	return slice
 }
@@ -203,39 +224,25 @@ func initRole(role role) (role, error) {
 		}
 	}
 
-	if role.Name == "" {
-		fmt.Fprintln(os.Stderr, "Missing role name")
-		os.Exit(1)
-	}
-	if role.URL == "" {
-		fmt.Fprintln(os.Stderr, "Missing role url")
-		os.Exit(1)
-	}
-
+	Directory = role.GetDir()
 	URL = role.URL
 
-	if role.Directory == "" {
-		role.Directory = path.Join(Target, dotDir, role.Name)
-	}
-
-	Directory = role.Directory
-
-	if err := syncCommand(role.Directory, role.URL); err != nil {
+	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
-	if err := execCommand(role.Exec); err != nil {
+	if err := execCommand(role.GetExec()); err != nil {
 		return role, err
 	}
-	if err := linkCommand(role.Link); err != nil {
+	if err := linkCommand(role.GetLink()); err != nil {
 		return role, err
 	}
-	if err := templateCommand(role.Template); err != nil {
+	if err := templateCommand(role.GetTemplate(), role.GetEnv()); err != nil {
 		return role, err
 	}
-	if err := lineCommand(role.Line); err != nil {
+	if err := lineCommand(role.GetLine()); err != nil {
 		return role, err
 	}
-	if err := execCommand(role.Done); err != nil {
+	if err := execCommand(role.GetDone()); err != nil {
 		return role, err
 	}
 	return role, nil
@@ -267,12 +274,13 @@ func getOS() []string {
 	return types
 }
 
-func GetEnv() (map[string]string, error) {
-	env := Env() // make(map[string]string, 0)
-	for key, val := range Env() {
-		env[key] = val
-	}
-	for k, v := range viper.GetStringMapString("env") {
+func GetEnv(in map[string]string) (map[string]string, error) {
+	env := Env()
+	// env := make(map[string]string, 0)
+	// for key, val := range Env() {
+	// 	env[key] = val
+	// }
+	for k, v := range in {
 		k = strings.ToTitle(k)
 		if v == "" { // Lookup environment if the variable is empty
 			val, ok := os.LookupEnv(k)

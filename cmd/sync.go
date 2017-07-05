@@ -26,7 +26,7 @@ var (
 	URL    string
 	Remote string = "origin"
 	Branch string = "master"
-	Pull bool = true
+	Pull   bool   = true
 	synced []string
 )
 

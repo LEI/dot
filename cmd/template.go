@@ -23,6 +23,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -35,7 +36,11 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return templateCommand(args)
+		env, err := GetEnv(viper.GetStringMapString("env"))
+		if err != nil {
+			return err
+		}
+		return templateCommand(args, env)
 	},
 }
 
@@ -53,10 +58,10 @@ func init() {
 	// templateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func templateCommand(in []string) error {
+func templateCommand(in []string, env map[string]string) error {
 	for _, arg := range in {
 		err := parseArg(arg, func(source, target string) error {
-			err := templatePattern(source, target, Directory)
+			err := templatePattern(source, target, env)
 			if err != nil {
 				return err
 			}
@@ -69,7 +74,7 @@ func templateCommand(in []string) error {
 	return nil
 }
 
-func templatePattern(source, target, dir string) error {
+func templatePattern(source, target string, env map[string]string) error {
 	_, f := path.Split(source)
 	target = path.Join(target, strings.TrimSuffix(f, ".tpl"))
 	tmpl, err := template.ParseGlob(source)
@@ -78,10 +83,10 @@ func templatePattern(source, target, dir string) error {
 		return err
 	}
 	buf := &bytes.Buffer{}
-	env, err := GetEnv()
-	if err != nil {
-		return err
-	}
+	// env, err := GetEnv()
+	// if err != nil {
+	// 	return err
+	// }
 	err = tmpl.Execute(buf, env)
 	if err != nil {
 		return err

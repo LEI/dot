@@ -24,9 +24,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-)
-
 // lineCmd represents the line command
 var lineCmd = &cobra.Command{
 	Use:   "line",
