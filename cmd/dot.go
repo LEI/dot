@@ -37,10 +37,10 @@ const (
 var (
 	HomeDir   = os.Getenv("HOME")
 	Target    = HomeDir
-	Directory string
+	Source string
 	URL       string
-	Cfg       Config
-	cfgFormat string
+	Config    config
+	cfgType   string
 	cfgFile   string
 	cfgDir                = []string{"$HOME", "/etc/dot"}
 	dotDir                = ".dot" // Default clone directory under $HOME
@@ -50,46 +50,47 @@ var (
 	FileMode  os.FileMode = 0644
 )
 
-type Config struct {
-	Roles []Role
+type config struct {
+	Roles []role
 }
 
-type Role struct {
-	Name string
-	Dir  string `mapstructure:"directory"`
-	URL  string
-	OS   stringSlice
-	Task `mapstructure:",squash"`
+type role struct {
+	Name      string
+	Dir       string `mapstructure:"directory"`
+	URL       string
+	OS        strSlice
+	taskRoles `mapstructure:",squash"`
+	taskExec  `mapstructure:",squash"`
 }
 
-type Task struct {
-	Exec     stringSlice
-	Link     stringSlice
-	Template stringSlice
-	Line     map[string]string
-	Done     stringSlice
-	Env      map[string]string
+type taskRoles struct {
+	Env      map[string]string // Environment variables map
+	Line     map[string]string // Lines map
+	Link     strSlice          // Paths list `<source>[:<target>]`
+	Template strSlice          // Paths list `<source>[:<target>]`
 }
 
-// type Value interface {
-// 	String() string
-// 	Set(string) error
-// }
+type taskExec struct {
+	Install     strSlice // Exec before install
+	PostInstall strSlice `mapstructure:"post_install"` // Exec after install
+	Remove      strSlice // Exec before remove
+	PostRemove  strSlice `mapstructure:"post_remove"` // Exec after remove
+}
 
-type stringSlice []string
+type strSlice []string
 
-func (s *stringSlice) String() string {
+func (s *strSlice) String() string {
 	return fmt.Sprintf("%v", *s)
 }
 
-func (s *stringSlice) Set(value string) error {
+func (s *strSlice) Set(value string) error {
 	// fmt.Printf("%s (%t)\n", value, value)
 	*s = append(*s, value)
 	return nil
 }
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
+// DotCmd represents the base command when called without any subcommands
+var DotCmd = &cobra.Command{
 	Use:   "dot",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
@@ -99,51 +100,40 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		for index, role := range Cfg.Roles {
-			r, err := initRole(role)
-			if err != nil {
-				return err
-			}
-			Cfg.Roles[index] = r
-		}
-		return nil
+		return installCommand(args)
 	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := RootCmd.Execute(); err != nil {
+	if err := DotCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
 	}
 }
 
 func init() {
-	// err := os.Setenv("OS", OS)
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, err)
-	// }
-
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "config file")
-	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
-	RootCmd.PersistentFlags().StringVarP(&cfgFormat, "format", "f", cfgFormat, "Data format (json|toml|yaml)")
+	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
+	DotCmd.PersistentFlags().StringVarP(&Source, "source", "s", Source, "Source directory")
+	DotCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
+	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 
 	// Local flags will only run when this action is called directly.
-	// RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 
-	// viper.BindPFlag("directory", RootCmd.PersistentFlags().Lookup("directory"))
+	// viper.BindPFlag("directory", DotCmd.Flags().Lookup("directory"))
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if Directory != "" {
-		cfgDir = append([]string{Directory}, cfgDir...)
+	if Source != "" {
+		cfgDir = append([]string{Source}, cfgDir...)
 	}
 	readConfig(viper.GetViper(), cfgDir...)
-	if err := viper.Unmarshal(&Cfg); err != nil {
+	if err := viper.Unmarshal(&Config); err != nil {
 		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
 		os.Exit(1)
 	}
@@ -153,15 +143,17 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	if cfgFile != "" { // Enable ability to specify config file via flag
 		v.SetConfigFile(cfgFile)
 	}
-	if cfgFormat != "" { // Enable ability to specify config file format
-		v.SetConfigType(cfgFormat)
+	if cfgType != "" { // Enable ability to specify config file format
+		v.SetConfigType(cfgType)
 	}
 	v.SetConfigName(dotCfg)    // Name of config file (without extension)
+
 	for _, dir := range dirs { // Add directories to look for the config file in
 		v.AddConfigPath(dir)
 	}
+
 	v.AutomaticEnv() // Read in environment variables that match
-	v.WatchConfig()  // Read config file while running
+	// v.WatchConfig()  // Read config file while running
 	// If a config file is found, read it in.
 	if err := v.ReadInConfig(); err == nil {
 		fmt.Println("# Using config file:", v.ConfigFileUsed())
@@ -169,7 +161,7 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	return v
 }
 
-func readRoleConfig(r *Role) error {
+func readRoleConfig(r *role) error {
 	v := viper.New()
 	readConfig(v, r.Dir)
 	if err := v.UnmarshalKey("role", &r); err != nil {
@@ -179,8 +171,8 @@ func readRoleConfig(r *Role) error {
 	return nil
 }
 
-func getRole(dir, url string) (*Role, error) {
-	r := &Role{Dir: dir, URL: url}
+func getRole(dir, url string) (*role, error) {
+	r := &role{Dir: dir, URL: url}
 	if err := syncCommand(r.Dir, r.URL); err != nil {
 		return r, err
 	}
@@ -230,7 +222,7 @@ func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	return cb(source, target)
 }
 
-func initRole(role Role) (Role, error) {
+func initRole(role role) (role, error) {
 	if role.Name == "" {
 		fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
 		os.Exit(1)
@@ -260,7 +252,7 @@ func initRole(role Role) (Role, error) {
 	if err != nil {
 		return role, err
 	}
-	if err := execCommand(role.Exec); err != nil {
+	if err := execCommand(role.Install); err != nil {
 		return role, err
 	}
 	if err := linkCommand(role.Link, role.Dir); err != nil {
@@ -272,7 +264,7 @@ func initRole(role Role) (Role, error) {
 	if err := lineCommand(role.Line); err != nil {
 		return role, err
 	}
-	if err := execCommand(role.Done); err != nil {
+	if err := execCommand(role.PostInstall); err != nil {
 		return role, err
 	}
 	return role, nil

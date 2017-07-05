@@ -33,27 +33,24 @@ var execCmd = &cobra.Command{
 	Short: "Execute",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Directory, URL)
-		if err != nil {
-			return err
-		}
-		r.Exec = args
+		// r, err := getRole(Source, URL)
+		// if err != nil {
+		// 	return err
+		// }
 		if len(args) == 0 {
-			// TODO key `done`
-			if err := viper.UnmarshalKey("exec", &r.Exec); err != nil {
+			if err := viper.UnmarshalKey("exec", &args); err != nil {
 				return err
 			}
 		}
-		return execCommand(r.Exec)
+		return execCommand(args)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(execCmd)
+	// DotCmd.AddCommand(execCmd)
 
-	execCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 	execCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
-	execCmd.Flags().StringVarP(&Shell, "shell", "s", Shell, "Shell (bash|sh)")
+	execCmd.Flags().StringVarP(&Shell, "shell", "", Shell, "Shell")
 }
 
 func execCommand(in []string) error {

@@ -30,7 +30,7 @@ var lineCmd = &cobra.Command{
 	Short: "Add or remove a line in file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Directory, URL)
+		r, err := getRole(Source, URL)
 		if err != nil {
 			return err
 		}
@@ -40,9 +40,9 @@ var lineCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(lineCmd)
+	installCmd.AddCommand(lineCmd)
+	removeCmd.AddCommand(lineCmd)
 
-	lineCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 	lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
@@ -81,7 +81,7 @@ func lineInFile(file string, line string) (bool, error) {
 			return false, nil
 		}
 	}
-	lines = append(lines, line + "\n")
+	lines = append(lines, line+"\n")
 	output := strings.Join(lines, "\n")
 	err = ioutil.WriteFile(file, []byte(output), FileMode)
 	if err != nil {

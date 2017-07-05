@@ -32,7 +32,7 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Directory, URL)
+		r, err := getRole(Source, URL)
 		if err != nil {
 			return err
 		}
@@ -50,14 +50,13 @@ var templateCmd = &cobra.Command{
 		// if err != nil {
 		// 	return role, err
 		// }
-		return templateCommand(r.Template, Directory, env)
+		return templateCommand(r.Template, Source, env)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(templateCmd)
+	installCmd.AddCommand(templateCmd)
 
-	templateCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 	templateCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 

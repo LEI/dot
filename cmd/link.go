@@ -34,7 +34,7 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Directory, URL)
+		r, err := getRole(Source, URL)
 		if err != nil {
 			return err
 		}
@@ -44,17 +44,15 @@ var linkCmd = &cobra.Command{
 				return err
 			}
 		}
-		return linkCommand(r.Link, Directory)
+		return linkCommand(r.Link, Source)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(linkCmd)
+	installCmd.AddCommand(linkCmd)
+	removeCmd.AddCommand(linkCmd)
 
-	linkCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 	linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
-	// linkCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory")
-	// linkCmd.Flags().StringVarP(&Target, "target", "t", "", "Target `path`, directory or file")
 }
 
 func linkCommand(in []string, dir string) error {

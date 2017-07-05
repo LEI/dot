@@ -14,7 +14,7 @@
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -35,25 +35,27 @@ var syncCmd = &cobra.Command{
 	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return syncCommand(Directory, URL) // args...
+		return syncCommand(Source, URL) // args...
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(syncCmd)
+	DotCmd.AddCommand(syncCmd)
 
-	RootCmd.PersistentFlags().BoolVarP(&Pull, "pull", "n", Pull, "Update if already cloned")
+	// DotCmd.PersistentFlags().BoolVarP(&Pull, "pull", "n", Pull, "Update if already cloned")
 
-	syncCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 	syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
 
-	// viper.BindPFlag("url", RootCmd.PersistentFlags().Lookup("url"))
+	// viper.BindPFlag("url", DotCmd.PersistentFlags().Lookup("url"))
 }
 
 // syncCommand clone or pull
 func syncCommand(dir, url string) error {
+	if dir == "" {
+		return fmt.Errorf("Missing repository directory\n")
+	}
 	for _, c := range synced {
 		if c == dir {
 			// Already updated
@@ -69,10 +71,14 @@ func syncCommand(dir, url string) error {
 	if fi != nil {
 		return pullRepo(dir, Remote, Branch)
 	}
+	if url == "" {
+		return fmt.Errorf("Missing repository url\n")
+		return fmt.Errorf("%s: No such file or directory\n", dir)
+	}
 	if err = cloneRepo(dir, url); err != nil {
 		return err
 	}
-	// if dir == Directory {}
+	// if dir == Source {}
 	// Read config file
 	// initConfig()
 	return nil
