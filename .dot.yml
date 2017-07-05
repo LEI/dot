@@ -3,7 +3,6 @@
 roles:
   - name: bash
     url: "https://github.com/LEI/dot-bash"
-    dir: ".bash.d"
     link:
       - ".inputrc"
       - "*.bash:.bash.d"
@@ -20,8 +19,7 @@ roles:
     link:
       - ".gitconfig"
       - ".gitignore"
-    template:
-      - ".gitconfig.local.tpl"
+    template: ".gitconfig.local.tpl"
     env:
       # git_author_name:
       # git_author_email:
@@ -55,22 +53,17 @@ roles:
   - name: termux
     url: "https://github.com/LEI/dot-termux"
     os: ["android"]
-    exec:
-      - "termux-setup-storage"
-    link:
-      - ".termux/*:.termux"
-    done:
-      - "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \\;"
+    exec: "termux-setup-storage"
+    link: ".termux/*:.termux"
+    done: "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \\;"
     # -name '*.sh'
 
   - name: osx
     url: "https://github.com/LEI/dot-osx"
     os: ["darwin16"] # Sierra
-    link:
-      - ".config/karabiner/*:.config/karabiner"
+    link: ".config/karabiner/*:.config/karabiner"
 
   - name: hammerspoon
     url: "https://github.com/LEI/dot-hammerspoon"
     os: ["darwin"]
-    link:
-      - "*:.hammerspoon"
+    link: "*:.hammerspoon"

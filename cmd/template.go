@@ -40,31 +40,30 @@ var templateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return templateCommand(args, env)
+		return templateCommand(args, Directory, env)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(templateCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// templateCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// templateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	templateCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 }
 
-func templateCommand(in []string, env map[string]string) error {
+func templateCommand(in []string, dir string, env map[string]string) error {
 	for _, arg := range in {
-		err := parseArg(arg, func(source, target string) error {
-			err := templatePattern(source, target, env)
+		err := parseArg(arg, dir, func(source, target string) error {
+			_, f := path.Split(source)
+			target = path.Join(target, strings.TrimSuffix(f, ".tpl"))
+			changed, err := templateGlob(source, target, env)
 			if err != nil {
 				return err
 			}
+			prefix := "# "
+			if changed {
+				prefix = ""
+			}
+			fmt.Printf("%senvsubst < %s | tee %s\n", prefix, source, target)
 			return nil
 		})
 		if err != nil {
@@ -74,36 +73,33 @@ func templateCommand(in []string, env map[string]string) error {
 	return nil
 }
 
-func templatePattern(source, target string, env map[string]string) error {
-	_, f := path.Split(source)
-	target = path.Join(target, strings.TrimSuffix(f, ".tpl"))
+func templateGlob(source, target string, env map[string]string) (bool, error) {
 	tmpl, err := template.ParseGlob(source)
 	tmpl = tmpl.Option("missingkey=zero")
 	if err != nil {
-		return err
+		return false, err
 	}
 	buf := &bytes.Buffer{}
 	// env, err := GetEnv()
 	// if err != nil {
-	// 	return err
+	// 	return false, err
 	// }
 	err = tmpl.Execute(buf, env)
 	if err != nil {
-		return err
+		return false, err
 	}
 	str := buf.String()
 	b, err := ioutil.ReadFile(target)
 	if err != nil && os.IsExist(err) {
-		return err
+		return false, err
 	}
 	if str != string(b) {
 		err := ioutil.WriteFile(target, []byte(str), defaultFileMode)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
-	fmt.Printf("envsubst < %s | tee %s\n", source, target)
-	return nil
+	return true, nil
 }
 
 func WriteString(path string, str string) (bool, error) {

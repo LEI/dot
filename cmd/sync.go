@@ -43,9 +43,10 @@ var syncCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(syncCmd)
 
-	RootCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	RootCmd.PersistentFlags().BoolVarP(&Pull, "pull", "n", Pull, "Update if already cloned")
 
+	syncCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
 

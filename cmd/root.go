@@ -37,11 +37,12 @@ const (
 var (
 	HomeDir   = os.Getenv("HOME")
 	Target    = HomeDir
-	Directory string
 	Config    config
 	cfgFormat string
 	cfgFile   string
+	cfgDir   = []string{"$HOME", "/etc/dot"}
 	dotDir    = ".dot"
+	dotCfg    = ".dot"
 )
 
 type config struct {
@@ -71,16 +72,11 @@ type stringSlice []string
 func (s *stringSlice) String() string {
 	return fmt.Sprintf("%v", *s)
 }
+
 func (s *stringSlice) Set(value string) error {
 	fmt.Printf("%s\n", value)
 	fmt.Printf("TYPE %t\n", value)
 	*s = append(*s, value)
-	// tmp, err := strconv.Atoi(value)
-	// if err != nil {
-	// 	*s = append(*s, -1)
-	// } else {
-	// 	*s = append(*s, tmp)
-	// }
 	return nil
 }
 
@@ -128,7 +124,6 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "config file")
-	RootCmd.PersistentFlags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 	RootCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
 	RootCmd.PersistentFlags().StringVarP(&cfgFormat, "format", "f", cfgFormat, "Data format (json|toml|yaml)")
 
@@ -140,21 +135,25 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
+	if Directory != "" {
+		cfgDir = append([]string{Directory}, cfgDir...)
+	}
+	readConfig(cfgDir...)
+}
+
+func readConfig(dirs ...string) {
+	if cfgFile != "" { // Enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
 	}
 	if cfgFormat != "" {
 		viper.SetConfigType(cfgFormat)
 	}
-	viper.SetConfigName(".dot")  // name of config file (without extension)
-	viper.AddConfigPath("$HOME") // adding home directory as first search path
-	viper.AddConfigPath("$HOME/.dot")
-	viper.AddConfigPath("/etc/dot")
-	viper.AddConfigPath(Directory)
-	viper.AutomaticEnv() // read in environment variables that match
-
+	viper.SetConfigName(dotCfg)  // Name of config file (without extension)
+	for _, dir := range dirs {
+		viper.AddConfigPath(dir)
+	}
+	viper.AutomaticEnv() // Read in environment variables that match
 	viper.WatchConfig() // Read config file while running
-
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("# Using config file:", viper.ConfigFileUsed())
@@ -174,7 +173,7 @@ func initConfig() {
 	// }
 }*/
 
-func parseArg(arg string, cb func(string, string) error) error {
+func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
 		parts = append(parts, Target)
@@ -184,16 +183,19 @@ func parseArg(arg string, cb func(string, string) error) error {
 	}
 	source := os.ExpandEnv(parts[0])
 	if !path.IsAbs(source) {
-		source = path.Join(Directory, source)
+		source = path.Join(baseDir, source)
 	}
 	source = path.Clean(source)
 	target := os.ExpandEnv(parts[1])
 	if !path.IsAbs(target) {
 		target = path.Join(Target, target)
 	}
-	_, err := createDir(target)
+	changed, err := createDir(target)
 	if err != nil {
 		return err
+	}
+	if changed {
+		fmt.Printf("mkdir -p %s\n", target)
 	}
 	return cb(source, target)
 }
@@ -209,25 +211,26 @@ func initRole(role role) (role, error) {
 	}
 	if role.OS != nil {
 		if ok := hasOne(role.OS, getOS()); !ok {
-			fmt.Printf("## Skipping %s (OS: %s)\n", role.Name, strings.Join(role.OS, ", "))
+			fmt.Printf("## Skipping %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
 			return role, nil
 		}
 	}
 	if role.Dir == "" {
 		role.Dir = path.Join(Target, dotDir, role.Name)
+		if Directory == "" || role.Dir != Directory {
+			readConfig(role.Dir)
+		}
 	}
-	Directory = role.Dir
-	URL = role.URL
 	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
 	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}
-	if err := linkCommand(role.Link); err != nil {
+	if err := linkCommand(role.Link, role.Dir); err != nil {
 		return role, err
 	}
-	if err := templateCommand(role.Template, role.Env); err != nil {
+	if err := templateCommand(role.Template, role.Dir, role.Env); err != nil {
 		return role, err
 	}
 	if err := lineCommand(role.Line); err != nil {
