@@ -40,7 +40,7 @@ var (
 	Config    config
 	cfgFormat string
 	cfgFile   string
-	cfgDir   = []string{"$HOME", "/etc/dot"}
+	cfgDir    = []string{"$HOME", "/etc/dot"}
 	dotDir    = ".dot"
 	dotCfg    = ".dot"
 )
@@ -148,12 +148,12 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	if cfgFormat != "" { // Enable ability to specify config file format
 		v.SetConfigType(cfgFormat)
 	}
-	v.SetConfigName(dotCfg) // Name of config file (without extension)
+	v.SetConfigName(dotCfg)    // Name of config file (without extension)
 	for _, dir := range dirs { // Add directories to look for the config file in
 		v.AddConfigPath(dir)
 	}
 	v.AutomaticEnv() // Read in environment variables that match
-	v.WatchConfig() // Read config file while running
+	v.WatchConfig()  // Read config file while running
 	// If a config file is found, read it in.
 	if err := v.ReadInConfig(); err == nil {
 		fmt.Println("# Using config file:", v.ConfigFileUsed())
@@ -161,7 +161,7 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	return v
 }
 
-func readRole(r *role) {
+func readRoleConfig(r *role) {
 	v := viper.New()
 	readConfig(v, r.Dir)
 	if err := v.UnmarshalKey("role", &r); err != nil {
@@ -232,8 +232,7 @@ func initRole(role role) (role, error) {
 	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
-	// if Directory == "" || role.Dir != Directory {}
-	readRole(&role)
+	readRoleConfig(&role)
 	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}

@@ -25,7 +25,7 @@ import (
 
 var (
 	// Source, Target string
-	Directory string
+	Directory      string
 	defaultDirMode os.FileMode = 0755
 )
 
