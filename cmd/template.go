@@ -27,7 +27,6 @@ import (
 )
 
 var (
-	defaultFileMode os.FileMode = 0644
 )
 
 // templateCmd represents the template command
@@ -94,7 +93,7 @@ func templateGlob(source, target string, env map[string]string) (bool, error) {
 		return false, err
 	}
 	if str != string(b) {
-		err := ioutil.WriteFile(target, []byte(str), defaultFileMode)
+		err := ioutil.WriteFile(target, []byte(str), FileMode)
 		if err != nil {
 			return false, err
 		}
@@ -103,7 +102,7 @@ func templateGlob(source, target string, env map[string]string) (bool, error) {
 }
 
 func WriteString(path string, str string) (bool, error) {
-	fi, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, defaultFileMode)
+	fi, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, FileMode)
 	defer fi.Close()
 	if err != nil {
 		return false, err

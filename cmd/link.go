@@ -25,8 +25,6 @@ import (
 
 var (
 	// Source, Target string
-	Directory      string
-	defaultDirMode os.FileMode = 0755
 )
 
 // linkCmd represents the link command

@@ -14,11 +14,11 @@
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
-	// "path/filepath"
-	// "strings"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,30 +41,54 @@ func init() {
 }
 
 func lineCommand(in map[string]string) error {
-	for dst, str := range in {
-		dst = os.ExpandEnv(dst)
-		if !path.IsAbs(dst) {
-			dst = path.Join(Target, dst)
+	for file, line := range in {
+		file = os.ExpandEnv(file)
+		if !path.IsAbs(file) {
+			file = path.Join(Target, file)
 		}
-		dst = path.Clean(dst)
-		// _, err := createDir(dst)
+		file = path.Clean(file)
+		// _, err := createDir(file)
 		// if err != nil {
 		// 	return err
 		// }
-		err := lineInFile(dst, str)
+		changed, err := lineInFile(file, line)
 		if err != nil {
 			return err
 		}
+		prefix := "# "
+		if changed {
+			prefix = ""
+		}
+		fmt.Printf("%secho '%s' >> \"%s\"\n", prefix, line, file)
 	}
 	return nil
 }
 
-func lineInFile(file string, line string) error {
-	str := `if ! test -f "` + file + `" || ! grep -Fxq '` + line + `' "` + file + `"; then echo '` + line + `' >> "` + file + `"; fi;`
-	err := executeCmd(Shell, []string{"-c", str}...)
+func lineInFile(file string, line string) (bool, error) {
+	input, err := ioutil.ReadFile(file)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	lines := strings.Split(string(input), "\n")
+	for _, l := range lines {
+		if strings.Contains(l, line) {
+			return false, nil
+		}
+	}
+	output := strings.Join(lines, "\n")
+	err = ioutil.WriteFile(file, []byte(output), FileMode)
 	if err != nil {
-		return err
+		return false, err
 	}
-
-	return nil
+	return true, nil
 }
+
+// func lineInFile(file string, line string) error {
+// 	str := `if ! test -f "` + file + `" || ! grep -Fxq '` + line + `' "` + file + `"; then echo '` + line + `' >> "` + file + `"; fi;`
+// 	err := executeCmd(Shell, []string{"-c", str}...)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }

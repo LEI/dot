@@ -37,12 +37,15 @@ const (
 var (
 	HomeDir   = os.Getenv("HOME")
 	Target    = HomeDir
+	Directory      string
 	Cfg       Config
 	cfgFormat string
 	cfgFile   string
 	cfgDir    = []string{"$HOME", "/etc/dot"}
 	dotDir    = ".dot"
 	dotCfg    = ".dot"
+	DirMode os.FileMode = 0755
+	FileMode os.FileMode = 0644
 )
 
 type Config struct {
@@ -346,7 +349,7 @@ func createDir(dir string) (bool, error) {
 	if err == nil && fi.IsDir() {
 		return false, nil
 	}
-	return true, os.MkdirAll(dir, defaultDirMode)
+	return true, os.MkdirAll(dir, DirMode)
 }
 
 func executeCmd(name string, args ...string) error {
@@ -382,7 +385,7 @@ func hasOne(in []string, list []string) bool {
 	case string:
 		// fmt.Println("string")
 		slice = append(slice, v)
-		// default:
+		// :
 		// 	fmt.Println("other:", v)
 	}
 	return slice
