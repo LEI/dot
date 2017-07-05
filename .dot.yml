@@ -3,67 +3,24 @@
 roles:
   - name: bash
     url: "https://github.com/LEI/dot-bash"
-    link:
-      - ".inputrc"
-      - "*.bash:.bash.d"
-      - "aliases:.bash.d"
-      - "environment:.bash.d"
-      - "functions:.bash.d"
-      - "plugins:.bash.d"
-    line:
-      ".bashrc": "[[ -n \"$PS1\" ]] && [[ -f ~/.bash_profile ]] && source ~/.bash_profile"
-      ".bash_profile": "[[ -f ~/.bash.d/init.bash ]] && source ~/.bash.d/init.bash"
 
   - name: git
     url: "https://github.com/LEI/dot-git"
-    link:
-      - ".gitconfig"
-      - ".gitignore"
-    template: ".gitconfig.local.tpl"
-    env:
-      # git_author_name:
-      # git_author_email:
-      credential_helper: '{{if eq "$OS" "darwin"}}osxkeychain{{else}}cache{{end}}'
 
   - name: vim
     url: "https://github.com/LEI/dot-vim"
-    link:
-      # - "[^.]*:.vim"
-      # - "autoload/*:.vim/autoload"
-      - "*.vim:.vim"
-      - "autoload:.vim"
-      - "config:.vim"
-      - "ftdetect:.vim"
-      - "ftplugin:.vim"
-      - "plugin:.vim"
-    line:
-      ".vimrc": "source $HOME/.vim/init.vim"
-      ".gvimrc": "source $HOME/.vim/ginit.vim"
 
   - name: tmux
     url: "https://github.com/LEI/dot-tmux"
-    link:
-      - "tmux.conf:.tmux"
-      - "tmux-*.conf:.tmux"
-      - "tmux.$OS.conf:.tmux"
-      - "colors:.tmux"
-    line:
-      ".tmux.conf": "source-file $HOME/.tmux/tmux.conf"
 
   - name: termux
     url: "https://github.com/LEI/dot-termux"
     os: ["android"]
-    exec: "termux-setup-storage"
-    link: ".termux/*:.termux"
-    done: "find ~/.tmux/plugins/* ! -path '*.git*' -type f -exec termux-fix-shebang '{}' \\;"
-    # -name '*.sh'
 
   - name: osx
     url: "https://github.com/LEI/dot-osx"
     os: ["darwin16"] # Sierra
-    link: ".config/karabiner/*:.config/karabiner"
 
   - name: hammerspoon
     url: "https://github.com/LEI/dot-hammerspoon"
     os: ["darwin"]
-    link: "*:.hammerspoon"

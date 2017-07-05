@@ -91,10 +91,6 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := viper.Unmarshal(&Config); err != nil {
-			fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
-			os.Exit(1)
-		}
 		for index, role := range Config.Roles {
 			r, err := initRole(role)
 			if err != nil {
@@ -138,26 +134,41 @@ func initConfig() {
 	if Directory != "" {
 		cfgDir = append([]string{Directory}, cfgDir...)
 	}
-	readConfig(cfgDir...)
+	readConfig(viper.GetViper(), cfgDir...)
+	if err := viper.Unmarshal(&Config); err != nil {
+		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+		os.Exit(1)
+	}
 }
 
-func readConfig(dirs ...string) {
+func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	if cfgFile != "" { // Enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
+		v.SetConfigFile(cfgFile)
 	}
-	if cfgFormat != "" {
-		viper.SetConfigType(cfgFormat)
+	if cfgFormat != "" { // Enable ability to specify config file format
+		v.SetConfigType(cfgFormat)
 	}
-	viper.SetConfigName(dotCfg)  // Name of config file (without extension)
-	for _, dir := range dirs {
-		viper.AddConfigPath(dir)
+	v.SetConfigName(dotCfg) // Name of config file (without extension)
+	for _, dir := range dirs { // Add directories to look for the config file in
+		v.AddConfigPath(dir)
 	}
-	viper.AutomaticEnv() // Read in environment variables that match
-	viper.WatchConfig() // Read config file while running
+	v.AutomaticEnv() // Read in environment variables that match
+	v.WatchConfig() // Read config file while running
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("# Using config file:", viper.ConfigFileUsed())
+	if err := v.ReadInConfig(); err == nil {
+		fmt.Println("# Using config file:", v.ConfigFileUsed())
 	}
+	return v
+}
+
+func readRole(r *role) {
+	v := viper.New()
+	readConfig(v, r.Dir)
+	if err := v.UnmarshalKey("role", &r); err != nil {
+		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+		os.Exit(1)
+	}
+	// fmt.Printf("%v\n", r)
 }
 
 /*func readStdin(args []string, cb func(string, string) error) error {
@@ -217,13 +228,12 @@ func initRole(role role) (role, error) {
 	}
 	if role.Dir == "" {
 		role.Dir = path.Join(Target, dotDir, role.Name)
-		if Directory == "" || role.Dir != Directory {
-			readConfig(role.Dir)
-		}
 	}
 	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
+	// if Directory == "" || role.Dir != Directory {}
+	readRole(&role)
 	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}
