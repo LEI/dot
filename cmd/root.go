@@ -213,16 +213,16 @@ func parseArg(arg, baseDir string, cb func(string, string) error) error {
 
 func initRole(role role) (role, error) {
 	if role.Name == "" {
-		fmt.Fprintln(os.Stderr, "Missing role name")
+		fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
 		os.Exit(1)
 	}
 	if role.URL == "" {
-		fmt.Fprintln(os.Stderr, "Missing role url")
+		fmt.Fprintf(os.Stderr, "Missing role url in %v\n", role)
 		os.Exit(1)
 	}
 	if role.OS != nil {
 		if ok := hasOne(role.OS, getOS()); !ok {
-			fmt.Printf("## Skipping %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+			fmt.Fprintf(os.Stderr, "## Skipping %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
 			return role, nil
 		}
 	}
