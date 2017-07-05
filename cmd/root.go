@@ -38,6 +38,7 @@ var (
 	HomeDir   = os.Getenv("HOME")
 	Target    = HomeDir
 	Directory string
+	URL       string
 	Cfg       Config
 	cfgFormat string
 	cfgFile   string
@@ -178,6 +179,17 @@ func readRoleConfig(r *Role) error {
 	return nil
 }
 
+func getRole(dir, url string) (*Role, error) {
+	r := &Role{Dir: dir, URL: url}
+	if err := syncCommand(r.Dir, r.URL); err != nil {
+		return r, err
+	}
+	if err := readRoleConfig(r); err != nil {
+		return r, fmt.Errorf("# Unable to decode into struct, %v", err)
+	}
+	return r, nil
+}
+
 /*func readStdin(args []string, cb func(string, string) error) error {
 	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
 	// 	in, err := ioutil.ReadAll(os.Stdin)
@@ -244,17 +256,17 @@ func initRole(role Role) (Role, error) {
 		// os.Exit(1)
 		return role, nil
 	}
+	roleEnv, err := initEnv(role.Env)
+	if err != nil {
+		return role, err
+	}
 	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}
 	if err := linkCommand(role.Link, role.Dir); err != nil {
 		return role, err
 	}
-	env, err := GetEnv(role.Env)
-	if err != nil {
-		return role, err
-	}
-	if err := templateCommand(role.Template, role.Dir, env); err != nil {
+	if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
 		return role, err
 	}
 	if err := lineCommand(role.Line); err != nil {
@@ -292,7 +304,7 @@ func getOS() []string {
 	return types
 }
 
-func GetEnv(in map[string]string) (map[string]string, error) {
+func initEnv(in map[string]string) (map[string]string, error) {
 	env := Env()
 	// env := make(map[string]string, 0)
 	// for key, val := range Env() {

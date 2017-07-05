@@ -30,14 +30,20 @@ var lineCmd = &cobra.Command{
 	Short: "Add or remove a line in file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return lineCommand(viper.GetStringMapString("line"))
+		r, err := getRole(Directory, URL)
+		if err != nil {
+			return err
+		}
+		r.Line = viper.GetStringMapString("line")
+		return lineCommand(r.Line)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(lineCmd)
 
-	// lineCmd.Flags().BoolVarP(&Bool, "bool", "b", Bool, "Example boolean")
+	lineCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
 func lineCommand(in map[string]string) error {

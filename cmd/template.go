@@ -32,11 +32,25 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		env, err := GetEnv(viper.GetStringMapString("env"))
+		r, err := getRole(Directory, URL)
 		if err != nil {
 			return err
 		}
-		return templateCommand(args, Directory, env)
+		r.Template = args
+		if len(args) == 0 {
+			if err := viper.UnmarshalKey("template", &r.Template); err != nil {
+				return err
+			}
+		}
+		env, err := initEnv(viper.GetStringMapString("env"))
+		if err != nil {
+			return err
+		}
+		// roleEnv, err := initEnv(role.Env)
+		// if err != nil {
+		// 	return role, err
+		// }
+		return templateCommand(r.Template, Directory, env)
 	},
 }
 
@@ -44,6 +58,7 @@ func init() {
 	RootCmd.AddCommand(templateCmd)
 
 	templateCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	templateCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
 func templateCommand(in []string, dir string, env map[string]string) error {
@@ -71,10 +86,10 @@ func templateCommand(in []string, dir string, env map[string]string) error {
 
 func templateGlob(source, target string, env map[string]string) (bool, error) {
 	tmpl, err := template.ParseGlob(source)
-	tmpl = tmpl.Option("missingkey=zero")
 	if err != nil {
 		return false, err
 	}
+	tmpl = tmpl.Option("missingkey=zero")
 	buf := &bytes.Buffer{}
 	// env, err := GetEnv()
 	// if err != nil {

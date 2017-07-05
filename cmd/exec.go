@@ -20,7 +20,7 @@ import (
 	// "strings"
 
 	"github.com/spf13/cobra"
-	// "github.com/spf13/viper"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -33,13 +33,26 @@ var execCmd = &cobra.Command{
 	Short: "Execute",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return execCommand(args)
+		r, err := getRole(Directory, URL)
+		if err != nil {
+			return err
+		}
+		r.Exec = args
+		if len(args) == 0 {
+			// TODO key `done`
+			if err := viper.UnmarshalKey("exec", &r.Exec); err != nil {
+				return err
+			}
+		}
+		return execCommand(r.Exec)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(execCmd)
 
+	execCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	execCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	execCmd.Flags().StringVarP(&Shell, "shell", "s", Shell, "Shell (bash|sh)")
 }
 

@@ -21,6 +21,7 @@ import (
 	// "strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -33,7 +34,17 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return linkCommand(args, Directory)
+		r, err := getRole(Directory, URL)
+		if err != nil {
+			return err
+		}
+		r.Link = args
+		if len(args) == 0 {
+			if err := viper.UnmarshalKey("link", &r.Link); err != nil {
+				return err
+			}
+		}
+		return linkCommand(r.Link, Directory)
 	},
 }
 
@@ -41,6 +52,7 @@ func init() {
 	RootCmd.AddCommand(linkCmd)
 
 	linkCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	// linkCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory")
 	// linkCmd.Flags().StringVarP(&Target, "target", "t", "", "Target `path`, directory or file")
 }
