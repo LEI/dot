@@ -26,9 +26,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-)
-
 // templateCmd represents the template command
 var templateCmd = &cobra.Command{
 	Use:   "template",

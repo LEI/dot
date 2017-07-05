@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	// Source, Target string
+// Source, Target string
 )
 
 // linkCmd represents the link command

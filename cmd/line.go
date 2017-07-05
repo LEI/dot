@@ -75,6 +75,7 @@ func lineInFile(file string, line string) (bool, error) {
 			return false, nil
 		}
 	}
+	lines = append(lines, line + "\n")
 	output := strings.Join(lines, "\n")
 	err = ioutil.WriteFile(file, []byte(output), FileMode)
 	if err != nil {

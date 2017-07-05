@@ -37,15 +37,16 @@ const (
 var (
 	HomeDir   = os.Getenv("HOME")
 	Target    = HomeDir
-	Directory      string
+	Directory string
 	Cfg       Config
 	cfgFormat string
 	cfgFile   string
-	cfgDir    = []string{"$HOME", "/etc/dot"}
-	dotDir    = ".dot"
-	dotCfg    = ".dot"
-	DirMode os.FileMode = 0755
-	FileMode os.FileMode = 0644
+	cfgDir                = []string{"$HOME", "/etc/dot"}
+	dotDir                = ".dot" // Default clone directory under $HOME
+	dotCfg                = ".dot" // Default config file name without extension
+	envKeys               = []string{"OS"}
+	DirMode   os.FileMode = 0755
+	FileMode  os.FileMode = 0644
 )
 
 type Config struct {
@@ -53,11 +54,11 @@ type Config struct {
 }
 
 type Role struct {
-	Name     string
-	Dir      string `mapstructure:"directory"`
-	URL      string
-	OS       stringSlice
-	Task     `mapstructure:",squash"`
+	Name string
+	Dir  string `mapstructure:"directory"`
+	URL  string
+	OS   stringSlice
+	Task `mapstructure:",squash"`
 }
 
 type Task struct {
@@ -249,7 +250,11 @@ func initRole(role Role) (Role, error) {
 	if err := linkCommand(role.Link, role.Dir); err != nil {
 		return role, err
 	}
-	if err := templateCommand(role.Template, role.Dir, role.Env); err != nil {
+	env, err := GetEnv(role.Env)
+	if err != nil {
+		return role, err
+	}
+	if err := templateCommand(role.Template, role.Dir, env); err != nil {
 		return role, err
 	}
 	if err := lineCommand(role.Line); err != nil {
@@ -335,8 +340,10 @@ func Env() map[string]string {
 		sep := strings.Index(i, "=")
 		env[i[0:sep]] = i[sep+1:]
 	}
-	if _, ok := env["OS"]; !ok {
-		env["OS"] = OS
+	for _, k := range envKeys {
+		if _, ok := env[k]; !ok {
+			env[k] = OS
+		}
 	}
 	return env
 }
