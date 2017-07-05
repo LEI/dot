@@ -161,14 +161,14 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	return v
 }
 
-func readRoleConfig(r *role) {
+func readRoleConfig(r *role) error {
 	v := viper.New()
 	readConfig(v, r.Dir)
 	if err := v.UnmarshalKey("role", &r); err != nil {
-		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
-		os.Exit(1)
+		return err
 	}
 	// fmt.Printf("%v\n", r)
+	return nil
 }
 
 /*func readStdin(args []string, cb func(string, string) error) error {
@@ -232,7 +232,11 @@ func initRole(role role) (role, error) {
 	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
-	readRoleConfig(&role)
+	if err := readRoleConfig(&role); err != nil {
+		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+		// os.Exit(1)
+		return role, nil
+	}
 	if err := execCommand(role.Exec); err != nil {
 		return role, err
 	}
