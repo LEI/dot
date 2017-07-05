@@ -37,7 +37,7 @@ const (
 var (
 	HomeDir   = os.Getenv("HOME")
 	Target    = HomeDir
-	Config    config
+	Cfg       Config
 	cfgFormat string
 	cfgFile   string
 	cfgDir    = []string{"$HOME", "/etc/dot"}
@@ -45,15 +45,19 @@ var (
 	dotCfg    = ".dot"
 )
 
-type config struct {
-	Roles []role
+type Config struct {
+	Roles []Role
 }
 
-type role struct {
+type Role struct {
 	Name     string
 	Dir      string `mapstructure:"directory"`
-	URL      string `mapstructure:"url"`
+	URL      string
 	OS       stringSlice
+	Task     `mapstructure:",squash"`
+}
+
+type Task struct {
 	Exec     stringSlice
 	Link     stringSlice
 	Template stringSlice
@@ -74,8 +78,7 @@ func (s *stringSlice) String() string {
 }
 
 func (s *stringSlice) Set(value string) error {
-	fmt.Printf("%s\n", value)
-	fmt.Printf("TYPE %t\n", value)
+	// fmt.Printf("%s (%t)\n", value, value)
 	*s = append(*s, value)
 	return nil
 }
@@ -91,12 +94,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		for index, role := range Config.Roles {
+		for index, role := range Cfg.Roles {
 			r, err := initRole(role)
 			if err != nil {
 				return err
 			}
-			Config.Roles[index] = r
+			Cfg.Roles[index] = r
 		}
 		return nil
 	},
@@ -135,7 +138,7 @@ func initConfig() {
 		cfgDir = append([]string{Directory}, cfgDir...)
 	}
 	readConfig(viper.GetViper(), cfgDir...)
-	if err := viper.Unmarshal(&Config); err != nil {
+	if err := viper.Unmarshal(&Cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
 		os.Exit(1)
 	}
@@ -161,7 +164,7 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	return v
 }
 
-func readRoleConfig(r *role) error {
+func readRoleConfig(r *Role) error {
 	v := viper.New()
 	readConfig(v, r.Dir)
 	if err := v.UnmarshalKey("role", &r); err != nil {
@@ -211,7 +214,7 @@ func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	return cb(source, target)
 }
 
-func initRole(role role) (role, error) {
+func initRole(role Role) (Role, error) {
 	if role.Name == "" {
 		fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
 		os.Exit(1)
