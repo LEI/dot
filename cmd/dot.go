@@ -364,14 +364,6 @@ func createDir(dir string) (bool, error) {
 	return true, os.MkdirAll(dir, DirMode)
 }
 
-func executeCmd(name string, args ...string) error {
-	fmt.Printf("%s %s\n", name, strings.Join(args, " "))
-	c := exec.Command(name, args...)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	return c.Run()
-}
-
 func hasOne(in []string, list []string) bool {
 	for _, a := range in {
 		for _, b := range list {

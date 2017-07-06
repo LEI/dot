@@ -14,10 +14,10 @@
 package cmd
 
 import (
-	// "fmt"
-	// "os"
-	// "os/exec"
-	// "strings"
+	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -65,4 +65,18 @@ func execCommand(in []string) error {
 		}
 	}
 	return nil
+}
+
+func executeCmd(name string, args ...string) error {
+	fmt.Printf("%s %s\n", name, strings.Join(args, " "))
+	c := exec.Command(name, args...)
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
+	// out, err := c.CombinedOutput()
+	// fmt.Println(out)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nil
 }
