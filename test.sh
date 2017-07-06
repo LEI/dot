@@ -10,12 +10,12 @@ ln -s $DOT/.dot.yml $HOME/.dot.yml
 
 run dot sync -u "https://github.com/LEI/dot-git" -s ~/.dot/git
 run dot install link -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig" ".gitignore"
-run dot install template -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig.local.tpl"
+CREDENTIAL_HELPER=cache run dot install template -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig.local.tpl"
 run dot install line -u "https://github.com/LEI/dot-git" -s ~/.dot/git
 
 tail_bashrc="$(tail -n1 ~/.bashrc)"
 # yes | run dot -s $DOT --https
-run dot
+run dot -- git
 run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +PlugInstall +qall; exit"
 for f in "$HOME"/.gitconfig; do run test -f "$f"; done
 for d in "$HOME"/{.tmux/plugins/tpm,.vim/plugged}; do run test -s "$d"; done

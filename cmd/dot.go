@@ -35,19 +35,19 @@ const (
 )
 
 var (
-	HomeDir   = os.Getenv("HOME")
-	Target    = HomeDir
-	Source string
-	URL       string
-	Config    config
-	cfgType   string
-	cfgFile   string
-	cfgDir                = []string{"$HOME", "/etc/dot"}
-	dotDir                = ".dot" // Default clone directory under $HOME
-	dotCfg                = ".dot" // Default config file name without extension
-	envKeys               = []string{"OS"}
-	DirMode   os.FileMode = 0755
-	FileMode  os.FileMode = 0644
+	HomeDir  = os.Getenv("HOME")
+	Target   = HomeDir
+	Source   string
+	URL      string
+	Config   config
+	cfgType  string
+	cfgFile  string
+	cfgDir               = []string{"$HOME", "/etc/dot"}
+	dotDir               = ".dot" // Default clone directory under $HOME
+	dotCfg               = ".dot" // Default config file name without extension
+	envKeys              = []string{"OS"}
+	DirMode  os.FileMode = 0755
+	FileMode os.FileMode = 0644
 )
 
 type config struct {
@@ -117,9 +117,10 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
+	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 	DotCmd.PersistentFlags().StringVarP(&Source, "source", "s", Source, "Source directory")
 	DotCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
-	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
+	DotCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
@@ -146,7 +147,7 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	if cfgType != "" { // Enable ability to specify config file format
 		v.SetConfigType(cfgType)
 	}
-	v.SetConfigName(dotCfg)    // Name of config file (without extension)
+	v.SetConfigName(dotCfg) // Name of config file (without extension)
 
 	for _, dir := range dirs { // Add directories to look for the config file in
 		v.AddConfigPath(dir)
@@ -297,8 +298,8 @@ func getOS() []string {
 }
 
 func initEnv(in map[string]string) (map[string]string, error) {
-	env := Env()
-	// env := make(map[string]string, 0)
+	// env := Env()
+	env := make(map[string]string, 0)
 	// for key, val := range Env() {
 	// 	env[key] = val
 	// }
@@ -325,7 +326,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 			v = buf.String()
 		}
 		if v != "" { // Set the environment variable
-			fmt.Printf("%s=\"%s\"\n", k, v)
+			// fmt.Printf("%s=\"%s\"\n", k, v)
 			err := os.Setenv(k, v)
 			if err != nil {
 				return env, err

@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -39,6 +40,11 @@ func init() {
 }
 
 func installCommand(args []string) error {
+	roles, err := filter(Config.Roles, args)
+	if err != nil {
+		return err
+	}
+	Config.Roles = roles
 	if len(Config.Roles) == 0 {
 		return fmt.Errorf("404 role not found\n")
 	}
@@ -50,4 +56,31 @@ func installCommand(args []string) error {
 		Config.Roles[index] = r
 	}
 	return nil
+}
+
+func filter(roles []role, patterns []string) ([]role, error) {
+	if len(patterns) == 0 {
+		return roles, nil
+	}
+	out := roles[:0]
+	for _, r := range roles {
+		matched, err := match(r.Name, patterns...)
+		if err != nil {
+			return out, err
+		}
+		if matched {
+			out = append(out, r)
+		}
+	}
+	return out, nil
+}
+
+func match(str string, patterns ...string) (bool, error) {
+	for _, pattern := range patterns {
+		matched, err := filepath.Match(pattern, str)
+		if err != nil || matched {
+			return matched, err
+		}
+	}
+	return false, nil
 }

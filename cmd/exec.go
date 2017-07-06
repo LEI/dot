@@ -49,7 +49,7 @@ var execCmd = &cobra.Command{
 func init() {
 	// DotCmd.AddCommand(execCmd)
 
-	execCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	// execCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	execCmd.Flags().StringVarP(&Shell, "shell", "", Shell, "Shell")
 }
 

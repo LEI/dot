@@ -43,7 +43,7 @@ func init() {
 	installCmd.AddCommand(lineCmd)
 	removeCmd.AddCommand(lineCmd)
 
-	lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	// lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
 func lineCommand(in map[string]string) error {
@@ -89,13 +89,3 @@ func lineInFile(file string, line string) (bool, error) {
 	}
 	return true, nil
 }
-
-// func lineInFile(file string, line string) error {
-// 	str := `if ! test -f "` + file + `" || ! grep -Fxq '` + line + `' "` + file + `"; then echo '` + line + `' >> "` + file + `"; fi;`
-// 	err := executeCmd(Shell, []string{"-c", str}...)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

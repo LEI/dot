@@ -52,7 +52,7 @@ func init() {
 	installCmd.AddCommand(linkCmd)
 	removeCmd.AddCommand(linkCmd)
 
-	linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	// linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
 func linkCommand(in []string, dir string) error {

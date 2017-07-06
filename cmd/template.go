@@ -57,7 +57,8 @@ var templateCmd = &cobra.Command{
 func init() {
 	installCmd.AddCommand(templateCmd)
 
-	templateCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	// templateCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	// templateCmd.Flags().StringVarP(&Extra, "env", "e", Extra, "Extra env var")
 }
 
 func templateCommand(in []string, dir string, env map[string]string) error {
@@ -73,7 +74,11 @@ func templateCommand(in []string, dir string, env map[string]string) error {
 			if changed {
 				prefix = ""
 			}
-			fmt.Printf("%senvsubst < %s | tee %s\n", prefix, source, target)
+			for k, v := range env {
+				fmt.Printf("%s=\"%s\"\n", k, v)
+			}
+			// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, source, target)
+			fmt.Printf("%stemplate %s -> %s\n", prefix, source, target)
 			return nil
 		})
 		if err != nil {
@@ -94,8 +99,7 @@ func templateGlob(source, target string, env map[string]string) (bool, error) {
 	// if err != nil {
 	// 	return false, err
 	// }
-	err = tmpl.Execute(buf, env)
-	if err != nil {
+	if err = tmpl.Execute(buf, env); err != nil {
 		return false, err
 	}
 	str := buf.String()
@@ -103,11 +107,11 @@ func templateGlob(source, target string, env map[string]string) (bool, error) {
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	if str != string(b) {
-		err := ioutil.WriteFile(target, []byte(str), FileMode)
-		if err != nil {
-			return false, err
-		}
+	if str == string(b) {
+		return false, nil
+	}
+	if err := ioutil.WriteFile(target, []byte(str), FileMode); err != nil {
+		return false, err
 	}
 	return true, nil
 }

@@ -44,7 +44,7 @@ func init() {
 
 	// DotCmd.PersistentFlags().BoolVarP(&Pull, "pull", "n", Pull, "Update if already cloned")
 
-	syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	// syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
 	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
 
