@@ -19,7 +19,6 @@ import (
 
 	"github.com/spf13/cobra"
 	// "github.com/spf13/viper"
-	// "gopkg.in/src-d/go-git.v4"
 )
 
 var (
@@ -69,12 +68,18 @@ func syncCommand(dir, url string) error {
 		return err
 	}
 	if fi != nil {
+		// err := fetchRepo(dir, Remote, Branch)
+		// if err != nil {
+		// 	return err
+		// }
+		// TODO: confirm pull
 		return pullRepo(dir, Remote, Branch)
 	}
 	if url == "" {
 		return fmt.Errorf("Missing repository url\n")
 		return fmt.Errorf("%s: No such file or directory\n", dir)
 	}
+	// TODO: construct url from `user/repo`
 	if err = cloneRepo(dir, url); err != nil {
 		return err
 	}
@@ -106,26 +111,3 @@ func pullRepo(dir, remote, branch string) error {
 	synced = append(synced, dir)
 	return nil
 }
-
-/*func cloneRepository(url string, dir string) (*git.Repository, error) {
-	var isBare = false
-	fmt.Printf("git clone %s %s --recursive\n", url, dir)
-	r, err := git.PlainClone(dir, isBare, &git.CloneOptions{
-		URL:               url,
-		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-	})
-	if err != nil {
-		return r, err
-	}
-	// // Branch being pointed by HEAD
-	// ref, err := r.Head()
-	// if err != nil {
-	// 	return err
-	// }
-	// // Commit object
-	// commit, err := r.CommitObject(ref.Hash())
-	// if err != nil {
-	// 	return err
-	// }
-	return r, nil
-}*/

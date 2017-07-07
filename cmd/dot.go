@@ -233,14 +233,17 @@ func initRole(role role) (role, error) {
 		os.Exit(1)
 	}
 	if role.OS != nil {
-		if ok := hasOne(role.OS, getOS()); !ok {
-			fmt.Fprintf(os.Stderr, "## Skipping %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+		if ok := hasOne(role.OS, getOS()); !ok { // Skip role
+			fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
 			return role, nil
 		}
 	}
 	if role.Dir == "" {
 		role.Dir = path.Join(Target, dotDir, role.Name)
 	}
+
+	fmt.Fprintf(os.Stderr, "# Install %s\n", role.Name)
+
 	if err := syncCommand(role.Dir, role.URL); err != nil {
 		return role, err
 	}
