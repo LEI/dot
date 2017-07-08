@@ -231,12 +231,25 @@ func initCmd(action string, args ...string) error {
 		return fmt.Errorf("404 role not found\n")
 	}
 	for index, role := range Config.Roles {
-		role, err := initRole(role)
-		if err != nil {
-			return err
+		if role.Name == "" {
+			fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
+			os.Exit(1)
+		}
+		if role.URL == "" {
+			fmt.Fprintf(os.Stderr, "Missing role url in %v\n", role)
+			os.Exit(1)
+		}
+		if role.OS != nil {
+			if ok := hasOne(role.OS, getOS()); !ok { // Skip role
+				fmt.Fprintf(os.Stderr, "# skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+				continue
+			}
+		}
+		if role.Dir == "" {
+			role.Dir = path.Join(destination, dotDir, role.Name)
 		}
 
-		fmt.Fprintf(os.Stderr, "# Install %s\n", role.Name)
+		fmt.Fprintf(os.Stderr, "# %s %s\n", action, role.Name)
 
 		if err := syncCommand(role.Dir, role.URL); err != nil {
 			return err
@@ -316,27 +329,6 @@ func match(str string, patterns ...string) (bool, error) {
 		}
 	}
 	return false, nil
-}
-
-func initRole(role role) (role, error) {
-	if role.Name == "" {
-		fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
-		os.Exit(1)
-	}
-	if role.URL == "" {
-		fmt.Fprintf(os.Stderr, "Missing role url in %v\n", role)
-		os.Exit(1)
-	}
-	if role.OS != nil {
-		if ok := hasOne(role.OS, getOS()); !ok { // Skip role
-			fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
-			return role, nil
-		}
-	}
-	if role.Dir == "" {
-		role.Dir = path.Join(destination, dotDir, role.Name)
-	}
-	return role, nil
 }
 
 func getOS() []string {
