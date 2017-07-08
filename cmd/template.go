@@ -50,7 +50,7 @@ var templateCmd = &cobra.Command{
 		// if err != nil {
 		// 	return role, err
 		// }
-		return templateCommand(r.Template, source, env)
+		return InstallTemplate(r.Template, source, env)
 	},
 }
 
@@ -61,12 +61,23 @@ func init() {
 	// templateCmd.Flags().StringVarP(&Extra, "env", "e", Extra, "Extra env var")
 }
 
-func templateCommand(in []string, dir string, env map[string]string) error {
+func InstallTemplate(in []string, dir string, env map[string]string) error {
+	return templateCommand(in, dir, env, templateGlob)
+}
+
+func RemoveTemplate(in []string, dir string, env map[string]string) error {
+	return templateCommand(in, dir, env, nil)
+}
+
+func templateCommand(in []string, dir string, env map[string]string, action func(src, dst string, env map[string]string) (bool, error)) error {
+	if action == nil {
+		return nil // fmt.Errorf("Missing action\n")
+	}
 	for _, arg := range in {
 		err := parseArg(arg, dir, func(src, dst string) error {
 			_, f := path.Split(src)
 			dst = path.Join(dst, strings.TrimSuffix(f, ".tpl"))
-			changed, err := templateGlob(src, dst, env)
+			changed, err := action(src, dst, env)
 			if err != nil {
 				return err
 			}

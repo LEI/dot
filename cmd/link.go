@@ -40,7 +40,7 @@ var linkCmd = &cobra.Command{
 				return err
 			}
 		}
-		return linkCommand(r.Link, source)
+		return InstallLink(r.Link, source)
 	},
 }
 
@@ -51,15 +51,20 @@ func init() {
 	// linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
-func linkCommand(in []string, dir string) error {
+func InstallLink(in []string, dir string) error {
+	return linkCommand(in, dir, linkGlob)
+}
+
+func RemoveLink(in []string, dir string) error {
+	return linkCommand(in, dir, nil)
+}
+
+func linkCommand(in []string, dir string, action func(src, dst string) error) error {
+	if action == nil {
+		return nil // fmt.Errorf("Missing action\n")
+	}
 	for _, arg := range in {
-		err := parseArg(arg, dir, func(src, dst string) error {
-			err := linkGlob(src, dst)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		err := parseArg(arg, dir, action)
 		if err != nil {
 			return err
 		}

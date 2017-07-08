@@ -34,7 +34,7 @@ var syncCmd = &cobra.Command{
 	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return syncCommand(source, URL) // args...
+		return CloneOrPull(source, URL) // args...
 	},
 }
 
@@ -50,8 +50,8 @@ func init() {
 	// viper.BindPFlag("url", DotCmd.PersistentFlags().Lookup("url"))
 }
 
-// syncCommand clone or pull
-func syncCommand(dir, url string) error {
+// CloneOrPull clone or pull
+func CloneOrPull(dir, url string) error {
 	if dir == "" {
 		return fmt.Errorf("Missing repository directory\n")
 	}

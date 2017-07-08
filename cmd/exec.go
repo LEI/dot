@@ -42,7 +42,7 @@ var execCmd = &cobra.Command{
 				return err
 			}
 		}
-		return execCommand(args)
+		return ExecCommand(args)
 	},
 }
 
@@ -53,7 +53,7 @@ func init() {
 	execCmd.Flags().StringVarP(&Shell, "shell", "", Shell, "Shell")
 }
 
-func execCommand(in []string) error {
+func ExecCommand(in []string) error {
 	// if len(args) == 0 {
 	// 	args = append(args, viper.GetStringSlice("exec")...)
 	// }

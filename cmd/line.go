@@ -35,7 +35,13 @@ var lineCmd = &cobra.Command{
 			return err
 		}
 		r.Line = viper.GetStringMapString("line")
-		return lineCommand(r.Line)
+		// switch action {
+		// case "install":
+		// 	err := InstallLine(in)
+		// case "remove":
+		// 	err := RemoveLine(in)
+		// }
+		return InstallLine(r.Line)
 	},
 }
 
@@ -46,7 +52,18 @@ func init() {
 	// lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
-func lineCommand(in map[string]string) error {
+func InstallLine(in map[string]string) error {
+	return lineCommand(in, lineInFile)
+}
+
+func RemoveLine(in map[string]string) error {
+	return lineCommand(in, nil)
+}
+
+func lineCommand(in map[string]string, action func(file string, line string) (bool, error)) error {
+	if action == nil {
+		return nil // fmt.Errorf("Missing action\n")
+	}
 	for file, line := range in {
 		file = os.ExpandEnv(file)
 		if !path.IsAbs(file) {
@@ -57,7 +74,7 @@ func lineCommand(in map[string]string) error {
 		// if err != nil {
 		// 	return err
 		// }
-		changed, err := lineInFile(file, line)
+		changed, err := action(file, line)
 		if err != nil {
 			return err
 		}

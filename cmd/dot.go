@@ -172,7 +172,7 @@ func readRoleConfig(r *role) error {
 
 func getRole(dir, url string) (*role, error) {
 	r := &role{Dir: dir, URL: url}
-	if err := syncCommand(r.Dir, r.URL); err != nil {
+	if err := CloneOrPull(r.Dir, r.URL); err != nil {
 		return r, err
 	}
 	if err := readRoleConfig(r); err != nil {
@@ -249,9 +249,9 @@ func initCmd(action string, args ...string) error {
 			role.Dir = path.Join(destination, dotDir, role.Name)
 		}
 
-		fmt.Fprintf(os.Stderr, "# %s %s\n", action, role.Name)
+		fmt.Fprintf(os.Stderr, "# %s %s\n", strings.Title(action), role.Name)
 
-		if err := syncCommand(role.Dir, role.URL); err != nil {
+		if err := CloneOrPull(role.Dir, role.URL); err != nil {
 			return err
 		}
 		if err := readRoleConfig(&role); err != nil {
@@ -265,35 +265,35 @@ func initCmd(action string, args ...string) error {
 		}
 		switch action {
 		case "install":
-			if err := execCommand(role.Install); err != nil {
+			if err := ExecCommand(role.Install); err != nil {
 				return err
 			}
-			if err := linkCommand(role.Link, role.Dir); err != nil {
+			if err := InstallLink(role.Link, role.Dir); err != nil {
 				return err
 			}
-			if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
+			if err := InstallTemplate(role.Template, role.Dir, roleEnv); err != nil {
 				return err
 			}
-			if err := lineCommand(role.Line); err != nil {
+			if err := InstallLine(role.Line); err != nil {
 				return err
 			}
-			if err := execCommand(role.PostInstall); err != nil {
+			if err := ExecCommand(role.PostInstall); err != nil {
 				return err
 			}
 		case "remove":
-			if err := execCommand(role.Remove); err != nil {
+			if err := ExecCommand(role.Remove); err != nil {
 				return err
 			}
-			// if err := linkCommand(role.Link, role.Dir); err != nil {
-			// 	return err
-			// }
-			// if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
-			// 	return err
-			// }
-			// if err := lineCommand(role.Line); err != nil {
-			// 	return err
-			// }
-			if err := execCommand(role.PostRemove); err != nil {
+			if err := RemoveLink(role.Link, role.Dir); err != nil {
+				return err
+			}
+			if err := RemoveTemplate(role.Template, role.Dir, roleEnv); err != nil {
+				return err
+			}
+			if err := RemoveLine(role.Line); err != nil {
+				return err
+			}
+			if err := ExecCommand(role.PostRemove); err != nil {
 				return err
 			}
 		default:
