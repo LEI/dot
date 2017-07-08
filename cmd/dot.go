@@ -35,19 +35,19 @@ const (
 )
 
 var (
-	HomeDir  = os.Getenv("HOME")
-	destination   = HomeDir
-	source   string
-	URL      string
-	Config   config
-	cfgType  string
-	cfgFile  string
-	cfgDir               = []string{"$HOME", "/etc/dot"}
-	dotDir               = ".dot" // Default clone directory under $HOME
-	dotCfg               = ".dot" // Default config file name without extension
-	envKeys              = []string{"OS"}
-	DirMode  os.FileMode = 0755
-	FileMode os.FileMode = 0644
+	HomeDir     = os.Getenv("HOME")
+	destination = HomeDir
+	source      string
+	URL         string
+	Config      config
+	cfgType     string
+	cfgFile     string
+	cfgDir                  = []string{"$HOME", "/etc/dot"}
+	dotDir                  = ".dot" // Default clone directory under $HOME
+	dotCfg                  = ".dot" // Default config file name without extension
+	envKeys                 = []string{"OS"}
+	DirMode     os.FileMode = 0755
+	FileMode    os.FileMode = 0644
 )
 
 type config struct {
