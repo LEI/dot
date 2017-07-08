@@ -14,8 +14,7 @@
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
+	// "fmt"
 
 	"github.com/spf13/cobra"
 )

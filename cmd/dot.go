@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	// "strconv"
 	"strings"
@@ -100,7 +101,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return installCommand(args)
+		return initCmd("install", args...)
 	},
 }
 
@@ -220,7 +221,7 @@ func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	return cb(src, dst)
 }
 
-func initCmd(action string, args []string) error {
+func initCmd(action string, args ...string) error {
 	roles, err := filter(Config.Roles, args)
 	if err != nil {
 		return err
@@ -230,7 +231,7 @@ func initCmd(action string, args []string) error {
 		return fmt.Errorf("404 role not found\n")
 	}
 	for index, role := range Config.Roles {
-		r, err := initRole(role)
+		role, err := initRole(role)
 		if err != nil {
 			return err
 		}
@@ -285,7 +286,7 @@ func initCmd(action string, args []string) error {
 		default:
 			fmt.Printf("Unknown action '%s'", action)
 		}
-		// Config.Roles[index] = r
+		Config.Roles[index] = role
 	}
 	return nil
 }
