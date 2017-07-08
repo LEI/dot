@@ -28,7 +28,3 @@ for d in "$HOME"/{.tmux/plugins/tpm,.vim/plugged}; do run test -s "$d"; done
 # # for d in $HOME/.dot/*; do yes | run dot "${d##*/}"; done'
 
 # cat ~/.gitconfig.local
-
-dot remove
-
-ls -la ~

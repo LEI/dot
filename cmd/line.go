@@ -62,7 +62,7 @@ func RemoveLine(in map[string]string) error {
 
 func lineCommand(in map[string]string, action func(file string, line string) (bool, error)) error {
 	if action == nil {
-		return nil // fmt.Errorf("Missing action\n")
+		return nil // Skip
 	}
 	for file, line := range in {
 		file = os.ExpandEnv(file)

@@ -185,7 +185,7 @@ func getRole(dir, url string) (*role, error) {
 	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
 	// 	in, err := ioutil.ReadAll(os.Stdin)
 	// 	if err != nil {
-	// 		return fmt.Errorf("Error occured while reading from stdin: %s.", err)
+	// 		return fmt.Errorf("Error occured while reading from stdin: %s", err)
 	// 	}
 	// 	viper.ReadConfig(bytes.NewBuffer(in))
 	// 	args = viper.GetStringSlice(key)
@@ -228,7 +228,7 @@ func initCmd(action string, args ...string) error {
 	}
 	Config.Roles = roles
 	if len(Config.Roles) == 0 {
-		return fmt.Errorf("404 role not found\n")
+		return fmt.Errorf("404 role not found")
 	}
 	for index, role := range Config.Roles {
 		if role.Name == "" {

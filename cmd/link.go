@@ -61,7 +61,7 @@ func RemoveLink(in []string, dir string) error {
 
 func linkCommand(in []string, dir string, action func(src, dst string) error) error {
 	if action == nil {
-		return nil // fmt.Errorf("Missing action\n")
+		return nil // Skip
 	}
 	for _, arg := range in {
 		err := parseArg(arg, dir, action)
@@ -102,18 +102,18 @@ func linkFile(src, dst string) (bool, error) {
 		return false, nil
 	}
 	if real != "" {
-		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", dst, real, src)
+		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s", dst, real, src)
 		// os.Exit(1)
-		return false, fmt.Errorf("# %s is a link to %s, not to %s\n", dst, real, src)
+		return false, fmt.Errorf("# %s is a link to %s, not to %s", dst, real, src)
 	}
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
 	if fi != nil {
-		// fmt.Fprintf(os.Stderr, "# %s is already a file\n", dst)
+		// fmt.Fprintf(os.Stderr, "# %s is already a file", dst)
 		// os.Exit(1)
-		return false, fmt.Errorf("# %s already exists, could not link %s\n", dst, src)
+		return false, fmt.Errorf("# %s already exists, could not link %s", dst, src)
 	}
 	err = os.Symlink(src, dst)
 	if err != nil {

@@ -53,7 +53,7 @@ func init() {
 // CloneOrPull clone or pull
 func CloneOrPull(dir, url string) error {
 	if dir == "" {
-		return fmt.Errorf("Missing repository directory\n")
+		return fmt.Errorf("Missing repository directory")
 	}
 	for _, c := range synced {
 		if c == dir {
@@ -76,8 +76,8 @@ func CloneOrPull(dir, url string) error {
 		return pullRepo(dir, Remote, Branch)
 	}
 	if url == "" {
-		return fmt.Errorf("Missing repository url\n")
-		return fmt.Errorf("%s: No such file or directory\n", dir)
+		return fmt.Errorf("Missing repository url")
+		return fmt.Errorf("%s: No such file or directory", dir)
 	}
 	// TODO: construct url from `user/repo`
 	if err = cloneRepo(dir, url); err != nil {

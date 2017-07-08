@@ -71,7 +71,7 @@ func RemoveTemplate(in []string, dir string, env map[string]string) error {
 
 func templateCommand(in []string, dir string, env map[string]string, action func(src, dst string, env map[string]string) (bool, error)) error {
 	if action == nil {
-		return nil // fmt.Errorf("Missing action\n")
+		return nil // Skip
 	}
 	for _, arg := range in {
 		err := parseArg(arg, dir, func(src, dst string) error {
