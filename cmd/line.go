@@ -30,7 +30,7 @@ var lineCmd = &cobra.Command{
 	Short: "Add or remove a line in file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Source, URL)
+		r, err := getRole(source, URL)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func lineCommand(in map[string]string) error {
 	for file, line := range in {
 		file = os.ExpandEnv(file)
 		if !path.IsAbs(file) {
-			file = path.Join(Target, file)
+			file = path.Join(destination, file)
 		}
 		file = path.Clean(file)
 		// _, err := createDir(file)

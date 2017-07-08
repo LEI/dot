@@ -36,8 +36,8 @@ const (
 
 var (
 	HomeDir  = os.Getenv("HOME")
-	Target   = HomeDir
-	Source   string
+	destination   = HomeDir
+	source   string
 	URL      string
 	Config   config
 	cfgType  string
@@ -118,9 +118,6 @@ func init() {
 
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
-	DotCmd.PersistentFlags().StringVarP(&Source, "source", "s", Source, "Source directory")
-	DotCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
-	DotCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
@@ -130,8 +127,8 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if Source != "" {
-		cfgDir = append([]string{Source}, cfgDir...)
+	if source != "" {
+		cfgDir = append([]string{source}, cfgDir...)
 	}
 	readConfig(viper.GetViper(), cfgDir...)
 	if err := viper.Unmarshal(&Config); err != nil {
@@ -199,28 +196,125 @@ func getRole(dir, url string) (*role, error) {
 func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
-		parts = append(parts, Target)
+		parts = append(parts, destination)
 	} else if len(parts) != 2 {
 		fmt.Println("Invalid arg", arg)
 		os.Exit(1)
 	}
-	source := os.ExpandEnv(parts[0])
-	if !path.IsAbs(source) {
-		source = path.Join(baseDir, source)
+	src := os.ExpandEnv(parts[0])
+	if !path.IsAbs(src) {
+		src = path.Join(baseDir, src)
 	}
-	source = path.Clean(source)
-	target := os.ExpandEnv(parts[1])
-	if !path.IsAbs(target) {
-		target = path.Join(Target, target)
+	src = path.Clean(src)
+	dst := os.ExpandEnv(parts[1])
+	if !path.IsAbs(dst) {
+		dst = path.Join(destination, dst)
 	}
-	changed, err := createDir(target)
+	changed, err := createDir(dst)
 	if err != nil {
 		return err
 	}
 	if changed {
-		fmt.Printf("mkdir -p %s\n", target)
+		fmt.Printf("mkdir -p %s\n", dst)
 	}
-	return cb(source, target)
+	return cb(src, dst)
+}
+
+func initCmd(action string, args []string) error {
+	roles, err := filter(Config.Roles, args)
+	if err != nil {
+		return err
+	}
+	Config.Roles = roles
+	if len(Config.Roles) == 0 {
+		return fmt.Errorf("404 role not found\n")
+	}
+	for index, role := range Config.Roles {
+		r, err := initRole(role)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(os.Stderr, "# Install %s\n", role.Name)
+
+		if err := syncCommand(role.Dir, role.URL); err != nil {
+			return err
+		}
+		if err := readRoleConfig(&role); err != nil {
+			fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+			// os.Exit(1)
+			return nil
+		}
+		roleEnv, err := initEnv(role.Env)
+		if err != nil {
+			return err
+		}
+		switch action {
+		case "install":
+			if err := execCommand(role.Install); err != nil {
+				return err
+			}
+			if err := linkCommand(role.Link, role.Dir); err != nil {
+				return err
+			}
+			if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
+				return err
+			}
+			if err := lineCommand(role.Line); err != nil {
+				return err
+			}
+			if err := execCommand(role.PostInstall); err != nil {
+				return err
+			}
+		case "remove":
+			if err := execCommand(role.Remove); err != nil {
+				return err
+			}
+			// if err := linkCommand(role.Link, role.Dir); err != nil {
+			// 	return err
+			// }
+			// if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
+			// 	return err
+			// }
+			// if err := lineCommand(role.Line); err != nil {
+			// 	return err
+			// }
+			if err := execCommand(role.PostRemove); err != nil {
+				return err
+			}
+		default:
+			fmt.Printf("Unknown action '%s'", action)
+		}
+		// Config.Roles[index] = r
+	}
+	return nil
+}
+
+func filter(roles []role, patterns []string) ([]role, error) {
+	if len(patterns) == 0 {
+		return roles, nil
+	}
+	out := roles[:0]
+	for _, r := range roles {
+		matched, err := match(r.Name, patterns...)
+		if err != nil {
+			return out, err
+		}
+		if matched {
+			out = append(out, r)
+		}
+	}
+	return out, nil
+}
+
+func match(str string, patterns ...string) (bool, error) {
+	for _, pattern := range patterns {
+		matched, err := filepath.Match(pattern, str)
+		if err != nil || matched {
+			return matched, err
+		}
+	}
+	return false, nil
 }
 
 func initRole(role role) (role, error) {
@@ -239,37 +333,7 @@ func initRole(role role) (role, error) {
 		}
 	}
 	if role.Dir == "" {
-		role.Dir = path.Join(Target, dotDir, role.Name)
-	}
-
-	fmt.Fprintf(os.Stderr, "# Install %s\n", role.Name)
-
-	if err := syncCommand(role.Dir, role.URL); err != nil {
-		return role, err
-	}
-	if err := readRoleConfig(&role); err != nil {
-		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
-		// os.Exit(1)
-		return role, nil
-	}
-	roleEnv, err := initEnv(role.Env)
-	if err != nil {
-		return role, err
-	}
-	if err := execCommand(role.Install); err != nil {
-		return role, err
-	}
-	if err := linkCommand(role.Link, role.Dir); err != nil {
-		return role, err
-	}
-	if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
-		return role, err
-	}
-	if err := lineCommand(role.Line); err != nil {
-		return role, err
-	}
-	if err := execCommand(role.PostInstall); err != nil {
-		return role, err
+		role.Dir = path.Join(destination, dotDir, role.Name)
 	}
 	return role, nil
 }

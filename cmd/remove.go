@@ -25,13 +25,14 @@ var removeCmd = &cobra.Command{
 	Short: "Remove",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println(args)
-		return nil
+		return initCmd("remove", args...)
 	},
 }
 
 func init() {
 	DotCmd.AddCommand(removeCmd)
 
-	// removeCmd.Flags().StringVarP(&Source, "source", "s", Source, "Source directory")
+	removeCmd.PersistentFlags().StringVarP(&source, "source", "s", source, "Source directory")
+	removeCmd.PersistentFlags().StringVarP(&destination, "target", "t", destination, "Destination directory")
+	removeCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
 }

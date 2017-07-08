@@ -32,7 +32,7 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Source, URL)
+		r, err := getRole(source, URL)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ var templateCmd = &cobra.Command{
 		// if err != nil {
 		// 	return role, err
 		// }
-		return templateCommand(r.Template, Source, env)
+		return templateCommand(r.Template, source, env)
 	},
 }
 
@@ -63,10 +63,10 @@ func init() {
 
 func templateCommand(in []string, dir string, env map[string]string) error {
 	for _, arg := range in {
-		err := parseArg(arg, dir, func(source, target string) error {
-			_, f := path.Split(source)
-			target = path.Join(target, strings.TrimSuffix(f, ".tpl"))
-			changed, err := templateGlob(source, target, env)
+		err := parseArg(arg, dir, func(src, dst string) error {
+			_, f := path.Split(src)
+			dst = path.Join(dst, strings.TrimSuffix(f, ".tpl"))
+			changed, err := templateGlob(src, dst, env)
 			if err != nil {
 				return err
 			}
@@ -77,8 +77,8 @@ func templateCommand(in []string, dir string, env map[string]string) error {
 			for k, v := range env {
 				fmt.Printf("%s=\"%s\"\n", k, v)
 			}
-			// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, source, target)
-			fmt.Printf("%stemplate %s -> %s\n", prefix, source, target)
+			// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, src, dst)
+			fmt.Printf("%stemplate %s -> %s\n", prefix, src, dst)
 			return nil
 		})
 		if err != nil {
@@ -88,8 +88,8 @@ func templateCommand(in []string, dir string, env map[string]string) error {
 	return nil
 }
 
-func templateGlob(source, target string, env map[string]string) (bool, error) {
-	tmpl, err := template.ParseGlob(source)
+func templateGlob(src, dst string, env map[string]string) (bool, error) {
+	tmpl, err := template.ParseGlob(src)
 	if err != nil {
 		return false, err
 	}
@@ -103,14 +103,14 @@ func templateGlob(source, target string, env map[string]string) (bool, error) {
 		return false, err
 	}
 	str := buf.String()
-	b, err := ioutil.ReadFile(target)
+	b, err := ioutil.ReadFile(dst)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
 	if str == string(b) {
 		return false, nil
 	}
-	if err := ioutil.WriteFile(target, []byte(str), FileMode); err != nil {
+	if err := ioutil.WriteFile(dst, []byte(str), FileMode); err != nil {
 		return false, err
 	}
 	return true, nil

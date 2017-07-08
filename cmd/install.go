@@ -26,61 +26,16 @@ var installCmd = &cobra.Command{
 	Short: "Install",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) > 0 {
-			fmt.Println("Args:", args)
-		}
-		return installCommand(args)
+		return initCmd("install", args...)
 	},
 }
 
 func init() {
 	DotCmd.AddCommand(installCmd)
 
+	installCmd.PersistentFlags().StringVarP(&source, "source", "s", source, "Source directory")
+	installCmd.PersistentFlags().StringVarP(&destination, "target", "t", destination, "Destination directory")
+	installCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
+
 	// installCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
-}
-
-func installCommand(args []string) error {
-	roles, err := filter(Config.Roles, args)
-	if err != nil {
-		return err
-	}
-	Config.Roles = roles
-	if len(Config.Roles) == 0 {
-		return fmt.Errorf("404 role not found\n")
-	}
-	for index, role := range Config.Roles {
-		r, err := initRole(role)
-		if err != nil {
-			return err
-		}
-		Config.Roles[index] = r
-	}
-	return nil
-}
-
-func filter(roles []role, patterns []string) ([]role, error) {
-	if len(patterns) == 0 {
-		return roles, nil
-	}
-	out := roles[:0]
-	for _, r := range roles {
-		matched, err := match(r.Name, patterns...)
-		if err != nil {
-			return out, err
-		}
-		if matched {
-			out = append(out, r)
-		}
-	}
-	return out, nil
-}
-
-func match(str string, patterns ...string) (bool, error) {
-	for _, pattern := range patterns {
-		matched, err := filepath.Match(pattern, str)
-		if err != nil || matched {
-			return matched, err
-		}
-	}
-	return false, nil
 }

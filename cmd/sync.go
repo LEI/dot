@@ -34,7 +34,7 @@ var syncCmd = &cobra.Command{
 	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return syncCommand(Source, URL) // args...
+		return syncCommand(source, URL) // args...
 	},
 }
 
@@ -83,7 +83,7 @@ func syncCommand(dir, url string) error {
 	if err = cloneRepo(dir, url); err != nil {
 		return err
 	}
-	// if dir == Source {}
+	// if dir == source {}
 	// Read config file
 	// initConfig()
 	return nil

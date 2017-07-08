@@ -24,17 +24,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-// Source, Target string
-)
-
 // linkCmd represents the link command
 var linkCmd = &cobra.Command{
 	Use:   "link",
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Source, URL)
+		r, err := getRole(source, URL)
 		if err != nil {
 			return err
 		}
@@ -44,7 +40,7 @@ var linkCmd = &cobra.Command{
 				return err
 			}
 		}
-		return linkCommand(r.Link, Source)
+		return linkCommand(r.Link, source)
 	},
 }
 
@@ -57,8 +53,8 @@ func init() {
 
 func linkCommand(in []string, dir string) error {
 	for _, arg := range in {
-		err := parseArg(arg, dir, func(source, target string) error {
-			err := linkGlob(source, target)
+		err := parseArg(arg, dir, func(src, dst string) error {
+			err := linkGlob(src, dst)
 			if err != nil {
 				return err
 			}
@@ -71,14 +67,14 @@ func linkCommand(in []string, dir string) error {
 	return nil
 }
 
-func linkGlob(source, target string) error {
-	paths, err := filepath.Glob(source)
+func linkGlob(src, dst string) error {
+	paths, err := filepath.Glob(src)
 	if err != nil {
 		return err // false
 	}
 	for _, s := range paths {
 		_, f := path.Split(s)
-		t := path.Join(target, f)
+		t := path.Join(dst, f)
 		changed, err := linkFile(s, t)
 		if err != nil {
 			return err
@@ -92,29 +88,29 @@ func linkGlob(source, target string) error {
 	return nil // true
 }
 
-func linkFile(source, target string) (bool, error) {
-	real, err := readLink(target)
+func linkFile(src, dst string) (bool, error) {
+	real, err := readLink(dst)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	if real == source { // Symlink already exists
+	if real == src { // Symlink already exists
 		return false, nil
 	}
 	if real != "" {
-		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", target, real, source)
+		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", dst, real, src)
 		// os.Exit(1)
-		return false, fmt.Errorf("# %s is a link to %s, not to %s\n", target, real, source)
+		return false, fmt.Errorf("# %s is a link to %s, not to %s\n", dst, real, src)
 	}
-	fi, err := os.Stat(target)
+	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
 	if fi != nil {
-		// fmt.Fprintf(os.Stderr, "# %s is already a file\n", target)
+		// fmt.Fprintf(os.Stderr, "# %s is already a file\n", dst)
 		// os.Exit(1)
-		return false, fmt.Errorf("# %s already exists, could not link %s\n", target, source)
+		return false, fmt.Errorf("# %s already exists, could not link %s\n", dst, src)
 	}
-	err = os.Symlink(source, target)
+	err = os.Symlink(src, dst)
 	if err != nil {
 		return false, err
 	}
