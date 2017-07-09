@@ -241,7 +241,7 @@ func initCmd(action string, args ...string) error {
 		}
 		if role.OS != nil {
 			if ok := hasOne(role.OS, getOS()); !ok { // Skip role
-				fmt.Fprintf(os.Stderr, "# skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+				fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
 				continue
 			}
 		}
