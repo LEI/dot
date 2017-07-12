@@ -22,7 +22,6 @@ ENTRYPOINT ["/bin/bash"]
 
 RUN go get github.com/spf13/cobra
 RUN go get github.com/spf13/viper
-RUN go get -u gopkg.in/src-d/go-git.v4/...
 
 ADD . $DOT
 
