@@ -16,15 +16,17 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 	// "github.com/spf13/viper"
 )
 
 var (
-	Remote string = "origin"
-	Branch string = "master"
-	Pull   bool   = true
+	directory string
+	remote = "origin"
+	branch = "master"
+	pull   = true
 	synced []string
 )
 
@@ -34,18 +36,19 @@ var syncCmd = &cobra.Command{
 	Short: "Clone or pull a git repository",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return CloneOrPull(source, URL) // args...
+		return CloneOrPull(directory, URL) // args...
 	},
 }
 
 func init() {
 	DotCmd.AddCommand(syncCmd)
 
-	// DotCmd.PersistentFlags().BoolVarP(&Pull, "pull", "n", Pull, "Update if already cloned")
+	// DotCmd.PersistentFlags().BoolVarP(&pull, "pull", "n", pull, "Update if already cloned")
 
-	// syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
-	syncCmd.Flags().StringVarP(&Remote, "remote", "r", Remote, "Remote name")
-	syncCmd.Flags().StringVarP(&Branch, "branch", "b", Branch, "Target ref")
+	syncCmd.Flags().StringVarP(&directory, "dir", "d", directory, "Repository directory")
+	syncCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
+	syncCmd.Flags().StringVarP(&remote, "remote", "r", remote, "Remote name")
+	syncCmd.Flags().StringVarP(&branch, "branch", "b", branch, "Target ref")
 
 	// viper.BindPFlag("url", DotCmd.PersistentFlags().Lookup("url"))
 }
@@ -68,12 +71,11 @@ func CloneOrPull(dir, url string) error {
 		return err
 	}
 	if fi != nil {
-		// err := fetchRepo(dir, Remote, Branch)
-		// if err != nil {
-		// 	return err
-		// }
-		// TODO: confirm pull
-		return pullRepo(dir, Remote, Branch)
+		err := checkRepo(dir, remote, branch)
+		if err != nil {
+			return err
+		}
+		return pullRepo(dir, remote, branch)
 	}
 	if url == "" {
 		return fmt.Errorf("Missing repository url")
@@ -99,8 +101,20 @@ func cloneRepo(dir, url string) error {
 	return nil
 }
 
+func checkRepo(dir, remote, branch string) error {
+	args := []string{"-C", dir, "diff-index", "--quiet", "HEAD"}
+	c := exec.Command("git", args...)
+	err := c.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Uncommited changes in '%s', aborting", dir)
+		os.Exit(1)
+		// return err
+	}
+	return nil
+}
+
 func pullRepo(dir, remote, branch string) error {
-	if !Pull {
+	if !pull {
 		return nil
 	}
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
