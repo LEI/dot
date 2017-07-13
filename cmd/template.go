@@ -14,13 +14,15 @@
 package cmd
 
 import (
-	"bytes"
+	// "bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
+	// "io/ioutil"
+	// "os"
 	"path"
 	"strings"
-	"text/template"
+	// "text/template"
+
+	"github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,7 +64,7 @@ func init() {
 }
 
 func InstallTemplate(in []string, dir string, env map[string]string) error {
-	return templateCommand(in, dir, env, templateGlob)
+	return templateCommand(in, dir, env, helpers.Template)
 }
 
 func RemoveTemplate(in []string, dir string, env map[string]string) error {
@@ -97,32 +99,4 @@ func templateCommand(in []string, dir string, env map[string]string, action func
 		}
 	}
 	return nil
-}
-
-func templateGlob(src, dst string, env map[string]string) (bool, error) {
-	tmpl, err := template.ParseGlob(src)
-	if err != nil {
-		return false, err
-	}
-	tmpl = tmpl.Option("missingkey=zero")
-	buf := &bytes.Buffer{}
-	// env, err := GetEnv()
-	// if err != nil {
-	// 	return false, err
-	// }
-	if err = tmpl.Execute(buf, env); err != nil {
-		return false, err
-	}
-	str := buf.String()
-	b, err := ioutil.ReadFile(dst)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	if str == string(b) {
-		return false, nil
-	}
-	if err := ioutil.WriteFile(dst, []byte(str), FileMode); err != nil {
-		return false, err
-	}
-	return true, nil
 }

@@ -368,7 +368,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 		if v == "" { // Lookup environment if the variable is empty
 			val, ok := os.LookupEnv(k)
 			if !ok {
-				fmt.Fprintf(os.Stderr, "# LookupEnv failed for '%s'\n", k)
+				fmt.Fprintf(os.Stderr, "# %s is not set in the environment\n", k)
 				continue
 			}
 			v = val
@@ -392,7 +392,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 				return env, err
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "# Empty environment variable '%s'", k)
+			fmt.Fprintf(os.Stderr, "# %s is empty", k)
 		}
 		env[k] = v
 	}

@@ -24,10 +24,10 @@ import (
 
 var (
 	directory string
-	remote = "origin"
-	branch = "master"
-	pull   = true
-	synced []string
+	remote    = "origin"
+	branch    = "master"
+	pull      = true
+	synced    []string
 )
 
 // syncCmd represents the sync command
