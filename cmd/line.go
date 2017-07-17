@@ -15,10 +15,10 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
-	"strings"
+
+	"github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -53,7 +53,7 @@ func init() {
 }
 
 func InstallLine(in map[string]string) error {
-	return lineCommand(in, lineInFile)
+	return lineCommand(in, helpers.LineInFile)
 }
 
 func RemoveLine(in map[string]string) error {
@@ -85,24 +85,4 @@ func lineCommand(in map[string]string, action func(file string, line string) (bo
 		fmt.Printf("%secho '%s' >> \"%s\"\n", prefix, line, file)
 	}
 	return nil
-}
-
-func lineInFile(file string, line string) (bool, error) {
-	input, err := ioutil.ReadFile(file)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	lines := strings.Split(string(input), "\n")
-	for _, l := range lines {
-		if strings.Contains(l, line) {
-			return false, nil
-		}
-	}
-	lines = append(lines, line+"\n")
-	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(file, []byte(output), FileMode)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }

@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	defaultFileMode os.FileMode = 0644
 )
 
 func Template(src, dst string, env map[string]string) (bool, error) {
@@ -34,7 +33,7 @@ func Template(src, dst string, env map[string]string) (bool, error) {
 	if str == string(b) {
 		return false, nil
 	}
-	if err := ioutil.WriteFile(dst, []byte(str), defaultFileMode); err != nil {
+	if err := ioutil.WriteFile(dst, []byte(str), FileMode); err != nil {
 		return false, err
 	}
 	return true, nil

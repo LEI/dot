@@ -6,7 +6,7 @@ sep() { printf %${COLUMNS:-100}s |tr " " "${1:-=}"; printf "\n"; }
 log() { sep "-"; printf "\n\t%s\n\n" "$@"; sep "-"; }
 run() { log "\$ $*"; "$@" || exit $?; }
 
-ln -s $DOT/.dot.yml $HOME/.dot.yml
+ln -sf $DOT/.dot.yml $HOME/.dot.yml
 
 # run dot sync -u "https://github.com/LEI/dot-git" -s ~/.dot/git
 # run dot install link -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig" ".gitignore"

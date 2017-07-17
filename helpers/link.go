@@ -1,12 +1,14 @@
 package helpers
 
 import (
-	"fmt"
+	"errors"
+	// "fmt"
 	"os"
 )
 
 var (
-// ErrSample = errors.New("Sample")
+	ErrLinkExist = errors.New("Link exists")
+	ErrFileExist = errors.New("File exists")
 )
 
 func Link(src, dst string) (bool, error) {
@@ -20,7 +22,7 @@ func Link(src, dst string) (bool, error) {
 	if real != "" {
 		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s", dst, real, src)
 		// os.Exit(1)
-		return false, fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
+		return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
 	}
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
@@ -29,7 +31,7 @@ func Link(src, dst string) (bool, error) {
 	if fi != nil {
 		// fmt.Fprintf(os.Stderr, "# %s is already a file", dst)
 		// os.Exit(1)
-		return false, fmt.Errorf("%s already exists, could not link %s", dst, src)
+		return false, ErrFileExist // fmt.Errorf("%s already exists, could not link %s", dst, src)
 	}
 	err = os.Symlink(src, dst)
 	if err != nil {

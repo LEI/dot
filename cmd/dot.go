@@ -27,6 +27,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/LEI/dot/formatter"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -50,6 +53,9 @@ var (
 	DirMode     os.FileMode = 0755
 	FileMode    os.FileMode = 0644
 )
+
+var cfgLogger = log.WithFields(log.Fields{
+})
 
 type config struct {
 	Roles []role
@@ -124,6 +130,18 @@ func init() {
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 
 	// viper.BindPFlag("directory", DotCmd.Flags().Lookup("directory"))
+
+	// Log as JSON instead of the default ASCII formatter
+	// log.SetFormatter(&formatter.JSONFormatter{})
+	log.SetFormatter(&formatter.CLIFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+
+	// Only log the this severity or above
+	log.SetLevel(log.InfoLevel)
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -132,8 +150,12 @@ func initConfig() {
 		cfgDir = append([]string{source}, cfgDir...)
 	}
 	readConfig(viper.GetViper(), cfgDir...)
+
+	cfgLogger = cfgLogger.WithFields(log.Fields{
+	})
+
 	if err := viper.Unmarshal(&Config); err != nil {
-		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+		cfgLogger.Errorf("Unable to decode into struct, %v", err)
 		os.Exit(1)
 	}
 }
@@ -155,7 +177,8 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	// v.WatchConfig()  // Read config file while running
 	// If a config file is found, read it in.
 	if err := v.ReadInConfig(); err == nil {
-		fmt.Println("# Using config file:", v.ConfigFileUsed())
+		cfgLogger.Info("Using config file: " + v.ConfigFileUsed())
+		// fmt.Println("# Using config file:", v.ConfigFileUsed())
 	}
 	return v
 }
@@ -231,17 +254,24 @@ func initCmd(action string, args ...string) error {
 		return fmt.Errorf("404 role not found")
 	}
 	for index, role := range Config.Roles {
+		roleLogger := cfgLogger.WithFields(log.Fields{
+			"name": role.Name,
+			// "url": role.URL,
+		})
 		if role.Name == "" {
-			fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
+			roleLogger.Warn("Missing role name")
 			os.Exit(1)
 		}
 		if role.URL == "" {
-			fmt.Fprintf(os.Stderr, "Missing role url in %v\n", role)
+			roleLogger.Warn("Missing role url")
 			os.Exit(1)
 		}
 		if role.OS != nil {
 			if ok := hasOne(role.OS, getOS()); !ok { // Skip role
-				fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+				// fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+				roleLogger.WithFields(log.Fields{
+					"os": role.OS,
+				}).Info("Skipping role")
 				continue
 			}
 		}
@@ -249,13 +279,18 @@ func initCmd(action string, args ...string) error {
 			role.Dir = path.Join(destination, dotDir, role.Name)
 		}
 
-		fmt.Fprintf(os.Stderr, "# %s %s\n", strings.Title(action), role.Name)
+		roleLogger = roleLogger.WithFields(log.Fields{
+			"path": role.Dir,
+		})
+		roleLogger.Info(strings.Title(action) + " role")
 
+		// TODO: cfg, role, err := getRole
 		if err := CloneOrPull(role.Dir, role.URL); err != nil {
 			return err
 		}
 		if err := readRoleConfig(&role); err != nil {
-			fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+			roleLogger.Warnf("Unable to decode into struct: %v", err)
+			// fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
 			// os.Exit(1)
 			return nil
 		}
