@@ -14,13 +14,15 @@
 package cmd
 
 import (
-	"bytes"
+	// "bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
+	// "io/ioutil"
+	// "os"
 	"path"
 	"strings"
-	"text/template"
+	// "text/template"
+
+	"github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,7 +34,7 @@ var templateCmd = &cobra.Command{
 	Short: "Fill go template",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Source, URL)
+		r, err := getRole(source, URL)
 		if err != nil {
 			return err
 		}
@@ -50,7 +52,7 @@ var templateCmd = &cobra.Command{
 		// if err != nil {
 		// 	return role, err
 		// }
-		return templateCommand(r.Template, Source, env)
+		return InstallTemplate(r.Template, source, env)
 	},
 }
 
@@ -61,12 +63,23 @@ func init() {
 	// templateCmd.Flags().StringVarP(&Extra, "env", "e", Extra, "Extra env var")
 }
 
-func templateCommand(in []string, dir string, env map[string]string) error {
+func InstallTemplate(in []string, dir string, env map[string]string) error {
+	return templateCommand(in, dir, env, helpers.Template)
+}
+
+func RemoveTemplate(in []string, dir string, env map[string]string) error {
+	return templateCommand(in, dir, env, nil)
+}
+
+func templateCommand(in []string, dir string, env map[string]string, action func(src, dst string, env map[string]string) (bool, error)) error {
+	if action == nil {
+		return nil // Skip
+	}
 	for _, arg := range in {
-		err := parseArg(arg, dir, func(source, target string) error {
-			_, f := path.Split(source)
-			target = path.Join(target, strings.TrimSuffix(f, ".tpl"))
-			changed, err := templateGlob(source, target, env)
+		err := parseArg(arg, dir, func(src, dst string) error {
+			_, f := path.Split(src)
+			dst = path.Join(dst, strings.TrimSuffix(f, ".tpl"))
+			changed, err := action(src, dst, env)
 			if err != nil {
 				return err
 			}
@@ -77,8 +90,8 @@ func templateCommand(in []string, dir string, env map[string]string) error {
 			for k, v := range env {
 				fmt.Printf("%s=\"%s\"\n", k, v)
 			}
-			// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, source, target)
-			fmt.Printf("%stemplate %s -> %s\n", prefix, source, target)
+			// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, src, dst)
+			fmt.Printf("%stemplate %s -> %s\n", prefix, src, dst)
 			return nil
 		})
 		if err != nil {
@@ -86,32 +99,4 @@ func templateCommand(in []string, dir string, env map[string]string) error {
 		}
 	}
 	return nil
-}
-
-func templateGlob(source, target string, env map[string]string) (bool, error) {
-	tmpl, err := template.ParseGlob(source)
-	if err != nil {
-		return false, err
-	}
-	tmpl = tmpl.Option("missingkey=zero")
-	buf := &bytes.Buffer{}
-	// env, err := GetEnv()
-	// if err != nil {
-	// 	return false, err
-	// }
-	if err = tmpl.Execute(buf, env); err != nil {
-		return false, err
-	}
-	str := buf.String()
-	b, err := ioutil.ReadFile(target)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	if str == string(b) {
-		return false, nil
-	}
-	if err := ioutil.WriteFile(target, []byte(str), FileMode); err != nil {
-		return false, err
-	}
-	return true, nil
 }

@@ -21,11 +21,15 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	// "strconv"
 	"strings"
 	"text/template"
 
+	"github.com/LEI/dot/formatter"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,20 +39,23 @@ const (
 )
 
 var (
-	HomeDir  = os.Getenv("HOME")
-	Target   = HomeDir
-	Source   string
-	URL      string
-	Config   config
-	cfgType  string
-	cfgFile  string
-	cfgDir               = []string{"$HOME", "/etc/dot"}
-	dotDir               = ".dot" // Default clone directory under $HOME
-	dotCfg               = ".dot" // Default config file name without extension
-	envKeys              = []string{"OS"}
-	DirMode  os.FileMode = 0755
-	FileMode os.FileMode = 0644
+	HomeDir     = os.Getenv("HOME")
+	destination = HomeDir
+	source      string
+	URL         string
+	Config      config
+	cfgType     string
+	cfgFile     string
+	cfgDir                  = []string{"$HOME", "/etc/dot"}
+	dotDir                  = ".dot" // Default clone directory under $HOME
+	dotCfg                  = ".dot" // Default config file name without extension
+	envKeys                 = []string{"OS"}
+	DirMode     os.FileMode = 0755
+	FileMode    os.FileMode = 0644
 )
+
+var cfgLogger = log.WithFields(log.Fields{
+})
 
 type config struct {
 	Roles []role
@@ -100,7 +107,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return installCommand(args)
+		return initCmd("install", args...)
 	},
 }
 
@@ -118,24 +125,37 @@ func init() {
 
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
-	DotCmd.PersistentFlags().StringVarP(&Source, "source", "s", Source, "Source directory")
-	DotCmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Target directory")
-	DotCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 
 	// viper.BindPFlag("directory", DotCmd.Flags().Lookup("directory"))
+
+	// Log as JSON instead of the default ASCII formatter
+	// log.SetFormatter(&formatter.JSONFormatter{})
+	log.SetFormatter(&formatter.CLIFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+
+	// Only log the this severity or above
+	log.SetLevel(log.InfoLevel)
+
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if Source != "" {
-		cfgDir = append([]string{Source}, cfgDir...)
+	if source != "" {
+		cfgDir = append([]string{source}, cfgDir...)
 	}
 	readConfig(viper.GetViper(), cfgDir...)
+
+	cfgLogger = cfgLogger.WithFields(log.Fields{
+	})
+
 	if err := viper.Unmarshal(&Config); err != nil {
-		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+		cfgLogger.Errorf("Unable to decode into struct, %v", err)
 		os.Exit(1)
 	}
 }
@@ -157,7 +177,8 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	// v.WatchConfig()  // Read config file while running
 	// If a config file is found, read it in.
 	if err := v.ReadInConfig(); err == nil {
-		fmt.Println("# Using config file:", v.ConfigFileUsed())
+		cfgLogger.Info("Using config file: " + v.ConfigFileUsed())
+		// fmt.Println("# Using config file:", v.ConfigFileUsed())
 	}
 	return v
 }
@@ -174,7 +195,7 @@ func readRoleConfig(r *role) error {
 
 func getRole(dir, url string) (*role, error) {
 	r := &role{Dir: dir, URL: url}
-	if err := syncCommand(r.Dir, r.URL); err != nil {
+	if err := CloneOrPull(r.Dir, r.URL); err != nil {
 		return r, err
 	}
 	if err := readRoleConfig(r); err != nil {
@@ -187,7 +208,7 @@ func getRole(dir, url string) (*role, error) {
 	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
 	// 	in, err := ioutil.ReadAll(os.Stdin)
 	// 	if err != nil {
-	// 		return fmt.Errorf("Error occured while reading from stdin: %s.", err)
+	// 		return fmt.Errorf("Error occured while reading from stdin: %s", err)
 	// 	}
 	// 	viper.ReadConfig(bytes.NewBuffer(in))
 	// 	args = viper.GetStringSlice(key)
@@ -199,79 +220,150 @@ func getRole(dir, url string) (*role, error) {
 func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
-		parts = append(parts, Target)
+		parts = append(parts, destination)
 	} else if len(parts) != 2 {
 		fmt.Println("Invalid arg", arg)
 		os.Exit(1)
 	}
-	source := os.ExpandEnv(parts[0])
-	if !path.IsAbs(source) {
-		source = path.Join(baseDir, source)
+	src := os.ExpandEnv(parts[0])
+	if !path.IsAbs(src) {
+		src = path.Join(baseDir, src)
 	}
-	source = path.Clean(source)
-	target := os.ExpandEnv(parts[1])
-	if !path.IsAbs(target) {
-		target = path.Join(Target, target)
+	src = path.Clean(src)
+	dst := os.ExpandEnv(parts[1])
+	if !path.IsAbs(dst) {
+		dst = path.Join(destination, dst)
 	}
-	changed, err := createDir(target)
+	changed, err := createDir(dst)
 	if err != nil {
 		return err
 	}
 	if changed {
-		fmt.Printf("mkdir -p %s\n", target)
+		fmt.Printf("mkdir -p %s\n", dst)
 	}
-	return cb(source, target)
+	return cb(src, dst)
 }
 
-func initRole(role role) (role, error) {
-	if role.Name == "" {
-		fmt.Fprintf(os.Stderr, "Missing role name in %v\n", role)
-		os.Exit(1)
+func initCmd(action string, args ...string) error {
+	roles, err := filter(Config.Roles, args)
+	if err != nil {
+		return err
 	}
-	if role.URL == "" {
-		fmt.Fprintf(os.Stderr, "Missing role url in %v\n", role)
-		os.Exit(1)
+	Config.Roles = roles
+	if len(Config.Roles) == 0 {
+		return fmt.Errorf("404 role not found")
 	}
-	if role.OS != nil {
-		if ok := hasOne(role.OS, getOS()); !ok { // Skip role
-			fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
-			return role, nil
+	for index, role := range Config.Roles {
+		roleLogger := cfgLogger.WithFields(log.Fields{
+			"name": role.Name,
+			// "url": role.URL,
+		})
+		if role.Name == "" {
+			roleLogger.Warn("Missing role name")
+			os.Exit(1)
+		}
+		if role.URL == "" {
+			roleLogger.Warn("Missing role url")
+			os.Exit(1)
+		}
+		if role.OS != nil {
+			if ok := hasOne(role.OS, getOS()); !ok { // Skip role
+				// fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
+				roleLogger.WithFields(log.Fields{
+					"os": role.OS,
+				}).Info("Skipping role")
+				continue
+			}
+		}
+		if role.Dir == "" {
+			role.Dir = path.Join(destination, dotDir, role.Name)
+		}
+
+		roleLogger = roleLogger.WithFields(log.Fields{
+			"path": role.Dir,
+		})
+		roleLogger.Info(strings.Title(action) + " role")
+
+		// TODO: cfg, role, err := getRole
+		if err := CloneOrPull(role.Dir, role.URL); err != nil {
+			return err
+		}
+		if err := readRoleConfig(&role); err != nil {
+			roleLogger.Warnf("Unable to decode into struct: %v", err)
+			// fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+			// os.Exit(1)
+			return nil
+		}
+		roleEnv, err := initEnv(role.Env)
+		if err != nil {
+			return err
+		}
+		switch action {
+		case "install":
+			if err := ExecCommand(role.Install); err != nil {
+				return err
+			}
+			if err := InstallLink(role.Link, role.Dir); err != nil {
+				return err
+			}
+			if err := InstallTemplate(role.Template, role.Dir, roleEnv); err != nil {
+				return err
+			}
+			if err := InstallLine(role.Line); err != nil {
+				return err
+			}
+			if err := ExecCommand(role.PostInstall); err != nil {
+				return err
+			}
+		case "remove":
+			if err := ExecCommand(role.Remove); err != nil {
+				return err
+			}
+			if err := RemoveLink(role.Link, role.Dir); err != nil {
+				return err
+			}
+			if err := RemoveTemplate(role.Template, role.Dir, roleEnv); err != nil {
+				return err
+			}
+			if err := RemoveLine(role.Line); err != nil {
+				return err
+			}
+			if err := ExecCommand(role.PostRemove); err != nil {
+				return err
+			}
+		default:
+			fmt.Printf("Unknown action '%s'", action)
+		}
+		Config.Roles[index] = role
+	}
+	return nil
+}
+
+func filter(roles []role, patterns []string) ([]role, error) {
+	if len(patterns) == 0 {
+		return roles, nil
+	}
+	out := roles[:0]
+	for _, r := range roles {
+		matched, err := match(r.Name, patterns...)
+		if err != nil {
+			return out, err
+		}
+		if matched {
+			out = append(out, r)
 		}
 	}
-	if role.Dir == "" {
-		role.Dir = path.Join(Target, dotDir, role.Name)
-	}
+	return out, nil
+}
 
-	fmt.Fprintf(os.Stderr, "# Install %s\n", role.Name)
-
-	if err := syncCommand(role.Dir, role.URL); err != nil {
-		return role, err
+func match(str string, patterns ...string) (bool, error) {
+	for _, pattern := range patterns {
+		matched, err := filepath.Match(pattern, str)
+		if err != nil || matched {
+			return matched, err
+		}
 	}
-	if err := readRoleConfig(&role); err != nil {
-		fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
-		// os.Exit(1)
-		return role, nil
-	}
-	roleEnv, err := initEnv(role.Env)
-	if err != nil {
-		return role, err
-	}
-	if err := execCommand(role.Install); err != nil {
-		return role, err
-	}
-	if err := linkCommand(role.Link, role.Dir); err != nil {
-		return role, err
-	}
-	if err := templateCommand(role.Template, role.Dir, roleEnv); err != nil {
-		return role, err
-	}
-	if err := lineCommand(role.Line); err != nil {
-		return role, err
-	}
-	if err := execCommand(role.PostInstall); err != nil {
-		return role, err
-	}
-	return role, nil
+	return false, nil
 }
 
 func getOS() []string {
@@ -311,7 +403,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 		if v == "" { // Lookup environment if the variable is empty
 			val, ok := os.LookupEnv(k)
 			if !ok {
-				fmt.Fprintf(os.Stderr, "# LookupEnv failed for '%s'", k)
+				fmt.Fprintf(os.Stderr, "# %s is not set in the environment\n", k)
 				continue
 			}
 			v = val
@@ -335,7 +427,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 				return env, err
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "# Empty environment variable '%s'", k)
+			fmt.Fprintf(os.Stderr, "# %s is empty", k)
 		}
 		env[k] = v
 	}

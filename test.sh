@@ -6,7 +6,7 @@ sep() { printf %${COLUMNS:-100}s |tr " " "${1:-=}"; printf "\n"; }
 log() { sep "-"; printf "\n\t%s\n\n" "$@"; sep "-"; }
 run() { log "\$ $*"; "$@" || exit $?; }
 
-ln -s $DOT/.dot.yml $HOME/.dot.yml
+ln -sf $DOT/.dot.yml $HOME/.dot.yml
 
 # run dot sync -u "https://github.com/LEI/dot-git" -s ~/.dot/git
 # run dot install link -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig" ".gitignore"
@@ -26,5 +26,3 @@ for d in "$HOME"/{.tmux/plugins/tpm,.vim/plugged}; do run test -s "$d"; done
 # touch ~/{.bashrc,.vim/init.vim}
 # yes | run dot install -s -f bash,vim -c $DOT/.dotrc.yml
 # # for d in $HOME/.dot/*; do yes | run dot "${d##*/}"; done'
-
-# cat ~/.gitconfig.local

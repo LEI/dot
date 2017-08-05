@@ -15,19 +15,16 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"path"
 	"path/filepath"
 	// "strings"
 
 	"github.com/LEI/dot/dot"
+	"github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-)
-
-var (
-// Source, Target string
 )
 
 // linkCmd represents the link command
@@ -36,7 +33,7 @@ var linkCmd = &cobra.Command{
 	Short: "Symlink",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Source, URL)
+		r, err := getRole(source, URL)
 		if err != nil {
 			return err
 		}
@@ -46,7 +43,7 @@ var linkCmd = &cobra.Command{
 				return err
 			}
 		}
-		return linkCommand(r.Link, Source)
+		return InstallLink(r.Link, source)
 	},
 }
 

@@ -15,10 +15,10 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
-	"strings"
+
+	"github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,12 +30,18 @@ var lineCmd = &cobra.Command{
 	Short: "Add or remove a line in file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(Source, URL)
+		r, err := getRole(source, URL)
 		if err != nil {
 			return err
 		}
 		r.Line = viper.GetStringMapString("line")
-		return lineCommand(r.Line)
+		// switch action {
+		// case "install":
+		// 	err := InstallLine(in)
+		// case "remove":
+		// 	err := RemoveLine(in)
+		// }
+		return InstallLine(r.Line)
 	},
 }
 
@@ -46,18 +52,29 @@ func init() {
 	// lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
-func lineCommand(in map[string]string) error {
+func InstallLine(in map[string]string) error {
+	return lineCommand(in, helpers.LineInFile)
+}
+
+func RemoveLine(in map[string]string) error {
+	return lineCommand(in, nil)
+}
+
+func lineCommand(in map[string]string, action func(file string, line string) (bool, error)) error {
+	if action == nil {
+		return nil // Skip
+	}
 	for file, line := range in {
 		file = os.ExpandEnv(file)
 		if !path.IsAbs(file) {
-			file = path.Join(Target, file)
+			file = path.Join(destination, file)
 		}
 		file = path.Clean(file)
 		// _, err := createDir(file)
 		// if err != nil {
 		// 	return err
 		// }
-		changed, err := lineInFile(file, line)
+		changed, err := action(file, line)
 		if err != nil {
 			return err
 		}
@@ -68,24 +85,4 @@ func lineCommand(in map[string]string) error {
 		fmt.Printf("%secho '%s' >> \"%s\"\n", prefix, line, file)
 	}
 	return nil
-}
-
-func lineInFile(file string, line string) (bool, error) {
-	input, err := ioutil.ReadFile(file)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	lines := strings.Split(string(input), "\n")
-	for _, l := range lines {
-		if strings.Contains(l, line) {
-			return false, nil
-		}
-	}
-	lines = append(lines, line+"\n")
-	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(file, []byte(output), FileMode)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }
