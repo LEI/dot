@@ -20,6 +20,8 @@ import (
 	"path/filepath"
 	// "strings"
 
+	"github.com/LEI/dot/dot"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -56,11 +58,26 @@ func init() {
 }
 
 func linkCommand(in []string, dir string) error {
+	var linkList []dot.Link
 	for _, arg := range in {
 		err := parseArg(arg, dir, func(source, target string) error {
-			err := linkGlob(source, target)
+			paths, err := filepath.Glob(source)
 			if err != nil {
-				return err
+				return err // false
+			}
+			for _, s := range paths {
+				_, f := path.Split(s)
+				t := path.Join(target, f)
+				linkList = append(linkList, dot.Link{s, t})
+				// changed, err := linkFile(s, t)
+				// if err != nil {
+				// 	return err
+				// }
+				// prefix := "# "
+				// if changed {
+				// 	prefix = ""
+				// }
+				// fmt.Printf("%sln -s %s %s\n", prefix, s, t)
 			}
 			return nil
 		})
@@ -68,28 +85,8 @@ func linkCommand(in []string, dir string) error {
 			return err
 		}
 	}
+	fmt.Println("Links:", linkList)
 	return nil
-}
-
-func linkGlob(source, target string) error {
-	paths, err := filepath.Glob(source)
-	if err != nil {
-		return err // false
-	}
-	for _, s := range paths {
-		_, f := path.Split(s)
-		t := path.Join(target, f)
-		changed, err := linkFile(s, t)
-		if err != nil {
-			return err
-		}
-		prefix := "# "
-		if changed {
-			prefix = ""
-		}
-		fmt.Printf("%sln -s %s %s\n", prefix, s, t)
-	}
-	return nil // true
 }
 
 func linkFile(source, target string) (bool, error) {
@@ -101,18 +98,18 @@ func linkFile(source, target string) (bool, error) {
 		return false, nil
 	}
 	if real != "" {
-		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", target, real, source)
+		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s", target, real, source)
 		// os.Exit(1)
-		return false, fmt.Errorf("# %s is a link to %s, not to %s\n", target, real, source)
+		return false, fmt.Errorf("# %s is a link to %s, not to %s", target, real, source)
 	}
 	fi, err := os.Stat(target)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
 	if fi != nil {
-		// fmt.Fprintf(os.Stderr, "# %s is already a file\n", target)
+		// fmt.Fprintf(os.Stderr, "# %s is already a file", target)
 		// os.Exit(1)
-		return false, fmt.Errorf("# %s already exists, could not link %s\n", target, source)
+		return false, fmt.Errorf("# %s already exists, could not link %s", target, source)
 	}
 	err = os.Symlink(source, target)
 	if err != nil {
