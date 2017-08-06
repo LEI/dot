@@ -15,13 +15,12 @@ package cmd
 
 import (
 	"fmt"
-	// "os"
 	"path"
 	"path/filepath"
 	// "strings"
 
 	"github.com/LEI/dot/dot"
-	"github.com/LEI/dot/helpers"
+	// "github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,82 +53,48 @@ func init() {
 	// linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
-func linkCommand(in []string, dir string) error {
-	var linkList []dot.Link
+func InstallLink(in []string, dir string) error {
+	return linkCommand(in, dir, linkGlob)
+}
+
+func RemoveLink(in []string, dir string) error {
+	return linkCommand(in, dir, nil)
+}
+
+func linkCommand(in []string, dir string, action func(src, dst string) error) error {
+// func linkCommand(in []string, dir string) error {
+	if action == nil {
+		return nil // Skip
+	}
 	for _, arg := range in {
-		err := parseArg(arg, dir, func(source, target string) error {
-			paths, err := filepath.Glob(source)
-			if err != nil {
-				return err // false
-			}
-			for _, s := range paths {
-				_, f := path.Split(s)
-				t := path.Join(target, f)
-				linkList = append(linkList, dot.Link{s, t})
-				// changed, err := linkFile(s, t)
-				// if err != nil {
-				// 	return err
-				// }
-				// prefix := "# "
-				// if changed {
-				// 	prefix = ""
-				// }
-				// fmt.Printf("%sln -s %s %s\n", prefix, s, t)
-			}
-			return nil
-		})
+		err := parseArg(arg, dir, action)
 		if err != nil {
 			return err
 		}
 	}
-	fmt.Println("Links:", linkList)
 	return nil
 }
 
-func linkFile(source, target string) (bool, error) {
-	real, err := readLink(target)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	if real == source { // Symlink already exists
-		return false, nil
-	}
-	if real != "" {
-		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s", target, real, source)
-		// os.Exit(1)
-		return false, fmt.Errorf("# %s is a link to %s, not to %s", target, real, source)
-	}
-	fi, err := os.Stat(target)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	if fi != nil {
-		// fmt.Fprintf(os.Stderr, "# %s is already a file", target)
-		// os.Exit(1)
-		return false, fmt.Errorf("# %s already exists, could not link %s", target, source)
-	}
-	err = os.Symlink(source, target)
+func linkGlob(source, target string) error {
+	var linkList []dot.Link
+	paths, err := filepath.Glob(source)
 	if err != nil {
-		return false, err
+		return err // false
 	}
-	return true, nil
-}
-
-func readLink(path string) (string, error) {
-	fi, err := os.Lstat(path)
-	if err != nil { // os.IsExist(err)
-		// if os.IsNotExist(err) {
-		// return path, nil
+	for _, s := range paths {
+		_, f := path.Split(s)
+		t := path.Join(target, f)
+		linkList = append(linkList, dot.Link{s, t})
+		// changed, err := helpers.Link(s, t)
+		// if err != nil {
+		// 	return err
 		// }
-		return "", err
+		// prefix := "# "
+		// if changed {
+		// 	prefix = ""
+		// }
+		// fmt.Printf("%sln -s %s %s\n", prefix, s, t)
 	}
-	if !isSymlink(fi) {
-		return "", nil
-	}
-	real, err := os.Readlink(path)
-	return real, err
-}
-
-func isSymlink(fi os.FileInfo) bool {
-	return fi != nil && fi.Mode()&os.ModeSymlink != 0
+	fmt.Println("Links:", linkList)
+	return nil
 }
