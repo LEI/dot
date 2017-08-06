@@ -20,7 +20,6 @@ import (
 	// "strings"
 
 	"github.com/LEI/dot/dot"
-	// "github.com/LEI/dot/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -76,7 +75,7 @@ func linkCommand(in []string, dir string, action func(src, dst string) error) er
 }
 
 func linkGlob(source, target string) error {
-	var linkList []dot.Link
+	// var linkList []dot.Link
 	paths, err := filepath.Glob(source)
 	if err != nil {
 		return err // false
@@ -84,17 +83,17 @@ func linkGlob(source, target string) error {
 	for _, s := range paths {
 		_, f := path.Split(s)
 		t := path.Join(target, f)
-		linkList = append(linkList, dot.Link{s, t})
-		// changed, err := helpers.Link(s, t)
-		// if err != nil {
-		// 	return err
-		// }
-		// prefix := "# "
-		// if changed {
-		// 	prefix = ""
-		// }
-		// fmt.Printf("%sln -s %s %s\n", prefix, s, t)
+		// linkList = append(linkList, dot.Link{s, t})
+		changed, err := dot.Link(s, t)
+		if err != nil {
+			return err
+		}
+		prefix := "# "
+		if changed {
+			prefix = ""
+		}
+		fmt.Printf("%sln -s %s %s\n", prefix, s, t)
 	}
-	fmt.Println("Links:", linkList)
+	// fmt.Println("Links:", linkList)
 	return nil
 }

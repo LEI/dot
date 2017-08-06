@@ -66,22 +66,18 @@ type role struct {
 	Dir       string `mapstructure:"directory"`
 	URL       string
 	OS        strSlice
-	taskRoles `mapstructure:",squash"`
-	taskExec  `mapstructure:",squash"`
+	task      `mapstructure:",squash"`
 }
 
-type taskRoles struct {
-	Env      map[string]string // Environment variables map
-	Line     map[string]string // Lines map
-	Link     strSlice          // Paths list `<source>[:<target>]`
-	Template strSlice          // Paths list `<source>[:<target>]`
-}
-
-type taskExec struct {
+type task struct {
 	Install     strSlice // Exec before install
 	PostInstall strSlice `mapstructure:"post_install"` // Exec after install
 	Remove      strSlice // Exec before remove
 	PostRemove  strSlice `mapstructure:"post_remove"` // Exec after remove
+	Env      map[string]string // Environment variables map
+	Line     map[string]string // Lines map
+	Link     strSlice          // Paths list `<source>[:<target>]`
+	Template strSlice          // Paths list `<source>[:<target>]`
 }
 
 type strSlice []string

@@ -22,7 +22,7 @@ import (
 	"strings"
 	// "text/template"
 
-	"github.com/LEI/dot/helpers"
+	"github.com/LEI/dot/dot"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -64,7 +64,7 @@ func init() {
 }
 
 func InstallTemplate(in []string, dir string, env map[string]string) error {
-	return templateCommand(in, dir, env, helpers.Template)
+	return templateCommand(in, dir, env, dot.Template)
 }
 
 func RemoveTemplate(in []string, dir string, env map[string]string) error {
