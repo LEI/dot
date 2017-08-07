@@ -35,14 +35,18 @@ import (
 )
 
 const (
+	// OS ...
 	OS = runtime.GOOS
 )
 
 var (
+	// HomeDir ...
 	HomeDir     = os.Getenv("HOME")
 	destination = HomeDir
 	source      string
+	// URL ...
 	URL         string
+	// Config ...
 	Config      config
 	cfgType     string
 	cfgFile     string
@@ -50,7 +54,9 @@ var (
 	dotDir                  = ".dot" // Default clone directory under $HOME
 	dotCfg                  = ".dot" // Default config file name without extension
 	envKeys                 = []string{"OS"}
+	// DirMode ...
 	DirMode     os.FileMode = 0755
+	// FileMode ...
 	FileMode    os.FileMode = 0644
 )
 
@@ -430,6 +436,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 	return env, nil
 }
 
+// Env ...
 func Env() map[string]string {
 	env := make(map[string]string, 0)
 	for _, i := range os.Environ() {

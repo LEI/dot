@@ -1,9 +1,11 @@
-package dot
+package dotlib
 
 import (
 	"errors"
-	// "fmt"
+	"fmt"
 	"os"
+	"strings"
+	"path"
 )
 
 var (
@@ -16,21 +18,58 @@ var (
 // LinkTask struct
 type LinkTask struct {
 	Source, Target string
+	Destination string
+}
+
+func (t *LinkTask) String() string {
+	return fmt.Sprintf("%s -> %s", t.Source, t.Target)
+}
+
+// Register link
+func (t *LinkTask) Register(baseDir string, str string) error {
+	parts := strings.Split(str, ":")
+	if len(parts) == 1 {
+		parts = append(parts, t.Destination)
+	} else if len(parts) != 2 {
+		return fmt.Errorf("Invalid arg: %s", str)
+	}
+	src := os.ExpandEnv(parts[0])
+	if !path.IsAbs(src) {
+		src = path.Join(baseDir, src)
+	}
+	src = path.Clean(src)
+	dst := os.ExpandEnv(parts[1])
+	if !path.IsAbs(dst) {
+		src = path.Join(t.Destination, dst)
+	}
+	dst = path.Clean(dst)
+	t.Source = src
+	t.Target = dst
+	return nil
 }
 
 // Install link
-// func (l *LinkTask) Install() error {
-// 	changed, err := Link(l.Source, l.Target)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	prefix := "# "
-// 	if changed {
-// 		prefix = ""
-// 	}
-// 	fmt.Printf("%sln -s %s %s\n", prefix, l.Source, l.Target)
-// 	return nil
-// }
+func (t *LinkTask) Install() error {
+	changed, err := Link(t.Source, t.Target)
+	if err != nil {
+		return err
+	}
+	prefix := "# "
+	if changed {
+		prefix = ""
+	}
+	c := fmt.Sprintf("ln -s %s %s\n", t.Source, t.Target)
+	fmt.Printf("%s%s\n", prefix, c)
+	return nil
+}
+
+// Remove link
+func (t *LinkTask) Remove() error {
+	prefix := "TODO: "
+	c := fmt.Sprintf("rm %s\n", t.Target)
+	fmt.Printf("%s%s\n", prefix, c)
+	return nil
+}
 
 // Link task
 func Link(src, dst string) (bool, error) {

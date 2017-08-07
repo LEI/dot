@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	// "strings"
 
-	"github.com/LEI/dot/dot"
+	"github.com/LEI/dot/dotlib"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -52,10 +52,12 @@ func init() {
 	// linkCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
+// InstallLink ...
 func InstallLink(in []string, dir string) error {
 	return linkCommand(in, dir, linkGlob)
 }
 
+// RemoveLink ...
 func RemoveLink(in []string, dir string) error {
 	return linkCommand(in, dir, nil)
 }
@@ -75,7 +77,7 @@ func linkCommand(in []string, dir string, action func(src, dst string) error) er
 }
 
 func linkGlob(source, target string) error {
-	// var linkList []dot.Link
+	// var linkList []dotlib.Link
 	paths, err := filepath.Glob(source)
 	if err != nil {
 		return err // false
@@ -83,8 +85,8 @@ func linkGlob(source, target string) error {
 	for _, s := range paths {
 		_, f := path.Split(s)
 		t := path.Join(target, f)
-		// linkList = append(linkList, dot.Link{s, t})
-		changed, err := dot.Link(s, t)
+		// linkList = append(linkList, dotlib.Link{s, t})
+		changed, err := dotlib.Link(s, t)
 		if err != nil {
 			return err
 		}

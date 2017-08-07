@@ -22,7 +22,7 @@ import (
 	"strings"
 	// "text/template"
 
-	"github.com/LEI/dot/dot"
+	"github.com/LEI/dot/dotlib"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -63,10 +63,12 @@ func init() {
 	// templateCmd.Flags().StringVarP(&Extra, "env", "e", Extra, "Extra env var")
 }
 
+// InstallTemplate ...
 func InstallTemplate(in []string, dir string, env map[string]string) error {
-	return templateCommand(in, dir, env, dot.Template)
+	return templateCommand(in, dir, env, dotlib.Template)
 }
 
+// RemoveTemplate ...
 func RemoveTemplate(in []string, dir string, env map[string]string) error {
 	return templateCommand(in, dir, env, nil)
 }
