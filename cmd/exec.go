@@ -59,7 +59,7 @@ func ExecCommand(in []string) error {
 	// }
 	// args = append([]string{"-c"}, str)
 	for _, str := range in {
-		err := executeCmd(Shell, []string{"-c", str}...)
+		err := safeExecuteCmd(Shell, []string{"-c", str}...)
 		if err != nil {
 			return err
 		}
@@ -79,4 +79,12 @@ func executeCmd(name string, args ...string) error {
 	// 	return err
 	// }
 	// return nil
+}
+
+func safeExecuteCmd(name string, args ...string) error {
+	if DryRun {
+		fmt.Printf("(DRY-RUN) %s %s\n", name, strings.Join(args, " "))
+		return nil
+	}
+	return executeCmd(name, args...)
 }

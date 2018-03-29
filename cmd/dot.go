@@ -27,6 +27,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/LEI/dot/dotlib"
 	"github.com/LEI/dot/formatter"
 
 	log "github.com/sirupsen/logrus"
@@ -48,9 +49,11 @@ var (
 	URL         string
 	// Config ...
 	Config      config
-	cfgType     string
+	DryRun      bool
+	Verbose     bool
 	cfgFile     string
-	cfgDir                  = []string{"$HOME", "/etc/dot"}
+	cfgType     string      = "yml"
+	cfgDir                  = []string{"$HOME", "/etc/dot", "."}
 	dotDir                  = ".dot" // Default clone directory under $HOME
 	dotCfg                  = ".dot" // Default config file name without extension
 	envKeys                 = []string{"OS"}
@@ -127,6 +130,8 @@ func init() {
 
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
+	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Test mode")
+	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
@@ -143,11 +148,12 @@ func init() {
 
 	// Only log the this severity or above
 	log.SetLevel(log.InfoLevel)
-
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	dotlib.DryRun = DryRun
+
 	if source != "" {
 		cfgDir = append([]string{source}, cfgDir...)
 	}
@@ -163,6 +169,10 @@ func initConfig() {
 }
 
 func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
+	// cfgLogger.Info("Config file: " + cfgFile)
+	// cfgLogger.Info("Config name: " + dotCfg)
+	// cfgLogger.Info("Config type: " + cfgType)
+
 	if cfgFile != "" { // Enable ability to specify config file via flag
 		v.SetConfigFile(cfgFile)
 	}
@@ -172,6 +182,8 @@ func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
 	v.SetConfigName(dotCfg) // Name of config file (without extension)
 
 	for _, dir := range dirs { // Add directories to look for the config file in
+		// cfgLogger.Info("Add config dir: " + dir)
+
 		v.AddConfigPath(dir)
 	}
 
@@ -287,6 +299,8 @@ func initCmd(action string, args ...string) error {
 		roleLogger.Info(strings.Title(action) + " role")
 
 		// TODO: cfg, role, err := getRole
+		// if _, err := os.Stat(role.Dir); os.IsExist(err) {
+		// }
 		if err := CloneOrPull(role.Dir, role.URL); err != nil {
 			return err
 		}
@@ -296,6 +310,7 @@ func initCmd(action string, args ...string) error {
 			// os.Exit(1)
 			return nil
 		}
+
 		roleEnv, err := initEnv(role.Env)
 		if err != nil {
 			return err
@@ -458,6 +473,9 @@ func createDir(dir string) (bool, error) {
 	}
 	if err == nil && fi.IsDir() {
 		return false, nil
+	}
+	if DryRun {
+		return true, nil
 	}
 	return true, os.MkdirAll(dir, DirMode)
 }

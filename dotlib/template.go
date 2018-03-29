@@ -46,6 +46,9 @@ func Template(src, dst string, env map[string]string) (bool, error) {
 	if str == string(b) {
 		return false, nil
 	}
+	if DryRun {
+		return true, nil
+	}
 	if err := ioutil.WriteFile(dst, []byte(str), FileMode); err != nil {
 		return false, err
 	}

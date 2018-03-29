@@ -94,6 +94,9 @@ func Link(src, dst string) (bool, error) {
 		// os.Exit(1)
 		return false, ErrFileExist // fmt.Errorf("%s already exists, could not link %s", dst, src)
 	}
+	if DryRun {
+		return true, nil
+	}
 	err = os.Symlink(src, dst)
 	if err != nil {
 		return false, err

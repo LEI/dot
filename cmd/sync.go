@@ -79,7 +79,7 @@ func CloneOrPull(dir, url string) error {
 	}
 	if url == "" {
 		return fmt.Errorf("Missing repository url")
-		return fmt.Errorf("%s: No such file or directory", dir)
+		// return fmt.Errorf("%s: No such file or directory", dir)
 	}
 	// TODO: construct url from `user/repo`
 	if err = cloneRepo(dir, url); err != nil {
