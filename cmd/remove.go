@@ -107,7 +107,7 @@ func removeLinks(r *role.Role) error {
 		if strings.Contains(l.Path, ":") {
 			s := strings.Split(l.Path, ":")
 			if len(s) != 2 {
-				logger.Errorf("%s: Invalid link path", l.Path)
+				logger.Errorf("%s: Invalid link path\n", l.Path)
 			}
 			l.Path = s[0]
 			targetDir = s[1]

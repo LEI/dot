@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path"
+	// "reflect"
 	"runtime"
 	"strings"
 
@@ -30,7 +31,8 @@ var (
 
 var (
 	Dot        = &role.Meta{}
-	DotIgnore  = []string{".git", "*.md", "*.tpl", "*.json", "*.yml", "*.yaml"}
+	DotIgnore  = []string{".git", "*.md", "*.tpl", "*.yml", "*.yaml"}
+	// , "*.json" (TODO: allow overwrite ignore, e.g. karabiner.json)
 	DotExclude = []string{}
 	Config     = viper.New()
 	configFile = ""
@@ -108,7 +110,7 @@ func initPersistentFlags(cmd *cobra.Command) {
 	DotCmd.PersistentFlags().StringSliceVarP(&DotExclude, "exclude", "x", DotExclude, "Exclude `pattern`")
 	DotCmd.PersistentFlags().StringSliceVarP(&roleFilter, "filter", "f", roleFilter, "Filter roles by `name`")
 	DotCmd.PersistentFlags().BoolVarP(&git.Https, "https", "", git.Https, "Default to HTTPS for git remotes")
-	DotCmd.PersistentFlags().StringVarP(&Dot.Source, "source", "s", CurrentDir, "Dot.Source `directory`")
+	DotCmd.PersistentFlags().StringVarP(&Dot.Source, "source", "s", CurrentDir, "Source `directory`")
 	DotCmd.PersistentFlags().StringVarP(&Dot.Target, "target", "t", HomeDir, "Destination `directory`")
 	// DotCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "Print the version number")
 	// DotCmd.PersistentFlags().Parse(os.Args[1:])
@@ -153,7 +155,7 @@ func initConfig() {
 func osTypes() []string {
 	types := []string{OS}
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	logger.Debugf("OSTYPE='%s' (%v)", OSTYPE, ok)
+	logger.Debugf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
 	if !ok || OSTYPE == "" {
 		out, err := exec.Command(shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
 		if err != nil {
@@ -186,7 +188,7 @@ func initRoles() error {
 		return err
 	}
 	if len(Dot.Roles) == 0 {
-		logger.Errorf("No roles found in %s", configUsed)
+		logger.Errorf("No roles found in %s\n", configUsed)
 	}
 	roles := make([]*role.Role, 0)
 	for _, r := range Dot.Roles {
@@ -249,17 +251,127 @@ func initRoleRepo(r *role.Role) error {
 
 // Init role configuration
 func initRoleConfig(r *role.Role) error {
+
 	cfg := viper.New()
 	cfg.SetConfigName(configName)
 	cfg.AddConfigPath(r.Source)
 	err := cfg.ReadInConfig()
-	if err != nil { // && !os.IsNotExist(err)
+	switch err.(type) {
+	case nil:
+	case viper.ConfigFileNotFoundError:
+		logger.Warn(err)
+	default:
+		// logger.Error(err)
 		return err
 	}
 	cfgUsed := cfg.ConfigFileUsed()
 	if cfgUsed != "" {
 		logger.Debugln("Using role config file:", cfgUsed)
 	}
-	r.Config = cfg
+
+	// r.Config = cfg
+
+	// logger.Infof(" ROLE --------------------- %+v\n", r)
+	// logger.Infof(" ROLE CONFIG --------------------- %+v\n", r.Config)
+
+	/*
+	// p := &role.Package{}
+	// err = Config.UnmarshalKey("roles.git", &p)
+	// if err != nil {
+	// 	return err
+	// }
+	// logger.Infof(" PACKAGE --------------------- %+v\n", p)
+	logger.Infof("\n!!!!!!!!! Config %+v\n\n", Config)
+	// logger.Infof("\nRole %+v\n\n", r)
+	// logger.Infof("= %+v\n", Config.Get("roles"))
+	logger.Infof("!!!!!!!! Dot.Roles %+v\n", Dot.Roles)
+	*/
+
+	// p := &role.Package{}
+	// err = cfg.UnmarshalKey("role", &p)
+	// if err != nil {
+	// 	return err
+	// }
+
+	p := cfg.Sub("role")
+
+	r.Config = p
+	// v := reflect.ValueOf(p)
+	// logger.Infof("--------------------v %+v\n", v)
+	// for i, key := range v.MapKeys() {
+	// 	// key := v.Type().Field(i).Name
+	// 	val := v.Field(i) // .Elem()
+	// 	logger.Printf("\nSET %s: %+v\n\n", key, val)
+	// }
+
+	/*
+	base := &role.Role{}
+	for _, b := range Dot.Roles {
+		if b.Name == r.Name {
+			base = b
+			logger.Infof("BASE ROLE %+v\n", base)
+			break
+		}
+	}
+
+	if r.Config == nil {
+		r.Config = &viper.Viper{}
+	}
+
+	if base.Config != nil {
+		logger.Infof("-------_> BASE %+v\n", base.Config)
+
+		r.Config = base.Config
+	}
+
+	// baseRole := &role.Role{}
+	// err = baseRole.Config.UnmarshalKey("role", &baseRole)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// values := make(map[string]interface{}, v.NumField())
+
+	//r.Config = reflect.Indirect(reflect.ValueOf(Dot.Roles)).Interface()
+	//r.Config = make(map[string]interface{}, len(Dot.Roles))
+	//copy(r.Config, Config)
+
+
+	logger.Infof("BEFORE ===================== %+v\n", base.Config.GetString("template"))
+	// r.Config.Set("name", "xxx")
+
+	for i := 0; i < v.NumField(); i++ {
+		key := v.Type().Field(i).Name
+		val := v.Field(i) // .Elem()
+
+		logger.Printf("\nSET %s: %+v\n\n", key, val)
+
+		fv := v.FieldByName(key)
+
+		fv.Set(val)
+		// r.Config.Set(key, val)
+		// r.Config[key] = val
+
+		// ptr? := v.Field(i).Interface()
+		// values[i] = v.Field(i).Interface()
+	}
+
+	logger.Infof("AFTER ===================== %+v\n", base.Config.GetString("template"))
+	// r.Config = cfg // .Get("role")
+	// for k, v := range v {
+	// 	logger.Infoln(k, v)
+	// 	// a[k] = v
+	// }
+	logger.Infoln("r.Config", r.Config)
+	*/
+
+	// r.Package = &role.Package{}
+	// err = cfg.UnmarshalKey("package", &r.Package)
+	// if err != nil {
+	// 	return err
+	// }
+	// logger.Infof(" r --------------------- %+v\n", r)
+	// logger.Infof(" PACKAGE --------------------- %+v\n", r.Package)
+
 	return nil
 }

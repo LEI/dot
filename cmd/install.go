@@ -84,7 +84,7 @@ func installLinks(r *role.Role) error {
 		if strings.Contains(l.Path, ":") {
 			s := strings.Split(l.Path, ":")
 			if len(s) != 2 {
-				logger.Errorf("%s: Invalid link path", l.Path)
+				logger.Errorf("%s: Invalid link path\n", l.Path)
 			}
 			l.Path = s[0]
 			targetDir = s[1]
@@ -94,6 +94,7 @@ func installLinks(r *role.Role) error {
 		if err != nil {
 			return err
 		}
+		// logger.Println(pattern, paths, len(paths), filterIgnored, l.Type)
 		for _, source := range paths {
 			s := r.Source
 			t := r.Target
@@ -181,7 +182,7 @@ func installTemplates(r *role.Role) error {
 					return err
 				}
 			} else {
-				logger.Warnf("Empty variable: %s", k)
+				logger.Warnf("Empty variable: %s\n", k)
 			}
 		}
 		t.Path = os.ExpandEnv(t.Path)
@@ -205,6 +206,18 @@ func installTemplates(r *role.Role) error {
 		}
 		prefix = "#"
 		if str != string(b) {
+			if string(b) != "" { // Backup the target file if needed
+				if _, err := os.Stat(target); ! os.IsNotExist(err) {
+					// _, err = removeOrBackup(target, "")
+					// if err != nil {
+					// 	return err
+					// }
+					logger.Warnf("%s: Template target exists\n", target)
+
+					return nil
+				}
+			}
+
 			changed, err := dot.WriteString(target, str)
 			if err != nil {
 				return err

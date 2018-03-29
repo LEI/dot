@@ -2,6 +2,7 @@ package role
 
 import (
 	"fmt"
+	// "reflect"
 	"github.com/LEI/dot/log"
 	// "os"
 	// "path/filepath"
@@ -31,15 +32,19 @@ func (r *Role) GetLinks() []*Link {
 	if r.Package.Links == nil {
 		r.Package.Links = make([]*Link, 0)
 	}
-	ln := r.Config.Get("link")
-	if ln != nil {
-		r.Package.Links = append(r.Package.Links, castAsLink(ln))
-		r.Package.Link = nil
-	}
-	links := r.Config.Get("links")
-	if links != nil {
-		for _, ln := range links.([]interface{}) {
+	if r.Config.IsSet("link") {
+		ln := r.Config.Get("link")
+		if ln != nil { // ! reflect.ValueOf(ln).IsNil()
 			r.Package.Links = append(r.Package.Links, castAsLink(ln))
+			r.Package.Link = nil
+		}
+	}
+	if r.Config.IsSet("links") {
+		links := r.Config.Get("links")
+		if links != nil { // ! reflect.ValueOf(links).IsNil()
+			for _, ln := range links.([]interface{}) { // .([]*Link)
+				r.Package.Links = append(r.Package.Links, castAsLink(ln))
+			}
 		}
 	}
 	r.Config.Set("links", r.Package.Links)
@@ -52,6 +57,11 @@ func castAsLink(value interface{}) *Link {
 	switch v := value.(type) {
 	case string:
 		l = &Link{Path: v}
+	// case *Link:
+	// 	log.Fatal(fmt.Errorf("??? (%T) %s for %v\n", v, v, value))
+	// 	l = v
+	// case []interface{}:
+	// 	log.Fatal(fmt.Errorf("??? (%T) %s for %v\n", v, v, value))
 	case map[string]interface{}:
 		p, ok := v["path"].(string)
 		if !ok {
@@ -79,7 +89,7 @@ func castAsLink(value interface{}) *Link {
 			Type: fileType,
 		}
 	default:
-		log.Fatal(fmt.Errorf("(%T) %s\n", v, v))
+		log.Fatal(fmt.Errorf("Unhandled type (%T) %s for %v\n", v, v, value))
 	}
 	return l
 }

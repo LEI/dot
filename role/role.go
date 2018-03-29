@@ -106,7 +106,7 @@ func (r *Role) GetEnv() (map[string]string, error) {
 		if v == "" {
 			val, ok := os.LookupEnv(k)
 			if !ok {
-				fmt.Printf("Warn: LookupEnv failed for '%s'", k)
+				fmt.Printf("Warn: LookupEnv failed for '%s'\n", k)
 			}
 			v = val
 		} // v = os.ExpandEnv(v)

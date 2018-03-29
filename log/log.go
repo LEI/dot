@@ -31,7 +31,7 @@ type Logger struct {
 
 func New(out io.Writer, prefix string, flag int) *Logger {
 	logger := &Logger{out: out, prefix: prefix, flag: flag}
-	logger.SetLevel(InfoLevel)
+	logger.SetLevel(InfoLevel) // FIXME --verbose?
 	return logger
 }
 

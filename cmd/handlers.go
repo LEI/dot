@@ -33,6 +33,8 @@ ROLES:
 func do(state string, action string) func(*role.Role) error {
 	key := state + "_" + action
 	return func(r *role.Role) error {
+		//logger.Infof("do -> CONFIG %v\n", r.Config)
+		
 		command := r.Config.GetString(key)
 		if command == "" {
 			return nil
@@ -59,7 +61,7 @@ func only(t string) dot.FileHandler {
 			logger.Debugf("# ignore %s (not a %s)\n", fi.Name(), t)
 			return dot.Skip
 			// case t == "":
-			// 	logger.Errorf("! Invalid type: %s", t)
+			// 	logger.Errorf("! Invalid type: %s\n", t)
 			// default:
 			// 	logger.Debugln("default", fi.Name(), t)
 		}
