@@ -2,9 +2,8 @@
 
 set -e
 
-sep() { printf %${COLUMNS:-100}s |tr " " "${1:-=}"; printf "\n"; }
-log() { sep "-"; printf "\n\t%s\n\n" "$@"; sep "-"; }
-run() { log "\$ $*"; "$@" || exit $?; }
+DIR="${BASH_SOURCE%/*}"
+source "$DIR/functions.sh"
 
 ln -sf $DOT/.dot.yml $HOME/.dot.yml
 
