@@ -28,11 +28,14 @@ import (
 // linkCmd represents the link command
 var linkCmd = &cobra.Command{
 	Use:   "link",
-	Short: "Symlink",
+	Short: "Create or remove symlinks",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(source, URL)
-		if err != nil {
+		r := &role{
+			Dir: Source,
+			URL: URL,
+		}
+		if err := r.Init(); err != nil {
 			return err
 		}
 		r.Link = args
@@ -41,7 +44,7 @@ var linkCmd = &cobra.Command{
 				return err
 			}
 		}
-		return InstallLink(r.Link, source)
+		return InstallLink(r.Link, Source)
 	},
 }
 

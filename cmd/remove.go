@@ -37,8 +37,5 @@ var removeCmd = &cobra.Command{
 
 func init() {
 	DotCmd.AddCommand(removeCmd)
-
-	removeCmd.PersistentFlags().StringVarP(&source, "source", "s", source, "Source directory")
-	removeCmd.PersistentFlags().StringVarP(&destination, "target", "t", destination, "Destination directory")
-	removeCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
+	initCommonFlags(removeCmd)
 }

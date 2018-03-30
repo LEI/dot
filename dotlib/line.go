@@ -1,13 +1,10 @@
-package helpers
+package dotlib
 
 import (
-	// "fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 )
-
-var ()
 
 func LineInFile(file string, line string) (bool, error) {
 	input, err := ioutil.ReadFile(file)

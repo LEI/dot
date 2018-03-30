@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 	// "github.com/spf13/viper"
@@ -60,6 +61,9 @@ func CloneOrPull(dir, url string) error {
 	if dir == "" {
 		return fmt.Errorf("Missing repository directory")
 	}
+	if url == "" {
+		return fmt.Errorf("Missing repository url")
+	}
 	for _, c := range synced {
 		if c == dir {
 			// Already updated
@@ -72,6 +76,9 @@ func CloneOrPull(dir, url string) error {
 		// os.Exit(1)
 		return err
 	}
+	// if err = checkURL(url, remote); err != nil {
+	// 	return err
+	// }
 	if fi != nil {
 		err := checkRepo(dir, remote, branch)
 		if err != nil {
@@ -79,11 +86,6 @@ func CloneOrPull(dir, url string) error {
 		}
 		return pullRepo(dir, remote, branch)
 	}
-	if url == "" {
-		return fmt.Errorf("Missing repository url")
-		// return fmt.Errorf("%s: No such file or directory", dir)
-	}
-	// TODO: construct url from `user/repo`
 	if err = cloneRepo(dir, url); err != nil {
 		return err
 	}
@@ -93,11 +95,25 @@ func CloneOrPull(dir, url string) error {
 	return nil
 }
 
+func checkURL(url, remote string) error {
+	fmt.Println(url, remote)
+	args := []string{"config", "--local", "--get", "remote.origin.url"}
+	// fmt.Printf("git %s\n", strings.Join(args, " "))
+
+	// TODO: catpure output and check url against `user/repo`
+	err := executeCmd("git", args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func cloneRepo(dir, url string) error {
 	if !gitClone {
 		return nil
 	}
 	args := []string{"clone", url, dir, "--recursive", "--quiet"}
+	fmt.Printf("git %s\n", strings.Join(args, " "))
 	err := executeCmd("git", args...)
 	if err != nil {
 		return err
@@ -126,6 +142,7 @@ func pullRepo(dir, remote, branch string) error {
 		return nil
 	}
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
+	fmt.Printf("git %s\n", strings.Join(args, " "))
 	err := executeCmd("git", args...)
 	if err != nil {
 		return err

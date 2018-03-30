@@ -10,11 +10,6 @@ import (
 	"text/template"
 )
 
-var (
-	// FileMode default
-	FileMode os.FileMode = 0644
-)
-
 // TemplateTask struct
 type TemplateTask struct {
 	Source, Target string

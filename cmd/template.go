@@ -31,11 +31,15 @@ import (
 // templateCmd represents the template command
 var templateCmd = &cobra.Command{
 	Use:   "template",
-	Short: "Fill go template",
+	Short: "Generate a file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(source, URL)
-		if err != nil {
+		r := &role{
+			Dir:  Source,
+			URL:  URL,
+			task: task{Env: Env()},
+		}
+		if err := r.Init(); err != nil {
 			return err
 		}
 		r.Template = args
@@ -44,15 +48,21 @@ var templateCmd = &cobra.Command{
 				return err
 			}
 		}
-		env, err := initEnv(viper.GetStringMapString("env"))
+		env := viper.GetStringMapString("env")
+		env, err := initEnv(env)
 		if err != nil {
 			return err
 		}
-		// roleEnv, err := initEnv(role.Env)
-		// if err != nil {
-		// 	return role, err
+		/*
+			roleEnv, err := initEnv(role.Env)
+			if err != nil {
+				return role, err
+			}
+		*/
+		// for k, e := range role.task.Env {
+		// 	env[k] = r
 		// }
-		return InstallTemplate(r.Template, source, env)
+		return InstallTemplate(r.Template, Source, env)
 	},
 }
 

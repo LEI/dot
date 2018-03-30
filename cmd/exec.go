@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,8 +32,11 @@ var execCmd = &cobra.Command{
 	Short: "Execute",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// r, err := getRole(source, URL)
-		// if err != nil {
+		// r := &role{
+		// 	Dir: Source,
+		// 	URL: URL,
+		// }
+		// if err := r.Init(); err != nil {
 		// 	return err
 		// }
 		if len(args) == 0 {
@@ -59,7 +61,9 @@ func ExecCommand(in []string) error {
 	// }
 	// args = append([]string{"-c"}, str)
 	for _, str := range in {
-		err := safeExecuteCmd(Shell, []string{"-c", str}...)
+		fmt.Printf("%s\n", str)
+		// fmt.Printf("%s %s\n", name, strings.Join(args, " "))
+		err := executeCmd(Shell, []string{"-c", str}...)
 		if err != nil {
 			return err
 		}
@@ -67,8 +71,15 @@ func ExecCommand(in []string) error {
 	return nil
 }
 
+// Safe guard execution in test mode
 func executeCmd(name string, args ...string) error {
-	fmt.Printf("%s %s\n", name, strings.Join(args, " "))
+	if DryRun {
+		return nil
+	}
+	return execute(name, args...)
+}
+
+func execute(name string, args ...string) error {
 	c := exec.Command(name, args...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
@@ -79,12 +90,4 @@ func executeCmd(name string, args ...string) error {
 	// 	return err
 	// }
 	// return nil
-}
-
-func safeExecuteCmd(name string, args ...string) error {
-	if DryRun {
-		fmt.Printf("(DRY-RUN) %s %s\n", name, strings.Join(args, " "))
-		return nil
-	}
-	return executeCmd(name, args...)
 }

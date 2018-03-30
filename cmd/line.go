@@ -16,9 +16,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path"
 
-	"github.com/LEI/dot/helpers"
+	"github.com/LEI/dot/dotlib"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,8 +29,11 @@ var lineCmd = &cobra.Command{
 	Short: "Add or remove a line in file",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		r, err := getRole(source, URL)
-		if err != nil {
+		r := &role{
+			Dir: Source,
+			URL: URL,
+		}
+		if err := r.Init(); err != nil {
 			return err
 		}
 		r.Line = viper.GetStringMapString("line")
@@ -53,7 +55,7 @@ func init() {
 }
 
 func InstallLine(in map[string]string) error {
-	return lineCommand(in, helpers.LineInFile)
+	return lineCommand(in, dotlib.LineInFile)
 }
 
 func RemoveLine(in map[string]string) error {
@@ -65,16 +67,12 @@ func lineCommand(in map[string]string, action func(file string, line string) (bo
 		return nil // Skip
 	}
 	for file, line := range in {
-		file = os.ExpandEnv(file)
-		if !path.IsAbs(file) {
-			file = path.Join(destination, file)
-		}
-		file = path.Clean(file)
-		// _, err := createDir(file)
+		p := parsePath(os.ExpandEnv(file), Target)
+		// _, err := createDir(p)
 		// if err != nil {
 		// 	return err
 		// }
-		changed, err := action(file, line)
+		changed, err := action(p, line)
 		if err != nil {
 			return err
 		}

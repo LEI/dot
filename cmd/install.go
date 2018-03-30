@@ -34,10 +34,6 @@ var installCmd = &cobra.Command{
 
 func init() {
 	DotCmd.AddCommand(installCmd)
-
-	installCmd.PersistentFlags().StringVarP(&source, "source", "s", source, "Source directory")
-	installCmd.PersistentFlags().StringVarP(&destination, "target", "t", destination, "Destination directory")
-	installCmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
-
+	initCommonFlags(installCmd)
 	// installCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 }
