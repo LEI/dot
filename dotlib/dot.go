@@ -6,7 +6,7 @@ var (
 
 // Task interface
 type Task interface {
-	Register(interface{}) error
+	// Register(interface{}) error
 	Install() error
 	Remove() error
 }

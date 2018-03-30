@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
-	"strings"
+	// "path"
+	// "strings"
 )
 
 var (
@@ -18,7 +18,7 @@ var (
 // LinkTask struct
 type LinkTask struct {
 	Source, Target string
-	Destination    string
+	// Destination    string
 	// Task
 }
 
@@ -27,6 +27,7 @@ func (t *LinkTask) String() string {
 }
 
 // Register link
+/*
 func (t *LinkTask) Register(baseDir string, str string) error {
 	parts := strings.Split(str, ":")
 	if len(parts) == 1 {
@@ -48,6 +49,7 @@ func (t *LinkTask) Register(baseDir string, str string) error {
 	t.Target = dst
 	return nil
 }
+*/
 
 // Install link
 func (t *LinkTask) Install() error {
@@ -59,8 +61,7 @@ func (t *LinkTask) Install() error {
 	if changed {
 		prefix = ""
 	}
-	c := fmt.Sprintf("ln -s %s %s\n", t.Source, t.Target)
-	fmt.Printf("%s%s\n", prefix, c)
+	fmt.Printf("%sln -s %s %s\n", prefix, t.Source, t.Target)
 	return nil
 }
 

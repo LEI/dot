@@ -14,7 +14,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 	"path"
 	"path/filepath"
 	// "strings"
@@ -62,13 +62,14 @@ func RemoveLink(in []string, dir string) error {
 	return linkCommand(in, dir, nil)
 }
 
-func linkCommand(in []string, dir string, action func(src, dst string) error) error {
+func linkCommand(in []string, dir string, action func(src, dst string, env map[string]string) error) error {
 	// func linkCommand(in []string, dir string) error {
 	if action == nil {
 		return nil // Skip
 	}
+	env := map[string]string{} // Unused
 	for _, arg := range in {
-		err := parseArg(arg, dir, action)
+		err := parseArg(arg, dir, action, env)
 		if err != nil {
 			return err
 		}
@@ -76,25 +77,25 @@ func linkCommand(in []string, dir string, action func(src, dst string) error) er
 	return nil
 }
 
-func linkGlob(source, target string) error {
-	// var linkList []dotlib.Link
-	paths, err := filepath.Glob(source)
+func linkGlob(src, dst string, env map[string]string) error {
+	// var linkList []*dotlib.LinkTask
+	paths, err := filepath.Glob(src)
 	if err != nil {
 		return err // false
 	}
 	for _, s := range paths {
 		_, f := path.Split(s)
-		t := path.Join(target, f)
-		// linkList = append(linkList, dotlib.Link{s, t})
-		changed, err := dotlib.Link(s, t)
-		if err != nil {
+		t := path.Join(dst, f)
+
+		link := &dotlib.LinkTask{
+			Source: s,
+			Target: t,
+		}
+
+		if err = link.Install(); err != nil {
 			return err
 		}
-		prefix := "# "
-		if changed {
-			prefix = ""
-		}
-		fmt.Printf("%sln -s %s %s\n", prefix, s, t)
+		// linkList = append(linkList, &dotlib.LinkTask{s, t, })
 	}
 	// fmt.Println("Links:", linkList)
 	return nil

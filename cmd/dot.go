@@ -243,7 +243,7 @@ func getRole(dir, url string) (*role, error) {
 	// }
 }*/
 
-func parseArg(arg, baseDir string, cb func(string, string) error) error {
+func parseArg(arg, baseDir string, cb func(string, string, map[string]string) error, env map[string]string) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
 		parts = append(parts, destination)
@@ -267,7 +267,7 @@ func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	if changed && !DryRun {
 		fmt.Printf("mkdir -p %s\n", dst)
 	}
-	return cb(src, dst)
+	return cb(src, dst, env)
 }
 
 func initCmd(action string, args ...string) error {
@@ -431,7 +431,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 		k = strings.ToTitle(k)
 		if v == "" { // Lookup environment if the variable is empty
 			val, ok := os.LookupEnv(k)
-			if !ok {
+			if !ok { // os.Getenv(k)
 				fmt.Fprintf(os.Stderr, "# %s is not set in the environment\n", k)
 				continue
 			}

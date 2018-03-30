@@ -2,9 +2,11 @@ package dotlib
 
 import (
 	"bytes"
-	// "fmt"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 	"text/template"
 )
 
@@ -21,8 +23,24 @@ type TemplateTask struct {
 }
 
 // Install template
-// func (t *TemplateTask) Install() error {
-// }
+func (t *TemplateTask) Install() error {
+	_, f := path.Split(t.Source)
+	dst := path.Join(t.Target, strings.TrimSuffix(f, ".tpl"))
+	changed, err := Template(t.Source, dst, t.Env)
+	if err != nil {
+		return err
+	}
+	prefix := "# "
+	if changed {
+		prefix = ""
+	}
+	for k, v := range t.Env {
+		fmt.Printf("%s=\"%s\"\n", k, v)
+	}
+	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
+	fmt.Printf("%stemplate %s -> %s\n", prefix, t.Source, dst)
+	return nil
+}
 
 // Template task
 func Template(src, dst string, env map[string]string) (bool, error) {

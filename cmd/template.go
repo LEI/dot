@@ -15,11 +15,11 @@ package cmd
 
 import (
 	// "bytes"
-	"fmt"
+	// "fmt"
 	// "io/ioutil"
 	// "os"
-	"path"
-	"strings"
+	// "path"
+	// "strings"
 	// "text/template"
 
 	"github.com/LEI/dot/dotlib"
@@ -65,7 +65,7 @@ func init() {
 
 // InstallTemplate ...
 func InstallTemplate(in []string, dir string, env map[string]string) error {
-	return templateCommand(in, dir, env, dotlib.Template)
+	return templateCommand(in, dir, env, templateFile)
 }
 
 // RemoveTemplate ...
@@ -73,32 +73,25 @@ func RemoveTemplate(in []string, dir string, env map[string]string) error {
 	return templateCommand(in, dir, env, nil)
 }
 
-func templateCommand(in []string, dir string, env map[string]string, action func(src, dst string, env map[string]string) (bool, error)) error {
+func templateCommand(in []string, dir string, env map[string]string, action func(src, dst string, env map[string]string) error) error {
 	if action == nil {
 		return nil // Skip
 	}
 	for _, arg := range in {
-		err := parseArg(arg, dir, func(src, dst string) error {
-			_, f := path.Split(src)
-			dst = path.Join(dst, strings.TrimSuffix(f, ".tpl"))
-			changed, err := action(src, dst, env)
-			if err != nil {
-				return err
-			}
-			prefix := "# "
-			if changed {
-				prefix = ""
-			}
-			for k, v := range env {
-				fmt.Printf("%s=\"%s\"\n", k, v)
-			}
-			// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, src, dst)
-			fmt.Printf("%stemplate %s -> %s\n", prefix, src, dst)
-			return nil
-		})
+		err := parseArg(arg, dir, action, env)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func templateFile(src, dst string, env map[string]string) error {
+	tpl := &dotlib.TemplateTask{
+		Source: src,
+		Target: dst,
+		Env: env,
+	}
+
+	return tpl.Install()
 }
