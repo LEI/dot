@@ -8,8 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-)
+const ()
 
 type CLIFormatter struct {
 	// QuoteEmptyFields will wrap empty fields in quotes if true
@@ -37,13 +36,11 @@ func (f *CLIFormatter) Format(entry *log.Entry) ([]byte, error) {
 	// 	f.appendKeyValue(b, key, entry.Data[key])
 	// }
 
-
 	f.printCommand(b, entry, keys)
 
 	b.WriteByte('\n')
 	return b.Bytes(), nil
 }
-
 
 func (f *CLIFormatter) printCommand(b *bytes.Buffer, entry *log.Entry, keys []string) {
 	lvl := strings.Title(entry.Level.String())
@@ -61,15 +58,14 @@ func (f *CLIFormatter) needsQuoting(text string) bool {
 	}
 	for _, ch := range text {
 		if !((ch >= 'a' && ch <= 'z') ||
-		(ch >= 'A' && ch <= 'Z') ||
-		(ch >= '0' && ch <= '9') ||
-		ch == '-' || ch == '.' || ch == '_' || ch == '/' || ch == '@' || ch == '^' || ch == '+') {
+			(ch >= 'A' && ch <= 'Z') ||
+			(ch >= '0' && ch <= '9') ||
+			ch == '-' || ch == '.' || ch == '_' || ch == '/' || ch == '@' || ch == '^' || ch == '+') {
 			return true
 		}
 	}
 	return false
 }
-
 
 func (f *CLIFormatter) appendKeyValue(b *bytes.Buffer, key string, value interface{}) {
 	b.WriteString(key)

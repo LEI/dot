@@ -63,7 +63,7 @@ func RemoveLink(in []string, dir string) error {
 }
 
 func linkCommand(in []string, dir string, action func(src, dst string) error) error {
-// func linkCommand(in []string, dir string) error {
+	// func linkCommand(in []string, dir string) error {
 	if action == nil {
 		return nil // Skip
 	}

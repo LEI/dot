@@ -2,13 +2,12 @@ package helpers
 
 import (
 	// "fmt"
-	"os"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
-var (
-)
+var ()
 
 func LineInFile(file string, line string) (bool, error) {
 	input, err := ioutil.ReadFile(file)

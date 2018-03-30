@@ -8,8 +8,7 @@ import (
 	"text/template"
 )
 
-var (
-)
+var ()
 
 func Template(src, dst string, env map[string]string) (bool, error) {
 	tmpl, err := template.ParseGlob(src)

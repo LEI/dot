@@ -46,47 +46,46 @@ var (
 	destination = HomeDir
 	source      string
 	// URL ...
-	URL         string
+	URL string
 	// Config ...
-	Config      config
-	DryRun      bool
-	Verbose     bool
-	cfgFile     string
-	cfgType     string      = "yml"
-	cfgDir                  = []string{"$HOME", "/etc/dot", "."}
-	dotDir                  = ".dot" // Default clone directory under $HOME
-	dotCfg                  = ".dot" // Default config file name without extension
-	envKeys                 = []string{"OS"}
+	Config  config
+	DryRun  bool
+	Verbose bool
+	cfgFile string
+	cfgType string = "yml"
+	cfgDir         = []string{"$HOME", "/etc/dot", "."}
+	dotDir         = ".dot" // Default clone directory under $HOME
+	dotCfg         = ".dot" // Default config file name without extension
+	envKeys        = []string{"OS"}
 	// DirMode ...
-	DirMode     os.FileMode = 0755
+	DirMode os.FileMode = 0755
 	// FileMode ...
-	FileMode    os.FileMode = 0644
+	FileMode os.FileMode = 0644
 )
 
-var cfgLogger = log.WithFields(log.Fields{
-})
+var cfgLogger = log.WithFields(log.Fields{})
 
 type config struct {
 	Roles []role
 }
 
 type role struct {
-	Name      string
-	Dir       string `mapstructure:"directory"`
-	URL       string
-	OS        strSlice
-	task      `mapstructure:",squash"`
+	Name string
+	Dir  string `mapstructure:"directory"`
+	URL  string
+	OS   strSlice
+	task `mapstructure:",squash"`
 }
 
 type task struct {
-	Install     strSlice // Exec before install
-	PostInstall strSlice `mapstructure:"post_install"` // Exec after install
-	Remove      strSlice // Exec before remove
-	PostRemove  strSlice `mapstructure:"post_remove"` // Exec after remove
-	Env      map[string]string // Environment variables map
-	Line     map[string]string // Lines map
-	Link     strSlice          // Paths list `<source>[:<target>]`
-	Template strSlice          // Paths list `<source>[:<target>]`
+	Install     strSlice          // Exec before install
+	PostInstall strSlice          `mapstructure:"post_install"` // Exec after install
+	Remove      strSlice          // Exec before remove
+	PostRemove  strSlice          `mapstructure:"post_remove"` // Exec after remove
+	Env         map[string]string // Environment variables map
+	Line        map[string]string // Lines map
+	Link        strSlice          // Paths list `<source>[:<target>]`
+	Template    strSlice          // Paths list `<source>[:<target>]`
 }
 
 type strSlice []string
@@ -128,10 +127,10 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
-	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Test mode")
 	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "")
+	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
+	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
@@ -159,8 +158,7 @@ func initConfig() {
 	}
 	readConfig(viper.GetViper(), cfgDir...)
 
-	cfgLogger = cfgLogger.WithFields(log.Fields{
-	})
+	cfgLogger = cfgLogger.WithFields(log.Fields{})
 
 	if err := viper.Unmarshal(&Config); err != nil {
 		cfgLogger.Errorf("Unable to decode into struct, %v", err)
@@ -252,7 +250,7 @@ func parseArg(arg, baseDir string, cb func(string, string) error) error {
 	if err != nil {
 		return err
 	}
-	if changed {
+	if changed && !DryRun {
 		fmt.Printf("mkdir -p %s\n", dst)
 	}
 	return cb(src, dst)

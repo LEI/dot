@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"path"
+	"strings"
 )
 
 var (
@@ -18,7 +18,7 @@ var (
 // LinkTask struct
 type LinkTask struct {
 	Source, Target string
-	Destination string
+	Destination    string
 }
 
 func (t *LinkTask) String() string {

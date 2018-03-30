@@ -16,7 +16,7 @@ var (
 // TemplateTask struct
 type TemplateTask struct {
 	Source, Target string
-	Env map[string]string
+	Env            map[string]string
 }
 
 // Install template

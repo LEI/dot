@@ -10,9 +10,9 @@ import (
 
 const (
 	DefaultTimestampFormat = time.RFC3339
-	FieldKeyMsg   = "msg"
-	FieldKeyLevel = "level"
-	FieldKeyTime  = "time"
+	FieldKeyMsg            = "msg"
+	FieldKeyLevel          = "level"
+	FieldKeyTime           = "time"
 )
 
 type fieldKey string
