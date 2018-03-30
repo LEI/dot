@@ -104,14 +104,17 @@ func (s *strSlice) Set(value string) error {
 
 // DotCmd represents the base command when called without any subcommands
 var DotCmd = &cobra.Command{
-	Use:   "dot",
-	Short: "A brief description of your application",
+	Use:   os.Args[0],
+	Short: "Manage dotfiles",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return initCmd("install", args...)
 	},
@@ -243,6 +246,14 @@ func getRole(dir, url string) (*role, error) {
 	// }
 }*/
 
+func parsePath(str string, base string) string {
+	src := os.ExpandEnv(str)
+	if !path.IsAbs(str) {
+		src = path.Join(base, str)
+	}
+	return path.Clean(src)
+}
+
 func parseArg(arg, baseDir string, cb func(string, string, map[string]string) error, env map[string]string) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
@@ -251,15 +262,8 @@ func parseArg(arg, baseDir string, cb func(string, string, map[string]string) er
 		fmt.Println("Invalid arg", arg)
 		os.Exit(1)
 	}
-	src := os.ExpandEnv(parts[0])
-	if !path.IsAbs(src) {
-		src = path.Join(baseDir, src)
-	}
-	src = path.Clean(src)
-	dst := os.ExpandEnv(parts[1])
-	if !path.IsAbs(dst) {
-		dst = path.Join(destination, dst)
-	}
+	src := parsePath(parts[0], baseDir)
+	dst := parsePath(parts[1], destination)
 	changed, err := createDir(dst)
 	if err != nil {
 		return err
@@ -431,7 +435,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 		k = strings.ToTitle(k)
 		if v == "" { // Lookup environment if the variable is empty
 			val, ok := os.LookupEnv(k)
-			if !ok { // os.Getenv(k)
+			if !ok {
 				fmt.Fprintf(os.Stderr, "# %s is not set in the environment\n", k)
 				continue
 			}

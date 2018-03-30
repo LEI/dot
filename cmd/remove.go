@@ -23,9 +23,11 @@ import (
 
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove",
-	Long:  ``,
+	Use:        "remove [flags]",
+	Aliases:    []string{"rm"},
+	SuggestFor: []string{"delete", "uninstall"},
+	Short:      "Remove dotfiles",
+	Long:       ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Fatal("Not fully implemented.")
 

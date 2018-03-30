@@ -90,7 +90,7 @@ func templateFile(src, dst string, env map[string]string) error {
 	tpl := &dotlib.TemplateTask{
 		Source: src,
 		Target: dst,
-		Env: env,
+		Env:    env,
 	}
 
 	return tpl.Install()

@@ -21,9 +21,12 @@ import (
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
-	Use:   "install",
-	Short: "Install",
-	Long:  ``,
+	// Hidden: true,
+	Use:        "install [flags]",
+	Aliases:    []string{"i"},
+	SuggestFor: []string{"add"},
+	Short:      "Install dotfiles",
+	Long:       ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return initCmd("install", args...)
 	},
