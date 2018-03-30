@@ -57,6 +57,8 @@ var (
 	dotDir         = ".dot" // Default clone directory under $HOME
 	dotCfg         = ".dot" // Default config file name without extension
 	envKeys        = []string{"OS"}
+	output         = "text"
+	noSync  bool
 	// DirMode ...
 	DirMode os.FileMode = 0755
 	// FileMode ...
@@ -127,19 +129,17 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Test mode")
+	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Enable test mode")
 	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "")
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
+	DotCmd.PersistentFlags().StringVarP(&output, "output", "o", output, "Output format: text or json")
+	DotCmd.PersistentFlags().BoolVarP(&noSync, "no-sync", "n", noSync, "Disable remote checks")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
 
 	// viper.BindPFlag("directory", DotCmd.Flags().Lookup("directory"))
-
-	// Log as JSON instead of the default ASCII formatter
-	// log.SetFormatter(&formatter.JSONFormatter{})
-	log.SetFormatter(&formatter.CLIFormatter{})
 
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer, see below for File example
@@ -151,7 +151,21 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	gitCheck = !noSync
+	gitClone = !noSync
+	gitPull = !noSync
+
 	dotlib.DryRun = DryRun
+
+	switch output {
+	case "text":
+		log.SetFormatter(&formatter.CLIFormatter{})
+	case "json":
+		log.SetFormatter(&formatter.JSONFormatter{})
+	default:
+		log.Errorf("Invalid output format: %s\n", output)
+		os.Exit(1)
+	}
 
 	if source != "" {
 		cfgDir = append([]string{source}, cfgDir...)
@@ -304,7 +318,7 @@ func initCmd(action string, args ...string) error {
 		}
 		if err := readRoleConfig(&role); err != nil {
 			roleLogger.Warnf("Unable to decode into struct: %v", err)
-			// fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v", err)
+			// fmt.Fprintf(os.Stderr, "# Unable to decode into struct, %v\n", err)
 			// os.Exit(1)
 			return nil
 		}
@@ -347,7 +361,7 @@ func initCmd(action string, args ...string) error {
 				return err
 			}
 		default:
-			fmt.Printf("Unknown action '%s'", action)
+			fmt.Printf("Unknown action '%s'\n", action)
 		}
 		Config.Roles[index] = role
 	}
@@ -442,7 +456,7 @@ func initEnv(in map[string]string) (map[string]string, error) {
 				return env, err
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "# %s is empty", k)
+			fmt.Fprintf(os.Stderr, "# %s is empty\n", k)
 		}
 		env[k] = v
 	}

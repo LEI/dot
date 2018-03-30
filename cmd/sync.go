@@ -26,7 +26,9 @@ var (
 	directory string
 	remote    = "origin"
 	branch    = "master"
-	pull      = true
+	gitCheck  = true
+	gitClone  = true
+	gitPull   = true
 	synced    []string
 )
 
@@ -92,6 +94,9 @@ func CloneOrPull(dir, url string) error {
 }
 
 func cloneRepo(dir, url string) error {
+	if !gitClone {
+		return nil
+	}
 	args := []string{"clone", url, dir, "--recursive", "--quiet"}
 	err := executeCmd("git", args...)
 	if err != nil {
@@ -102,6 +107,9 @@ func cloneRepo(dir, url string) error {
 }
 
 func checkRepo(dir, remote, branch string) error {
+	if !gitCheck {
+		return nil
+	}
 	args := []string{"-C", dir, "diff-index", "--quiet", "HEAD"}
 	c := exec.Command("git", args...)
 	err := c.Run()
@@ -114,7 +122,7 @@ func checkRepo(dir, remote, branch string) error {
 }
 
 func pullRepo(dir, remote, branch string) error {
-	if !pull {
+	if !gitPull {
 		return nil
 	}
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
