@@ -215,7 +215,7 @@ func readRoleConfig(r *role) error {
 	if err := v.UnmarshalKey("role", &r); err != nil {
 		return err
 	}
-	// fmt.Printf("%v\n", r)
+	// fmt.Printf("%+v\n", r)
 	return nil
 }
 

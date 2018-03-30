@@ -19,6 +19,7 @@ var (
 type LinkTask struct {
 	Source, Target string
 	Destination    string
+	// Task
 }
 
 func (t *LinkTask) String() string {
