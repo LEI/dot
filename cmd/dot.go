@@ -56,7 +56,7 @@ var (
 	cfgDir         = []string{"$HOME", "/etc/dot", "."}
 	dotDir         = ".dot" // Default clone directory under $HOME
 	dotCfg         = ".dot" // Default config file name without extension
-	envKeys        = []string{"OS"}
+	dotEnv         = map[string]string{"OS": OS}
 	output         = "text"
 	noSync  bool
 	// DirMode ...
@@ -176,6 +176,10 @@ func initConfig() {
 	gitPull = !noSync
 
 	dotlib.DryRun = DryRun
+
+	if Verbose {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	switch output {
 	case "text":
@@ -472,12 +476,19 @@ func Env() map[string]string {
 	env := make(map[string]string, 0)
 	for _, i := range os.Environ() {
 		sep := strings.Index(i, "=")
-		env[i[0:sep]] = i[sep+1:]
+		k := i[0:sep]
+		v := i[sep+1:]
+		env[k] = v
+		// cfgLogger.Debugf("%s=%+v", k, v)
 	}
-	for _, k := range envKeys {
+	for k, v := range dotEnv {
+		prefix := ""
 		if _, ok := env[k]; !ok {
-			env[k] = OS
+			env[k] = v
+		} else {
+			prefix = "# (SKIPPED) "
 		}
+		cfgLogger.Debugf("%s%s=%+v", prefix, k, v)
 	}
 	return env
 }
