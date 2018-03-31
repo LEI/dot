@@ -77,6 +77,7 @@ type role struct {
 	Dir  string `mapstructure:"directory"`
 	URL  string
 	OS   strSlice
+	Log  *log.Entry
 	task `mapstructure:",squash"`
 }
 
@@ -208,8 +209,10 @@ func initCmd(action string, args ...string) error {
 		roleLogger = roleLogger.WithFields(log.Fields{
 			"path": role.Dir,
 		})
+
 		roleLogger.Info(strings.Title(action) + " role")
 
+		role.Log = roleLogger
 		// Do not pull if already cloned
 		// if _, err := os.Stat(role.Dir); os.IsExist(err) { }
 		if err := role.Init(); err != nil {
@@ -267,8 +270,8 @@ func initCmd(action string, args ...string) error {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	gitCheck = !noSync
-	gitClone = !noSync
-	gitPull = !noSync
+	// gitClone = !noSync
+	// gitPull = !noSync
 
 	dotlib.DryRun = DryRun
 
