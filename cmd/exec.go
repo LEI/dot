@@ -14,13 +14,17 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+// type execFunc func(name string, args ...string) error
 
 var (
 	Shell = "bash"
@@ -90,4 +94,65 @@ func execute(name string, args ...string) error {
 	// 	return err
 	// }
 	// return nil
+}
+
+func execStdout(name string, args ...string) (string, error) {
+	c := exec.Command(name, args...)
+	stdout, err := c.StdoutPipe()
+	if err != nil {
+		return toString(stdout), err
+	}
+	if err := c.Start(); err != nil {
+		return toString(stdout), err
+	}
+	// var person struct {
+	// 	Name string
+	// 	Age  int
+	// }
+	// if err := json.NewDecoder(stdout).Decode(&person); err != nil {
+	// 	return toString(stdout), err
+	// }
+	out := toString(stdout)
+	if err := c.Wait(); err != nil {
+		return out, err
+	}
+	// fmt.Printf("%s is %d years old\n", person.Name, person.Age)
+	return out, nil
+}
+
+func toString(in io.ReadCloser) string {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(in)
+	return buf.String()
+}
+
+func captureStdout(cb func() error) (string, error) {
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	// fmt.Println("output")
+	err := cb()
+	if err != nil {
+		return "", err
+	}
+
+	outC := make(chan string)
+	// copy the output in a separate goroutine so printing can't block indefinitely
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	// back to normal state
+	w.Close()
+	os.Stdout = old // restoring the real stdout
+	out := <-outC
+
+	// reading our temp stdout
+	fmt.Println("previous output:")
+	fmt.Print(out)
+
+	return out, nil
 }

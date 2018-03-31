@@ -15,6 +15,8 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	// "net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -57,12 +59,12 @@ func init() {
 }
 
 // CloneOrPull clone or pull
-func CloneOrPull(dir, url string) error {
+func CloneOrPull(dir, repo string) error {
 	if dir == "" {
 		return fmt.Errorf("Missing repository directory")
 	}
-	if url == "" {
-		return fmt.Errorf("Missing repository url")
+	if repo == "" {
+		return fmt.Errorf("Missing repository repo url")
 	}
 	for _, c := range synced {
 		if c == dir {
@@ -76,17 +78,17 @@ func CloneOrPull(dir, url string) error {
 		// os.Exit(1)
 		return err
 	}
-	// if err = checkURL(url, remote); err != nil {
-	// 	return err
-	// }
 	if fi != nil {
+		if err = checkURL(dir, remote, repo); err != nil {
+			return err
+		}
 		err := checkRepo(dir, remote, branch)
 		if err != nil {
 			return err
 		}
 		return pullRepo(dir, remote, branch)
 	}
-	if err = cloneRepo(dir, url); err != nil {
+	if err = cloneRepo(dir, repo); err != nil {
 		return err
 	}
 	// if dir == source {}
@@ -95,26 +97,36 @@ func CloneOrPull(dir, url string) error {
 	return nil
 }
 
-func checkURL(url, remote string) error {
-	fmt.Println(url, remote)
-	args := []string{"config", "--local", "--get", "remote.origin.url"}
-	// fmt.Printf("git %s\n", strings.Join(args, " "))
-
-	// TODO: catpure output and check url against `user/repo`
-	err := executeCmd("git", args...)
+func checkURL(dir, remote, repo string) error {
+	// inputURL, err := url.Parse(repo)
+	// if err != nil {
+	// 	return err
+	// }
+	args := []string{"-C", dir, "config", "--local", "--get", "remote.origin.url"}
+	fmt.Printf("git %s\n", strings.Join(args, " "))
+	out, err := execStdout("git", args...)
 	if err != nil {
 		return err
+	}
+	actual := strings.TrimRight(out, "\n")
+	// cloneURL, err := url.Parse(out)
+	// if err != nil {
+	// 	return err
+	// }
+	// TODO: check domain and `user/repo`
+	if repo != actual {
+		log.Fatalf("Remote mismatch: url is '%s' but repo has '%s'\n", repo, actual)
 	}
 	return nil
 }
 
-func cloneRepo(dir, url string) error {
+func cloneRepo(dir, repo string) error {
 	if !gitClone {
 		return nil
 	}
-	args := []string{"clone", url, dir, "--recursive", "--quiet"}
+	args := []string{"clone", repo, dir, "--recursive", "--quiet"}
 	fmt.Printf("git %s\n", strings.Join(args, " "))
-	err := executeCmd("git", args...)
+	err := execute("git", args...)
 	if err != nil {
 		return err
 	}
@@ -143,7 +155,7 @@ func pullRepo(dir, remote, branch string) error {
 	}
 	args := []string{"-C", dir, "pull", remote, branch, "--quiet"}
 	fmt.Printf("git %s\n", strings.Join(args, " "))
-	err := executeCmd("git", args...)
+	err := execute("git", args...)
 	if err != nil {
 		return err
 	}
