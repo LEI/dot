@@ -18,7 +18,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	log "github.com/sirupsen/logrus"
+	// log "github.com/sirupsen/logrus"
 )
 
 // removeCmd represents the remove command
@@ -29,8 +29,7 @@ var removeCmd = &cobra.Command{
 	Short:      "Remove dotfiles",
 	Long:       ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Fatal("Not fully implemented.")
-
+		// log.Fatal("Not fully implemented.")
 		return initCmd("remove", args...)
 	},
 }

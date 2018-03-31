@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	// "strconv"
 	"strings"
@@ -169,93 +170,6 @@ func initCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	gitCheck = !noSync
-	gitClone = !noSync
-	gitPull = !noSync
-
-	dotlib.DryRun = DryRun
-
-	if Verbose {
-		log.SetLevel(log.DebugLevel)
-	}
-
-	switch output {
-	case "text":
-		log.SetFormatter(&formatter.CLIFormatter{})
-	case "json":
-		log.SetFormatter(&formatter.JSONFormatter{})
-	default:
-		log.Errorf("Invalid output format: %s\n", output)
-		os.Exit(1)
-	}
-
-	if Source != "" {
-		cfgDir = append([]string{Source}, cfgDir...)
-	}
-	readConfig(viper.GetViper(), cfgDir...)
-
-	cfgLogger = cfgLogger.WithFields(log.Fields{})
-
-	if err := viper.Unmarshal(&Config); err != nil {
-		cfgLogger.Errorf("Unable to decode into struct, %v", err)
-		os.Exit(1)
-	}
-}
-
-func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
-	// cfgLogger.Info("Config file: " + cfgFile)
-	// cfgLogger.Info("Config name: " + dotCfg)
-	// cfgLogger.Info("Config type: " + cfgType)
-
-	if cfgFile != "" { // Enable ability to specify config file via flag
-		v.SetConfigFile(cfgFile)
-	}
-	if cfgType != "" { // Enable ability to specify config file format
-		v.SetConfigType(cfgType)
-	}
-	v.SetConfigName(dotCfg) // Name of config file (without extension)
-
-	for _, dir := range dirs { // Add directories to look for the config file in
-		// cfgLogger.Info("Add config dir: " + dir)
-
-		v.AddConfigPath(dir)
-	}
-
-	v.AutomaticEnv() // Read in environment variables that match
-	// v.WatchConfig()  // Read config file while running
-	// If a config file is found, read it in.
-	if err := v.ReadInConfig(); err == nil {
-		cfgLogger.Debug("Using config file: " + v.ConfigFileUsed())
-		// fmt.Println("# Using config file:", v.ConfigFileUsed())
-	}
-	return v
-}
-
-func readRoleConfig(r *role) error {
-	v := viper.New()
-	readConfig(v, r.Dir)
-	if err := v.UnmarshalKey("role", &r); err != nil {
-		return err
-	}
-	// fmt.Printf("%+v\n", r)
-	return nil
-}
-
-/*func readStdin(args []string, cb func(string, string) error) error {
-	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
-	// 	in, err := ioutil.ReadAll(os.Stdin)
-	// 	if err != nil {
-	// 		return fmt.Errorf("Error occured while reading from stdin: %s", err)
-	// 	}
-	// 	viper.ReadConfig(bytes.NewBuffer(in))
-	// 	args = viper.GetStringSlice(key)
-	// } else if viper.ConfigFileUsed() != "" {
-	// 	args = viper.GetStringSlice(key)
-	// }
-}*/
-
 func initCmd(action string, args ...string) error {
 	roles, err := filter(Config.Roles, args)
 	if err != nil {
@@ -347,6 +261,96 @@ func initCmd(action string, args ...string) error {
 	return nil
 }
 
+// func initSubCmd(action, sub string, args ...string) error {
+// }
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	gitCheck = !noSync
+	gitClone = !noSync
+	gitPull = !noSync
+
+	dotlib.DryRun = DryRun
+
+	if Verbose {
+		log.SetLevel(log.DebugLevel)
+	}
+
+	switch output {
+	case "text":
+		log.SetFormatter(&formatter.CLIFormatter{})
+	case "json":
+		log.SetFormatter(&formatter.JSONFormatter{})
+	default:
+		log.Errorf("Invalid output format: %s\n", output)
+		os.Exit(1)
+	}
+
+	if Source != "" {
+		cfgDir = append([]string{Source}, cfgDir...)
+	}
+	readConfig(viper.GetViper(), cfgDir...)
+
+	cfgLogger = cfgLogger.WithFields(log.Fields{})
+
+	if err := viper.Unmarshal(&Config); err != nil {
+		cfgLogger.Errorf("Unable to decode into struct, %v", err)
+		os.Exit(1)
+	}
+}
+
+func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
+	// cfgLogger.Info("Config file: " + cfgFile)
+	// cfgLogger.Info("Config name: " + dotCfg)
+	// cfgLogger.Info("Config type: " + cfgType)
+
+	if cfgFile != "" { // Enable ability to specify config file via flag
+		v.SetConfigFile(cfgFile)
+	}
+	if cfgType != "" { // Enable ability to specify config file format
+		v.SetConfigType(cfgType)
+	}
+	v.SetConfigName(dotCfg) // Name of config file (without extension)
+
+	for _, dir := range dirs { // Add directories to look for the config file in
+		// cfgLogger.Info("Add config dir: " + dir)
+
+		v.AddConfigPath(dir)
+	}
+
+	v.AutomaticEnv() // Read in environment variables that match
+	// v.WatchConfig()  // Read config file while running
+	// If a config file is found, read it in.
+	if err := v.ReadInConfig(); err == nil {
+		cfgLogger.Debug("Using config file: " + v.ConfigFileUsed())
+		// fmt.Println("# Using config file:", v.ConfigFileUsed())
+	}
+	return v
+}
+
+func readRoleConfig(r *role) error {
+	v := viper.New()
+	readConfig(v, r.Dir)
+	if err := v.UnmarshalKey("role", &r); err != nil {
+		return err
+	}
+	// fmt.Printf("%+v\n", r)
+	return nil
+}
+
+/*func readStdin(args []string, cb func(string, string) error) error {
+	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
+	// 	in, err := ioutil.ReadAll(os.Stdin)
+	// 	if err != nil {
+	// 		return fmt.Errorf("Error occured while reading from stdin: %s", err)
+	// 	}
+	// 	viper.ReadConfig(bytes.NewBuffer(in))
+	// 	args = viper.GetStringSlice(key)
+	// } else if viper.ConfigFileUsed() != "" {
+	// 	args = viper.GetStringSlice(key)
+	// }
+}*/
+
 func parsePath(str string, base string) string {
 	src := os.ExpandEnv(str)
 	if !path.IsAbs(str) {
@@ -355,7 +359,7 @@ func parsePath(str string, base string) string {
 	return path.Clean(src)
 }
 
-func parseArg(arg, baseDir string, cb func(string, string, map[string]string) error, env map[string]string) error {
+func parseArg(arg, baseDir string, env map[string]string, cb interface{}) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
 		parts = append(parts, Target)
@@ -372,7 +376,18 @@ func parseArg(arg, baseDir string, cb func(string, string, map[string]string) er
 	if changed && !DryRun {
 		fmt.Printf("mkdir -p %s\n", dst)
 	}
-	return cb(src, dst, env)
+	// return cb(src, dst, env)
+	result := reflect.ValueOf(cb).Call(
+		[]reflect.Value{
+			reflect.ValueOf(src),
+			reflect.ValueOf(dst),
+			reflect.ValueOf(env),
+		},
+	)[0].Interface()
+	if result != nil {
+		return result.(error)
+	}
+	return nil
 }
 
 func filter(roles []role, patterns []string) ([]role, error) {

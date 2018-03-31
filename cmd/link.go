@@ -35,6 +35,11 @@ var linkCmd = &cobra.Command{
 			Dir: Source,
 			URL: URL,
 		}
+		if r.URL == "" {
+			if err := viper.UnmarshalKey("url", &r.URL); err != nil {
+				return err
+			}
+		}
 		if err := r.Init(); err != nil {
 			return err
 		}
@@ -70,9 +75,9 @@ func linkCommand(in []string, dir string, action func(src, dst string, env map[s
 	if action == nil {
 		return nil // Skip
 	}
-	env := map[string]string{} // Unused
+	env := map[string]string{} // Placeholder
 	for _, arg := range in {
-		err := parseArg(arg, dir, action, env)
+		err := parseArg(arg, dir, env, action)
 		if err != nil {
 			return err
 		}
@@ -94,7 +99,7 @@ func linkGlob(src, dst string, env map[string]string) error {
 			Source: s,
 			Target: t,
 		}
-
+		// TODO: switch Install/Remove Link
 		if err = link.Install(); err != nil {
 			return err
 		}

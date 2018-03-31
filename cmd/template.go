@@ -88,7 +88,7 @@ func templateCommand(in []string, dir string, env map[string]string, action func
 		return nil // Skip
 	}
 	for _, arg := range in {
-		err := parseArg(arg, dir, action, env)
+		err := parseArg(arg, dir, env, action)
 		if err != nil {
 			return err
 		}

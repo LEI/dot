@@ -103,7 +103,7 @@ func checkURL(dir, remote, repo string) error {
 	// 	return err
 	// }
 	args := []string{"-C", dir, "config", "--local", "--get", "remote.origin.url"}
-	fmt.Printf("git %s\n", strings.Join(args, " "))
+	// fmt.Printf("git %s\n", strings.Join(args, " "))
 	out, err := execStdout("git", args...)
 	if err != nil {
 		return err
