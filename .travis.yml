@@ -22,7 +22,7 @@ stages:
   - compile
   - test
   - name: deploy
-    if: branch = master
+    # if: branch = master
 
 jobs:
   include:
@@ -61,7 +61,7 @@ before_deploy:
   - mkdir -p bin
   - GOOS=darwin  GOARCH=amd64 go build -o bin/dot-darwin-amd64
   - GOOS=linux   GOARCH=amd64 go build -o bin/dot-linux-amd64
-  - go get go get github.com/inconshreveable/mousetrap
+  - go get github.com/inconshreveable/mousetrap
   - GOOS=windows GOARCH=amd64 go build -o bin/dot-windows-amd64.exe
   - ls -la bin
 deploy:
