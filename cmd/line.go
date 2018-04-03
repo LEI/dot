@@ -14,7 +14,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/LEI/dot/dotlib"
@@ -55,32 +54,32 @@ func init() {
 }
 
 func InstallLine(in map[string]string) error {
-	return lineCommand(in, dotlib.LineInFile)
+	return lineCommand("Install", in)
 }
 
 func RemoveLine(in map[string]string) error {
-	return lineCommand(in, nil)
+	return lineCommand("Remove", in)
 }
 
-func lineCommand(in map[string]string, action func(file string, line string) (bool, error)) error {
-	if action == nil {
-		return nil // Skip
-	}
+func lineCommand(method string, in map[string]string) error {
+	// if action == nil {
+	// 	return nil // Skip
+	// }
 	for file, line := range in {
-		p := parsePath(os.ExpandEnv(file), Target)
-		// _, err := createDir(p)
-		// if err != nil {
-		// 	return err
+		filePath := parsePath(os.ExpandEnv(file), Target)
+		// if method == INSTALL {
+		// 	if _, err := createDir(dir); err != nil {
+		// 		return err
+		// 	}
 		// }
-		changed, err := action(p, line)
+		lif := &dotlib.LineTask{
+			File: filePath,
+			Line: line,
+		}
+		err := callMethod(lif, method)
 		if err != nil {
 			return err
 		}
-		prefix := "# "
-		if changed {
-			prefix = ""
-		}
-		fmt.Printf("%secho '%s' >> \"%s\"\n", prefix, line, file)
 	}
 	return nil
 }

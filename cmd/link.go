@@ -62,30 +62,34 @@ func init() {
 
 // InstallLink ...
 func InstallLink(in []string, dir string) error {
-	return linkCommand(in, dir, linkGlob)
+	return linkCommand(INSTALL, in, dir)
 }
 
 // RemoveLink ...
 func RemoveLink(in []string, dir string) error {
-	return linkCommand(in, dir, nil)
+	return linkCommand(REMOVE, in, dir)
 }
 
-func linkCommand(in []string, dir string, action func(src, dst string, env map[string]string) error) error {
+func linkCommand(method string, in []string, dir string) error {
 	// func linkCommand(in []string, dir string) error {
-	if action == nil {
-		return nil // Skip
-	}
-	env := map[string]string{} // Placeholder
+	// if action == nil {
+	// 	return nil // Skip
+	// }
 	for _, arg := range in {
-		err := parseArg(arg, dir, env, action)
-		if err != nil {
+		src, dst := parseArg(arg, dir)
+		if method == INSTALL {
+			if _, err := createDir(dst); err != nil {
+				return err
+			}
+		}
+		if err := linkGlob(method, src, dst); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func linkGlob(src, dst string, env map[string]string) error {
+func linkGlob(method, src, dst string) error {
 	// var linkList []*dotlib.LinkTask
 	paths, err := filepath.Glob(src)
 	if err != nil {
@@ -94,13 +98,11 @@ func linkGlob(src, dst string, env map[string]string) error {
 	for _, s := range paths {
 		_, f := path.Split(s)
 		t := path.Join(dst, f)
-
 		link := &dotlib.LinkTask{
 			Source: s,
 			Target: t,
 		}
-		// TODO: switch Install/Remove Link
-		if err = link.Install(); err != nil {
+		if err = callMethod(link, method); err != nil {
 			return err
 		}
 		// linkList = append(linkList, &dotlib.LinkTask{s, t, })

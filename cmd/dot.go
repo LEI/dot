@@ -39,6 +39,8 @@ import (
 const (
 	// OS ...
 	OS = runtime.GOOS
+	INSTALL = "Install"
+	REMOVE = "Remove"
 )
 
 var (
@@ -78,7 +80,16 @@ type role struct {
 	URL  string
 	OS   strSlice
 	Log  *log.Entry
-	task `mapstructure:",squash"`
+
+	// task `mapstructure:",squash"`
+	Install     strSlice          // Exec before install
+	PostInstall strSlice          `mapstructure:"post_install"` // Exec after install
+	Remove      strSlice          // Exec before remove
+	PostRemove  strSlice          `mapstructure:"post_remove"` // Exec after remove
+	Env         map[string]string // Environment variables map
+	Line        map[string]string // Lines map
+	Link        strSlice          // Paths list `<source>[:<target>]`
+	Template    strSlice          // Paths list `<source>[:<target>]`
 }
 
 func (r *role) Init() error {
@@ -89,17 +100,6 @@ func (r *role) Init() error {
 		return fmt.Errorf("# Unable to decode into struct, %v", err)
 	}
 	return nil
-}
-
-type task struct {
-	Install     strSlice          // Exec before install
-	PostInstall strSlice          `mapstructure:"post_install"` // Exec after install
-	Remove      strSlice          // Exec before remove
-	PostRemove  strSlice          `mapstructure:"post_remove"` // Exec after remove
-	Env         map[string]string // Environment variables map
-	Line        map[string]string // Lines map
-	Link        strSlice          // Paths list `<source>[:<target>]`
-	Template    strSlice          // Paths list `<source>[:<target>]`
 }
 
 type strSlice []string
@@ -362,7 +362,38 @@ func parsePath(str string, base string) string {
 	return path.Clean(src)
 }
 
-func parseArg(arg, baseDir string, env map[string]string, cb interface{}) error {
+func parseArg(str, baseDir string) (string, string) {
+	parts := strings.Split(str, ":")
+	if len(parts) == 1 {
+		parts = append(parts, Target)
+	} else if len(parts) != 2 {
+		fmt.Println("Invalid arg", str)
+		os.Exit(1)
+	}
+	src := parsePath(parts[0], baseDir)
+	dst := parsePath(parts[1], Target)
+	return src, dst
+}
+
+func callMethodSlice(task dotlib.Task, method string, args []interface{}) error {
+	return callMethod(task, method, args...)
+}
+
+func callMethod(task dotlib.Task, method string, args ...interface{}) error {
+	v := reflect.ValueOf(task)
+	vMethod := v.MethodByName(method)
+	vArgs := []reflect.Value{}
+	for i, a := range args {
+		vArgs[i] = reflect.ValueOf(a)
+	}
+	err := vMethod.Call(vArgs)[0].Interface()
+	if err != nil {
+		return err.(error)
+	}
+	return nil
+}
+
+/*func parseArg(arg, baseDir string, env map[string]string, cb interface{}) error {
 	parts := strings.Split(arg, ":")
 	if len(parts) == 1 {
 		parts = append(parts, Target)
@@ -391,7 +422,7 @@ func parseArg(arg, baseDir string, env map[string]string, cb interface{}) error 
 		return result.(error)
 	}
 	return nil
-}
+}*/
 
 func filter(roles []role, patterns []string) ([]role, error) {
 	if len(patterns) == 0 {
@@ -519,6 +550,8 @@ func createDir(dir string) (bool, error) {
 	if err == nil && fi.IsDir() {
 		return false, nil
 	}
+	// if Verbose {}
+	fmt.Printf("mkdir -p %s\n", dir)
 	if DryRun {
 		return true, nil
 	}

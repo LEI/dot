@@ -14,7 +14,7 @@ import (
 type TemplateTask struct {
 	Source, Target string
 	Env            map[string]string
-	// Task
+	Task
 }
 
 // Install template
@@ -35,6 +35,13 @@ func (t *TemplateTask) Install() error {
 	// envsubst
 	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
 	fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, dst)
+	return nil
+}
+
+func (t *TemplateTask) Remove() error {
+	prefix := "TODO: "
+	c := fmt.Sprintf("rm %s\n", t.Target)
+	fmt.Printf("%s%s\n", prefix, c)
 	return nil
 }
 

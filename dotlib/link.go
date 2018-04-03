@@ -18,8 +18,7 @@ var (
 // LinkTask struct
 type LinkTask struct {
 	Source, Target string
-	// Destination    string
-	// Task
+	Task
 }
 
 func (t *LinkTask) String() string {
@@ -67,10 +66,36 @@ func (t *LinkTask) Install() error {
 
 // Remove link
 func (t *LinkTask) Remove() error {
-	prefix := "TODO: "
-	c := fmt.Sprintf("rm %s\n", t.Target)
-	fmt.Printf("%s%s\n", prefix, c)
+	changed, err := Unlink(t.Source, t.Target)
+	if err != nil {
+		return err
+	}
+	prefix := "# "
+	if changed {
+		prefix = ""
+	}
+	fmt.Printf("%srm %s\n", prefix, t.Target)
 	return nil
+}
+
+// IsSymlink check
+func IsSymlink(fi os.FileInfo) bool {
+	return fi != nil && fi.Mode()&os.ModeSymlink != 0
+}
+// ReadLink path
+func ReadLink(path string) (string, error) {
+	fi, err := os.Lstat(path)
+	if err != nil { // os.IsExist(err)
+		// if os.IsNotExist(err) {
+		// return path, nil
+		// }
+		return "", err
+	}
+	if !IsSymlink(fi) {
+		return "", nil
+	}
+	real, err := os.Readlink(path)
+	return real, err
 }
 
 // Link task
@@ -106,23 +131,27 @@ func Link(src, dst string) (bool, error) {
 	return true, nil
 }
 
-// ReadLink path
-func ReadLink(path string) (string, error) {
-	fi, err := os.Lstat(path)
-	if err != nil { // os.IsExist(err)
-		// if os.IsNotExist(err) {
-		// return path, nil
-		// }
-		return "", err
+func Unlink(src, dst string) (bool, error) {
+	real, err := ReadLink(dst)
+	if err != nil && os.IsExist(err) {
+		return false, err
 	}
-	if !IsSymlink(fi) {
-		return "", nil
+	if real != "" && real != src {
+		return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
 	}
-	real, err := os.Readlink(path)
-	return real, err
-}
-
-// IsSymlink check
-func IsSymlink(fi os.FileInfo) bool {
-	return fi != nil && fi.Mode()&os.ModeSymlink != 0
+	fi, err := os.Stat(dst)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	if fi == nil { // Target does no exist
+		return false, nil
+	}
+	if DryRun {
+		return true, nil
+	}
+	err = os.Remove(dst)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

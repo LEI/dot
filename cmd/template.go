@@ -37,7 +37,7 @@ var templateCmd = &cobra.Command{
 		r := &role{
 			Dir:  Source,
 			URL:  URL,
-			task: task{Env: Env()},
+			Env: Env(),
 		}
 		if err := r.Init(); err != nil {
 			return err
@@ -75,33 +75,37 @@ func init() {
 
 // InstallTemplate ...
 func InstallTemplate(in []string, dir string, env map[string]string) error {
-	return templateCommand(in, dir, env, templateFile)
+	return templateCommand(INSTALL, in, dir, env)
 }
 
 // RemoveTemplate ...
 func RemoveTemplate(in []string, dir string, env map[string]string) error {
-	return templateCommand(in, dir, env, nil)
+	return templateCommand(REMOVE, in, dir, env)
 }
 
-func templateCommand(in []string, dir string, env map[string]string, action func(src, dst string, env map[string]string) error) error {
-	if action == nil {
-		return nil // Skip
-	}
+func templateCommand(method string, in []string, dir string, env map[string]string) error {
+	// switch method.(type) {
+	// case string:
+	// 	break;
+	// }
+	// if action == nil {
+	// 	return nil // Skip
+	// }
 	for _, arg := range in {
-		err := parseArg(arg, dir, env, action)
-		if err != nil {
+		src, dst := parseArg(arg, dir)
+		if method == INSTALL {
+			if _, err := createDir(dst); err != nil {
+				return err
+			}
+		}
+		tpl := &dotlib.TemplateTask{
+			Source: src,
+			Target: dst,
+			Env:    env,
+		}
+		if err := callMethod(tpl, method); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func templateFile(src, dst string, env map[string]string) error {
-	tpl := &dotlib.TemplateTask{
-		Source: src,
-		Target: dst,
-		Env:    env,
-	}
-
-	return tpl.Install()
 }
