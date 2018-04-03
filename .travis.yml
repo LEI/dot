@@ -18,7 +18,7 @@ stages:
   - compile
   - test
   - name: deploy
-    if: branch = master
+    # if: branch = master
 
 jobs:
   include:
@@ -66,9 +66,9 @@ jobs:
         file: bin/*
         file_glob: true
         skip_cleanup: true
-        # on:
-        #   repo: LEI/dot
-        #   tags: true
+        on:
+          repo: LEI/dot
+          tags: true
 
 notifications:
   email: false
