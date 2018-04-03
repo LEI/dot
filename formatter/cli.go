@@ -8,8 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const ()
-
 // CLIFormatter ...
 type CLIFormatter struct {
 	// QuoteEmptyFields will wrap empty fields in quotes if true
