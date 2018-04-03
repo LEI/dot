@@ -35,8 +35,8 @@ var templateCmd = &cobra.Command{
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		r := &role{
-			Dir:  Source,
-			URL:  URL,
+			Dir: Source,
+			URL: URL,
 			Env: Env(),
 		}
 		if err := r.Init(); err != nil {

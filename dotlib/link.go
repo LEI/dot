@@ -82,6 +82,7 @@ func (t *LinkTask) Remove() error {
 func IsSymlink(fi os.FileInfo) bool {
 	return fi != nil && fi.Mode()&os.ModeSymlink != 0
 }
+
 // ReadLink path
 func ReadLink(path string) (string, error) {
 	fi, err := os.Lstat(path)

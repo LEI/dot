@@ -38,9 +38,9 @@ import (
 
 const (
 	// OS ...
-	OS = runtime.GOOS
+	OS      = runtime.GOOS
 	INSTALL = "Install"
-	REMOVE = "Remove"
+	REMOVE  = "Remove"
 )
 
 var (
