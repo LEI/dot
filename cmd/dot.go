@@ -39,28 +39,32 @@ import (
 const (
 	// OS ...
 	OS      = runtime.GOOS
+	// INSTALL method
 	INSTALL = "Install"
+	// REMOVE method
 	REMOVE  = "Remove"
 )
 
 var (
-	// HomeDir ...
-	HomeDir = os.Getenv("HOME")
-	Target  = HomeDir
+	// Target directory
+	Target  = os.Getenv("HOME")
+	// Source directory
 	Source  = ""
-	// URL ...
+	// URL of the repository
 	URL string
 	// Config ...
 	Config  config
+	// DryRun option
 	DryRun  bool
+	// Verbose option
 	Verbose bool
 	cfgFile string
-	cfgType string = "yml"
-	cfgDir         = []string{"$HOME", "/etc/dot", "."}
-	dotDir         = ".dot" // Default clone directory under $HOME
-	dotCfg         = ".dot" // Default config file name without extension
-	dotEnv         = map[string]string{"OS": OS}
-	output         = "text"
+	cfgType = "yml"
+	cfgDir  = []string{"$HOME", "/etc/dot", "."}
+	dotDir  = ".dot" // Default clone directory under $HOME
+	dotCfg  = ".dot" // Default config file name without extension
+	dotEnv  = map[string]string{"OS": OS}
+	output  = "text"
 	noSync  bool
 	// DirMode ...
 	DirMode os.FileMode = 0755

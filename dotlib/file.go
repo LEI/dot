@@ -5,5 +5,6 @@ import (
 )
 
 var (
+	// FileMode default
 	FileMode os.FileMode = 0644
 )

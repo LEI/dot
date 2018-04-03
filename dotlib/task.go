@@ -1,7 +1,9 @@
 package dotlib
 
 var (
+	// DryRun ...
 	DryRun bool
+	// Verbose ...
 	Verbose bool
 )
 

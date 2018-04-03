@@ -17,6 +17,7 @@ type TemplateTask struct {
 	Task
 }
 
+// Init template path
 func (t *TemplateTask) Init() *TemplateTask {
 	_, f := path.Split(t.Source)
 	dst := path.Join(t.Target, strings.TrimSuffix(f, ".tpl"))
@@ -24,6 +25,7 @@ func (t *TemplateTask) Init() *TemplateTask {
 	return t
 }
 
+// Parse template file
 func (t *TemplateTask) Parse() (string, error) {
 	tmpl, err := template.ParseGlob(t.Source)
 	if err != nil {

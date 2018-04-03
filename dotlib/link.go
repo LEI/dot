@@ -132,6 +132,7 @@ func Link(src, dst string) (bool, error) {
 	return true, nil
 }
 
+// Unlink task
 func Unlink(src, dst string) (bool, error) {
 	real, err := ReadLink(dst)
 	if err != nil && os.IsExist(err) {

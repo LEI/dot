@@ -53,10 +53,12 @@ func init() {
 	// lineCmd.Flags().StringVarP(&URL, "url", "u", URL, "Repository URL")
 }
 
+// InstallLine ...
 func InstallLine(in map[string]string) error {
 	return lineCommand("Install", in)
 }
 
+// RemoveLine ...
 func RemoveLine(in map[string]string) error {
 	return lineCommand("Remove", in)
 }

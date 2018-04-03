@@ -41,7 +41,7 @@ func (l *LineTask) Remove() error {
 	return nil
 }
 
-// Line task
+// LineInFile task
 func LineInFile(file string, line string) (bool, error) {
 	input, err := ioutil.ReadFile(file)
 	if err != nil && os.IsExist(err) {
@@ -68,6 +68,7 @@ func LineInFile(file string, line string) (bool, error) {
 	return true, nil
 }
 
+// LineOutFile task
 func LineOutFile(file string, line string) (bool, error) {
 	input, err := ioutil.ReadFile(file)
 	if err != nil && os.IsExist(err) {

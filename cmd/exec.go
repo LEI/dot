@@ -27,6 +27,7 @@ import (
 // type execFunc func(name string, args ...string) error
 
 var (
+	// Shell to use for commands
 	Shell = "bash"
 )
 
@@ -59,6 +60,7 @@ func init() {
 	execCmd.Flags().StringVarP(&Shell, "shell", "", Shell, "Shell")
 }
 
+// ExecCommand ...
 func ExecCommand(in []string) error {
 	// if len(args) == 0 {
 	// 	args = append(args, viper.GetStringSlice("exec")...)

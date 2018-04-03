@@ -10,11 +10,13 @@ import (
 
 const ()
 
+// CLIFormatter ...
 type CLIFormatter struct {
 	// QuoteEmptyFields will wrap empty fields in quotes if true
 	QuoteEmptyFields bool
 }
 
+// Format entry
 func (f *CLIFormatter) Format(entry *log.Entry) ([]byte, error) {
 	var b *bytes.Buffer
 	keys := make([]string, 0, len(entry.Data))

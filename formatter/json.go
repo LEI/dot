@@ -9,13 +9,18 @@ import (
 )
 
 const (
+	// DefaultTimestampFormat ...
 	DefaultTimestampFormat = time.RFC3339
+	// FieldKeyMsg ...
 	FieldKeyMsg            = "msg"
+	// FieldKeyLevel ...
 	FieldKeyLevel          = "level"
+	// FieldKeyTime ...
 	FieldKeyTime           = "time"
 )
 
 type fieldKey string
+// FieldMap ...
 type FieldMap map[fieldKey]string
 
 func (f FieldMap) resolve(key fieldKey) string {
@@ -26,6 +31,7 @@ func (f FieldMap) resolve(key fieldKey) string {
 	return string(key)
 }
 
+// JSONFormatter ...
 type JSONFormatter struct {
 	// TimestampFormat sets the format used for marshaling timestamps.
 	TimestampFormat string
@@ -45,6 +51,7 @@ type JSONFormatter struct {
 	FieldMap FieldMap
 }
 
+// Format entry
 func (f *JSONFormatter) Format(entry *log.Entry) ([]byte, error) {
 	data := make(log.Fields, len(entry.Data)+3)
 
