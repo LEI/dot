@@ -17,11 +17,62 @@ type TemplateTask struct {
 	Task
 }
 
-// Install template
-func (t *TemplateTask) Install() error {
+func (t *TemplateTask) Init() *TemplateTask {
 	_, f := path.Split(t.Source)
 	dst := path.Join(t.Target, strings.TrimSuffix(f, ".tpl"))
-	changed, err := Template(t.Source, dst, t.Env)
+	t.Target = dst
+	return t
+}
+
+func (t *TemplateTask) Parse() (string, error) {
+	tmpl, err := template.ParseGlob(t.Source)
+	if err != nil {
+		return "", err
+	}
+	tmpl = tmpl.Option("missingkey=zero")
+	buf := &bytes.Buffer{}
+	// env, err := GetEnv()
+	// if err != nil {
+	// 	return false, err
+	// }
+	if err = tmpl.Execute(buf, t.Env); err != nil {
+		return buf.String(), err
+	}
+	return buf.String(), nil
+}
+
+// Install template
+func (t *TemplateTask) Install() error {
+	t = t.Init()
+	changed, err := Template(t) // t.Source, dst, t.Env
+	if err != nil {
+		return err
+	}
+	prefix := "# "
+	if changed {
+		prefix = ""
+	}
+	vars := []string{}
+	for k, v := range t.Env { // + dotEnv
+		// fmt.Printf("%s=\"%s\"\n", k, v)
+		vars = append(vars, fmt.Sprintf("%s: %s", k, v))
+	}
+	// envsubst
+	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
+	// fmt.Printf("%sgotpl %s <<< '%s' | tee %s\n", prefix, t.Source, strings.Join(vars, "\n"), t.Target)
+	if Verbose {
+		// github.com/tsg/gotpl with option missingkey=zero
+		fmt.Printf("%sgotpl %s <<'EOF' | tee %s\n%s\nEOF\n", prefix, t.Source, t.Target, strings.Join(vars, "\n"))
+	} else {
+		fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, t.Target)
+	}
+	return nil
+}
+
+// Remove template
+func (t *TemplateTask) Remove() error {
+	t = t.Init()
+	changed, err := Untemplate(t)
 	if err != nil {
 		return err
 	}
@@ -32,36 +83,17 @@ func (t *TemplateTask) Install() error {
 	for k, v := range t.Env { // + dotEnv
 		fmt.Printf("%s=\"%s\"\n", k, v)
 	}
-	// envsubst
-	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
-	fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, dst)
-	return nil
-}
-
-func (t *TemplateTask) Remove() error {
-	prefix := "TODO: "
-	c := fmt.Sprintf("rm %s\n", t.Target)
-	fmt.Printf("%s%s\n", prefix, c)
+	fmt.Printf("%srm %s\n", prefix, t.Target)
 	return nil
 }
 
 // Template task
-func Template(src, dst string, env map[string]string) (bool, error) {
-	tmpl, err := template.ParseGlob(src)
+func Template(t *TemplateTask) (bool, error) {
+	str, err := t.Parse()
 	if err != nil {
 		return false, err
 	}
-	tmpl = tmpl.Option("missingkey=zero")
-	buf := &bytes.Buffer{}
-	// env, err := GetEnv()
-	// if err != nil {
-	// 	return false, err
-	// }
-	if err = tmpl.Execute(buf, env); err != nil {
-		return false, err
-	}
-	str := buf.String()
-	b, err := ioutil.ReadFile(dst)
+	b, err := ioutil.ReadFile(t.Target)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
@@ -71,7 +103,33 @@ func Template(src, dst string, env map[string]string) (bool, error) {
 	if DryRun {
 		return true, nil
 	}
-	if err := ioutil.WriteFile(dst, []byte(str), FileMode); err != nil {
+	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// Untemplate task
+func Untemplate(t *TemplateTask) (bool, error) {
+	str, err := t.Parse()
+	if err != nil {
+		return false, err
+	}
+	b, err := ioutil.ReadFile(t.Target)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	if len(b) == 0 { // Empty file
+		return false, nil
+	}
+	if str != string(b) { // Mismatching content
+		fmt.Printf("Warn: mismatching content %s\n", t.Target)
+		return false, nil
+	}
+	if DryRun {
+		return true, nil
+	}
+	if err := os.Remove(t.Target); err != nil {
 		return false, err
 	}
 	return true, nil

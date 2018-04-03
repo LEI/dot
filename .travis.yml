@@ -3,6 +3,9 @@ sudo: required
 
 language: go
 
+# go:
+#   - master
+
 os:
   - linux
   # - osx # brew install docker-compose

@@ -2,6 +2,7 @@ package dotlib
 
 var (
 	DryRun bool
+	Verbose bool
 )
 
 // Task interface

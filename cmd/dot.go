@@ -128,7 +128,7 @@ to quickly create a Cobra application.`,
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Println(args)
+		// log.Println("args:", args)
 		return initCmd("install", args...)
 	},
 }
@@ -151,6 +151,11 @@ func init() {
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 	DotCmd.PersistentFlags().StringVarP(&output, "output", "o", output, "Output format: text or json")
 	DotCmd.PersistentFlags().BoolVarP(&noSync, "no-sync", "n", noSync, "Disable remote checks")
+
+	// Common flags
+	DotCmd.Flags().StringVarP(&Source, "source", "s", Source, "Source directory")
+	DotCmd.Flags().StringVarP(&Target, "target", "t", Target, "Destination directory")
+	DotCmd.Flags().StringVarP(&URL, "url", "u", URL, "Remote URL")
 
 	// Local flags will only run when this action is called directly.
 	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
@@ -274,6 +279,7 @@ func initConfig() {
 	// gitPull = !noSync
 
 	dotlib.DryRun = DryRun
+	dotlib.Verbose = Verbose
 
 	if Verbose {
 		log.SetLevel(log.DebugLevel)
