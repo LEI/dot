@@ -57,7 +57,6 @@ jobs:
         - GOOS=linux   GOARCH=amd64 go build -o bin/dot-linux-amd64
         - go get github.com/inconshreveable/mousetrap
         - GOOS=windows GOARCH=amd64 go build -o bin/dot-windows-amd64.exe
-        - ls -la bin
       deploy:
         provider: releases
         # prerelease: true
@@ -67,8 +66,8 @@ jobs:
         file: bin/*
         skip_cleanup: true
         on:
-          repo: LEI/dot
-          # tags: true
+          repo: lei/dot
+          tags: true
 
 notifications:
   email: false
