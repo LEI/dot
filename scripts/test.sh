@@ -5,7 +5,7 @@ set -e
 DIR="${BASH_SOURCE%/*}"
 source "$DIR/functions.sh"
 
-ln -sf $DOT/.dot.yml $HOME/.dot.yml
+ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
 
 # run dot sync -u "https://github.com/LEI/dot-git" -s ~/.dot/git
 # run dot install link -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig" ".gitignore"
