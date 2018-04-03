@@ -29,11 +29,12 @@ func (t *TemplateTask) Install() error {
 	if changed {
 		prefix = ""
 	}
-	for k, v := range t.Env {
+	for k, v := range t.Env { // + dotEnv
 		fmt.Printf("%s=\"%s\"\n", k, v)
 	}
+	// envsubst
 	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
-	fmt.Printf("%stemplate %s -> %s\n", prefix, t.Source, dst)
+	fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, dst)
 	return nil
 }
 
