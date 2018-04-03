@@ -22,7 +22,7 @@ import (
 
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
-	Use:        "remove [flags]",
+	Use:        "remove", // [flags]
 	Aliases:    []string{"rm"},
 	SuggestFor: []string{"delete", "uninstall"},
 	Short:      "Remove dotfiles",

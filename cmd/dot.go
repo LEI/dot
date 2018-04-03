@@ -120,7 +120,7 @@ func (s *strSlice) Set(value string) error {
 
 // DotCmd represents the base command when called without any subcommands
 var DotCmd = &cobra.Command{
-	Use:   os.Args[0],
+	Use:   "dot",
 	Short: "Manage dotfiles",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:

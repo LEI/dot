@@ -22,7 +22,7 @@ import (
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	// Hidden: true,
-	Use:        "install [flags]",
+	Use:        "install", // [flags]
 	Aliases:    []string{"i"},
 	SuggestFor: []string{"add"},
 	Short:      "Install dotfiles",
