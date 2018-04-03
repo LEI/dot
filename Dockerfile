@@ -30,8 +30,7 @@ ENTRYPOINT ["/bin/bash"]
 
 RUN go get github.com/sirupsen/logrus \
     github.com/spf13/cobra \
-    github.com/spf13/viper \
-    github.com/boltdb/bolt
+    github.com/spf13/viper
 
 ADD . $DOT
 
