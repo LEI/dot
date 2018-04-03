@@ -19,10 +19,10 @@ cache:
     - $GOPATH/pkg
 
 stages:
-  # - compile
-  # - test
+  - compile
+  - test
   - name: deploy
-    if: branch = master
+    # if: branch = master
 
 jobs:
   include:
@@ -47,7 +47,7 @@ jobs:
         # - test -d $HOME/.vim/plugged
         # - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
     - stage: test
-      install: true
+      install: false
       before_script:
         - docker-compose build
       script:
@@ -62,13 +62,14 @@ jobs:
         # - GOOS=windows GOARCH=amd64 go build -o bin/dot-windows-amd64.exe
       deploy:
         provider: releases
-        prerelease: true
+        # prerelease: true
+        draft: true
         api_key:
           secure: oY3u9O1FkqsozEtRY0Jn4/4+2EP6UNCcpI2+j0uIFMzybnGl7RyvYizWGSElbzIALQySSFMv39g69BCiPCZmeilcfiZs1C9qXP13RC21/XfHSpmLiyD0Va1TuADC6BklbfQ/XDpFUrTAY/ErFybLjKkYbfI6ntInZkKq7qaak5OpIBGe0aFNWtidHEnu24yK0jcUIui/qMioBwY5El9F9qcwvdMYVU9g4o32uKYrTcHaNRG2pcTEtZmMNsojYpyE+2S1y9Q55Gz/AyU0C+wBgj+NHeWpLSfac6x/I8vxlsUmV2QozJhct4ws3RJ5rscy73DVdNYEdO1whka3CUvUWIw1m7SReaKqWUl4NpOvaNfH5cQO/0kgZLjrTq5WLyiPpUTqMVA5MHzKVN9351MV2i8hhXrK+8H0/ihNnLSl6RbcgIDbp3I7P59YmofuT7+Iy1tiBmmHvBJDuU1DcwHQYqKnSpVVkuOIgt6bqvhdKCCTV48VFW+0+gh3M428At/U6Nl56XUJ0YG55CFGLd03vIp7n1rUnyv9/uNMY3b0aDpAj4trfhUybDGwoRG5Pb0FnFQVh/jRtImsB0IWW823yU6b+1GjbF0a5SfWDCRAaTE6QQukpWdSQdjyhmImbsdpAKbi497oDM3KraM9R77WQfY/JSD01Dzj+KDvX7lP60Y=
         file:
           - bin/dot-darwin-amd64
           - bin/dot-linux-amd64
-        # skip_cleanup: true
+        skip_cleanup: true
         on:
           repo: LEI/dot
           tags: true
