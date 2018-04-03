@@ -22,18 +22,18 @@ stages:
   - compile
   - test
   - name: deploy
-    if: branch = latest
+    # if: branch = latest
 
 jobs:
   include:
     - stage: compile
-      before_script:
-        # - sudo apt-get -qq update
-        # - sudo apt-get install -y vim tmux
-        - go get github.com/sirupsen/logrus
-        - go get github.com/spf13/cobra
-        - go get github.com/spf13/viper
-        # - go get github.com/mattn/goveralls
+      # before_script:
+      #   # - sudo apt-get -qq update
+      #   # - sudo apt-get install -y vim tmux
+      #   - go get github.com/sirupsen/logrus
+      #   - go get github.com/spf13/cobra
+      #   - go get github.com/spf13/viper
+      #   # - go get github.com/mattn/goveralls
       script:
         # - golint
         - go vet ./...
@@ -46,6 +46,7 @@ jobs:
         # - test -d $HOME/.vim/plugged
         # - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
     - stage: test
+      install: false
       before_script:
         - docker-compose build
       script:
