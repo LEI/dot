@@ -12,14 +12,15 @@ const (
 	// DefaultTimestampFormat ...
 	DefaultTimestampFormat = time.RFC3339
 	// FieldKeyMsg ...
-	FieldKeyMsg            = "msg"
+	FieldKeyMsg = "msg"
 	// FieldKeyLevel ...
-	FieldKeyLevel          = "level"
+	FieldKeyLevel = "level"
 	// FieldKeyTime ...
-	FieldKeyTime           = "time"
+	FieldKeyTime = "time"
 )
 
 type fieldKey string
+
 // FieldMap ...
 type FieldMap map[fieldKey]string
 

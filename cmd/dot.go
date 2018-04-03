@@ -38,24 +38,24 @@ import (
 
 const (
 	// OS ...
-	OS      = runtime.GOOS
+	OS = runtime.GOOS
 	// INSTALL method
 	INSTALL = "Install"
 	// REMOVE method
-	REMOVE  = "Remove"
+	REMOVE = "Remove"
 )
 
 var (
 	// Target directory
-	Target  = os.Getenv("HOME")
+	Target = os.Getenv("HOME")
 	// Source directory
-	Source  = ""
+	Source = ""
 	// URL of the repository
 	URL string
 	// Config ...
-	Config  config
+	Config config
 	// DryRun option
-	DryRun  bool
+	DryRun bool
 	// Verbose option
 	Verbose bool
 	cfgFile string

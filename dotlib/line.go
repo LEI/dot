@@ -84,7 +84,7 @@ func LineOutFile(file string, line string) (bool, error) {
 	for i, l := range lines {
 		if strings.Contains(l, line) {
 			index = i
-			break;
+			break
 		}
 	}
 	if index < 0 {

@@ -13,10 +13,10 @@ os:
 services:
   - docker
 
-# cache:
-#   directories:
-#     - $GOPATH/src
-#     - $GOPATH/pkg
+cache:
+  directories:
+    - $GOPATH/src
+    - $GOPATH/pkg
 
 stages:
   - compile
