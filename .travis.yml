@@ -19,8 +19,8 @@ cache:
     - $GOPATH/pkg
 
 stages:
-  - compile
-  - test
+  # - compile
+  # - test
   - name: deploy
     if: branch = master
 
@@ -47,13 +47,14 @@ jobs:
         # - test -d $HOME/.vim/plugged
         # - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
     - stage: test
-      install: false
+      install: true
       before_script:
         - docker-compose build
       script:
         # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
         - docker-compose run test
     - stage: deploy
+      install: true
       before_deploy:
         - mkdir -p bin
         - GOOS=darwin  GOARCH=amd64 go build -o bin/dot-darwin-amd64
