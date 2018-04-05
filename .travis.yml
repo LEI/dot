@@ -15,14 +15,13 @@ cache:
     - $GOPATH/pkg
 
 stages:
-  - compile
   - test
   - name: deploy
     # if: branch = master
 
 jobs:
   include:
-    - stage: compile
+    - stage: test
       before_script:
         # - sudo apt-get -qq update
         # - sudo apt-get install -y vim tmux
