@@ -280,7 +280,7 @@ func initCmd(action string, args ...string) error {
 func initConfig() {
 	gitCheck = !noSync
 	// gitClone = !noSync
-	// gitPull = !noSync
+	gitPull = !noSync
 
 	dotlib.DryRun = DryRun
 	dotlib.Verbose = Verbose

@@ -8,6 +8,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	levelFormat = "## %s: "
+)
+
 // CLIFormatter ...
 type CLIFormatter struct {
 	// QuoteEmptyFields will wrap empty fields in quotes if true
@@ -44,7 +48,7 @@ func (f *CLIFormatter) Format(entry *log.Entry) ([]byte, error) {
 
 func (f *CLIFormatter) printCommand(b *bytes.Buffer, entry *log.Entry, keys []string) {
 	lvl := strings.Title(entry.Level.String())
-	b.WriteString(fmt.Sprintf("%s: ", lvl))
+	b.WriteString(fmt.Sprintf(levelFormat, lvl))
 	b.WriteString(entry.Message)
 	for _, key := range keys {
 		b.WriteString(fmt.Sprintf(" %s=%v", key, entry.Data[key]))
