@@ -125,7 +125,7 @@ func parseRepo(str string) string {
 	str = strings.Replace(str, ":", "/", 1)
 	parts := strings.Split(str, "/")
 	if len(parts) > 1 {
-		return strings.Join(parts[len(parts) - 2:], "/")
+		return strings.Join(parts[len(parts)-2:], "/")
 	}
 	return str
 }
