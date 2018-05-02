@@ -49,12 +49,12 @@ func RemovePackages(args []interface{}) error {
 }
 
 func pkgCommand(method string, args []interface{}) error {
-	opts := "-S" // INSTALL
-	if method == REMOVE {
-		opts = "-R"
+	pacaptArgs := []string{"--noconfirm"}
+	if method == INSTALL {
+		pacaptArgs = append(pacaptArgs, "-S")
+	} else if method == REMOVE {
+		pacaptArgs = append(pacaptArgs, "-R")
 	}
-
-	pacaptArgs := []string{opts}
 	for _, arg := range args {
 		switch v := arg.(type) {
 		case string:
