@@ -138,6 +138,7 @@ func cloneRepo(dir, repo string) error {
 	fmt.Printf("git %s\n", strings.Join(args, " "))
 	err := execute("git", args...)
 	if err != nil {
+		fmt.Println("ERR", err, args)
 		return err
 	}
 	synced = append(synced, dir)
