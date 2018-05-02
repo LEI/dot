@@ -17,7 +17,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io"
 	// "io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -70,6 +72,8 @@ var (
 	DirMode os.FileMode = 0755
 	// FileMode ...
 	FileMode os.FileMode = 0644
+	pacaptURL = "https://github.com/icy/pacapt/raw/ng/pacapt"
+	pacaptBin = "/usr/local/bin/pacapt"
 )
 
 var cfgLogger = log.WithFields(log.Fields{})
@@ -129,7 +133,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return nil
+		return initPac()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// log.Println("args:", args)
@@ -178,6 +182,66 @@ func initCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&Source, "source", "s", Source, "Source directory")
 	cmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Destination directory")
 	cmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
+}
+
+func downloadFromURL(url, dst string, perm os.FileMode) {
+	if dst == "" {
+		tokens := strings.Split(url, "/")
+		dst = tokens[len(tokens)-1]
+	}
+
+	fi, err := os.Stat(dst)
+	if err != nil && os.IsExist(err) {
+		log.Fatal(err)
+	}
+	if fi != nil && !os.IsNotExist(err) {
+		fmt.Println("Already exists:", dst)
+		return
+	}
+
+	fmt.Println("Downloading", url, "to", dst)
+
+	output, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
+	if err != nil {
+		fmt.Println("Error while creating", dst, "-", err)
+		return
+	}
+	defer output.Close()
+
+	response, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Error while downloading", url, "-", err)
+		return
+	}
+	defer response.Body.Close()
+
+	n, err := io.Copy(output, response.Body)
+	if err != nil {
+		fmt.Println("Error while downloading", url, "-", err)
+		return
+	}
+
+	fmt.Println(n, "bytes downloaded.")
+}
+
+func initPac() error {
+	downloadFromURL(pacaptURL, pacaptBin, 0755)
+
+	// log.Fatal("done")
+	return nil
+}
+
+func execPac(args ...string) error {
+	out, err := exec.Command(pacaptBin, args...).Output()
+	fmt.Println(pacaptBin)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str := string(out)
+	fmt.Println(str)
+
+	return nil
 }
 
 func initCmd(action string, args ...string) error {

@@ -4,5 +4,3 @@
 
 - [Cobra](https://github.com/spf13/cobra)
 - [Viper](https://github.com/spf13/viper)
-
-- [Antibody](https://github.com/getantibody/antibody)
