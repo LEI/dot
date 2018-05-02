@@ -87,6 +87,7 @@ type role struct {
 	Dir  string `mapstructure:"directory"`
 	URL  string
 	OS   strSlice
+	Pkg []interface{}
 	Log  *log.Entry
 
 	// task `mapstructure:",squash"`
@@ -231,17 +232,12 @@ func initPac() error {
 	return nil
 }
 
-func execPac(args ...string) error {
-	out, err := exec.Command(pacaptBin, args...).Output()
-	fmt.Println(pacaptBin)
+func execPac(args ...string) (string, error) {
+	out, err := exec.Command(pacaptBin, args...).CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		return string(out), err
 	}
-
-	str := string(out)
-	fmt.Println(str)
-
-	return nil
+	return string(out), err
 }
 
 func initCmd(action string, args ...string) error {
@@ -298,6 +294,9 @@ func initCmd(action string, args ...string) error {
 		}
 		switch action {
 		case "install":
+			if err := InstallPackages(role.Pkg); err != nil {
+				return err
+			}
 			if err := ExecCommand(role.Install); err != nil {
 				return err
 			}
@@ -314,6 +313,9 @@ func initCmd(action string, args ...string) error {
 				return err
 			}
 		case "remove":
+			if err := RemovePackages(role.Pkg); err != nil {
+				return err
+			}
 			if err := ExecCommand(role.Remove); err != nil {
 				return err
 			}
