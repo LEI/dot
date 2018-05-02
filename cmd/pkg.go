@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	// "github.com/LEI/dot/dotlib"
 
@@ -55,15 +56,34 @@ func pkgCommand(method string, args []interface{}) error {
 
 	pacaptArgs := []string{opts}
 	for _, arg := range args {
-		pacaptArgs = append(pacaptArgs, arg.(string))
+		switch v := arg.(type) {
+		case string:
+			pacaptArgs = append(pacaptArgs, v)
+		// case map[interface{}]string:
+		// 	fmt.Println("---------", v)
+		case map[interface{}]interface{}:
+			if v["os"] != nil {
+				vOS := v["os"].([]interface{})
+				osList := make([]string, len(vOS))
+				for i := range vOS {
+					osList[i] = vOS[i].(string)
+				}
+				if ok := hasOne(osList, listOS()); !ok {
+					break
+				}
+			}
+			pacaptArgs = append(pacaptArgs, v["name"].(string))
+		}
 	}
+
+	fmt.Println("pacapt", strings.Join(pacaptArgs, " "))
 
 	out, err := execPac(pacaptArgs...)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("\n" + out)
+	fmt.Println(out)
 
 	return nil
 }

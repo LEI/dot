@@ -4,3 +4,4 @@
 
 - [Cobra](https://github.com/spf13/cobra)
 - [Viper](https://github.com/spf13/viper)
+- [pacapt](https://github.com/icy/pacapt)

@@ -226,18 +226,25 @@ func downloadFromURL(url, dst string, perm os.FileMode) {
 }
 
 func initPac() error {
+	if DryRun {
+		return nil
+	}
+
 	downloadFromURL(pacaptURL, pacaptBin, 0755)
 
-	// log.Fatal("done")
 	return nil
 }
 
 func execPac(args ...string) (string, error) {
-	out, err := exec.Command(pacaptBin, args...).CombinedOutput()
-	if err != nil {
-		return string(out), err
+	if DryRun {
+		return "# (SKIPPED: dry-run)", nil
 	}
-	return string(out), err
+	output, err := exec.Command(pacaptBin, args...).CombinedOutput()
+	str := strings.TrimRight(string(output), "\n")
+	if err != nil {
+		return str, err
+	}
+	return str, err
 }
 
 func initCmd(action string, args ...string) error {
