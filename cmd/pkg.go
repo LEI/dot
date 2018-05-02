@@ -71,6 +71,7 @@ func pkgCommand(method string, args []interface{}) error {
 				if ok := hasOne(osList, listOS()); !ok {
 					break
 				}
+				fmt.Println(osList, listOS())
 			}
 			pacaptArgs = append(pacaptArgs, v["name"].(string))
 		}

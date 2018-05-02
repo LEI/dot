@@ -5,9 +5,7 @@ RUN apt-get update -qq -y && \
     ca-certificates \
     curl \
     git-core \
-    locales \
-    tmux \
-    vim-nox
+    locales
 # && rm -rf /var/lib/apt/lists/*
 
 # https://stackoverflow.com/q/28405902/7796750
