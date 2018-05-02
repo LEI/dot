@@ -193,6 +193,7 @@ func downloadFromURL(url, dst string, perm os.FileMode) {
 
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
+		fmt.Println("Already exists:", dst)
 		log.Fatal(err)
 	}
 	if fi != nil && !os.IsNotExist(err) {
