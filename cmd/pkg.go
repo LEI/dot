@@ -53,17 +53,19 @@ func pkgCommand(method string, args []interface{}) error {
 		return nil
 	}
 	pacaptArgs := []string{}
+	opt := "-"
 	if method == INSTALL {
-		pacaptArgs = append(pacaptArgs, "-S")
+		opt+= "S"
 	} else if method == REMOVE {
-		pacaptArgs = append(pacaptArgs, "-R")
+		opt+= "R"
 	}
+	if !Verbose {
+		opt+= "q"
+	}
+	pacaptArgs = append(pacaptArgs, opt)
 	osList := listOS()
 	if ok := hasOne([]string{"darwin"}, osList); !ok {
 		pacaptArgs = append(pacaptArgs, "--noconfirm")
-	}
-	if !Verbose {
-		pacaptArgs = append(pacaptArgs, "--quiet")
 	}
 	for _, arg := range args {
 		switch v := arg.(type) {
