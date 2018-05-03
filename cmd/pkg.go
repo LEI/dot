@@ -49,12 +49,20 @@ func RemovePackages(args []interface{}) error {
 }
 
 func pkgCommand(method string, args []interface{}) error {
-	pacaptArgs := []string{"--noconfirm"}
+	if len(args) == 0 {
+		return nil
+	}
+	pacaptArgs := []string{}
 	if method == INSTALL {
 		pacaptArgs = append(pacaptArgs, "-S")
 	} else if method == REMOVE {
 		pacaptArgs = append(pacaptArgs, "-R")
 	}
+	osList := listOS()
+	if ok := hasOne([]string{"darwin"}, osList); !ok {
+		pacaptArgs = append(pacaptArgs, "--noconfirm")
+	}
+	fmt.Println(osList)
 	for _, arg := range args {
 		switch v := arg.(type) {
 		case string:
@@ -64,27 +72,36 @@ func pkgCommand(method string, args []interface{}) error {
 		case map[interface{}]interface{}:
 			if v["os"] != nil {
 				vOS := v["os"].([]interface{})
-				osList := make([]string, len(vOS))
+				osPkg := make([]string, len(vOS))
 				for i := range vOS {
-					osList[i] = vOS[i].(string)
+					osPkg[i] = vOS[i].(string)
 				}
-				if ok := hasOne(osList, listOS()); !ok {
+				if ok := hasOne(osPkg, osList); !ok {
 					break
 				}
-				fmt.Println(osList, listOS())
+				// TODO Check "!"+OS
 			}
 			pacaptArgs = append(pacaptArgs, v["name"].(string))
 		}
 	}
-
 	fmt.Println("pacapt", strings.Join(pacaptArgs, " "))
-
-	out, err := execPac(pacaptArgs...)
+	err := execute(pacaptBin, pacaptArgs...)
+	// out, err := execPac(pacaptArgs...)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(out)
-
+	// fmt.Println(out)
 	return nil
 }
+
+// func execPac(args ...string) (string, error) {
+// 	if DryRun {
+// 		return "# (SKIPPED: dry-run)", nil
+// 	}
+// 	output, err := exec.Command(pacaptBin, args...).CombinedOutput()
+// 	str := strings.TrimRight(string(output), "\n")
+// 	if err != nil {
+// 		return str, err
+// 	}
+// 	return str, err
+// }

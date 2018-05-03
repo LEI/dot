@@ -193,10 +193,6 @@ func downloadFromURL(url, dst string, perm os.FileMode) {
 
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
-
-		// TORM
-		fmt.Println("Already exists:", dst)
-
 		log.Fatal(err)
 	}
 	if fi != nil && !os.IsNotExist(err) {
@@ -237,18 +233,6 @@ func initPac() error {
 	downloadFromURL(pacaptURL, pacaptBin, 0755)
 
 	return nil
-}
-
-func execPac(args ...string) (string, error) {
-	if DryRun {
-		return "# (SKIPPED: dry-run)", nil
-	}
-	output, err := exec.Command(pacaptBin, args...).CombinedOutput()
-	str := strings.TrimRight(string(output), "\n")
-	if err != nil {
-		return str, err
-	}
-	return str, err
 }
 
 func initCmd(action string, args ...string) error {
