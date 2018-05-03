@@ -59,9 +59,9 @@ func pkgCommand(method string, args []interface{}) error {
 	} else if method == REMOVE {
 		opt+= "R"
 	}
-	if !Verbose {
-		opt+= "q"
-	}
+	// if !Verbose {
+	// 	opt+= "q"
+	// }
 	pacaptArgs = append(pacaptArgs, opt)
 	osList := listOS()
 	if ok := hasOne([]string{"darwin"}, osList); !ok {
@@ -74,6 +74,12 @@ func pkgCommand(method string, args []interface{}) error {
 		// case map[interface{}]string:
 		// 	fmt.Println("---------", v)
 		case map[interface{}]interface{}:
+			if method == INSTALL && v["install"] != nil && v["install"] == false {
+				break
+			}
+			if method == REMOVE && v["remove"] != nil && v["remove"] == false {
+				break
+			}
 			if v["os"] != nil {
 				vOS := v["os"].([]interface{})
 				osPkg := make([]string, len(vOS))
@@ -83,7 +89,14 @@ func pkgCommand(method string, args []interface{}) error {
 				if ok := hasOne(osPkg, osList); !ok {
 					break
 				}
-				// TODO Check "!"+OS
+				// Check "!"+OS
+				notOsPkg := make([]string, len(vOS))
+				for i := range vOS {
+					notOsPkg[i] = vOS[i].(string)
+				}
+				if ok := hasOne(notOsPkg, osList); ok {
+					break
+				}
 			}
 			pacaptArgs = append(pacaptArgs, v["name"].(string))
 		}
