@@ -29,7 +29,7 @@ var pkgCmd = &cobra.Command{
 	Short: "Create or remove packages",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return nil
+		return fmt.Errorf("TODO")
 	},
 }
 
@@ -62,7 +62,9 @@ func pkgCommand(method string, args []interface{}) error {
 	if ok := hasOne([]string{"darwin"}, osList); !ok {
 		pacaptArgs = append(pacaptArgs, "--noconfirm")
 	}
-	fmt.Println(osList)
+	if !Verbose {
+		pacaptArgs = append(pacaptArgs, "--quiet")
+	}
 	for _, arg := range args {
 		switch v := arg.(type) {
 		case string:
