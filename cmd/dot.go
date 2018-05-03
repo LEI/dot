@@ -77,6 +77,7 @@ var (
 )
 
 var cfgLogger = log.WithFields(log.Fields{})
+// var currentRole role
 
 type config struct {
 	Roles []role
@@ -277,6 +278,8 @@ func initCmd(action string, args ...string) error {
 		roleLogger.Info(strings.Title(action) + " role")
 
 		role.Log = roleLogger
+		// currentRole = role
+
 		// Do not pull if already cloned
 		// if _, err := os.Stat(role.Dir); os.IsExist(err) { }
 		if err := role.Init(); err != nil {
