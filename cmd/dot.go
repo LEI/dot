@@ -74,12 +74,13 @@ var (
 	// DirMode ...
 	DirMode os.FileMode = 0755
 	// FileMode ...
-	FileMode os.FileMode = 0644
-	pacaptURL = "https://github.com/icy/pacapt/raw/ng/pacapt"
-	pacaptBin = "/usr/local/bin/pacapt"
+	FileMode  os.FileMode = 0644
+	pacaptURL             = "https://github.com/icy/pacapt/raw/ng/pacapt"
+	pacaptBin             = "/usr/local/bin/pacapt"
 )
 
 var cfgLogger = log.WithFields(log.Fields{})
+
 // var currentRole role
 
 type config struct {
@@ -91,7 +92,7 @@ type role struct {
 	Dir  string `mapstructure:"directory"`
 	URL  string
 	OS   strSlice
-	Pkg []interface{}
+	Pkg  []interface{}
 	Log  *log.Entry
 
 	// task `mapstructure:",squash"`
