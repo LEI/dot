@@ -60,6 +60,8 @@ var (
 	DryRun bool
 	// Verbose option
 	Verbose bool
+	// Sudo option
+	Sudo    bool
 	cfgFile string
 	cfgType = "yml"
 	cfgDir  = []string{"$HOME", "/etc/dot", "."}
@@ -157,6 +159,7 @@ func init() {
 
 	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Enable test mode")
 	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "")
+	DotCmd.PersistentFlags().BoolVarP(&Sudo, "sudo", "S", false, "Use sudo for pacapt")
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 	DotCmd.PersistentFlags().StringVarP(&output, "output", "o", output, "Output format: text or json")
@@ -527,6 +530,20 @@ func match(str string, patterns ...string) (bool, error) {
 
 func listOS() []string {
 	types := []string{OS}
+	out, err := exec.Command("cat", "/etc/*-release").Output()
+	if err != nil {
+		fmt.Println("err", err)
+	} else {
+		release := string(out)
+		fmt.Println(release)
+		for _, l := range strings.Split(release, "\n") {
+			v := strings.TrimLeft(release, "ID=")
+			if l != v {
+				fmt.Println("ID", v)
+				types = append(types, v)
+			}
+		}
+	}
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
 	if ok && OSTYPE != "" {
 		types = append(types, OSTYPE)

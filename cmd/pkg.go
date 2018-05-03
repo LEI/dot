@@ -85,11 +85,19 @@ func pkgCommand(method string, args []interface{}) error {
 		}
 	}
 	fmt.Println("pacapt", strings.Join(pacaptArgs, " "))
-	err := execute(pacaptBin, pacaptArgs...)
-	// out, err := execPac(pacaptArgs...)
-	if err != nil {
-		return err
+	if Sudo {
+		pacaptArgs = append([]string{pacaptBin}, pacaptArgs...)
+		err := execute("sudo", pacaptArgs...)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := execute(pacaptBin, pacaptArgs...)
+		if err != nil {
+			return err
+		}
 	}
+	// out, err := execPac(pacaptArgs...)
 	// fmt.Println(out)
 	return nil
 }

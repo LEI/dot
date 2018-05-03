@@ -24,3 +24,7 @@ roles:
   - name: hammerspoon
     url: "https://github.com/LEI/dot-hammerspoon"
     os: ["darwin"]
+
+  - name: i3
+    url: "https://github.com/LEI/dot-i3"
+    os: ["archlinux"]
