@@ -15,14 +15,13 @@ services:
 #     - $GOPATH/pkg
 
 stages:
-  - build
   - test
   - name: deploy
     # if: branch = master
 
 jobs:
   include:
-    - stage: build
+    - stage: test
       before_script:
         # - sudo apt-get -qq update
         # - sudo apt-get install -y vim tmux
