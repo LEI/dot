@@ -27,4 +27,4 @@ roles:
 
   - name: i3
     url: "https://github.com/LEI/dot-i3"
-    os: ["archlinux"]
+    os: ["arch"]

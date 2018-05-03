@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -530,20 +531,25 @@ func match(str string, patterns ...string) (bool, error) {
 
 func listOS() []string {
 	types := []string{OS}
-	out, err := exec.Command("cat", "/etc/*-release").Output()
-	if err != nil {
-		fmt.Println("err", err)
-	} else {
-		release := string(out)
-		fmt.Println(release)
-		for _, l := range strings.Split(release, "\n") {
-			v := strings.TrimLeft(release, "ID=")
-			if l != v {
-				fmt.Println("ID", v)
-				types = append(types, v)
-			}
+
+	// Add OS family
+	c := exec.Command(Shell, "-c", "cat /etc/*-release")
+	stdout, _ := c.StdoutPipe()
+	// stderr, _ := c.StderrPipe()
+	c.Start()
+	scanner := bufio.NewScanner(stdout)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		m := scanner.Text()
+		log.Debugln(m)
+		v := strings.TrimLeft(m, "ID=")
+		if m != v {
+			types = append(types, v)
+			break
 		}
 	}
+	c.Wait()
+
 	OSTYPE, ok := os.LookupEnv("OSTYPE")
 	if ok && OSTYPE != "" {
 		types = append(types, OSTYPE)
