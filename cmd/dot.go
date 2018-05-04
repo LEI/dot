@@ -353,8 +353,8 @@ func initConfig() {
 	// gitClone = !noSync
 	gitPull = !noSync
 
-	shouldInstallPackages = doPkg
-	shouldRemovePackages = doPkg
+	shouldInstallPackages = DoPkg
+	shouldRemovePackages = DoPkg
 
 	dotlib.DryRun = DryRun
 	dotlib.Verbose = Verbose
