@@ -23,6 +23,11 @@ import (
 	// "github.com/spf13/viper"
 )
 
+var (
+	shouldInstallPackages bool
+	shouldRemovePackages bool
+)
+
 // pkgCmd represents the package command
 var pkgCmd = &cobra.Command{
 	Use:   "pkg",
@@ -40,11 +45,17 @@ func init() {
 
 // InstallPackages ...
 func InstallPackages(args []interface{}) error {
+	if !shouldInstallPackages {
+		return nil
+	}
 	return pkgCommand(INSTALL, args)
 }
 
 // RemovePackages ...
 func RemovePackages(args []interface{}) error {
+	if !shouldRemovePackages {
+		return nil
+	}
 	return pkgCommand(REMOVE, args)
 }
 

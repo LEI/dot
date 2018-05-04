@@ -63,6 +63,7 @@ var (
 	Verbose bool
 	// Sudo option
 	Sudo    bool
+	DoPkg   bool
 	cfgFile string
 	cfgType = "yml"
 	cfgDir  = []string{"$HOME", "/etc/dot", "."}
@@ -162,6 +163,7 @@ func init() {
 	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Enable test mode")
 	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "")
 	DotCmd.PersistentFlags().BoolVarP(&Sudo, "sudo", "S", false, "Use sudo for pacapt")
+	DotCmd.PersistentFlags().BoolVarP(&DoPkg, "packages", "p", false, "Install or remove packages")
 	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
 	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
 	DotCmd.PersistentFlags().StringVarP(&output, "output", "o", output, "Output format: text or json")
