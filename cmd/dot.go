@@ -63,6 +63,7 @@ var (
 	Verbose bool
 	// Sudo option
 	Sudo    bool
+	// DoPkg action
 	DoPkg   bool
 	cfgFile string
 	cfgType = "yml"
