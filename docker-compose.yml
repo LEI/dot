@@ -13,7 +13,7 @@ services:
     command: |
       -l -c '
       source $$DOT/scripts/functions.sh
-      run dot --verbose;
+      run dot --packages --verbose;
       # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +PlugInstall +qall; exit";
       exec bash -l;'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
