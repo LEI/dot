@@ -28,3 +28,7 @@ roles:
   - name: i3
     url: "https://github.com/LEI/dot-i3"
     os: ["arch"]
+
+  - name: usql
+    url: "https://github.com/LEI/dot-usql"
+    os: ["darwin"]
