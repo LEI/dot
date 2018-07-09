@@ -52,7 +52,7 @@ type RoleArg struct {
 
 // New dot.Role
 func (a *RoleArg) New() *dot.Role {
-	var name string
+	var name = a.Name
 	switch name {
 	case "":
 		name = "default"
@@ -60,8 +60,6 @@ func (a *RoleArg) New() *dot.Role {
 	case "all":
 		name = "*"
 		break
-	default:
-		name = a.Name
 	}
 	if strings.Contains(name, "*") {
 		// find glob

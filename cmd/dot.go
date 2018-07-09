@@ -5,7 +5,7 @@ import (
 	// "io"
 	"os"
 
-	"github.com/LEI/dot/cfg"
+	// "github.com/LEI/dot/cfg"
 	"github.com/LEI/dot/dot"
 
 	"github.com/jessevdk/go-flags"
@@ -70,7 +70,7 @@ func init() {
 
 	parser.SubcommandsOptional = false
 
-	Options.Config = readConfig(GlobalConfig)
+	// Options.Config = readConfig(GlobalConfig)
 	Options.IniConfig = readIniConfig(parser)
 }
 
@@ -115,20 +115,8 @@ func GetParser() *flags.Parser {
 	return parser
 }
 
-func readConfig(config *dot.Config) func(s string) error {
-	return func(s string) error {
-		configFile, err := cfg.Load(&config, s)
-		if err != nil {
-			return err
-		}
-
-		if configFile != "" {
-			fmt.Println("Using configuration file:", configFile)
-		}
-
-		return nil
-	}
-}
+// func readConfig(config *dot.Config) func(s string) error {
+// }
 
 func readIniConfig(parser *flags.Parser) func(s string) error {
 	return func(s string) error {

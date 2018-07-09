@@ -17,9 +17,22 @@ var (
 )
 
 func main() {
-	cfg.Debug = true
+	// cfg.Debug = true
 
 	cmd.GlobalConfig = config
+
+	cmd.Options.Config =  func(s string) error {
+		configFile, err := cfg.Load(config, s)
+		if err != nil {
+			return err
+		}
+
+		if configFile != "" {
+			fmt.Println("Using configuration file:", configFile)
+		}
+
+		return nil
+	}
 
 	remaining, err := cmd.Parse()
 	if err != nil {
@@ -48,8 +61,6 @@ func main() {
 	// 	fmt.Printf("Verbosity: %v\n", verbosity)
 	// }
 	// cfg.Debug = verbosity > 0
-
-	// fmt.Printf("Options: %+v\n", options)
 
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)

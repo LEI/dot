@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/LEI/dot/dot"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -15,7 +17,7 @@ var (
 )
 
 // Load ...
-func Load(c interface{}, s string) (string, error) {
+func Load(c *dot.Config, s string) (string, error) {
 	cfgPath, err := findConfig(s)
 	if err != nil {
 		return cfgPath, err
