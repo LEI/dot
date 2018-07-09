@@ -11,7 +11,7 @@ import (
 // Role ...
 type Role struct {
 	Name string
-	URL string
+	Path string
 	OS []string
 	Copy Paths
 	Link Paths
@@ -21,21 +21,21 @@ type Role struct {
 // Paths ...
 type Paths map[string]string
 
-// ParseURL ...
-func ParseURL(url string) string {
+// ParsePath ...
+func ParsePath(p string) string {
 	// if r.Name == "" {}
-	// if url == "" {}
-	if !strings.Contains(url, "http") {
+	// if p == "" {}
+	if !strings.Contains(p, "http") {
 		base := "https://github.com"
-		url = base + "/" + url
+		p = base + "/" + p
 	}
-	return url
+	return p
 }
 
 // NewRole ...
-func NewRole(name, url string) *Role {
-	r := &Role{Name: name, URL: url}
-	r.URL = ParseURL(r.URL)
+func NewRole(name, p string) *Role {
+	r := &Role{Name: name} // , Path: p}
+	r.Path = ParsePath(p)
 	return r
 }
 

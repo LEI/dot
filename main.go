@@ -66,7 +66,7 @@ func main() {
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", options)
 	for i, r := range config.Roles {
-		fmt.Println("Role", i+1, r.Name, r.URL)
+		fmt.Printf("Role #%d [%s] %s\n", i+1, r.Name, r.Path)
 		fmt.Println("Copies", r.Copy)
 		fmt.Println("Links", r.Link)
 		fmt.Println("Templates", r.Template)
