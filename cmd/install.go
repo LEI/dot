@@ -1,39 +1,82 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
+	// "os"
 
-	"github.com/spf13/cobra"
+	// "github.com/jessevdk/go-flags"
 )
 
-// installCmd represents the install command
-var installCmd = &cobra.Command{
-	// Hidden: true,
-	Use:        "install", // [flags]
-	Aliases:    []string{"i"},
-	SuggestFor: []string{"add"},
-	Short:      "Install dotfiles",
-	Long:       ``,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return initCmd("install", args...)
-	},
+// InstallCmd ...
+type InstallCmd struct {
+	*BaseCmd
+
+	// Link LinkCmd `command:"link" alias:"l" description:"Symlink file"`
+	// Link map[string]string `short:"l" long:"links" description:"Map source files to target symlinks"`
+	// Link map[string]string `positional-args:"yes" required:"yes" positional-arg-name:"links" description:"Map source files to target symlinks"`
+
+	Copy     CopyCmd     `command:"copy" alias:"cp" description:""`
+	Link     LinkCmd     `command:"link" alias:"ln" description:""`
+	Template TemplateCmd `command:"template" alias:"tpl" description:""`
+
+	// Role struct {
+	// 	Name, URL string
+	// } `required:"1" positional-args:"true"`
+	// Roles map[string]string `short:"r" long:"roles" description:""`
+}
+
+var installCmd InstallCmd
+// Install ... var Install *flags.Command
+
+// var installCommands = []*flags.Command{
+// 	&flags.Command{
+// 		Name: "copy",
+// 		Group: &flags.Group{
+// 			ShortDescription: "Copy files",
+// 			LongDescription: "Copy files",
+// 			// data: &copyCmd,
+// 		},
+// 	},
+// }
+
+// Execute ...
+func (cmd *InstallCmd) Execute(args []string) error {
+	fmt.Println("exec install cmd", args)
+	// fmt.Println("role", cmd.Role)
+
+	if err := cmd.Copy.Execute([]string{}); err != nil {
+		fmt.Println("copy err", err)
+		// os.Exit(1)
+	}
+	if err := cmd.Link.Execute([]string{}); err != nil {
+		fmt.Println("link err", err)
+	}
+	if err := cmd.Template.Execute([]string{}); err != nil {
+		fmt.Println("template err", err)
+	}
+
+	return nil
 }
 
 func init() {
-	DotCmd.AddCommand(installCmd)
-	initCommonFlags(installCmd)
-	// installCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	// Install, err := parser.AddCommand("install",
+	// 	"Install",
+	// 	"",
+	// 	&installCmd)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
+	// Install.Aliases = []string{"i"}
+	// Install.SubcommandsOptional = true
+
+	// InstallCopy, err := Install.AddCommand("copy",
+	// 	"Install copy",
+	// 	"",
+	// 	&copyCmd)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
+	// InstallCopy.Aliases = []string{"rm"}
 }

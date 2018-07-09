@@ -1,0 +1,8 @@
+{
+    "roles": [
+        {
+            "name": "vim",
+            "url": "LEI/dot-vim"
+        }
+    ]
+}

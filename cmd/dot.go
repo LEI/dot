@@ -1,694 +1,118 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"io"
-	// "io/ioutil"
-	"net/http"
+	// "io"
 	"os"
-	"os/exec"
-	"path"
-	"path/filepath"
-	"reflect"
-	"runtime"
-	// "strconv"
-	"strings"
-	"text/template"
 
-	"github.com/LEI/dot/dotlib"
-	"github.com/LEI/dot/formatter"
-
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/jessevdk/go-flags"
 )
 
-const (
-	// OS ...
-	OS = runtime.GOOS
-	// INSTALL method
-	INSTALL = "Install"
-	// REMOVE method
-	REMOVE = "Remove"
-)
+// DotCmd ...
+type DotCmd struct {
+	*BaseCmd
 
-var (
-	// Target directory
-	Target = os.Getenv("HOME")
-	// Source directory
-	Source = ""
-	// URL of the repository
-	URL string
-	// Config ...
-	Config config
-	// DryRun option
-	DryRun bool
-	// Verbose option
-	Verbose bool
-	// Sudo option
-	Sudo    bool
-	// DoPkg action
-	DoPkg   bool
-	cfgFile string
-	cfgType = "yml"
-	cfgDir  = []string{"$HOME", "/etc/dot", "."}
-	dotDir  = ".dot" // Default clone directory under $HOME
-	dotCfg  = ".dot" // Default config file name without extension
-	dotEnv  = map[string]string{"OS": OS}
-	output  = "text"
-	noSync  bool
-	// DirMode ...
-	DirMode os.FileMode = 0755
-	// FileMode ...
-	FileMode  os.FileMode = 0644
-	pacaptURL             = "https://github.com/icy/pacapt/raw/ng/pacapt"
-	pacaptBin             = "/usr/local/bin/pacapt"
-)
+	// Slice of bool will append 'true' each time the option
+	// is encountered (can be set multiple times, like -vvv)
+	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
 
-var cfgLogger = log.WithFields(log.Fields{})
+	Version bool `short:"V" long:"version" description:"Print the version and exit"`
 
-// var currentRole role
+	IniConfig func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
+	// env:"DOT_CONFIG" default:".dot"
+	Config string `short:"c" long:"config" description:"Config file name"`
 
-type config struct {
-	Roles []role
+	Debug bool `short:"d" long:"debug" description:""`
+
+	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
+	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
+
+	// Name:URL map[string]string
+	Roles []string `short:"r" long:"roles" description:""`
+	// Role string `short:"r" long:"role" description:""`
+	// URL string `short:"u" long:"url" description:""`
 }
 
-type role struct {
-	Name string
-	Dir  string `mapstructure:"directory"`
-	URL  string
-	OS   strSlice
-	Pkg  []interface{}
-	Log  *log.Entry
+// Cmd ...
+// var Cmd flags.Command
 
-	// task `mapstructure:",squash"`
-	Install     strSlice          // Exec before install
-	PostInstall strSlice          `mapstructure:"post_install"` // Exec after install
-	Remove      strSlice          // Exec before remove
-	PostRemove  strSlice          `mapstructure:"post_remove"` // Exec after remove
-	Env         map[string]string // Environment variables map
-	Line        map[string]string // Lines map
-	Link        strSlice          // Paths list `<source>[:<target>]`
-	Template    strSlice          // Paths list `<source>[:<target>]`
-}
+// Options ...
+var Options DotCmd
 
-func (r *role) Init() error {
-	if err := CloneOrPull(r.Dir, r.URL); err != nil {
-		return err
-	}
-	if err := readRoleConfig(r); err != nil {
-		return fmt.Errorf("# Unable to decode into struct, %v", err)
-	}
-	return nil
-}
+var parser = flags.NewParser(&Options, flags.Default)
 
-type strSlice []string
+// Execute ...
+func (cmd *DotCmd) Execute(args []string) error {
+	fmt.Println("exec cmd", args)
 
-func (s *strSlice) String() string {
-	return fmt.Sprintf("%v", *s)
-}
+	// fmt.Println(Dot.Commands)
+	// if c, ok := cmd.(*flags.Command); ok {
+	// 	fmt.Println(c)
+	// }
 
-func (s *strSlice) Set(value string) error {
-	// fmt.Printf("%s (%t)\n", value, value)
-	*s = append(*s, value)
-	return nil
-}
-
-// DotCmd represents the base command when called without any subcommands
-var DotCmd = &cobra.Command{
-	Use:   "dot",
-	Short: "Manage dotfiles",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return initPac()
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// log.Println("args:", args)
-		return initCmd("install", args...)
-	},
-}
-
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := DotCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(-1)
-	}
+	return nil // Install.Execute(args)
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	// args, err := flags.Parse(&options)
 
-	DotCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "D", false, "Enable test mode")
-	DotCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "")
-	DotCmd.PersistentFlags().BoolVarP(&Sudo, "sudo", "S", false, "Use sudo for pacapt")
-	DotCmd.PersistentFlags().BoolVarP(&DoPkg, "packages", "p", false, "Install or remove packages")
-	DotCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "$HOME/.dot.yaml", "Config file")
-	DotCmd.PersistentFlags().StringVarP(&cfgType, "format", "f", cfgType, "Config type: json, toml or yaml")
-	DotCmd.PersistentFlags().StringVarP(&output, "output", "o", output, "Output format: text or json")
-	DotCmd.PersistentFlags().BoolVarP(&noSync, "no-sync", "n", noSync, "Disable remote checks")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// Common flags
-	DotCmd.Flags().StringVarP(&Source, "source", "s", Source, "Source directory")
-	DotCmd.Flags().StringVarP(&Target, "target", "t", Target, "Destination directory")
-	DotCmd.Flags().StringVarP(&URL, "url", "u", URL, "Remote URL")
+	// fmt.Printf("Args: %v\n", args)
 
-	// Local flags will only run when this action is called directly.
-	// DotCmd.Flags().StringVarP(&Directory, "dir", "d", Directory, "Repository path")
+	parser.SubcommandsOptional = false
 
-	// viper.BindPFlag("directory", DotCmd.Flags().Lookup("directory"))
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
-	log.SetOutput(os.Stdout)
-
-	// Only log the this severity or above
-	log.SetLevel(log.InfoLevel)
+	Options.IniConfig = readIniConfig(parser)
 }
 
-func initCommonFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&Source, "source", "s", Source, "Source directory")
-	cmd.PersistentFlags().StringVarP(&Target, "target", "t", Target, "Destination directory")
-	cmd.PersistentFlags().StringVarP(&URL, "url", "u", URL, "Remote URL")
-}
-
-func downloadFromURL(url, dst string, perm os.FileMode) {
-	if dst == "" {
-		tokens := strings.Split(url, "/")
-		dst = tokens[len(tokens)-1]
-	}
-
-	fi, err := os.Stat(dst)
-	if err != nil && os.IsExist(err) {
-		log.Fatal(err)
-	}
-	if fi != nil && !os.IsNotExist(err) {
-		fmt.Println("Already exists:", dst)
-		return
-	}
-
-	fmt.Println("Downloading", url, "to", dst)
-
-	output, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
+// Parse ...
+func Parse() ([]string, error) {
+	remaining, err := parser.Parse()
 	if err != nil {
-		fmt.Println("Error while creating", dst, "-", err)
-		return
+		if flagsErr, ok := err.(*flags.Error); ok {
+			switch flagsErr.Type {
+			case flags.ErrHelp:
+				os.Exit(1)
+			case flags.ErrCommandRequired:
+				// FIXME: DotCmd.Execute() never called
+				// when first-level sub commands are optional
+				err = Options.Install.Execute(remaining)
+				remaining = []string{}
+				// os.Exit(1)
+			// default:
+			// 	fmt.Println("Error parsing args:", err)
+			// 	os.Exit(1)
+			}
+		}
 	}
-	defer output.Close()
 
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
-		return
-	}
-	defer response.Body.Close()
-
-	n, err := io.Copy(output, response.Body)
-	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
-		return
-	}
-
-	fmt.Println(n, "bytes downloaded.")
+	return remaining, err
 }
 
-func initPac() error {
-	if DryRun {
-		return nil
-	}
-
-	downloadFromURL(pacaptURL, pacaptBin, 0755)
-
-	return nil
-}
-
-func initCmd(action string, args ...string) error {
-	roles, err := filter(Config.Roles, args)
-	if err != nil {
-		return err
-	}
-	Config.Roles = roles
-	if len(Config.Roles) == 0 {
-		return fmt.Errorf("404 role not found")
-	}
-	for index, role := range Config.Roles {
-		roleLogger := cfgLogger.WithFields(log.Fields{
-			"name": role.Name,
-			// "url": role.URL,
-		})
-		if role.Name == "" {
-			roleLogger.Warn("Missing role name")
-			os.Exit(1)
-		}
-		if role.URL == "" {
-			roleLogger.Warn("Missing role url")
-			os.Exit(1)
-		}
-		if role.OS != nil {
-			if ok := hasOne(role.OS, listOS()); !ok { // Skip role
-				// fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", role.Name, strings.Join(role.OS, ", "))
-				roleLogger.WithFields(log.Fields{
-					"os": role.OS,
-				}).Info("Skipping role")
-				continue
-			}
-		}
-		if role.Dir == "" {
-			role.Dir = path.Join(Target, dotDir, role.Name)
-		}
-
-		roleLogger = roleLogger.WithFields(log.Fields{
-			"path": role.Dir,
-		})
-
-		roleLogger.Info(strings.Title(action) + " role")
-
-		role.Log = roleLogger
-		// currentRole = role
-
-		// Do not pull if already cloned
-		// if _, err := os.Stat(role.Dir); os.IsExist(err) { }
-		if err := role.Init(); err != nil {
-			return err
-		}
-
-		roleEnv, err := initEnv(role.Env)
-		if err != nil {
-			return err
-		}
-		switch action {
-		case "install":
-			if err := InstallPackages(role.Pkg); err != nil {
-				return err
-			}
-			if err := ExecCommand(role.Install); err != nil {
-				return err
-			}
-			if err := InstallLink(role.Link, role.Dir); err != nil {
-				return err
-			}
-			if err := InstallTemplate(role.Template, role.Dir, roleEnv); err != nil {
-				return err
-			}
-			if err := InstallLine(role.Line); err != nil {
-				return err
-			}
-			if err := ExecCommand(role.PostInstall); err != nil {
-				return err
-			}
-		case "remove":
-			if err := RemovePackages(role.Pkg); err != nil {
-				return err
-			}
-			if err := ExecCommand(role.Remove); err != nil {
-				return err
-			}
-			if err := RemoveLink(role.Link, role.Dir); err != nil {
-				return err
-			}
-			if err := RemoveTemplate(role.Template, role.Dir, roleEnv); err != nil {
-				return err
-			}
-			if err := RemoveLine(role.Line); err != nil {
-				return err
-			}
-			if err := ExecCommand(role.PostRemove); err != nil {
-				return err
-			}
-		default:
-			fmt.Printf("Unknown action '%s'\n", action)
-		}
-		Config.Roles[index] = role
-	}
-	return nil
-}
-
-// func initSubCmd(action, sub string, args ...string) error {
+// WriteHelp ...
+// func WriteHelp(o io.Writer) {
+// 	parser.WriteHelp(o)
 // }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	gitCheck = !noSync
-	// gitClone = !noSync
-	gitPull = !noSync
-
-	shouldInstallPackages = DoPkg
-	shouldRemovePackages = DoPkg
-
-	dotlib.DryRun = DryRun
-	dotlib.Verbose = Verbose
-
-	if Verbose {
-		log.SetLevel(log.DebugLevel)
-	}
-
-	switch output {
-	case "text":
-		log.SetFormatter(&formatter.CLIFormatter{})
-	case "json":
-		log.SetFormatter(&formatter.JSONFormatter{})
-	default:
-		log.Errorf("Invalid output format: %s\n", output)
-		os.Exit(1)
-	}
-
-	if Source != "" {
-		cfgDir = append([]string{Source}, cfgDir...)
-	}
-	readConfig(viper.GetViper(), cfgDir...)
-
-	cfgLogger = cfgLogger.WithFields(log.Fields{})
-
-	if err := viper.Unmarshal(&Config); err != nil {
-		cfgLogger.Errorf("Unable to decode into struct, %v", err)
-		os.Exit(1)
-	}
+// Help ...
+func Help(rc int) {
+	parser.WriteHelp(os.Stdout)
+	os.Exit(rc)
 }
 
-func readConfig(v *viper.Viper, dirs ...string) *viper.Viper {
-	// cfgLogger.Info("Config file: " + cfgFile)
-	// cfgLogger.Info("Config name: " + dotCfg)
-	// cfgLogger.Info("Config type: " + cfgType)
+// GetParser ...
+// func GetParser() *flags.Parser {
+// 	return parser
+// }
 
-	if cfgFile != "" { // Enable ability to specify config file via flag
-		v.SetConfigFile(cfgFile)
-	}
-	if cfgType != "" { // Enable ability to specify config file format
-		v.SetConfigType(cfgType)
-	}
-	v.SetConfigName(dotCfg) // Name of config file (without extension)
+func readIniConfig(parser *flags.Parser) func(s string) error {
+	return func(s string) error {
+		ini := flags.NewIniParser(parser)
 
-	for _, dir := range dirs { // Add directories to look for the config file in
-		// cfgLogger.Info("Add config dir: " + dir)
+		// ini.ParseAsDefaults = true
 
-		v.AddConfigPath(dir)
+		return ini.ParseFile(s)
 	}
-
-	v.AutomaticEnv() // Read in environment variables that match
-	// v.WatchConfig()  // Read config file while running
-	// If a config file is found, read it in.
-	if err := v.ReadInConfig(); err == nil {
-		cfgLogger.Debug("Using config file: " + v.ConfigFileUsed())
-		// fmt.Println("# Using config file:", v.ConfigFileUsed())
-	}
-	return v
 }
-
-func readRoleConfig(r *role) error {
-	v := viper.New()
-	readConfig(v, r.Dir)
-	if err := v.UnmarshalKey("role", &r); err != nil {
-		return err
-	}
-	// fmt.Printf("%+v\n", r)
-	return nil
-}
-
-/*func readStdin(args []string, cb func(string, string) error) error {
-	// if len(args) >= 1 && args[0] == "-" { // Read config from stdin
-	// 	in, err := ioutil.ReadAll(os.Stdin)
-	// 	if err != nil {
-	// 		return fmt.Errorf("Error occured while reading from stdin: %s", err)
-	// 	}
-	// 	viper.ReadConfig(bytes.NewBuffer(in))
-	// 	args = viper.GetStringSlice(key)
-	// } else if viper.ConfigFileUsed() != "" {
-	// 	args = viper.GetStringSlice(key)
-	// }
-}*/
-
-func parsePath(str string, base string) string {
-	src := os.ExpandEnv(str)
-	if !path.IsAbs(str) {
-		src = path.Join(base, str)
-	}
-	return path.Clean(src)
-}
-
-func parseArg(str, baseDir string) (string, string) {
-	parts := strings.Split(str, ":")
-	if len(parts) == 1 {
-		parts = append(parts, Target)
-	} else if len(parts) != 2 {
-		fmt.Println("Invalid arg", str)
-		os.Exit(1)
-	}
-	src := parsePath(parts[0], baseDir)
-	dst := parsePath(parts[1], Target)
-	return src, dst
-}
-
-func callMethodSlice(task dotlib.Task, method string, args []interface{}) error {
-	return callMethod(task, method, args...)
-}
-
-func callMethod(task dotlib.Task, method string, args ...interface{}) error {
-	v := reflect.ValueOf(task)
-	vMethod := v.MethodByName(method)
-	vArgs := []reflect.Value{}
-	for i, a := range args {
-		vArgs[i] = reflect.ValueOf(a)
-	}
-	err := vMethod.Call(vArgs)[0].Interface()
-	if err != nil {
-		return err.(error)
-	}
-	return nil
-}
-
-/*func parseArg(arg, baseDir string, env map[string]string, cb interface{}) error {
-	parts := strings.Split(arg, ":")
-	if len(parts) == 1 {
-		parts = append(parts, Target)
-	} else if len(parts) != 2 {
-		fmt.Println("Invalid arg", arg)
-		os.Exit(1)
-	}
-	src := parsePath(parts[0], baseDir)
-	dst := parsePath(parts[1], Target)
-	changed, err := createDir(dst)
-	if err != nil {
-		return err
-	}
-	if changed && !DryRun {
-		fmt.Printf("mkdir -p %s\n", dst)
-	}
-	// return cb(src, dst, env)
-	result := reflect.ValueOf(cb).Call(
-		[]reflect.Value{
-			reflect.ValueOf(src),
-			reflect.ValueOf(dst),
-			reflect.ValueOf(env),
-		},
-	)[0].Interface()
-	if result != nil {
-		return result.(error)
-	}
-	return nil
-}*/
-
-func filter(roles []role, patterns []string) ([]role, error) {
-	if len(patterns) == 0 {
-		return roles, nil
-	}
-	out := roles[:0]
-	for _, r := range roles {
-		matched, err := match(r.Name, patterns...)
-		if err != nil {
-			return out, err
-		}
-		if matched {
-			out = append(out, r)
-		}
-	}
-	return out, nil
-}
-
-func match(str string, patterns ...string) (bool, error) {
-	for _, pattern := range patterns {
-		matched, err := filepath.Match(pattern, str)
-		if err != nil || matched {
-			return matched, err
-		}
-	}
-	return false, nil
-}
-
-func listOS() []string {
-	types := []string{OS}
-
-	// Add OS family
-	c := exec.Command(Shell, "-c", "cat /etc/*-release")
-	stdout, _ := c.StdoutPipe()
-	// stderr, _ := c.StderrPipe()
-	c.Start()
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		m := scanner.Text()
-		log.Debugln(m)
-		v := strings.TrimLeft(m, "ID=")
-		if m != v {
-			types = append(types, v)
-			break
-		}
-	}
-	c.Wait()
-
-	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	if ok && OSTYPE != "" {
-		types = append(types, OSTYPE)
-	} else { // !ok || OSTYPE == ""
-		// fmt.Printf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
-		out, err := exec.Command(Shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
-		if err != nil {
-			fmt.Println(err)
-		}
-		if len(out) > 0 {
-			OSTYPE = string(out)
-			o := strings.Split(OSTYPE, ".")
-			if len(o) > 0 {
-				types = append(types, o[0])
-			}
-			types = append(types, OSTYPE)
-		}
-	}
-	if OSTYPE == "" {
-		fmt.Println("OSTYPE is not set or empty")
-	}
-	return types
-}
-
-func initEnv(in map[string]string) (map[string]string, error) {
-	// env := Env()
-	env := make(map[string]string, 0)
-	// for key, val := range Env() {
-	// 	env[key] = val
-	// }
-	for k, v := range in {
-		k = strings.ToTitle(k)
-		if v == "" { // Lookup environment if the variable is empty
-			val, ok := os.LookupEnv(k)
-			if !ok {
-				cfgLogger.Debugf("%s is not set", k)
-				// fmt.Fprintf(os.Stderr, "# %s is not set in the environment\n", k)
-				continue
-			}
-			v = val
-		}
-		if v != "" { // Parse string as a template
-			templ, err := template.New(k).Option("missingkey=zero").Parse(v)
-			if err != nil {
-				return env, err
-			}
-			buf := &bytes.Buffer{}
-			err = templ.Execute(buf, Env())
-			if err != nil {
-				return env, err
-			}
-			v = buf.String()
-		}
-		if v != "" { // Set the environment variable
-			// fmt.Printf("%s=\"%s\"\n", k, v)
-			err := os.Setenv(k, v)
-			if err != nil {
-				return env, err
-			}
-		} else {
-			fmt.Fprintf(os.Stderr, "# %s is empty\n", k)
-		}
-		env[k] = v
-	}
-	return env, nil
-}
-
-// Env ...
-func Env() map[string]string {
-	env := make(map[string]string, 0)
-	for _, i := range os.Environ() {
-		sep := strings.Index(i, "=")
-		k := i[0:sep]
-		v := i[sep+1:]
-		env[k] = v
-		// cfgLogger.Debugf("%s=%+v", k, v)
-	}
-	for k, v := range dotEnv {
-		prefix := ""
-		if _, ok := env[k]; !ok {
-			env[k] = v
-		} else {
-			prefix = "# (SKIPPED) "
-		}
-		cfgLogger.Debugf("%s%s=%+v", prefix, k, v)
-	}
-	return env
-}
-
-func createDir(dir string) (bool, error) {
-	fi, err := os.Stat(dir)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	if err == nil && fi.IsDir() {
-		return false, nil
-	}
-	// if Verbose {}
-	fmt.Printf("mkdir -p %s\n", dir)
-	if DryRun {
-		return true, nil
-	}
-	return true, os.MkdirAll(dir, DirMode)
-}
-
-func hasOne(in []string, list []string) bool {
-	for _, a := range in {
-		for _, b := range list {
-			if b == a {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-/*func getSlice(arg interface{}) []string {
-	var slice []string
-	switch v := arg.(type) {
-	case []interface{}:
-		// fmt.Println("[]interface")
-		for _, r := range v {
-			slice = append(slice, r.(string))
-		}
-	case interface{}:
-		// fmt.Println("interface")
-		slice = append(slice, v.(string))
-	case string:
-		// fmt.Println("string")
-		slice = append(slice, v)
-		// :
-		// 	fmt.Println("other:", v)
-	}
-	return slice
-}*/

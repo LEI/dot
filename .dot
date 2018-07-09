@@ -1,0 +1,4 @@
+# version=true
+[install.link]
+source=tmux
+target=.tmux
