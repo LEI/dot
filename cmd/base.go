@@ -1,20 +1,7 @@
 package cmd
 
 import (
-	// "fmt"
-	// "reflect"
-
-	"github.com/jessevdk/go-flags"
 )
-
-// BaseCmd ...
-type BaseCmd struct {
-	// FIXME *flags.Command
-	flags.Commander
-
-	// Role map[string]string `short:"r" long:"role" description:""`
-}
-
 
 /*
 // CommandHandler ...

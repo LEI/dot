@@ -6,29 +6,19 @@ import (
 
 	// "github.com/jessevdk/go-flags"
 
-	"github.com/LEI/dot/cmd"
 	"github.com/LEI/dot/cfg"
+	"github.com/LEI/dot/cmd"
+	"github.com/LEI/dot/dot"
 )
 
-// Config ...
-type Config struct {
-	Roles []Role
-}
-
-// Role ...
-type Role struct {
-	Name string
-	URL string
-	OS []string
-}
-
 var (
-	config Config
+	config *dot.Config = &dot.Config{}
 	configFile string
-	options = cmd.Options
 )
 
 func main() {
+	cmd.GlobalConfig = config
+
 	remaining, err := cmd.Parse()
 	if err != nil {
 		fmt.Println("Command error:", remaining)
@@ -38,6 +28,12 @@ func main() {
 		fmt.Println("Remaining arguments:", remaining)
 		cmd.Help(1)
 	}
+
+	// Parsed arguments
+	options := cmd.Options
+
+	// FIXME: &config not working?
+	//  dot i -c .dot.yml -d
 
 	// TODO: before Execute()
 	if options.Version {
@@ -51,22 +47,37 @@ func main() {
 		fmt.Printf("Verbosity: %v\n", verbosity)
 	}
 
-	cfg.Debug = options.Debug
+	cfg.Debug = verbosity > 0
 
-	configFile, err := cfg.Load(&config, options.Config)
-	if err != nil {
+	// fmt.Printf("Options: %+v\n", options)
+
+	// fmt.Printf("Config: %+v\n", config)
+	// fmt.Printf("Config roles: %+v\n", config.Roles)
+	// fmt.Printf("Options: %+v\n", options)
+	for i, r := range config.Roles {
+		fmt.Println("Role", i+1, r.Name)
+		fmt.Println("Copies", r.Copy)
+		fmt.Println("Links", r.Link)
+		fmt.Println("Templates", r.Template)
+	}
+
+	// fmt.Println("CFG")
+	// cmd.WriteIniConfig(cmd.GetParser())
+	// fmt.Println("ENDCFG")
+
+	if err := config.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if configFile != "" {
-		fmt.Println("Final configuration file:", configFile)
-	}
-
-	// FIXME: &config not working?
-	//  dot i -c .dot.yml -d
-	fmt.Printf("Config: %+v\n", config.Roles)
-	fmt.Printf("Options: %+v\n", options.Roles)
+	// for k, v := range options.Roles {
+	// 	fmt.Println(k, v)
+	// 	config.Roles = append(config.Roles, dot.Role{
+	// 		Name: k,
+	// 		URL: v,
+	// 	})
+	// }
+	// fmt.Printf("=> %+v roles\n", len(config.Roles))
 	// fmt.Println("CLI role:", cmd.GetParser().Find("install").FindOptionByLongName("roles"))
 }
 

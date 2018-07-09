@@ -1,32 +1,32 @@
 package dot
 
 import (
-	"fmt"
+	// "fmt"
 )
 
-// RegisterLink ...
-func RegisterLink(s, t string) error {
-	CacheStore.Link[s] = t
+// // RegisterLink ...
+// func RegisterLink(s, t string) error {
+// 	CacheStore.Link[s] = t
 
-	return nil
-}
+// 	return nil
+// }
 
-// Link ...
-func Link(s, t string) error {
-	source := s
-	target := t
+// // Link ...
+// func Link(s, t string) error {
+// 	source := s
+// 	target := t
 
-	fmt.Println("ln -s", source, target)
+// 	fmt.Println("ln -s", source, target)
 
-	return nil
-}
+// 	return nil
+// }
 
-// Unlink ...
-func Unlink(s, t string) error {
-	// source := s
-	target := t
+// // Unlink ...
+// func Unlink(s, t string) error {
+// 	// source := s
+// 	target := t
 
-	fmt.Println("rm", target)
+// 	fmt.Println("rm", target)
 
-	return nil
-}
+// 	return nil
+// }

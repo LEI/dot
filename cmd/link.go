@@ -1,28 +1,12 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/jessevdk/go-flags"
-
-	"github.com/LEI/dot/dot"
+	// "fmt"
 )
 
 // LinkCmd ...
 type LinkCmd struct {
-	*BaseCmd
-
-	*LinkArg // `required:"true" positional-args:"true"`
-}
-
-// LinkArg ...
-type LinkArg struct {
-	// Paths map[flags.Filename]flags.Filename `name:"PATHS" description:"Paths"`
-	// Paths map[string]string `name:"PATHS" description:"Paths"`
-	// Source flags.Filename `name:"SOURCE" description:"Path to source file"`
-	// Target flags.Filename `name:"TARGET" description:"Path to target link"`
-	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
-	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
+	BaseRoleCmd
 }
 
 // Link ...
@@ -30,15 +14,17 @@ var Link LinkCmd
 
 // Execute ...
 func (cmd *LinkCmd) Execute(args []string) error {
-	fmt.Println("execute link command", args)
-	if cmd.Source == "" && cmd.Target == "" {
-		return nil
+	// fmt.Println("execute link command", args) // , cmd)
+	// fmt.Println("Role:", cmd.Role.Name)
+	role := cmd.Role.New() // Init dot.Role
+	if err := role.Register(GlobalConfig); err != nil {
+		return err
 	}
-
-	s := string(cmd.Source)
-	t := string(cmd.Target)
-
-	// fmt.Printf("%v\n", cmd)
-
-	return dot.RegisterLink(s, t)
+	for _, p := range cmd.Role.Paths {
+		err := role.RegisterLink(string(p))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

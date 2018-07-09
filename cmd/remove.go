@@ -7,7 +7,7 @@ import (
 
 // RemoveCmd ...
 type RemoveCmd struct {
-	*BaseCmd
+	BaseCmd
 
 	Copy     CopyCmd     `command:"copy" alias:"cp" description:""`
 	Link     LinkCmd     `command:"link" alias:"ln" description:""`
@@ -17,9 +17,9 @@ type RemoveCmd struct {
 var removeCmd RemoveCmd
 
 // Execute ...
-func (cmd *RemoveCmd) Execute(args ...[]string) error {
+func (cmd *RemoveCmd) Execute(args []string) error {
 	fmt.Println("exec remove cmd", args)
-	return nil
+	return nil // executeCommands(cmd, args)
 }
 
 func init() {

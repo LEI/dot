@@ -1,24 +1,11 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/jessevdk/go-flags"
 )
 
 // TemplateCmd ...
 type TemplateCmd struct {
-	*BaseCmd
-
-	Source string `short:"s" long:"source" description:""`
-	Target string `short:"t" long:"target" description:""`
-	// *TemplateArg `required:"true" positional-args:"true"`
-}
-
-// TemplateArg ...
-type TemplateArg struct {
-	Source flags.Filename `name:"SOURCE" description:"Path to template file"`
-	Target flags.Filename `name:"TARGET" description:"Path to target file"`
+	BaseRoleCmd
 }
 
 // Template ...
@@ -26,12 +13,15 @@ var Template TemplateCmd
 
 // Execute ...
 func (cmd *TemplateCmd) Execute(args []string) error {
-	fmt.Println("execute template command", args)
-	if cmd.Source == "" && cmd.Target == "" {
-		return nil
+	role := cmd.Role.New() // Init dot.Role
+	if err := role.Register(GlobalConfig); err != nil {
+		return err
 	}
-
-	fmt.Println("tpl", cmd.Source, cmd.Target)
-
+	for _, p := range cmd.Role.Paths {
+		err := role.RegisterTemplate(string(p))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

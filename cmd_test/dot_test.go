@@ -9,6 +9,34 @@ import (
 	// "github.com/jessevdk/go-flags"
 )
 
+/* https://joeshaw.org/testing-with-os-exec-and-testmain/
+// TestMain ...
+func TestMain(m *testing.M) {
+    switch os.Getenv("GO_TEST_MODE") {
+    case "":
+        // Normal test mode
+        os.Exit(m.Run())
+
+    case "echo":
+        iargs := []interface{}{}
+        for _, s := range os.Args[1:] {
+            iargs = append(iargs, s)
+        }
+        fmt.Println(iargs...)
+    }
+}
+
+    cmd := exec.Command(os.Args[0], "hello", "world")
+    cmd.Env = []string{"GO_TEST_MODE=echo"}
+    output, err := cmd.Output()
+    if err != nil {
+        t.Errorf("echo: %v", err)
+    }
+    if g, e := string(output), "hello world\n"; g != e {
+        t.Errorf("echo: want %q, got %q", e, g)
+    }
+*/
+
 // TestParse DotCmd
 func TestParse(t *testing.T) {
 	os.Args = []string{"dot", "-V"}

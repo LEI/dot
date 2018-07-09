@@ -9,7 +9,7 @@ import (
 
 // InstallCmd ...
 type InstallCmd struct {
-	*BaseCmd
+	BaseCmd
 
 	// Link LinkCmd `command:"link" alias:"l" description:"Symlink file"`
 	// Link map[string]string `short:"l" long:"links" description:"Map source files to target symlinks"`
@@ -41,9 +41,7 @@ var installCmd InstallCmd
 
 // Execute ...
 func (cmd *InstallCmd) Execute(args []string) error {
-	fmt.Println("exec install cmd", args)
-	// fmt.Println("role", cmd.Role)
-
+	// fmt.Println("exec install cmd", args)
 	if err := cmd.Copy.Execute([]string{}); err != nil {
 		fmt.Println("copy err", err)
 		// os.Exit(1)
@@ -54,7 +52,6 @@ func (cmd *InstallCmd) Execute(args []string) error {
 	if err := cmd.Template.Execute([]string{}); err != nil {
 		fmt.Println("template err", err)
 	}
-
 	return nil
 }
 
