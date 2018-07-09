@@ -3,6 +3,7 @@ package dot
 import (
 	// "fmt"
 	// "reflect"
+	"strings"
 
 	"github.com/imdario/mergo"
 )
@@ -19,6 +20,24 @@ type Role struct {
 
 // Paths ...
 type Paths map[string]string
+
+// ParseURL ...
+func ParseURL(url string) string {
+	// if r.Name == "" {}
+	// if url == "" {}
+	if !strings.Contains(url, "http") {
+		base := "https://github.com"
+		url = base + "/" + url
+	}
+	return url
+}
+
+// NewRole ...
+func NewRole(name, url string) *Role {
+	r := &Role{Name: name, URL: url}
+	r.URL = ParseURL(r.URL)
+	return r
+}
 
 // Register ...
 func (r *Role) Register(cfg *Config) error {
