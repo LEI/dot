@@ -45,8 +45,8 @@ func (r *Role) Merge(role *Role) error {
 	// vrole := reflect.ValueOf(role).Elem()
 	// fmt.Printf("%+v /// %+v\n", vr.Kind(), vrole.Kind())
 	// reflect.TypeOf(r), reflect.TypeOf(role)
-	// fmt.Printf("%+v /// %+v\n", r, role)
-	return mergo.Merge(&r, role)
+	// fmt.Printf("%+v\n%+v\n", r, role)
+	return mergo.Merge(r, role)
 }
 
 // RegisterCopy ...

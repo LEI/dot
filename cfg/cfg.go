@@ -27,7 +27,6 @@ func Load(c interface{}, s string) (string, error) {
 
 	cfg, err := readConfig(cfgPath)
 	if err != nil {
-	    fmt.Println("xx", err)
 	    return cfgPath, err
 	}
 

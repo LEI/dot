@@ -17,6 +17,8 @@ var (
 )
 
 func main() {
+	cfg.Debug = true
+
 	cmd.GlobalConfig = config
 
 	remaining, err := cmd.Parse()
@@ -41,13 +43,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	verbosity := len(options.Verbose)
-
-	if verbosity > 0 {
-		fmt.Printf("Verbosity: %v\n", verbosity)
-	}
-
-	cfg.Debug = verbosity > 0
+	// verbosity := len(options.Verbose)
+	// if verbosity > 0 {
+	// 	fmt.Printf("Verbosity: %v\n", verbosity)
+	// }
+	// cfg.Debug = verbosity > 0
 
 	// fmt.Printf("Options: %+v\n", options)
 
