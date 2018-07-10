@@ -5,9 +5,11 @@ import (
 	"fmt"
 	// "io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // Repo ...
@@ -19,6 +21,12 @@ type Repo struct {
 var (
 	defaultRemote = "origin"
 	defaultBranch = "master"
+
+	// ErrDirtyRepo ...
+	ErrDirtyRepo = fmt.Errorf("Dirty repository")
+
+	// ErrNetworkUnreachable ...
+	ErrNetworkUnreachable = fmt.Errorf("Network unreachable")
 )
 
 // NewRepo ...
@@ -80,13 +88,18 @@ func (r *Repo) checkRepo() error {
 	args := []string{"-C", r.Path, "diff-index", "--quiet", "HEAD"}
 	c := exec.Command("git", args...)
 	err := c.Run()
-	if err != nil { // fmt.Fprintf(os.Stderr)
-		return fmt.Errorf("Uncommited changes in '%s'", r.Path)
+	if err != nil {
+		// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
+		return ErrDirtyRepo
 	}
 	return nil
 }
 
-func (r *Repo) pullRepo() error {
+// Pull ...
+func (r *Repo) Pull() error {
+	if !networkReachable() {
+		return ErrNetworkUnreachable
+	}
 	args := []string{"-C", r.Path, "pull", r.remote, r.branch, "--quiet"}
 	// // fmt.Printf("git %s\n", strings.Join(args, " "))
 	// fmt.Printf("git pull %s %s\n", r.remote, r.branch)
@@ -101,6 +114,9 @@ func (r *Repo) pullRepo() error {
 
 // Clone ...
 func (r *Repo) Clone() error {
+	if !networkReachable() {
+		return ErrNetworkUnreachable
+	}
 	args := []string{"clone", r.URL, r.Path, "--recursive", "--quiet"}
 	// // fmt.Printf("git %s\n", strings.Join(args, " "))
 	// fmt.Printf("git clone %s %s\n", r.URL, r.Path)
@@ -112,4 +128,10 @@ func (r *Repo) Clone() error {
 	}
 	// actual := strings.TrimRight(out, "\n")
 	return nil
+}
+
+func networkReachable() bool {
+	timeout := time.Duration(1 * time.Second)
+	_, err := net.DialTimeout("tcp", "github.com", timeout)
+	return err == nil
 }

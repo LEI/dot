@@ -18,6 +18,7 @@ func (cmd *CopyCmd) Execute(args []string) error {
 		return nil
 	}
 	fmt.Println("execute copy command", args)
+	// fmt.Println("role:", cmd.Role)
 	role := cmd.Role.New() // Init dot.Role
 	if err := role.Register(GlobalConfig); err != nil {
 		return err

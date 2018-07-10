@@ -18,7 +18,7 @@ func (cmd *LinkCmd) Execute(args []string) error {
 		return nil
 	}
 	fmt.Println("execute link command", args) // , cmd)
-	// fmt.Println("Role:", )
+	// fmt.Println("role:", cmd.Role)
 	role := cmd.Role.New() // Init dot.Role
 	if err := role.Register(GlobalConfig); err != nil {
 		return err

@@ -7,10 +7,15 @@ import (
 	"reflect"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/imdario/mergo"
 )
 
 var tasks = []string{"Copy", "Link", "Template"}
+
+var noCheck = true // Skip repository check for uncomitted changes
+var noSync = true // Skip git clone and pull
 
 // Role ...
 type Role struct {
@@ -22,7 +27,9 @@ type Role struct {
 	Copy Paths
 	Link Paths
 	Template Paths
-	// Skip bool
+
+	Pkg []interface{}
+	Line map[string]string
 }
 
 // Env ...
@@ -165,31 +172,85 @@ func (r *Role) Sync() error {
 	repo := NewRepo(r.Path, r.URL)
 	// Clone if the local directory does not exist
 	if _, err := os.Stat(repo.Path); os.IsNotExist(err) {
-		if err := repo.Clone(); err != nil {
+		switch err := repo.Clone(); err {
+		case nil:
+			break
+		case ErrNetworkUnreachable:
+			if !noSync {
+				return err
+			}
+		default:
 			return err
 		}
+	}
+	switch err := repo.Clone(); err {
+	case nil:
+		break
+	case ErrNetworkUnreachable:
+		if !noSync {
+			return err
+		}
+	default:
+		return err
 	}
 	if err := repo.checkRemote(); err != nil {
 		return err
 	}
 	// TODO: flag ignore dirty
-	if err := repo.checkRepo(); err != nil {
+	switch err := repo.checkRepo(); err {
+	case nil:
+		break
+	case ErrDirtyRepo:
+		if !noCheck {
+			return err
+		}
+	default:
 		return err
 	}
 	// TODO: skip if just cloned
-	if err := repo.pullRepo(); err != nil {
-		return err
-	}
-	if err := r.Config(); err != nil {
+	switch err := repo.Pull(); err {
+	case nil:
+		break
+	case ErrNetworkUnreachable:
+		if !noSync {
+			return err
+		}
+	default:
 		return err
 	}
 	return nil
 }
 
-// Config ...
-func (r *Role) Config() error {
-	fmt.Println("Search cfg in", r.Path)
-	return nil
+// RoleConfig ...
+type RoleConfig struct {
+	Role *Role
+}
+
+// LoadConfig ...
+func (r *Role) LoadConfig(name string) (string, error) {
+	if r.Path == "" || name == "" {
+		return "", nil
+	}
+	cfgPath := filepath.Join(r.Path, name)
+	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
+		fmt.Println("No role config file found:", cfgPath)
+		return "", nil
+	}
+	cfg, err := readConfig(cfgPath)
+	if err != nil {
+	    return cfgPath, err
+	}
+	rc := &RoleConfig{}
+	// fmt.Printf("+++\n%v\n+++\n", string(cfg))
+	err = yaml.Unmarshal(cfg, &rc)
+	// fmt.Printf("---\n%v\n---\n", rc.Role)
+	if rc.Role != nil {
+		if err := r.Merge(rc.Role); err != nil {
+			return cfgPath, err
+		}
+	}
+	// fmt.Printf("---\n%v\n---\n", r)
+	return cfgPath, err
 }
 
 // GetField ...
@@ -214,7 +275,15 @@ func (r *Role) InitPaths(key string) error {
 
 // Execute ...
 func (r *Role) Execute() error {
-	fmt.Println("EXEC", r.Name)
+	for s, t := range r.Copy {
+		fmt.Printf("cp '%s' '%s'\n", s, t)
+	}
+	for s, t := range r.Link {
+		fmt.Printf("ln -s '%s' '%s'\n", s, t)
+	}
+	for s, t := range r.Template {
+		fmt.Printf("tpl '%s' '%s'\n", s, t)
+	}
 	return nil
 }
 
