@@ -2,6 +2,8 @@ package dot
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	// "reflect"
 	"strings"
 
@@ -14,31 +16,62 @@ type Role struct {
 	Path string // Local directory
 	URL string // Repository URL
 	OS []string // TODO
+	Env Env
 	Copy Paths
 	Link Paths
 	Template Paths
 }
 
+// Env ...
+type Env map[string]string
+
 // Paths ...
 type Paths map[string]string
 
+// ErrEmptyRole ...
+var ErrEmptyRole = fmt.Errorf("Attempt to register an empty role")
+
 // NewRole ...
-func NewRole(name, p string) *Role {
-	r := &Role{Name: name}
+func NewRole(name string) *Role {
+	switch name {
+	case "":
+		name = "default"
+		break
+	case "all":
+		name = "*"
+		break
+	}
+	url := ""
+	if strings.Contains(name, ":") {
+		parts := strings.Split(name, ":")
+		if len(parts) == 2 {
+			name = parts[0]
+			url = parts[1]
+		} else {
+			fmt.Println("Unhandled role spec", name)
+			os.Exit(1)
+		}
+	}
+	// if strings.Contains(name, "*") {
+	// 	// find glob
+	// }
+	r := &Role{Name: name, URL: url}
 	r.Parse()
 	return r
 }
 
 // Parse ...
 func (r *Role) Parse() *Role {
-	r.URL = ParseURL(r.Name)
+	r.URL = ParseURL(r.URL)
+	// if r.Path == "" {
+	// }
 	return r
 }
 
 // Register ...
 func (r *Role) Register(cfg *Config) error {
 	if (&Role{}) == r {
-		return nil
+		return ErrEmptyRole
 	}
 	for i, cfgRole := range cfg.Roles {
 		if cfgRole.Name == r.Name {
@@ -110,30 +143,59 @@ func (r *Role) RegisterTemplate(s string) error {
 }
 
 // Init ...
-func (r *Role) Init() error {
+func (r *Role) Init(target, roleDir string) error {
+	if r.Path == "" {
+		r.Path = filepath.Join(target, roleDir, r.Name)
+	}
+	r.Path = os.ExpandEnv(r.Path)
 	fmt.Printf("Role [%s] %s (%s)\n", r.Name, r.Path, r.URL)
-	fmt.Println("Copies", r.Copy)
-	fmt.Println("Links", r.Link)
-	fmt.Println("Templates", r.Template)
+	fmt.Printf("Copies: %+v\n", r.Copy)
+	// fmt.Printf("Links: %+v\n", r.Link)
+	for s, t := range r.Link {
+		fmt.Println("ln -s", s, t)
+	}
+	fmt.Printf("Templates: %+v\n", r.Template)
 	return nil
 }
 
 // ParseURL ...
-func ParseURL(p string) string {
+func ParseURL(url string) string {
 	// if r.Name == "" {}
-	// if p == "" {}
-	if !strings.Contains(p, "http") {
+	// if url == "" {}
+	if !strings.Contains(url, "http") {
 		base := "https://github.com"
-		p = base + "/" + p
+		url = base + "/" + url
 	}
-	return p
+	return url
 }
 
 // ParsePath ...
 func ParsePath(s string) (Paths, error) {
-	paths := map[string]string{
-		s: s,
+	src := s
+	dst := ""
+	if strings.Contains(s, ":") {
+		parts := strings.Split(s, ":")
+		if len(parts) == 2 {
+			src = parts[0]
+			dst = parts[1]
+		} else {
+			fmt.Println("Unhandled path spec", s)
+			os.Exit(1)
+		}
 	}
-
+	paths := map[string]string{}
+	if strings.Contains(src, "*") {
+		glob, err := filepath.Glob(src)
+		if err != nil {
+			return paths, err
+		}
+		for _, s := range glob {
+			_, f := filepath.Split(s)
+			dst = filepath.Join(dst, f)
+			paths[s] = dst
+		}
+	} else {
+		paths[src] = dst
+	}
 	return paths, nil
 }

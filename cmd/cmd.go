@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	// "fmt"
+	// "os"
 	// "reflect"
-	"strings"
+	// "strings"
 
 	"github.com/LEI/dot/dot"
 
@@ -51,30 +51,7 @@ type RoleArg struct {
 
 // New dot.Role
 func (a *RoleArg) New() *dot.Role {
-	var name = a.Name
-	switch name {
-	case "":
-		name = "default"
-		break
-	case "all":
-		name = "*"
-		break
-	}
-	url := ""
-	if strings.Contains(name, ":") {
-		parts := strings.Split(name, ":")
-		if len(parts) == 2 {
-			name = parts[0]
-			url = parts[1]
-		} else {
-			fmt.Println("Unhandled", name)
-			os.Exit(1)
-		}
-	}
-	if strings.Contains(name, "*") {
-		// find glob
-	}
-	return dot.NewRole(name, url)
+	return dot.NewRole(a.Name)
 }
 
 /*

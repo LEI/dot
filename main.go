@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
+	"os/exec"
+	"strings"
+	"runtime"
 
 	// "github.com/jessevdk/go-flags"
 
@@ -14,7 +17,10 @@ import (
 
 var (
 	// OS ...
-	// OS = runtime.GOOS
+	OS = runtime.GOOS
+
+	// Shell ...
+	Shell = "bash"
 
 	config *dot.Config = &dot.Config{}
 	configFile string
@@ -78,14 +84,17 @@ func main() {
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", options)
+	target := string(options.Target)
 	for i, r := range config.Roles {
-		if r.Path == "" {
-			r.Path = filepath.Join(
-				string(options.Target),
-				string(options.RoleDir),
-				r.Name)
+		if r.OS != nil {
+			if ok := hasOne(r.OS, getOsTypes()); !ok { // Skip role
+				fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", r.Name, strings.Join(r.OS, ", "))
+				continue
+			}
 		}
-		if err := r.Init(); err != nil {
+		if err := r.Init(
+			target,
+			string(options.RoleDir)); err != nil {
 			fmt.Println("Role", i, "error:", remaining)
 			os.Exit(1)
 		}
@@ -137,4 +146,61 @@ func init() {
 	// // cmd.Remove = r
 	// fmt.Println(i, r)
 	// fmt.Println(cmd.Install, cmd.Remove)
+}
+
+// List of OS name and family/type
+func getOsTypes() []string {
+	types := []string{OS}
+
+	// Add OS family
+	c := exec.Command(Shell, "-c", "cat /etc/*-release")
+	stdout, _ := c.StdoutPipe()
+	// stderr, _ := c.StderrPipe()
+	c.Start()
+	scanner := bufio.NewScanner(stdout)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		m := scanner.Text()
+		fmt.Println(m)
+		v := strings.TrimLeft(m, "ID=")
+		if m != v {
+			types = append(types, v)
+			break
+		}
+	}
+	c.Wait()
+
+	OSTYPE, ok := os.LookupEnv("OSTYPE")
+	if ok && OSTYPE != "" {
+		types = append(types, OSTYPE)
+	} else { // !ok || OSTYPE == ""
+		// fmt.Printf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
+		out, err := exec.Command(Shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		if len(out) > 0 {
+			OSTYPE = string(out)
+			o := strings.Split(OSTYPE, ".")
+			if len(o) > 0 {
+				types = append(types, o[0])
+			}
+			types = append(types, OSTYPE)
+		}
+	}
+	if OSTYPE == "" {
+		fmt.Println("OSTYPE is not set or empty")
+	}
+	return types
+}
+
+func hasOne(in []string, list []string) bool {
+	for _, a := range in {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+	}
+	return false
 }
