@@ -28,7 +28,7 @@ type DotCmd struct {
 	Config func(s string) error `short:"c" long:"config" description:"Config file name"`
 	IniConfig func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
 
-	// Debug bool `short:"d" long:"debug" description:""`
+	// Debug bool `short:"D" long:"debug" description:""`
 
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
@@ -37,6 +37,10 @@ type DotCmd struct {
 	// URL string `short:"u" long:"url" description:""`
 	// Roles []dot.Role `short:"r" long:"roles" description:""`
 	// Roles map[string]string `short:"r" long:"roles" description:""`
+
+	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
+	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
+	RoleDir flags.Filename ` short:"d" long:"role-dir" description:"Roles directory name"`
 }
 
 // Cmd ...

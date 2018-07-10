@@ -1,7 +1,7 @@
 package dot
 
 import (
-	// "fmt"
+	"fmt"
 	// "reflect"
 	"strings"
 
@@ -10,9 +10,10 @@ import (
 
 // Role ...
 type Role struct {
-	Name string
-	Path string
-	OS []string
+	Name string // Name of the role
+	Path string // Local directory
+	URL string // Repository URL
+	OS []string // TODO
 	Copy Paths
 	Link Paths
 	Template Paths
@@ -21,21 +22,16 @@ type Role struct {
 // Paths ...
 type Paths map[string]string
 
-// ParsePath ...
-func ParsePath(p string) string {
-	// if r.Name == "" {}
-	// if p == "" {}
-	if !strings.Contains(p, "http") {
-		base := "https://github.com"
-		p = base + "/" + p
-	}
-	return p
-}
-
 // NewRole ...
 func NewRole(name, p string) *Role {
-	r := &Role{Name: name} // , Path: p}
-	r.Path = ParsePath(p)
+	r := &Role{Name: name}
+	r.Parse()
+	return r
+}
+
+// Parse ...
+func (r *Role) Parse() *Role {
+	r.URL = ParseURL(r.Name)
 	return r
 }
 
@@ -73,7 +69,7 @@ func (r *Role) RegisterCopy(s string) error {
 	if r.Copy == nil {
 		r.Copy = map[string]string{}
 	}
-	paths, err := parseString(s)
+	paths, err := ParsePath(s)
 	if err != nil {
 		return err
 	}
@@ -88,7 +84,7 @@ func (r *Role) RegisterLink(s string) error {
 	if r.Link == nil {
 		r.Link = map[string]string{}
 	}
-	paths, err := parseString(s)
+	paths, err := ParsePath(s)
 	if err != nil {
 		return err
 	}
@@ -103,7 +99,7 @@ func (r *Role) RegisterTemplate(s string) error {
 	if r.Template == nil {
 		r.Template = map[string]string{}
 	}
-	paths, err := parseString(s)
+	paths, err := ParsePath(s)
 	if err != nil {
 		return err
 	}
@@ -113,7 +109,28 @@ func (r *Role) RegisterTemplate(s string) error {
 	return nil
 }
 
-func parseString(s string) (Paths, error) {
+// Init ...
+func (r *Role) Init() error {
+	fmt.Printf("Role [%s] %s (%s)\n", r.Name, r.Path, r.URL)
+	fmt.Println("Copies", r.Copy)
+	fmt.Println("Links", r.Link)
+	fmt.Println("Templates", r.Template)
+	return nil
+}
+
+// ParseURL ...
+func ParseURL(p string) string {
+	// if r.Name == "" {}
+	// if p == "" {}
+	if !strings.Contains(p, "http") {
+		base := "https://github.com"
+		p = base + "/" + p
+	}
+	return p
+}
+
+// ParsePath ...
+func ParsePath(s string) (Paths, error) {
 	paths := map[string]string{
 		s: s,
 	}

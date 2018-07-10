@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	// "github.com/jessevdk/go-flags"
 
@@ -12,16 +13,28 @@ import (
 )
 
 var (
+	// OS ...
+	// OS = runtime.GOOS
+
 	config *dot.Config = &dot.Config{}
 	configFile string
 )
 
+// var defaults = map[string]interface{} {
+// 	"Source": "a",
+// 	"Config": ...,
+// }
+
 func main() {
 	// cfg.Debug = true
 
+	cmd.Options.Source = ""
+	cmd.Options.Target = "$HOME" // os.Getenv("HOME")
+	cmd.Options.RoleDir = ".dot"
+
 	cmd.GlobalConfig = config
 
-	cmd.Options.Config =  func(s string) error {
+	cmd.Options.Config = func(s string) error {
 		configFile, err := cfg.Load(config, s)
 		if err != nil {
 			return err
@@ -66,10 +79,16 @@ func main() {
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", options)
 	for i, r := range config.Roles {
-		fmt.Printf("Role #%d [%s] %s\n", i+1, r.Name, r.Path)
-		fmt.Println("Copies", r.Copy)
-		fmt.Println("Links", r.Link)
-		fmt.Println("Templates", r.Template)
+		if r.Path == "" {
+			r.Path = filepath.Join(
+				string(options.Target),
+				string(options.RoleDir),
+				r.Name)
+		}
+		if err := r.Init(); err != nil {
+			fmt.Println("Role", i, "error:", remaining)
+			os.Exit(1)
+		}
 	}
 
 	// fmt.Println("CFG")

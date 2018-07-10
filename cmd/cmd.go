@@ -37,7 +37,6 @@ type BaseRoleCmd struct {
 	// Name string `short:"n" long:"name" description:""`
 	// URL string `short:"u" long:"url" description:""`
 
-	// *PathArg // `required:"true" positional-args:"true"`
 	// Paths dot.Role `required:"" positional-args:"true" positional-arg-name:"paths"`
 	Role RoleArg `positional-args:"true" positional-arg-name:"paths"` // required:"1"
 
@@ -77,12 +76,6 @@ func (a *RoleArg) New() *dot.Role {
 	}
 	return dot.NewRole(name, url)
 }
-
-// PathArg ...
-// type PathArg struct {
-// 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
-// 	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
-// }
 
 /*
 var commands = []string{
