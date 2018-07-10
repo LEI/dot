@@ -27,14 +27,7 @@ var (
 
 	config *dot.Config = &dot.Config{} // {Name: ".dot"}
 	configFile string
-
-	options = &cmd.DotCmd{}
 )
-
-// var defaults = map[string]interface{} {
-// 	"Source": "a",
-// 	"Config": ...,
-// }
 
 func main() {
 	cmd.Options.Source = ""
@@ -128,11 +121,9 @@ func init() {
 }
 
 func execute(options *cmd.DotCmd) error {
-	// target := filepath.Join(string(options.Target), string(options.Config))
-	target := string(options.Target)
-	fmt.Println(len(config.Roles), "ROLES")
+	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
-	// TODO: async (clone, pull...)
+	// TODO: parallel init (clone, pull...)
 	for _, r := range config.Roles {
 		if len(options.Filter) > 0 && !hasOne([]string{r.Name}, options.Filter) {
 			// fmt.Fprintf(os.Stderr, "# Skip %s\n", r.Name)
@@ -146,7 +137,7 @@ func execute(options *cmd.DotCmd) error {
 				continue
 			}
 		}
-		if err := r.Init(target); err != nil {
+		if err := r.Init(string(options.Target)); err != nil {
 			return fmt.Errorf("# %s init error: %s", r.Name, err)
 		}
 		configFile, err := r.LoadConfig(options.ConfigName)
@@ -163,14 +154,6 @@ func execute(options *cmd.DotCmd) error {
 		return nil
 	}
 
-	// fmt.Println("CFG")
-	// cmd.WriteIniConfig(cmd.GetParser())
-	// fmt.Println("ENDCFG")
-
-	// Execute roles commands
-	// if err := config.Execute(); err != nil {
-	// 	return err
-	// }
 	return config.Execute()
 }
 

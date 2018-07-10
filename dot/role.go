@@ -14,8 +14,8 @@ import (
 
 var tasks = []string{"Copy", "Link", "Template"}
 
-var noCheck = true // Skip repository check for uncomitted changes
-var noSync = true // Skip git clone and pull
+var noCheck bool // Ignore uncomitted changes in repository
+var noSync bool // Do not attempt to git clone or pull
 
 // Role ...
 type Role struct {
@@ -28,6 +28,7 @@ type Role struct {
 	Link Paths
 	Template Paths
 
+	// v0.0.2
 	Pkg []interface{}
 	Line map[string]string
 }
@@ -37,6 +38,62 @@ type Env map[string]string
 
 // Paths ...
 type Paths map[string]string
+
+// UnmarshalYAML ...
+func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// Avoid assignment to entry in nil map
+	if *p == nil {
+		*p = make(Paths)
+	}
+	var i interface{}
+	if err := unmarshal(&i); err != nil {
+		return err
+	}
+	switch val := i.(type) {
+	case []string:
+		for _, v := range val {
+			(*p)[v] = v
+		}
+		break
+	// case interface{}:
+	// 	s := val.(string)
+	// 	(*p)[s] = s
+	case []interface{}:
+		for _, v := range val {
+			s := v.(string)
+			(*p)[s] = s
+		}
+		break
+	case map[string]string:
+		p = i.(*Paths)
+		break
+	case map[interface{}]interface{}:
+		for _, v := range val {
+			s := v.(string)
+			(*p)[s] = s
+		}
+		break
+	default:
+		t := reflect.TypeOf(val)
+		T := t.Elem()
+		if t.Kind() == reflect.Map {
+			T = reflect.MapOf(t.Key(), t.Elem())
+		}
+		return fmt.Errorf("Unable to unmarshal %s into struct: %+v", T, val)
+	}
+	return nil
+}
+
+// // UnmarshalFlag ...
+// func (p *Paths) UnmarshalFlag(value string) error {
+// 	fmt.Println("UnmarshalFlag", value)
+// 	return nil
+// }
+
+// // MarshalFlag ...
+// func (p Paths) MarshalFlag() (string, error) {
+// 	return fmt.Sprintf("MarshalFlag: %+v", p), nil
+// }
 
 // ErrEmptyRole ...
 var ErrEmptyRole = fmt.Errorf("Attempt to register an empty role")
@@ -193,9 +250,6 @@ func (r *Role) Sync() error {
 	default:
 		return err
 	}
-	if err := repo.checkRemote(); err != nil {
-		return err
-	}
 	// TODO: flag ignore dirty
 	switch err := repo.checkRepo(); err {
 	case nil:
@@ -244,13 +298,17 @@ func (r *Role) LoadConfig(name string) (string, error) {
 	// fmt.Printf("+++\n%v\n+++\n", string(cfg))
 	err = yaml.Unmarshal(cfg, &rc)
 	// fmt.Printf("---\n%v\n---\n", rc.Role)
+	if err != nil {
+		// fmt.Fprintf(os.Stderr, "Error while parsing %s:\n%s\n", cfgPath, err)
+		return cfgPath, err
+	}
 	if rc.Role != nil {
 		if err := r.Merge(rc.Role); err != nil {
 			return cfgPath, err
 		}
+		// fmt.Printf("---\n%v\n---\n", r)
 	}
-	// fmt.Printf("---\n%v\n---\n", r)
-	return cfgPath, err
+	return cfgPath, nil // err
 }
 
 // GetField ...
@@ -275,6 +333,7 @@ func (r *Role) InitPaths(key string) error {
 
 // Execute ...
 func (r *Role) Execute() error {
+	fmt.Println("# Role", r.Name)
 	for s, t := range r.Copy {
 		fmt.Printf("cp '%s' '%s'\n", s, t)
 	}
