@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 )
 
 // TemplateCmd ...
@@ -13,6 +14,7 @@ var Template TemplateCmd
 
 // Execute ...
 func (cmd *TemplateCmd) Execute(args []string) error {
+	fmt.Println("execute template command", args)
 	role := cmd.Role.New() // Init dot.Role
 	if err := role.Register(GlobalConfig); err != nil {
 		return err

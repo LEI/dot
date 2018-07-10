@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	// "reflect"
+	"reflect"
 	"strings"
 
 	"github.com/imdario/mergo"
 )
+
+var tasks = []string{"Copy", "Link", "Template"}
 
 // Role ...
 type Role struct {
@@ -20,6 +22,7 @@ type Role struct {
 	Copy Paths
 	Link Paths
 	Template Paths
+	// Skip bool
 }
 
 // Env ...
@@ -35,11 +38,13 @@ var ErrEmptyRole = fmt.Errorf("Attempt to register an empty role")
 func NewRole(name string) *Role {
 	switch name {
 	case "":
-		name = "default"
+		fmt.Println("No role name")
+		os.Exit(1)
+		// name = "default"
 		break
-	case "all":
-		name = "*"
-		break
+	// case "all":
+	// 	name = "*"
+	// 	break
 	}
 	url := ""
 	if strings.Contains(name, ":") {
@@ -56,15 +61,6 @@ func NewRole(name string) *Role {
 	// 	// find glob
 	// }
 	r := &Role{Name: name, URL: url}
-	r.Parse()
-	return r
-}
-
-// Parse ...
-func (r *Role) Parse() *Role {
-	r.URL = ParseURL(r.URL)
-	// if r.Path == "" {
-	// }
 	return r
 }
 
@@ -144,72 +140,94 @@ func (r *Role) RegisterTemplate(s string) error {
 
 // Init ...
 func (r *Role) Init(target string) error {
+	target = os.ExpandEnv(target)
+	if _, err := os.Stat(target); os.IsNotExist(err) {
+		return fmt.Errorf("Directory does not exist: %s", target)
+	}
 	if r.Path == "" {
 		r.Path = filepath.Join(target, r.Name)
 	}
-	r.Path = os.ExpandEnv(r.Path)
-	fmt.Printf("# Role %s [%s] %s\n", r.Name, r.Path, r.URL)
-	// fmt.Printf("Copies: %+v\n", r.Copy)
-	if err := r.InitCopy(); err != nil {
+	// r.URL = ParseURL(r.URL)
+	fmt.Printf("# Syncing role %s [%s] %s\n", r.Name, r.Path, r.URL)
+	if err := r.Sync(); err != nil {
 		return err
 	}
-	// fmt.Printf("Links: %+v\n", r.Link)
-	if err := r.InitLink(); err != nil {
+	for _, c := range tasks {
+		if err := r.InitPaths(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Sync ...
+func (r *Role) Sync() error {
+	repo := NewRepo(r.Path, r.URL)
+	// Clone if the local directory does not exist
+	if _, err := os.Stat(repo.Path); os.IsNotExist(err) {
+		if err := repo.Clone(); err != nil {
+			return err
+		}
+	}
+	if err := repo.checkRemote(); err != nil {
 		return err
 	}
-	// fmt.Printf("Templates: %+v\n", r.Template)
-	if err := r.InitTemplate(); err != nil {
+	// TODO: flag ignore dirty
+	if err := repo.checkRepo(); err != nil {
+		return err
+	}
+	// TODO: skip if just cloned
+	if err := repo.pullRepo(); err != nil {
+		return err
+	}
+	if err := r.Config(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// InitCopy ...
-func (r *Role) InitCopy() error {
-	var paths Paths = make(map[string]string, len(r.Copy))
-	for s, t := range r.Copy {
+// Config ...
+func (r *Role) Config() error {
+	fmt.Println("Search cfg in", r.Path)
+	return nil
+}
+
+// GetField ...
+func (r *Role) GetField(key string) reflect.Value {
+	return reflect.Indirect(reflect.ValueOf(r)).FieldByName(key)
+}
+
+// InitPaths ...
+func (r *Role) InitPaths(key string) error {
+	f := r.GetField(key)
+	val := f.Interface().(Paths)
+	// fmt.Printf("%s: %+v\n", key, val)
+	var paths Paths = make(map[string]string, len(val))
+	for s, t := range val {
 		s = filepath.Join(r.Path, s)
-		fmt.Printf("cp '%s' '%s'\n", s, t)
+		// fmt.Printf("%s '%s' '%s'\n", key, s, t)
 		paths[s] = t
 	}
 	r.Copy = paths
 	return nil
 }
 
-// InitLink ...
-func (r *Role) InitLink() error {
-	var paths Paths = make(map[string]string, len(r.Link))
-	for s, t := range r.Link {
-		s = filepath.Join(r.Path, s)
-		fmt.Printf("ln -s '%s' '%s'\n", s, t)
-		paths[s] = t
-	}
-	r.Link = paths
-	return nil
-}
-
-// InitTemplate ...
-func (r *Role) InitTemplate() error {
-	var paths Paths = make(map[string]string, len(r.Template))
-	for s, t := range r.Template {
-		s = filepath.Join(r.Path, s)
-		fmt.Printf("tpl '%s' '%s'\n", s, t)
-		paths[s] = t
-	}
-	r.Template = paths
+// Execute ...
+func (r *Role) Execute() error {
+	fmt.Println("EXEC", r.Name)
 	return nil
 }
 
 // ParseURL ...
-func ParseURL(url string) string {
-	// if r.Name == "" {}
-	// if url == "" {}
-	if !strings.Contains(url, "http") {
-		base := "https://github.com"
-		url = base + "/" + url
-	}
-	return url
-}
+// func ParseURL(url string) string {
+// 	// if r.Name == "" {}
+// 	// if url == "" {}
+// 	if !strings.Contains(url, "http") {
+// 		base := "https://github.com"
+// 		url = base + "/" + url
+// 	}
+// 	return url
+// }
 
 // ParsePath ...
 func ParsePath(s, baseDir string) (Paths, error) {
@@ -225,7 +243,7 @@ func ParsePath(s, baseDir string) (Paths, error) {
 			os.Exit(1)
 		}
 	}
-	fmt.Println("TARGET", target, baseDir)
+	// fmt.Println("TARGET", target, baseDir)
 	paths := map[string]string{}
 	if strings.Contains(source, "*") {
 		glob, err := filepath.Glob(source)

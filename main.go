@@ -85,25 +85,41 @@ func main() {
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", options)
+
 	// target := filepath.Join(string(options.Target), string(options.RoleDir))
 	target := string(options.Target)
+
+	// Initialize role config
+	// TODO: async (clone, pull...)
 	for i, r := range config.Roles {
+		if len(options.Filter) > 0 && !hasOne([]string{r.Name}, options.Filter) {
+			// fmt.Fprintf(os.Stderr, "# Skip %s\n", r.Name)
+			config.Roles = removeRole(config.Roles, r)
+			continue
+		}
 		if r.OS != nil {
-			if ok := hasOne(r.OS, getOsTypes()); !ok { // Skip role
+			if !hasOne(r.OS, getOsTypes()) { // Skip role
 				fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", r.Name, strings.Join(r.OS, ", "))
+				config.Roles = removeRole(config.Roles, r)
 				continue
 			}
 		}
 		if err := r.Init(target); err != nil {
-			fmt.Println("Role", i, "error:", remaining)
+			fmt.Println("Role", i, "->", err)
 			os.Exit(1)
 		}
+	}
+
+	if len(config.Roles) == 0 {
+		fmt.Fprintln(os.Stderr, "No roles to execute")
+		os.Exit(0)
 	}
 
 	// fmt.Println("CFG")
 	// cmd.WriteIniConfig(cmd.GetParser())
 	// fmt.Println("ENDCFG")
 
+	// Execute roles commands
 	if err := config.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -146,6 +162,16 @@ func init() {
 	// // cmd.Remove = r
 	// fmt.Println(i, r)
 	// fmt.Println(cmd.Install, cmd.Remove)
+}
+
+func removeRole(roles []*dot.Role, rm *dot.Role) (ret []*dot.Role) {
+	for _, r := range roles {
+		if r == rm {
+			continue
+		}
+		ret = append(ret, r)
+	}
+	return ret
 }
 
 // List of OS name and family/type

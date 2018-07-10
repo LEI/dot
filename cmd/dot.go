@@ -41,6 +41,7 @@ type DotCmd struct {
 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
 	RoleDir flags.Filename ` short:"d" long:"role-dir" description:"Roles directory name"`
+	Filter []string `short:"r" long:"role" description:"Filter roles by name"`
 }
 
 // Cmd ...

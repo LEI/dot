@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
 )
 
 // LinkCmd ...
@@ -14,8 +14,11 @@ var Link LinkCmd
 
 // Execute ...
 func (cmd *LinkCmd) Execute(args []string) error {
-	// fmt.Println("execute link command", args) // , cmd)
-	// fmt.Println("Role:", cmd.Role.Name)
+	if cmd.Role.Name == "" {
+		return nil
+	}
+	fmt.Println("execute link command", args) // , cmd)
+	// fmt.Println("Role:", )
 	role := cmd.Role.New() // Init dot.Role
 	if err := role.Register(GlobalConfig); err != nil {
 		return err
