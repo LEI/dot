@@ -102,7 +102,7 @@ func (r *Role) RegisterCopy(s string) error {
 	if r.Copy == nil {
 		r.Copy = map[string]string{}
 	}
-	paths, err := ParsePath(s)
+	paths, err := ParsePath(s, r.Path)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (r *Role) RegisterLink(s string) error {
 	if r.Link == nil {
 		r.Link = map[string]string{}
 	}
-	paths, err := ParsePath(s)
+	paths, err := ParsePath(s, r.Path)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (r *Role) RegisterTemplate(s string) error {
 	if r.Template == nil {
 		r.Template = map[string]string{}
 	}
-	paths, err := ParsePath(s)
+	paths, err := ParsePath(s, r.Path)
 	if err != nil {
 		return err
 	}
@@ -143,18 +143,60 @@ func (r *Role) RegisterTemplate(s string) error {
 }
 
 // Init ...
-func (r *Role) Init(target, roleDir string) error {
+func (r *Role) Init(target string) error {
 	if r.Path == "" {
-		r.Path = filepath.Join(target, roleDir, r.Name)
+		r.Path = filepath.Join(target, r.Name)
 	}
 	r.Path = os.ExpandEnv(r.Path)
-	fmt.Printf("Role [%s] %s (%s)\n", r.Name, r.Path, r.URL)
-	fmt.Printf("Copies: %+v\n", r.Copy)
-	// fmt.Printf("Links: %+v\n", r.Link)
-	for s, t := range r.Link {
-		fmt.Println("ln -s", s, t)
+	fmt.Printf("# Role %s [%s] %s\n", r.Name, r.Path, r.URL)
+	// fmt.Printf("Copies: %+v\n", r.Copy)
+	if err := r.InitCopy(); err != nil {
+		return err
 	}
-	fmt.Printf("Templates: %+v\n", r.Template)
+	// fmt.Printf("Links: %+v\n", r.Link)
+	if err := r.InitLink(); err != nil {
+		return err
+	}
+	// fmt.Printf("Templates: %+v\n", r.Template)
+	if err := r.InitTemplate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// InitCopy ...
+func (r *Role) InitCopy() error {
+	var paths Paths = make(map[string]string, len(r.Copy))
+	for s, t := range r.Copy {
+		s = filepath.Join(r.Path, s)
+		fmt.Printf("cp '%s' '%s'\n", s, t)
+		paths[s] = t
+	}
+	r.Copy = paths
+	return nil
+}
+
+// InitLink ...
+func (r *Role) InitLink() error {
+	var paths Paths = make(map[string]string, len(r.Link))
+	for s, t := range r.Link {
+		s = filepath.Join(r.Path, s)
+		fmt.Printf("ln -s '%s' '%s'\n", s, t)
+		paths[s] = t
+	}
+	r.Link = paths
+	return nil
+}
+
+// InitTemplate ...
+func (r *Role) InitTemplate() error {
+	var paths Paths = make(map[string]string, len(r.Template))
+	for s, t := range r.Template {
+		s = filepath.Join(r.Path, s)
+		fmt.Printf("tpl '%s' '%s'\n", s, t)
+		paths[s] = t
+	}
+	r.Template = paths
 	return nil
 }
 
@@ -170,32 +212,33 @@ func ParseURL(url string) string {
 }
 
 // ParsePath ...
-func ParsePath(s string) (Paths, error) {
-	src := s
-	dst := ""
+func ParsePath(s, baseDir string) (Paths, error) {
+	source := s
+	target := baseDir
 	if strings.Contains(s, ":") {
 		parts := strings.Split(s, ":")
 		if len(parts) == 2 {
-			src = parts[0]
-			dst = parts[1]
+			source = parts[0]
+			target = filepath.Join(target, parts[1])
 		} else {
 			fmt.Println("Unhandled path spec", s)
 			os.Exit(1)
 		}
 	}
+	fmt.Println("TARGET", target, baseDir)
 	paths := map[string]string{}
-	if strings.Contains(src, "*") {
-		glob, err := filepath.Glob(src)
+	if strings.Contains(source, "*") {
+		glob, err := filepath.Glob(source)
 		if err != nil {
 			return paths, err
 		}
 		for _, s := range glob {
 			_, f := filepath.Split(s)
-			dst = filepath.Join(dst, f)
-			paths[s] = dst
+			t := filepath.Join(target, f)
+			paths[s] = t
 		}
 	} else {
-		paths[src] = dst
+		paths[source] = target
 	}
 	return paths, nil
 }

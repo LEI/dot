@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	// "path/filepath"
 	"runtime"
+	"strings"
 
 	// "github.com/jessevdk/go-flags"
 
@@ -84,6 +85,7 @@ func main() {
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", options)
+	// target := filepath.Join(string(options.Target), string(options.RoleDir))
 	target := string(options.Target)
 	for i, r := range config.Roles {
 		if r.OS != nil {
@@ -92,9 +94,7 @@ func main() {
 				continue
 			}
 		}
-		if err := r.Init(
-			target,
-			string(options.RoleDir)); err != nil {
+		if err := r.Init(target); err != nil {
 			fmt.Println("Role", i, "error:", remaining)
 			os.Exit(1)
 		}
