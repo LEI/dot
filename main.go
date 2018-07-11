@@ -21,7 +21,8 @@ var (
 	// Shell ...
 	Shell = "bash"
 
-	config         *cmd.Config = &cmd.Config{} // {Name: ".dot"}
+	config = cmd.NewConfig()
+	// *cmd.Config = &cmd.Config{} // {Name: ".dot"}
 	configFileUsed string
 
 	verbosity = 0
@@ -39,8 +40,6 @@ func main() {
 		configFileUsed = configFile
 		return nil
 	}
-
-	cmd.GlobalConfig = config
 
 	// Parse arguments
 	remaining, err := cmd.Parse()

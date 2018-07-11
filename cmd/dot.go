@@ -11,9 +11,6 @@ import (
 )
 
 var (
-	// GlobalConfig ...
-	GlobalConfig *Config
-
 	// Options ...
 	Options DotCmd
 
@@ -25,13 +22,7 @@ var (
 	// Only (copy, link, template)
 	Only []string
 
-	// Source ....
-	Source string
-
-	// Target ....
-	Target string
-
-	// Verbose ....
+	// Verbose mode
 	Verbose bool
 )
 
@@ -48,7 +39,7 @@ func init() {
 
 	parser.SubcommandsOptional = false
 
-	// Options.Config = readConfig(GlobalConfig)
+	// Options.Config = readConfig(config)
 	Options.IniConfig = readIniConfig(parser)
 
 	parser.CommandHandler = func(cmd flags.Commander, args []string) error {

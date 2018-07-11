@@ -234,7 +234,6 @@ func (r *Role) RegisterTemplate(s string) error {
 
 // Init ...
 func (r *Role) Init() error {
-	target := os.ExpandEnv(string(Options.Target))
 	if _, err := os.Stat(target); os.IsNotExist(err) {
 		return fmt.Errorf("Directory does not exist: %s", target)
 	}
@@ -349,7 +348,6 @@ func (r *Role) Prepare() error {
 // PreparePaths ...
 func (r *Role) PreparePaths(p *Paths) error {
 	// in interface{} p := in.(*Paths)
-	target := os.ExpandEnv(string(Options.Target))
 	var paths Paths = make(map[string]string, len(*p))
 	for src, dst := range *p {
 		// Prepend role directory to source path
@@ -398,7 +396,6 @@ func (r *Role) GetField(key string) reflect.Value {
 
 // Do ...
 func (r *Role) Do(a string, filter []string) error {
-	target := os.ExpandEnv(string(Options.Target))
 	fmt.Printf("# Role: %+v\n", r.Name)
 	if len(filter) == 0 {
 		filter = defaultTasks

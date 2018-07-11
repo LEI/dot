@@ -58,6 +58,8 @@ type RoleArg struct {
 
 var parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
 
+var target string
+
 // GetParser ...
 func GetParser() *flags.Parser {
 	return parser
@@ -87,6 +89,7 @@ func Parse() ([]string, error) {
 			}
 		}
 	}
+	target = os.ExpandEnv(string(Options.Target))
 	// WriteIniConfig(parser)
 	return remaining, err
 }

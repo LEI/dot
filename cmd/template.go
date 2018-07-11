@@ -20,7 +20,7 @@ func (cmd *TemplateCmd) Execute(args []string) error {
 	}
 	// fmt.Println("role:", cmd.Role)
 	role := NewRole(cmd.Role.Name)
-	if err := role.Register(GlobalConfig); err != nil {
+	if err := role.Register(config); err != nil {
 		return err
 	}
 	for _, p := range cmd.Role.Paths {

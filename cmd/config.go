@@ -34,6 +34,16 @@ func (c *Config) Load(name string) (string, error) {
 	return cfgPath, err
 }
 
+var config *Config
+
+// NewConfig ...
+func NewConfig() *Config {
+	if config == nil {
+		config = &Config{}
+	}
+	return config
+}
+
 // FindConfig ...
 func FindConfig(s string) (string, error) {
 	if s == "" {
