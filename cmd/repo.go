@@ -37,6 +37,9 @@ func init() {
 
 // NewRepo ...
 func NewRepo(p, url string) *Repo {
+	if !strings.Contains(url, "https://") {
+		url = "https://github.com/" + url
+	}
 	r := &Repo{Path: p, URL: url}
 	if r.remote == "" {
 		r.remote = defaultRemote
@@ -70,8 +73,10 @@ func (r *Repo) Pull() error {
 		return ErrNetworkUnreachable
 	}
 	args := []string{"-C", r.Path, "pull", r.remote, r.branch, "--quiet"}
-	// // fmt.Printf("git %s\n", strings.Join(args, " "))
-	// fmt.Printf("git pull %s %s\n", r.remote, r.branch)
+	// fmt.Printf("git %s\n", strings.Join(args, " "))
+	if Verbose {
+		fmt.Printf("git pull %s %s\n", r.remote, r.branch)
+	}
 	c := exec.Command("git", args...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
@@ -90,8 +95,10 @@ func (r *Repo) Clone() error {
 		return r.checkRemote()
 	}
 	args := []string{"clone", r.URL, r.Path, "--recursive", "--quiet"}
-	// // fmt.Printf("git %s\n", strings.Join(args, " "))
-	// fmt.Printf("git clone %s %s\n", r.URL, r.Path)
+	// fmt.Printf("git %s\n", strings.Join(args, " "))
+	if Verbose {
+		fmt.Printf("git clone %s %s\n", r.URL, r.Path)
+	}
 	c := exec.Command("git", args...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr

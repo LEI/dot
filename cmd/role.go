@@ -250,7 +250,7 @@ func (r *Role) Init() error {
 		return fmt.Errorf("Directory does not exist: %s", target)
 	}
 	if r.Path == "" {
-		r.Path = filepath.Join(target, r.Name)
+		r.Path = filepath.Join(target, Options.RoleDir, r.Name)
 	}
 	// r.URL = ParseURL(r.URL)
 	if Verbose {
@@ -376,6 +376,7 @@ func (r *Role) InitPaths(key string) error {
 
 // Do ...
 func (r *Role) Do(a string, filter []string) error {
+	fmt.Printf("# Role: %+v\n", r.Path)
 	if len(filter) == 0 {
 		filter = fileTasks
 	}

@@ -28,10 +28,10 @@ var (
 )
 
 func main() {
-	cmd.Options.Source = ""
-	cmd.Options.Target = "$HOME" // os.Getenv("HOME")
-	cmd.Options.ConfigName = ".dot.yml"
+	// cmd.Options.Source = "" // .
+	// cmd.Options.Target = "$HOME" // os.Getenv("HOME")
 	cmd.Options.Config = func(s string) error {
+		cmd.ConfigName = s
 		configFile, err := config.Load(s)
 		if err != nil {
 			return err
@@ -150,7 +150,7 @@ func execute(options *cmd.DotCmd) error {
 				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
 				return
 			}
-			configFile, err := r.LoadConfig(options.ConfigName)
+			configFile, err := r.LoadConfig(cmd.ConfigName)
 			if err != nil {
 				errs <- err
 				return
@@ -161,7 +161,6 @@ func execute(options *cmd.DotCmd) error {
 			errs <- nil
 		}(r)
 	}
-
 	for i := 0; i < length; i++ {
 		if err := <-errs; err != nil {
 			fmt.Printf("Role initialization failed: %d/%d\n", i+1, length)

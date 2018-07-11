@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	// ConfigName ...
-	ConfigName string
-
 	// GlobalConfig ...
 	GlobalConfig *Config
 
 	// Options ...
 	Options DotCmd
+
+	// ConfigName ...
+	ConfigName string
 
 	// Action (install/remove)
 	Action string
@@ -92,9 +92,9 @@ type DotCmd struct {
 	Version bool `short:"V" long:"version" description:"Print the version and exit"`
 
 	// env:"DOT_CONFIG" default:".dot"
-	Config     func(s string) error `short:"c" long:"config" description:"Global config file name"`
+	Config     func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
 	IniConfig  func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
-	ConfigName string               `short:"C" long:"config-name" description:"Config file name for roles"`
+	RoleDir string `long:"role-dir" description:"" default:".dot"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
 
@@ -113,7 +113,7 @@ type DotCmd struct {
 	// Roles map[string]string `short:"r" long:"roles" description:""`
 
 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
-	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
+	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
 
 	RoleFilter   []string `short:"r" long:"role" description:"Filter roles by name"`
 }
