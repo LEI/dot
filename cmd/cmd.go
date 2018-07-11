@@ -89,6 +89,7 @@ func Parse() ([]string, error) {
 			}
 		}
 	}
+	// Update local package variables
 	target = os.ExpandEnv(string(Options.Target))
 	// WriteIniConfig(parser)
 	return remaining, err
