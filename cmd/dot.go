@@ -92,9 +92,9 @@ type DotCmd struct {
 	Version bool `short:"V" long:"version" description:"Print the version and exit"`
 
 	// env:"DOT_CONFIG" default:".dot"
-	Config     func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
-	IniConfig  func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
-	RoleDir string `long:"role-dir" description:"" default:".dot"`
+	Config    func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
+	IniConfig func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
+	RoleDir   string               `long:"role-dir" description:"" default:".dot"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
 
@@ -115,7 +115,7 @@ type DotCmd struct {
 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
 
-	RoleFilter   []string `short:"r" long:"role" description:"Filter roles by name"`
+	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
 }
 
 // CommandHandler ...

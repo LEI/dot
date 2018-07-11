@@ -398,7 +398,7 @@ func (r *Role) PreparePaths(p *Paths) error {
 			if err != nil {
 				return err
 			}
-			GLOB:
+		GLOB:
 			for _, s := range glob {
 				// Extract source file name
 				_, n := filepath.Split(s)
@@ -501,6 +501,7 @@ func ParsePath(s string) (src, dst string) {
 	}
 	return src, dst
 }
+
 /*
 func ParsePath(src, dst string) (Paths, error) {
 	if strings.Contains(src, ":") {
