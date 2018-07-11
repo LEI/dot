@@ -12,7 +12,6 @@ import (
 	// "github.com/jessevdk/go-flags"
 
 	"github.com/LEI/dot/cmd"
-	"github.com/LEI/dot/dot"
 )
 
 var (
@@ -22,8 +21,10 @@ var (
 	// Shell ...
 	Shell = "bash"
 
-	config *dot.Config = &dot.Config{} // {Name: ".dot"}
+	config *cmd.Config = &cmd.Config{} // {Name: ".dot"}
 	configFileUsed string
+
+	verbosity = 0
 )
 
 func main() {
@@ -61,22 +62,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	verbosity := len(cmd.Options.Verbose)
+	verbosity = len(cmd.Options.Verbose)
 	// if verbosity > 0 {
 	// 	fmt.Printf("Verbosity: %v\n", verbosity)
 	// }
-
-	dot.NoCheck = cmd.Options.NoCheck
-	dot.NoSync = cmd.Options.NoSync
-	dot.Source = string(cmd.Options.Source)
-	dot.Target = string(cmd.Options.Target)
-	dot.Verbose = verbosity > 0
 
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", cmd.Options)
 
-	if configFileUsed != "" && dot.Verbose {
+	if configFileUsed != "" && verbosity > 0 {
 		fmt.Println("# Using configuration file:", configFileUsed)
 	}
 
@@ -87,7 +82,7 @@ func main() {
 
 	// for k, v := range cmd.Options.Roles {
 	// 	fmt.Println(k, v)
-	// 	config.Roles = append(config.Roles, dot.Role{
+	// 	config.Roles = append(config.Roles, Role{
 	// 		Name: k,
 	// 		URL: v,
 	// 	})
@@ -150,7 +145,7 @@ func execute(options *cmd.DotCmd) error {
 	length := len(config.Roles)
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
-		go func (r *dot.Role) {
+		go func (r *cmd.Role) {
 			if err := r.Init(); err != nil {
 				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
 				return
@@ -160,7 +155,7 @@ func execute(options *cmd.DotCmd) error {
 				errs <- err
 				return
 			}
-			if configFile != "" && dot.Verbose {
+			if configFile != "" && verbosity > 0 {
 				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
 			}
 			errs <- nil
@@ -180,7 +175,7 @@ func execute(options *cmd.DotCmd) error {
 	return config.Do(options.ActionFilter)
 }
 
-func removeRole(roles []*dot.Role, rm *dot.Role) (ret []*dot.Role) {
+func removeRole(roles []*cmd.Role, rm *cmd.Role) (ret []*cmd.Role) {
 	for _, r := range roles {
 		if r == rm {
 			continue

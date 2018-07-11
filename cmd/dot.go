@@ -7,16 +7,28 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/LEI/dot/dot"
-
 	"github.com/jessevdk/go-flags"
 )
 
-// GlobalConfig ...
-var GlobalConfig *dot.Config
+var (
+	// ConfigName ...
+	ConfigName string
 
-// Options ...
-var Options DotCmd
+	// GlobalConfig ...
+	GlobalConfig *Config
+
+	// Options ...
+	Options DotCmd
+
+	// Source ....
+	Source string
+
+	// Target ....
+	Target string
+
+	// Verbose ....
+	Verbose bool
+)
 
 var parser = flags.NewParser(&Options, flags.Default)
 
@@ -77,7 +89,11 @@ type DotCmd struct {
 	ConfigName string `short:"C" long:"config-name" description:"Config file name for roles"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
+
+	// Ignore uncommitted changes in repository
 	NoCheck bool `short:"N" long:"no-check" description:"Ignore uncommitted changes"`
+
+	// Do not error out if unable to git clone or pull
 	NoSync bool `short:"S" long:"no-sync" description:"Skip network operations"`
 
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`

@@ -1,4 +1,4 @@
-package dot
+package cmd
 
 import (
 	// "fmt"
@@ -17,7 +17,7 @@ type Config struct {
 
 // Load ...
 func (c *Config) Load(name string) (string, error) {
-	// configFile, err := dot.Load(c, name)
+	// configFile, err := Load(c, name)
 	// return configFile, err
 	if name == "" {
 		return "", nil

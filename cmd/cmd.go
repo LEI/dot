@@ -6,8 +6,6 @@ import (
 	// "reflect"
 	// "strings"
 
-	"github.com/LEI/dot/dot"
-
 	"github.com/jessevdk/go-flags"
 )
 
@@ -50,8 +48,8 @@ type RoleArg struct {
 }
 
 // New dot.Role
-func (a *RoleArg) New() *dot.Role {
-	return dot.NewRole(a.Name)
+func (a *RoleArg) New() *Role {
+	return NewRole(a.Name)
 }
 
 /*

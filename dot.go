@@ -1,20 +1,6 @@
-package dot
+package main
 
 import (
-)
-
-var (
-	// ConfigName ...
-	ConfigName string
-
-	// Source ....
-	Source string
-
-	// Target ....
-	Target string
-
-	// Verbose ....
-	Verbose bool
 )
 
 // // Cache ...

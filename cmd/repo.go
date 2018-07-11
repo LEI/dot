@@ -1,4 +1,4 @@
-package dot
+package cmd
 
 import (
 	"bytes"

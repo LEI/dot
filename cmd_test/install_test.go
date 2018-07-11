@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/LEI/dot/cmd"
-	"github.com/LEI/dot/dot"
+	// "github.com/LEI/dot/dot"
 
 	"github.com/jessevdk/go-flags"
 )

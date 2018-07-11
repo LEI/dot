@@ -22,7 +22,7 @@ func (cmd *LinkCmd) Execute(args []string) error {
 		return nil
 	}
 	// fmt.Println("role:", cmd.Role)
-	role := cmd.Role.New() // Init dot.Role
+	role := cmd.Role.New()
 	if err := role.Register(GlobalConfig); err != nil {
 		return err
 	}

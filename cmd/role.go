@@ -1,4 +1,4 @@
-package dot
+package cmd
 
 import (
 	"fmt"
@@ -13,11 +13,6 @@ import (
 )
 
 var actions = []string{"Copy", "Link", "Template"}
-
-// NoCheck gnore uncommitted changes in repository
-var NoCheck bool
-// NoSync do not attempt to git clone or pull
-var NoSync bool
 
 // Role ...
 type Role struct {
@@ -43,6 +38,7 @@ type Paths map[string]string
 
 // UnmarshalYAML ...
 func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	target := string(Options.Target)
 	// Avoid assignment to entry in nil map
 	if *p == nil {
 		*p = make(Paths)
@@ -56,7 +52,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	case []string:
 		for _, v := range val {
 			// (*p)[v] = v
-			paths, err := ParsePath(v, Target)
+			paths, err := ParsePath(v, target)
 			if err != nil {
 				return err
 			}
@@ -71,7 +67,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	case []interface{}:
 		for _, v := range val {
 			// (*p)[v.(string)] = v.(string)
-			paths, err := ParsePath(v.(string), Target)
+			paths, err := ParsePath(v.(string), target)
 			if err != nil {
 				return err
 			}
@@ -86,7 +82,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if k != "" {
 				fmt.Printf("Unmarshal: ignore key '%s'\n", k)
 			}
-			paths, err := ParsePath(v, Target)
+			paths, err := ParsePath(v, target)
 			if err != nil {
 				return err
 			}
@@ -101,7 +97,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				fmt.Printf("Unmarshal: ignore key '%s'\n", k.(string))
 			}
 			// (*p)[v.(string)] = v.(string)
-			paths, err := ParsePath(v.(string), Target)
+			paths, err := ParsePath(v.(string), target)
 			if err != nil {
 				return err
 			}
@@ -242,7 +238,7 @@ func (r *Role) RegisterTemplate(s string) error {
 
 // Init ...
 func (r *Role) Init() error {
-	target := os.ExpandEnv(Target)
+	target := os.ExpandEnv(string(Options.Target))
 	if _, err := os.Stat(target); os.IsNotExist(err) {
 		return fmt.Errorf("Directory does not exist: %s", target)
 	}
@@ -273,7 +269,7 @@ func (r *Role) Sync() error {
 		case nil:
 			break
 		case ErrNetworkUnreachable:
-			if !NoSync {
+			if !Options.NoSync {
 				return err
 			}
 		default:
@@ -284,7 +280,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrNetworkUnreachable:
-		if !NoSync {
+		if !Options.NoSync {
 			return err
 		}
 	default:
@@ -295,7 +291,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrDirtyRepo:
-		if !NoCheck {
+		if !Options.NoCheck {
 			return err
 		}
 	default:
@@ -306,7 +302,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrNetworkUnreachable:
-		if !NoSync {
+		if !Options.NoSync {
 			return err
 		}
 	default:
