@@ -19,6 +19,11 @@ var defaultTasks = []string{
 	"template",
 }
 
+var ignore = []string{
+	"*.md",
+	".git",
+}
+
 // Role ...
 type Role struct {
 	Name     string   // Name of the role
@@ -383,7 +388,6 @@ func (r *Role) PreparePaths(p *Paths) error {
 	// val := r.GetField(key).Interface().(Paths)
 	// fmt.Printf("%s: %+v\n", key, val)
 	var paths Paths = make(map[string]string, len(*p))
-	fmt.Println("Prepare", r.Name, "paths for", target)
 	for src, dst := range *p {
 		// Prepend role directory to source path
 		src = filepath.Join(r.Path, src)
@@ -394,7 +398,20 @@ func (r *Role) PreparePaths(p *Paths) error {
 			if err != nil {
 				return err
 			}
+			GLOB:
 			for _, s := range glob {
+				// Extract source file name
+				_, n := filepath.Split(s)
+				for _, i := range ignore {
+					// Check for ignored patterns
+					matched, err := filepath.Match(i, n)
+					if err != nil {
+						return err
+					}
+					if matched {
+						continue GLOB
+					}
+				}
 				// TODO: Ignore .git, ...
 				_, f := filepath.Split(s)
 				t := filepath.Join(target, dst, f)
