@@ -90,10 +90,10 @@ type DotCmd struct {
 	// Debug bool `short:"D" long:"debug" description:""`
 
 	// Ignore uncommitted changes in repository
-	NoCheck bool `short:"N" long:"no-check" description:"Ignore uncommitted changes"`
+	Force bool `short:"f" long:"force" description:"Ignore uncommitted changes"`
 
 	// Do not error out if unable to git clone or pull
-	NoSync bool `short:"S" long:"no-sync" description:"Skip network operations"`
+	NoSync bool `short:"n" long:"no-sync" description:"Skip network operations"`
 
 	// Slice of bool will append 'true' each time the option
 	// is encountered (can be set multiple times, like -vvv)

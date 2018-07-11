@@ -278,7 +278,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrDirtyRepo:
-		if !Options.NoCheck {
+		if !Options.Force {
 			return err
 		}
 	default:
