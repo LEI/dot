@@ -56,7 +56,7 @@ type RoleArg struct {
 	Paths []flags.Filename
 }
 
-var parser = flags.NewParser(&Options, flags.HelpFlag | flags.PassDoubleDash)
+var parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
 
 // GetParser ...
 func GetParser() *flags.Parser {

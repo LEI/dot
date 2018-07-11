@@ -90,7 +90,7 @@ type DotCmd struct {
 	Config    func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
 	IniConfig func(s string) error `short:"i" long:"ini" description:"INI config file" no-ini:"true"`
 
-	RoleDir   string               `short:"d" long:"role-dir" description:"Role directory name" default:".dot"`
+	RoleDir    string   `short:"d" long:"role-dir" description:"Role directory name" default:".dot"`
 	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
