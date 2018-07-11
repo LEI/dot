@@ -431,8 +431,8 @@ func (r *Role) Do(a string, filter []string) error {
 		// }
 		for s, t := range val {
 			s = strings.TrimPrefix(s, r.Path+"/")
-			t = strings.TrimPrefix(s, target+"/")
-			fmt.Printf("Do %s %s %s\n", key, s, t)
+			t = strings.TrimPrefix(t, target+"/")
+			fmt.Printf("%s %s %s\n", key, s, t)
 		}
 	}
 	if len(after) > 0 {
