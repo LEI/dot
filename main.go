@@ -33,7 +33,7 @@ func main() {
 	// cmd.Options.Target = "$HOME" // os.Getenv("HOME")
 	cmd.Options.Config = func(s string) error {
 		cmd.ConfigName = s
-		configFile, err := config.Load(s)
+		configFile, err := config.Read(s)
 		if err != nil {
 			return err
 		}
@@ -150,7 +150,7 @@ func execute(options *cmd.DotCmd) error {
 				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
 				return
 			}
-			configFile, err := r.LoadConfig(cmd.ConfigName)
+			configFile, err := r.ReadConfig(cmd.ConfigName)
 			if err != nil {
 				errs <- err
 				return

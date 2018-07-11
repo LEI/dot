@@ -15,10 +15,8 @@ type Config struct {
 	Roles []*Role
 }
 
-// Load ...
-func (c *Config) Load(name string) (string, error) {
-	// configFile, err := Load(c, name)
-	// return configFile, err
+// Read ...
+func (c *Config) Read(name string) (string, error) {
 	if name == "" {
 		return "", nil
 	}

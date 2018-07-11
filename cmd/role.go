@@ -301,8 +301,8 @@ func (r *Role) Sync() error {
 	return nil
 }
 
-// LoadConfig ...
-func (r *Role) LoadConfig(name string) (string, error) {
+// ReadConfig ...
+func (r *Role) ReadConfig(name string) (string, error) {
 	if r.Path == "" || name == "" {
 		return "", nil
 	}
