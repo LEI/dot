@@ -1,7 +1,6 @@
 package cmd
 
-import (
-)
+import ()
 
 // LinkCmd ...
 type LinkCmd struct {

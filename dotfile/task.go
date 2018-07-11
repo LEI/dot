@@ -1,4 +1,4 @@
-package dotlib
+package dotfile
 
 import (
 	"os"

@@ -1,7 +1,6 @@
 package cmd
 
-import (
-)
+import ()
 
 // CopyCmd ...
 type CopyCmd struct {
