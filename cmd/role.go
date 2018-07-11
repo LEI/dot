@@ -10,7 +10,13 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/imdario/mergo"
+
+	"github.com/LEI/dot/dotfile"
 )
+
+func init() {
+	dotfile.DryRun = true
+}
 
 // r.<Task>, r.Register<Task>
 var defaultTasks = []string{
@@ -411,20 +417,48 @@ func (r *Role) Do(a string, filter []string) error {
 	// if r.Pkg != nil {
 	// 	fmt.Printf("# packages: %+v\n", r.Pkg)
 	// }
-	for _, key := range filter {
-		key = strings.Title(key)
-		val := r.GetField(key).Interface().(Paths)
-		// if len(val) == 0 {
-		// 	fmt.Printf("# No %s task for role %s\n", key, r.Name)
-		// 	continue
-		// }
-		for s, t := range val {
-			// TODO: role task format (cp, ln, tpl...)
+	if r.Copy != nil {
+		for s, t := range r.Copy {
 			s = strings.TrimPrefix(s, r.Path+"/")
 			t = strings.TrimPrefix(t, target+"/")
-			fmt.Printf("%s '%s' '%s'\n", key, s, t)
+			fmt.Printf("cp '%s' '%s'\n", s, t)
 		}
 	}
+	if r.Line != nil {
+		for s, t := range r.Line {
+			s = strings.TrimPrefix(s, r.Path+"/")
+			t = strings.TrimPrefix(t, target+"/")
+			fmt.Printf("echo '%s' >> '%s'\n", t, s)
+		}
+	}
+	if r.Link != nil {
+		for s, t := range r.Link {
+			s = strings.TrimPrefix(s, r.Path+"/")
+			t = strings.TrimPrefix(t, target+"/")
+			fmt.Printf("ln '%s' '%s'\n", s, t)
+		}
+	}
+	if r.Template != nil {
+		for s, t := range r.Template {
+			s = strings.TrimPrefix(s, r.Path+"/")
+			t = strings.TrimPrefix(t, target+"/")
+			fmt.Printf("gotpl '%s' '%s'\n", s, t)
+		}
+	}
+	// for _, key := range filter {
+	// 	key = strings.Title(key)
+	// 	val := r.GetField(key).Interface().(Paths)
+	// 	// if len(val) == 0 {
+	// 	// 	fmt.Printf("# No %s task for role %s\n", key, r.Name)
+	// 	// 	continue
+	// 	// }
+	// 	for s, t := range val {
+	// 		// TODO: role task format (cp, ln, tpl...)
+	// 		s = strings.TrimPrefix(s, r.Path+"/")
+	// 		t = strings.TrimPrefix(t, target+"/")
+	// 		fmt.Printf("%s '%s' '%s'\n", key, s, t)
+	// 	}
+	// }
 	if r.Line != nil {
 		fmt.Printf("# lines: %+v\n", r.Line)
 	}

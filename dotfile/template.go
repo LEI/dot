@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
-	"strings"
+	// "path"
+	// "strings"
 	"text/template"
 )
 
@@ -37,7 +37,6 @@ func (t *TemplateTask) Parse() (string, error) {
 
 // Install template
 func (t *TemplateTask) Install() error {
-	t = t.Init()
 	changed, err := Template(t) // t.Source, dst, t.Env
 	if err != nil {
 		return err
@@ -54,18 +53,15 @@ func (t *TemplateTask) Install() error {
 	// envsubst
 	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
 	// fmt.Printf("%sgotpl %s <<< '%s' | tee %s\n", prefix, t.Source, strings.Join(vars, "\n"), t.Target)
-	if Verbose {
-		// github.com/tsg/gotpl with option missingkey=zero
-		fmt.Printf("%sgotpl %s <<'EOF' | tee %s\n%s\nEOF\n", prefix, t.Source, t.Target, strings.Join(vars, "\n"))
-	} else {
-		fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, t.Target)
-	}
+
+	// TODO? github.com/tsg/gotpl with option missingkey=zero
+	// fmt.Printf("%sgotpl %s <<'EOF' | tee %s\n%s\nEOF\n", prefix, t.Source, t.Target, strings.Join(vars, "\n"))
+	fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, t.Target)
 	return nil
 }
 
 // Remove template
 func (t *TemplateTask) Remove() error {
-	t = t.Init()
 	changed, err := Untemplate(t)
 	if err != nil {
 		return err
