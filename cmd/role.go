@@ -37,7 +37,7 @@ type Role struct {
 	Name     string   // Name of the role
 	Path     string   // Local directory
 	URL      string   // Repository URL
-	OS       []string // TODO
+	OS       []string // Allowed OSes
 	Env      Env
 	Copy     Paths
 	Link     Paths
