@@ -24,6 +24,14 @@ var ignore = []string{
 	".git",
 }
 
+// RoleConfig ...
+type RoleConfig struct {
+	// TODO: Use top-level struct
+	// for meta properties (dir, dst)
+	// or change config format role:
+	Role *Role
+}
+
 // Role ...
 type Role struct {
 	Name     string   // Name of the role
@@ -49,92 +57,6 @@ type Role struct {
 
 // Env ...
 type Env map[string]string
-
-// Paths ...
-type Paths map[string]string
-
-// Add ...
-func (p *Paths) Add(s string) error {
-	src, dst := ParsePath(s)
-	// if p.Dir != "" {
-	// 	src = filepath.Join(p.Dir, src)
-	// }
-	// if p.Dst != "" {
-	// 	dst = filepath.Join(p.Dst, dst)
-	// }
-	src = os.ExpandEnv(src)
-	dst = os.ExpandEnv(dst)
-	(*p)[src] = dst
-	return nil
-}
-
-// func addPaths (p *Paths, v string, target string) error {
-// 	// v = filepath.Join(source, v)
-// 	paths, err := ParsePath(v, target)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	for s, t := range paths {
-// 		(*p)[s] = t
-// 	}
-// 	return nil
-// }
-
-// UnmarshalYAML ...
-func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	// Avoid assignment to entry in nil map
-	if *p == nil {
-		*p = make(Paths)
-	}
-	var i interface{}
-	if err := unmarshal(&i); err != nil {
-		return err
-	}
-	// paths := map[string]string{}
-	switch val := i.(type) {
-	case []string:
-		for _, v := range val {
-			// (*p)[v] = v
-			p.Add(v)
-		}
-		break
-	// case interface{}:
-	// 	s := val.(string)
-	// 	(*p)[s] = s
-	case []interface{}:
-		for _, v := range val {
-			// (*p)[v.(string)] = v.(string)
-			p.Add(v.(string))
-		}
-		break
-	case map[string]string:
-		// p = i.(*Paths)
-		for k, v := range val {
-			if k != "" {
-				fmt.Printf("Unmarshal: ignore key '%s'\n", k)
-			}
-			p.Add(v)
-		}
-		break
-	case map[interface{}]interface{}:
-		for k, v := range val {
-			if k.(string) != "" {
-				fmt.Printf("Unmarshal: ignore key '%s'\n", k.(string))
-			}
-			// (*p)[v.(string)] = v.(string)
-			p.Add(v.(string))
-		}
-		break
-	default:
-		t := reflect.TypeOf(val)
-		T := t.Elem()
-		if t.Kind() == reflect.Map {
-			T = reflect.MapOf(t.Key(), t.Elem())
-		}
-		return fmt.Errorf("Unable to unmarshal %s into struct: %+v", T, val)
-	}
-	return nil
-}
 
 // // UnmarshalFlag ...
 // func (p *Paths) UnmarshalFlag(value string) error {
@@ -205,20 +127,32 @@ func (r *Role) Merge(role *Role) error {
 	return mergo.Merge(r, role)
 }
 
+// SplitPath ...
+func SplitPath(s string) (src, dst string) {
+	src = s
+	if strings.Contains(s, ":") {
+		parts := strings.Split(s, ":")
+		if len(parts) == 2 {
+			src = parts[0]
+			dst = parts[1]
+		} else {
+			fmt.Println("Unhandled path spec", s)
+			os.Exit(1)
+		}
+	}
+	if dst == "" {
+		dst = src
+	}
+	return src, dst
+}
+
 // RegisterCopy ...
 func (r *Role) RegisterCopy(s string) error {
 	if r.Copy == nil {
 		r.Copy = map[string]string{}
 	}
-	src, dst := ParsePath(s)
+	src, dst := SplitPath(s)
 	r.Copy[src] = dst
-	// paths, err := ParsePath(s, r.Path)
-	// if err != nil {
-	// 	return err
-	// }
-	// for src, dst := range paths {
-	// 	r.Copy[src] = dst
-	// }
 	return nil
 }
 
@@ -227,15 +161,8 @@ func (r *Role) RegisterLink(s string) error {
 	if r.Link == nil {
 		r.Link = map[string]string{}
 	}
-	src, dst := ParsePath(s)
+	src, dst := SplitPath(s)
 	r.Link[src] = dst
-	// paths, err := ParsePath(s, r.Path)
-	// if err != nil {
-	// 	return err
-	// }
-	// for src, dst := range paths {
-	// 	r.Link[src] = dst
-	// }
 	return nil
 }
 
@@ -244,15 +171,8 @@ func (r *Role) RegisterTemplate(s string) error {
 	if r.Template == nil {
 		r.Template = map[string]string{}
 	}
-	src, dst := ParsePath(s)
+	src, dst := SplitPath(s)
 	r.Template[src] = dst
-	// paths, err := ParsePath(s, r.Path)
-	// if err != nil {
-	// 	return err
-	// }
-	// for src, dst := range paths {
-	// 	r.Template[src] = dst
-	// }
 	return nil
 }
 
@@ -326,26 +246,6 @@ func (r *Role) Sync() error {
 	return nil
 }
 
-// Prepare ...
-func (r *Role) Prepare() error {
-	if err := r.PreparePaths(&r.Copy); err != nil {
-		return err
-	}
-	if err := r.PreparePaths(&r.Link); err != nil {
-		return err
-	}
-	if err := r.PreparePaths(&r.Template); err != nil {
-		return err
-	}
-	return nil
-}
-
-// RoleConfig ...
-type RoleConfig struct {
-	// Dir, Dst string
-	Role *Role
-}
-
 // LoadConfig ...
 func (r *Role) LoadConfig(name string) (string, error) {
 	if r.Path == "" || name == "" {
@@ -376,17 +276,23 @@ func (r *Role) LoadConfig(name string) (string, error) {
 	return cfgPath, nil // err
 }
 
-// GetField ...
-func (r *Role) GetField(key string) reflect.Value {
-	return reflect.Indirect(reflect.ValueOf(r)).FieldByName(key)
+// Prepare ...
+func (r *Role) Prepare() error {
+	if err := r.PreparePaths(&r.Copy); err != nil {
+		return err
+	}
+	if err := r.PreparePaths(&r.Link); err != nil {
+		return err
+	}
+	if err := r.PreparePaths(&r.Template); err != nil {
+		return err
+	}
+	return nil
 }
 
 // PreparePaths ...
 func (r *Role) PreparePaths(p *Paths) error {
 	target := os.ExpandEnv(string(Options.Target))
-	// key = strings.Title(key)
-	// val := r.GetField(key).Interface().(Paths)
-	// fmt.Printf("%s: %+v\n", key, val)
 	var paths Paths = make(map[string]string, len(*p))
 	for src, dst := range *p {
 		// Prepend role directory to source path
@@ -426,6 +332,11 @@ func (r *Role) PreparePaths(p *Paths) error {
 	}
 	*p = paths
 	return nil
+}
+
+// GetField ...
+func (r *Role) GetField(key string) reflect.Value {
+	return reflect.Indirect(reflect.ValueOf(r)).FieldByName(key)
 }
 
 // Do ...
@@ -470,36 +381,6 @@ func (r *Role) Do(a string, filter []string) error {
 		}
 	}
 	return nil
-}
-
-// ParseURL ...
-// func ParseURL(url string) string {
-// 	// if r.Name == "" {}
-// 	// if url == "" {}
-// 	if !strings.Contains(url, "http") {
-// 		base := "https://github.com"
-// 		url = base + "/" + url
-// 	}
-// 	return url
-// }
-
-// ParsePath ...
-func ParsePath(s string) (src, dst string) {
-	src = s
-	if strings.Contains(s, ":") {
-		parts := strings.Split(s, ":")
-		if len(parts) == 2 {
-			src = parts[0]
-			dst = parts[1]
-		} else {
-			fmt.Println("Unhandled path spec", s)
-			os.Exit(1)
-		}
-	}
-	if dst == "" {
-		dst = src
-	}
-	return src, dst
 }
 
 /*
