@@ -37,7 +37,7 @@ func init() {
 
 	// fmt.Printf("Args: %v\n", args)
 
-	parser.SubcommandsOptional = false
+	parser.SubcommandsOptional = true
 
 	// Options.Config = readConfig(config)
 	Options.IniConfig = readIniConfig(parser)
@@ -48,6 +48,9 @@ func init() {
 		// fmt.Printf("----------> %+v\n", cmd)
 		Action = "install"
 		switch cmd.(type) {
+		case nil:
+			cmd = &DotCmd{}
+			// cmd = &InstallCmd{}
 		case *DotCmd:
 		case *InstallCmd:
 			break
@@ -109,12 +112,8 @@ type DotCmd struct {
 
 // Execute ...
 func (cmd *DotCmd) Execute(args []string) error {
-	fmt.Println("exec cmd", args)
-	// fmt.Println(Dot.Commands)
-	// if c, ok := cmd.(*flags.Command); ok {
-	// 	fmt.Println(c)
-	// }
-	return nil // Install.Execute(args)
+	// fmt.Println("exec dot cmd", args)
+	return cmd.Install.Execute(args)
 }
 
 // func readConfig(config *dot.Config) func(s string) error {

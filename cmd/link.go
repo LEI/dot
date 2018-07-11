@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 )
 
 // LinkCmd ...
@@ -11,10 +11,10 @@ type LinkCmd struct {
 
 // Execute ...
 func (cmd *LinkCmd) Execute(args []string) error {
-	fmt.Println("execute link command",
-		cmd.Role.Name,
-		cmd.Role.Paths,
-		args)
+	// fmt.Println("execute link command",
+	// 	cmd.Role.Name,
+	// 	cmd.Role.Paths,
+	// 	args)
 	if cmd.Role.Name == "" {
 		return nil
 	}

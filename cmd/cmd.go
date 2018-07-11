@@ -35,16 +35,6 @@ type BaseTaskCmd struct {
 type BaseRoleCmd struct {
 	BaseCmd
 
-	// Paths map[flags.Filename]flags.Filename `name:"PATHS" description:"Paths"`
-	// Paths map[string]string `name:"PATHS" description:"Paths"`
-	// Source flags.Filename `name:"SOURCE" description:"Path to source file"`
-	// Target flags.Filename `name:"TARGET" description:"Path to target link"`
-
-	// Role dot.Role `required:"false" positional-args:"true" positional-arg-name:"role"`
-	// Name string `short:"n" long:"name" description:""`
-	// URL string `short:"u" long:"url" description:""`
-
-	// Paths dot.Role `required:"" positional-args:"true" positional-arg-name:"paths"`
 	Role RoleArg `positional-args:"true" positional-arg-name:"paths"` // required:"1"
 
 	Executable
@@ -76,12 +66,12 @@ func Parse() ([]string, error) {
 				parser.WriteHelp(os.Stdout)
 				os.Exit(0)
 				// break
-			// case flags.ErrCommandRequired:
-			// 	// FIXME: DotCmd.Execute() never called
-			// 	// when first-level sub commands are optional
-			// 	err = Options.Install.Execute(remaining)
-			// 	remaining = []string{}
-			// 	break
+			case flags.ErrCommandRequired:
+				err = nil
+				fmt.Println(err, remaining)
+				// err = Options.Install.Execute(remaining)
+				// remaining = []string{}
+				break
 			default:
 				fmt.Fprintf(os.Stderr, "Error parsing args: %s\n", err)
 				parser.WriteHelp(os.Stdout)

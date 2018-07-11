@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 )
 
 // CopyCmd ...
@@ -11,10 +11,10 @@ type CopyCmd struct {
 
 // Execute ...
 func (cmd *CopyCmd) Execute(args []string) error {
-	fmt.Println("execute copy command",
-		cmd.Role.Name,
-		cmd.Role.Paths,
-		args)
+	// fmt.Println("execute copy command",
+	// 	cmd.Role.Name,
+	// 	cmd.Role.Paths,
+	// 	args)
 	if cmd.Role.Name == "" {
 		return nil
 	}

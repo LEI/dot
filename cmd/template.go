@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 )
 
 // TemplateCmd ...
@@ -11,10 +11,10 @@ type TemplateCmd struct {
 
 // Execute ...
 func (cmd *TemplateCmd) Execute(args []string) error {
-	fmt.Println("execute template command",
-		cmd.Role.Name,
-		cmd.Role.Paths,
-		args)
+	// fmt.Println("execute template command",
+	// 	cmd.Role.Name,
+	// 	cmd.Role.Paths,
+	// 	args)
 	if cmd.Role.Name == "" {
 		return nil
 	}

@@ -410,7 +410,11 @@ func (r *Role) Do(a string, filter []string) error {
 	// 	fmt.Printf("# lines: %+v\n", r.Line)
 	// }
 	a = strings.Title(a)
-	before := r.GetField(a).Interface().([]string)
+	v := r.GetField(a)
+	if !v.IsValid() {
+		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
+	}
+	before := v.Interface().([]string)
 	after := r.GetField("Post" + a).Interface().([]string)
 	if len(before) > 0 {
 		for _, c := range before {
