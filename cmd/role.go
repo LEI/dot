@@ -13,7 +13,7 @@ import (
 )
 
 // r.<Task>, r.Register<Task>
-var fileTasks = []string{
+var defaultTasks = []string{
 	"copy",
 	"link",
 	"template",
@@ -48,9 +48,35 @@ type Env map[string]string
 // Paths ...
 type Paths map[string]string
 
+// Add ...
+func (p *Paths) Add(s string) error {
+	src, dst := ParsePath(s)
+	// if p.Dir != "" {
+	// 	src = filepath.Join(p.Dir, src)
+	// }
+	// if p.Dst != "" {
+	// 	dst = filepath.Join(p.Dst, dst)
+	// }
+	src = os.ExpandEnv(src)
+	dst = os.ExpandEnv(dst)
+	(*p)[src] = dst
+	return nil
+}
+
+// func addPaths (p *Paths, v string, target string) error {
+// 	// v = filepath.Join(source, v)
+// 	paths, err := ParsePath(v, target)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	for s, t := range paths {
+// 		(*p)[s] = t
+// 	}
+// 	return nil
+// }
+
 // UnmarshalYAML ...
 func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	target := string(Options.Target)
 	// Avoid assignment to entry in nil map
 	if *p == nil {
 		*p = make(Paths)
@@ -64,13 +90,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	case []string:
 		for _, v := range val {
 			// (*p)[v] = v
-			paths, err := ParsePath(v, target)
-			if err != nil {
-				return err
-			}
-			for s, t := range paths {
-				(*p)[s] = t
-			}
+			p.Add(v)
 		}
 		break
 	// case interface{}:
@@ -79,13 +99,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	case []interface{}:
 		for _, v := range val {
 			// (*p)[v.(string)] = v.(string)
-			paths, err := ParsePath(v.(string), target)
-			if err != nil {
-				return err
-			}
-			for s, t := range paths {
-				(*p)[s] = t
-			}
+			p.Add(v.(string))
 		}
 		break
 	case map[string]string:
@@ -94,13 +108,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if k != "" {
 				fmt.Printf("Unmarshal: ignore key '%s'\n", k)
 			}
-			paths, err := ParsePath(v, target)
-			if err != nil {
-				return err
-			}
-			for s, t := range paths {
-				(*p)[s] = t
-			}
+			p.Add(v)
 		}
 		break
 	case map[interface{}]interface{}:
@@ -109,13 +117,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				fmt.Printf("Unmarshal: ignore key '%s'\n", k.(string))
 			}
 			// (*p)[v.(string)] = v.(string)
-			paths, err := ParsePath(v.(string), target)
-			if err != nil {
-				return err
-			}
-			for s, t := range paths {
-				(*p)[s] = t
-			}
+			p.Add(v.(string))
 		}
 		break
 	default:
@@ -203,13 +205,15 @@ func (r *Role) RegisterCopy(s string) error {
 	if r.Copy == nil {
 		r.Copy = map[string]string{}
 	}
-	paths, err := ParsePath(s, r.Path)
-	if err != nil {
-		return err
-	}
-	for src, dst := range paths {
-		r.Copy[src] = dst
-	}
+	src, dst := ParsePath(s)
+	r.Copy[src] = dst
+	// paths, err := ParsePath(s, r.Path)
+	// if err != nil {
+	// 	return err
+	// }
+	// for src, dst := range paths {
+	// 	r.Copy[src] = dst
+	// }
 	return nil
 }
 
@@ -218,13 +222,15 @@ func (r *Role) RegisterLink(s string) error {
 	if r.Link == nil {
 		r.Link = map[string]string{}
 	}
-	paths, err := ParsePath(s, r.Path)
-	if err != nil {
-		return err
-	}
-	for src, dst := range paths {
-		r.Link[src] = dst
-	}
+	src, dst := ParsePath(s)
+	r.Link[src] = dst
+	// paths, err := ParsePath(s, r.Path)
+	// if err != nil {
+	// 	return err
+	// }
+	// for src, dst := range paths {
+	// 	r.Link[src] = dst
+	// }
 	return nil
 }
 
@@ -233,13 +239,15 @@ func (r *Role) RegisterTemplate(s string) error {
 	if r.Template == nil {
 		r.Template = map[string]string{}
 	}
-	paths, err := ParsePath(s, r.Path)
-	if err != nil {
-		return err
-	}
-	for src, dst := range paths {
-		r.Template[src] = dst
-	}
+	src, dst := ParsePath(s)
+	r.Template[src] = dst
+	// paths, err := ParsePath(s, r.Path)
+	// if err != nil {
+	// 	return err
+	// }
+	// for src, dst := range paths {
+	// 	r.Template[src] = dst
+	// }
 	return nil
 }
 
@@ -258,11 +266,6 @@ func (r *Role) Init() error {
 	}
 	if err := r.Sync(); err != nil {
 		return err
-	}
-	for _, c := range fileTasks {
-		if err := r.InitPaths(c); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -318,8 +321,23 @@ func (r *Role) Sync() error {
 	return nil
 }
 
+// Prepare ...
+func (r *Role) Prepare() error {
+	if err := r.PreparePaths(&r.Copy); err != nil {
+		return err
+	}
+	if err := r.PreparePaths(&r.Link); err != nil {
+		return err
+	}
+	if err := r.PreparePaths(&r.Template); err != nil {
+		return err
+	}
+	return nil
+}
+
 // RoleConfig ...
 type RoleConfig struct {
+	// Dir, Dst string
 	Role *Role
 }
 
@@ -337,7 +355,7 @@ func (r *Role) LoadConfig(name string) (string, error) {
 	if err != nil {
 		return cfgPath, err
 	}
-	rc := &RoleConfig{}
+	rc := &RoleConfig{} // Dir: r.Path
 	// fmt.Printf("+++\n%v\n+++\n", string(cfg))
 	err = yaml.Unmarshal(cfg, &rc)
 	// fmt.Printf("---\n%v\n---\n", rc.Role)
@@ -349,7 +367,6 @@ func (r *Role) LoadConfig(name string) (string, error) {
 		if err := r.Merge(rc.Role); err != nil {
 			return cfgPath, err
 		}
-		// fmt.Printf("---\n%v\n---\n", r)
 	}
 	return cfgPath, nil // err
 }
@@ -359,18 +376,38 @@ func (r *Role) GetField(key string) reflect.Value {
 	return reflect.Indirect(reflect.ValueOf(r)).FieldByName(key)
 }
 
-// InitPaths ...
-func (r *Role) InitPaths(key string) error {
-	key = strings.Title(key)
-	val := r.GetField(key).Interface().(Paths)
+// PreparePaths ...
+func (r *Role) PreparePaths(p *Paths) error {
+	target := os.ExpandEnv(string(Options.Target))
+	// key = strings.Title(key)
+	// val := r.GetField(key).Interface().(Paths)
 	// fmt.Printf("%s: %+v\n", key, val)
-	var paths Paths = make(map[string]string, len(val))
-	for s, t := range val {
-		s = filepath.Join(r.Path, s)
-		// fmt.Printf("%s '%s' '%s'\n", key, s, t)
-		paths[s] = t
+	var paths Paths = make(map[string]string, len(*p))
+	fmt.Println("Prepare", r.Name, "paths for", target)
+	for src, dst := range *p {
+		// Prepend role directory to source path
+		src = filepath.Join(r.Path, src)
+		// Check frob globs
+		if strings.Contains(src, "*") {
+			//fmt.Println("*", src, dst)
+			glob, err := filepath.Glob(src)
+			if err != nil {
+				return err
+			}
+			for _, s := range glob {
+				// TODO: Ignore .git, ...
+				_, f := filepath.Split(s)
+				t := filepath.Join(target, dst, f)
+				paths[s] = t
+			}
+		} else {
+			//fmt.Println("+", src, dst)
+			_, f := filepath.Split(src)
+			t := filepath.Join(target, dst, f)
+			paths[src] = t
+		}
 	}
-	r.Copy = paths
+	*p = paths
 	return nil
 }
 
@@ -378,7 +415,7 @@ func (r *Role) InitPaths(key string) error {
 func (r *Role) Do(a string, filter []string) error {
 	fmt.Printf("# Role: %+v\n", r.Path)
 	if len(filter) == 0 {
-		filter = fileTasks
+		filter = defaultTasks
 	}
 	// if r.Env != nil {
 	// 	fmt.Printf("# environment: %+v\n", r.Env)
@@ -405,7 +442,7 @@ func (r *Role) Do(a string, filter []string) error {
 		// 	continue
 		// }
 		for s, t := range val {
-			s = filepath.Join(r.Path, s)
+			// s = filepath.Join(r.Path, s)
 			// cp, ln -s, tpl
 			fmt.Printf("%s '%s' '%s'\n", key, s, t)
 		}
@@ -430,6 +467,24 @@ func (r *Role) Do(a string, filter []string) error {
 // }
 
 // ParsePath ...
+func ParsePath(s string) (src, dst string) {
+	src = s
+	if strings.Contains(s, ":") {
+		parts := strings.Split(s, ":")
+		if len(parts) == 2 {
+			src = parts[0]
+			dst = parts[1]
+		} else {
+			fmt.Println("Unhandled path spec", s)
+			os.Exit(1)
+		}
+	}
+	if dst == "" {
+		dst = src
+	}
+	return src, dst
+}
+/*
 func ParsePath(src, dst string) (Paths, error) {
 	if strings.Contains(src, ":") {
 		parts := strings.Split(src, ":")
@@ -445,6 +500,7 @@ func ParsePath(src, dst string) (Paths, error) {
 	dst = os.ExpandEnv(dst)
 	paths := map[string]string{}
 	if strings.Contains(src, "*") {
+		fmt.Println("GLOB", src)
 		glob, err := filepath.Glob(src)
 		if err != nil {
 			return paths, err
@@ -461,3 +517,4 @@ func ParsePath(src, dst string) (Paths, error) {
 	}
 	return paths, nil
 }
+*/

@@ -155,6 +155,10 @@ func execute(options *cmd.DotCmd) error {
 				errs <- err
 				return
 			}
+			if err := r.Prepare(); err != nil {
+				errs <- err
+				return
+			}
 			if configFile != "" && verbosity > 0 {
 				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
 			}
@@ -172,6 +176,9 @@ func execute(options *cmd.DotCmd) error {
 		return nil
 	}
 	for _, r := range config.Roles {
+		// if err := r.Prepare(); err != nil {
+		// 	return err
+		// }
 		if err := r.Do(cmd.Action, cmd.Only); err != nil {
 			return err
 		}
