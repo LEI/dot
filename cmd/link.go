@@ -14,10 +14,13 @@ var Link LinkCmd
 
 // Execute ...
 func (cmd *LinkCmd) Execute(args []string) error {
+	fmt.Println("execute link command",
+		cmd.Role.Name,
+		cmd.Role.Paths,
+		args)
 	if cmd.Role.Name == "" {
 		return nil
 	}
-	fmt.Println("execute link command", args) // , cmd)
 	// fmt.Println("role:", cmd.Role)
 	role := cmd.Role.New() // Init dot.Role
 	if err := role.Register(GlobalConfig); err != nil {

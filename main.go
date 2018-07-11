@@ -22,25 +22,20 @@ var (
 	// Shell ...
 	Shell = "bash"
 
-	// Debug ...
-	Debug bool
-
 	config *dot.Config = &dot.Config{} // {Name: ".dot"}
-	configFile string
+	configFileUsed string
 )
 
 func main() {
 	cmd.Options.Source = ""
 	cmd.Options.Target = "$HOME" // os.Getenv("HOME")
-	cmd.Options.ConfigName = ".dot"
+	cmd.Options.ConfigName = ".dot.yml"
 	cmd.Options.Config = func(s string) error {
 		configFile, err := config.Load(s)
 		if err != nil {
 			return err
 		}
-		if configFile != "" {
-			fmt.Println("Using configuration file:", configFile)
-		}
+		configFileUsed = configFile
 		return nil
 	}
 
@@ -49,7 +44,7 @@ func main() {
 	// Parse arguments
 	remaining, err := cmd.Parse()
 	if err != nil {
-		fmt.Println("Command error:", remaining)
+		fmt.Println("Command error:", err)
 		cmd.Help(1)
 	}
 	if len(remaining) > 0 {
@@ -66,15 +61,24 @@ func main() {
 		os.Exit(0)
 	}
 
-	// verbosity := len(cmd.Options.Verbose)
+	verbosity := len(cmd.Options.Verbose)
 	// if verbosity > 0 {
 	// 	fmt.Printf("Verbosity: %v\n", verbosity)
 	// }
-	// Debug = verbosity > 0
+
+	dot.NoCheck = cmd.Options.NoCheck
+	dot.NoSync = cmd.Options.NoSync
+	dot.Source = string(cmd.Options.Source)
+	dot.Target = string(cmd.Options.Target)
+	dot.Verbose = verbosity > 0
 
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", cmd.Options)
+
+	if configFileUsed != "" && dot.Verbose {
+		fmt.Println("# Using configuration file:", configFileUsed)
+	}
 
 	if err := execute(&cmd.Options); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -93,6 +97,11 @@ func main() {
 }
 
 func init() {
+	if err := os.Setenv("OS", OS); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	// i, err := parser.AddCommand("install",
 	// 	"Install",
 	// 	"",
@@ -125,7 +134,7 @@ func execute(options *cmd.DotCmd) error {
 	// Initialize role config
 	// TODO: parallel init (clone, pull...)
 	for _, r := range config.Roles {
-		if len(options.Filter) > 0 && !hasOne([]string{r.Name}, options.Filter) {
+		if len(options.RoleFilter) > 0 && !hasOne([]string{r.Name}, options.RoleFilter) {
 			// fmt.Fprintf(os.Stderr, "# Skip %s\n", r.Name)
 			config.Roles = removeRole(config.Roles, r)
 			continue
@@ -137,15 +146,15 @@ func execute(options *cmd.DotCmd) error {
 				continue
 			}
 		}
-		if err := r.Init(string(options.Target)); err != nil {
+		if err := r.Init(); err != nil {
 			return fmt.Errorf("# %s init error: %s", r.Name, err)
 		}
 		configFile, err := r.LoadConfig(options.ConfigName)
 		if err != nil {
 			return err
 		}
-		if configFile != "" {
-			fmt.Println("Using role configuration file:", configFile)
+		if configFile != "" && dot.Verbose {
+			fmt.Println("# Using role configuration file:", configFile)
 		}
 	}
 
@@ -154,7 +163,7 @@ func execute(options *cmd.DotCmd) error {
 		return nil
 	}
 
-	return config.Execute()
+	return config.Do(options.ActionFilter)
 }
 
 func removeRole(roles []*dot.Role, rm *dot.Role) (ret []*dot.Role) {

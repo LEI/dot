@@ -14,10 +14,13 @@ var Copy CopyCmd
 
 // Execute ...
 func (cmd *CopyCmd) Execute(args []string) error {
+	fmt.Println("execute copy command",
+		cmd.Role.Name,
+		cmd.Role.Paths,
+		args)
 	if cmd.Role.Name == "" {
 		return nil
 	}
-	fmt.Println("execute copy command", args)
 	// fmt.Println("role:", cmd.Role)
 	role := cmd.Role.New() // Init dot.Role
 	if err := role.Register(GlobalConfig); err != nil {

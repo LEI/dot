@@ -5,6 +5,7 @@ import (
 	// "io"
 	// "io/ioutil"
 	"os"
+	"reflect"
 
 	"github.com/LEI/dot/dot"
 
@@ -13,6 +14,52 @@ import (
 
 // GlobalConfig ...
 var GlobalConfig *dot.Config
+
+// Options ...
+var Options DotCmd
+
+var parser = flags.NewParser(&Options, flags.Default)
+
+var executedCommand flags.Commander
+
+func init() {
+	// args, err := flags.Parse(&options)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Printf("Args: %v\n", args)
+
+	parser.SubcommandsOptional = false
+
+	// Options.Config = readConfig(GlobalConfig)
+	Options.IniConfig = readIniConfig(parser)
+
+	parser.CommandHandler = func(cmd flags.Commander, args []string) error {
+		// executedCommand = cmd
+		// return Options.CommandHandler(cmd, args)
+		// fmt.Printf("----------> %+v\n", cmd)
+		switch cmd.(type) {
+		case *DotCmd:
+		case *InstallCmd:
+		case *RemoveCmd:
+			break;
+		case *CopyCmd:
+			Options.ActionFilter = append(Options.ActionFilter, "Copy")
+			break
+		case *LinkCmd:
+			Options.ActionFilter = append(Options.ActionFilter, "Link")
+			break
+		case *TemplateCmd:
+			Options.ActionFilter = append(Options.ActionFilter, "Template")
+			break
+		default:
+			return fmt.Errorf("exec cmd (%+v) %+v", reflect.TypeOf(cmd).Elem(), cmd)
+		}
+		return cmd.Execute(args)
+	}
+}
 
 // DotCmd ...
 type DotCmd struct {
@@ -30,6 +77,8 @@ type DotCmd struct {
 	ConfigName string `short:"C" long:"config-name" description:"Config file name for roles"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
+	NoCheck bool `short:"N" long:"no-check" description:"Ignore uncommitted changes"`
+	NoSync bool `short:"S" long:"no-sync" description:"Skip network operations"`
 
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
@@ -41,83 +90,24 @@ type DotCmd struct {
 
 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
-	Filter []string `short:"r" long:"role" description:"Filter roles by name"`
+
+	ActionFilter []string `short:"a" long:"action" description:"Filter commands by name"`
+	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
 }
 
-// Cmd ...
-// var Cmd flags.Command
-
-// Options ...
-var Options DotCmd
-
-var parser = flags.NewParser(&Options, flags.Default)
-
-func init() {
-	// args, err := flags.Parse(&options)
-
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// fmt.Printf("Args: %v\n", args)
-
-	parser.SubcommandsOptional = false
-
-	// Options.Config = readConfig(GlobalConfig)
-	Options.IniConfig = readIniConfig(parser)
-}
+// CommandHandler ...
+// func (cmd *DotCmd) CommandHandler(command flags.Commander, args []string) error {
+// 	return command.Execute(args)
+// }
 
 // Execute ...
 func (cmd *DotCmd) Execute(args []string) error {
 	fmt.Println("exec cmd", args)
-
 	// fmt.Println(Dot.Commands)
 	// if c, ok := cmd.(*flags.Command); ok {
 	// 	fmt.Println(c)
 	// }
-
 	return nil // Install.Execute(args)
-}
-
-// Parse ...
-func Parse() ([]string, error) {
-	// TODO: control (mute) output?
-	remaining, err := parser.Parse()
-	if err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok {
-			switch flagsErr.Type {
-			case flags.ErrHelp:
-				os.Exit(1)
-			case flags.ErrCommandRequired:
-				// FIXME: DotCmd.Execute() never called
-				// when first-level sub commands are optional
-				err = Options.Install.Execute(remaining)
-				remaining = []string{}
-				// os.Exit(1)
-			// default:
-			// 	fmt.Println("Error parsing args:", err)
-			// 	os.Exit(1)
-			}
-		}
-	}
-
-	return remaining, err
-}
-
-// WriteHelp ...
-// func WriteHelp(o io.Writer) {
-// 	parser.WriteHelp(o)
-// }
-
-// Help ...
-func Help(rc int) {
-	parser.WriteHelp(os.Stdout)
-	os.Exit(rc)
-}
-
-// GetParser ...
-func GetParser() *flags.Parser {
-	return parser
 }
 
 // func readConfig(config *dot.Config) func(s string) error {

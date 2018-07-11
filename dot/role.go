@@ -12,10 +12,12 @@ import (
 	"github.com/imdario/mergo"
 )
 
-var tasks = []string{"Copy", "Link", "Template"}
+var actions = []string{"Copy", "Link", "Template"}
 
-var noCheck bool // Ignore uncomitted changes in repository
-var noSync bool // Do not attempt to git clone or pull
+// NoCheck gnore uncommitted changes in repository
+var NoCheck bool
+// NoSync do not attempt to git clone or pull
+var NoSync bool
 
 // Role ...
 type Role struct {
@@ -49,10 +51,18 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&i); err != nil {
 		return err
 	}
+	// paths := map[string]string{}
 	switch val := i.(type) {
 	case []string:
 		for _, v := range val {
-			(*p)[v] = v
+			// (*p)[v] = v
+			paths, err := ParsePath(v, Target)
+			if err != nil {
+				return err
+			}
+			for s, t := range paths {
+				(*p)[s] = t
+			}
 		}
 		break
 	// case interface{}:
@@ -60,17 +70,44 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// 	(*p)[s] = s
 	case []interface{}:
 		for _, v := range val {
-			s := v.(string)
-			(*p)[s] = s
+			// (*p)[v.(string)] = v.(string)
+			paths, err := ParsePath(v.(string), Target)
+			if err != nil {
+				return err
+			}
+			for s, t := range paths {
+				(*p)[s] = t
+			}
 		}
 		break
 	case map[string]string:
-		p = i.(*Paths)
+		// p = i.(*Paths)
+		for k, v := range val {
+			if k != "" {
+				fmt.Printf("Unmarshal: ignore key '%s'\n", k)
+			}
+			paths, err := ParsePath(v, Target)
+			if err != nil {
+				return err
+			}
+			for s, t := range paths {
+				(*p)[s] = t
+			}
+		}
 		break
 	case map[interface{}]interface{}:
-		for _, v := range val {
-			s := v.(string)
-			(*p)[s] = s
+		for k, v := range val {
+			if k.(string) != "" {
+				fmt.Printf("Unmarshal: ignore key '%s'\n", k.(string))
+			}
+			// (*p)[v.(string)] = v.(string)
+			paths, err := ParsePath(v.(string), Target)
+			if err != nil {
+				return err
+			}
+			for s, t := range paths {
+				(*p)[s] = t
+			}
 		}
 		break
 	default:
@@ -102,9 +139,10 @@ var ErrEmptyRole = fmt.Errorf("Attempt to register an empty role")
 func NewRole(name string) *Role {
 	switch name {
 	case "":
-		fmt.Println("No role name")
-		os.Exit(1)
+		fmt.Println("No role name!")
+		// os.Exit(1)
 		// name = "default"
+		// return nil
 		break
 	// case "all":
 	// 	name = "*"
@@ -203,8 +241,8 @@ func (r *Role) RegisterTemplate(s string) error {
 }
 
 // Init ...
-func (r *Role) Init(target string) error {
-	target = os.ExpandEnv(target)
+func (r *Role) Init() error {
+	target := os.ExpandEnv(Target)
 	if _, err := os.Stat(target); os.IsNotExist(err) {
 		return fmt.Errorf("Directory does not exist: %s", target)
 	}
@@ -212,11 +250,13 @@ func (r *Role) Init(target string) error {
 		r.Path = filepath.Join(target, r.Name)
 	}
 	// r.URL = ParseURL(r.URL)
-	fmt.Printf("# Syncing role %s [%s] %s\n", r.Name, r.Path, r.URL)
+	if Verbose {
+		fmt.Printf("# Sync %s %s < %s\n", r.Name, r.Path, r.URL)
+	}
 	if err := r.Sync(); err != nil {
 		return err
 	}
-	for _, c := range tasks {
+	for _, c := range actions {
 		if err := r.InitPaths(c); err != nil {
 			return err
 		}
@@ -233,7 +273,7 @@ func (r *Role) Sync() error {
 		case nil:
 			break
 		case ErrNetworkUnreachable:
-			if !noSync {
+			if !NoSync {
 				return err
 			}
 		default:
@@ -244,7 +284,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrNetworkUnreachable:
-		if !noSync {
+		if !NoSync {
 			return err
 		}
 	default:
@@ -255,7 +295,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrDirtyRepo:
-		if !noCheck {
+		if !NoCheck {
 			return err
 		}
 	default:
@@ -266,7 +306,7 @@ func (r *Role) Sync() error {
 	case nil:
 		break
 	case ErrNetworkUnreachable:
-		if !noSync {
+		if !NoSync {
 			return err
 		}
 	default:
@@ -331,17 +371,24 @@ func (r *Role) InitPaths(key string) error {
 	return nil
 }
 
-// Execute ...
-func (r *Role) Execute() error {
-	fmt.Println("# Role", r.Name)
-	for s, t := range r.Copy {
-		fmt.Printf("cp '%s' '%s'\n", s, t)
+// Do ...
+func (r *Role) Do(filter []string) error {
+	if len(filter) == 0 {
+		filter = actions
 	}
-	for s, t := range r.Link {
-		fmt.Printf("ln -s '%s' '%s'\n", s, t)
-	}
-	for s, t := range r.Template {
-		fmt.Printf("tpl '%s' '%s'\n", s, t)
+	fmt.Printf("# Role: %+v\n", r.Name)
+	for _, key := range filter {
+		f := r.GetField(key)
+		val := f.Interface().(Paths)
+		// if len(val) == 0 {
+		// 	fmt.Printf("# No %s task for role %s\n", key, r.Name)
+		// 	continue
+		// }
+		for s, t := range val {
+			s = filepath.Join(r.Path, s)
+			// cp, ln -s, tpl
+			fmt.Printf("%s '%s' '%s'\n", key, s, t)
+		}
 	}
 	return nil
 }
@@ -358,33 +405,34 @@ func (r *Role) Execute() error {
 // }
 
 // ParsePath ...
-func ParsePath(s, baseDir string) (Paths, error) {
-	source := s
-	target := baseDir
-	if strings.Contains(s, ":") {
-		parts := strings.Split(s, ":")
+func ParsePath(src, dst string) (Paths, error) {
+	if strings.Contains(src, ":") {
+		parts := strings.Split(src, ":")
 		if len(parts) == 2 {
-			source = parts[0]
-			target = filepath.Join(target, parts[1])
+			src = parts[0]
+			dst = filepath.Join(dst, parts[1])
 		} else {
-			fmt.Println("Unhandled path spec", s)
+			fmt.Println("Unhandled path spec", src)
 			os.Exit(1)
 		}
 	}
-	// fmt.Println("TARGET", target, baseDir)
+	src = os.ExpandEnv(src)
+	dst = os.ExpandEnv(dst)
 	paths := map[string]string{}
-	if strings.Contains(source, "*") {
-		glob, err := filepath.Glob(source)
+	if strings.Contains(src, "*") {
+		glob, err := filepath.Glob(src)
 		if err != nil {
 			return paths, err
 		}
 		for _, s := range glob {
 			_, f := filepath.Split(s)
-			t := filepath.Join(target, f)
+			t := filepath.Join(dst, f)
 			paths[s] = t
 		}
 	} else {
-		paths[source] = target
+		_, f := filepath.Split(src)
+		t := filepath.Join(dst, f)
+		paths[src] = t
 	}
 	return paths, nil
 }

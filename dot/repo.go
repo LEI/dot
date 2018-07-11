@@ -18,6 +18,8 @@ type Repo struct {
 }
 
 var (
+	online bool
+
 	defaultRemote = "origin"
 	defaultBranch = "master"
 
@@ -27,6 +29,10 @@ var (
 	// ErrNetworkUnreachable ...
 	ErrNetworkUnreachable = fmt.Errorf("Network unreachable")
 )
+
+func init() {
+	online = networkReachable()
+}
 
 // NewRepo ...
 func NewRepo(p, url string) *Repo {
@@ -53,7 +59,7 @@ func (r *Repo) checkRepo() error {
 
 // Pull ...
 func (r *Repo) Pull() error {
-	if !networkReachable() {
+	if !online {
 		return ErrNetworkUnreachable
 	}
 	args := []string{"-C", r.Path, "pull", r.remote, r.branch, "--quiet"}
@@ -70,7 +76,7 @@ func (r *Repo) Pull() error {
 
 // Clone ...
 func (r *Repo) Clone() error {
-	if !networkReachable() {
+	if !online {
 		return ErrNetworkUnreachable
 	}
 	if _, err := os.Stat(r.Path); err == nil {

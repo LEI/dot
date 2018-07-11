@@ -2,7 +2,7 @@ package cmd
 
 import (
 	// "fmt"
-	// "os"
+	"os"
 	// "reflect"
 	// "strings"
 
@@ -76,3 +76,44 @@ func executeCommands(cmd interface{}, args []string) error {
 	return nil
 }
 */
+
+// Parse ...
+func Parse() ([]string, error) {
+	// TODO: control (mute) output?
+	remaining, err := parser.Parse()
+	if err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok {
+			switch flagsErr.Type {
+			case flags.ErrHelp:
+				os.Exit(1)
+			case flags.ErrCommandRequired:
+				// FIXME: DotCmd.Execute() never called
+				// when first-level sub commands are optional
+				err = Options.Install.Execute(remaining)
+				remaining = []string{}
+				// os.Exit(1)
+			// default:
+			// 	fmt.Println("Error parsing args:", err)
+			// 	os.Exit(1)
+			}
+		}
+	}
+	// WriteIniConfig(parser)
+	return remaining, err
+}
+
+// WriteHelp ...
+// func WriteHelp(o io.Writer) {
+// 	parser.WriteHelp(o)
+// }
+
+// Help ...
+func Help(rc int) {
+	parser.WriteHelp(os.Stdout)
+	os.Exit(rc)
+}
+
+// GetParser ...
+func GetParser() *flags.Parser {
+	return parser
+}
