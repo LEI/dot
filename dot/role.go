@@ -251,7 +251,7 @@ func (r *Role) Init() error {
 	}
 	// r.URL = ParseURL(r.URL)
 	if Verbose {
-		fmt.Printf("# Sync %s %s < %s\n", r.Name, r.Path, r.URL)
+		fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
 	}
 	if err := r.Sync(); err != nil {
 		return err

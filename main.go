@@ -132,37 +132,51 @@ func init() {
 func execute(options *cmd.DotCmd) error {
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
-	// TODO: parallel init (clone, pull...)
 	for _, r := range config.Roles {
 		if len(options.RoleFilter) > 0 && !hasOne([]string{r.Name}, options.RoleFilter) {
-			// fmt.Fprintf(os.Stderr, "# Skip %s\n", r.Name)
+			// fmt.Fprintf(os.Stderr, "# [%s] Skipping (filtered)\n", r.Name)
 			config.Roles = removeRole(config.Roles, r)
 			continue
 		}
 		if r.OS != nil {
 			if !hasOne(r.OS, getOsTypes()) { // Skip role
-				fmt.Fprintf(os.Stderr, "# Skip %s (%s)\n", r.Name, strings.Join(r.OS, ", "))
+				fmt.Fprintf(os.Stderr, "# [%s] Skipping (OS: %s)\n", r.Name, strings.Join(r.OS, ", "))
 				config.Roles = removeRole(config.Roles, r)
 				continue
 			}
 		}
-		if err := r.Init(); err != nil {
-			return fmt.Errorf("# %s init error: %s", r.Name, err)
-		}
-		configFile, err := r.LoadConfig(options.ConfigName)
-		if err != nil {
-			return err
-		}
-		if configFile != "" && dot.Verbose {
-			fmt.Println("# Using role configuration file:", configFile)
-		}
+	}
+	// Compute length after filtering roles
+	length := len(config.Roles)
+	errs := make(chan error, length)
+	for _, r := range config.Roles {
+		go func (r *dot.Role) {
+			if err := r.Init(); err != nil {
+				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
+				return
+			}
+			configFile, err := r.LoadConfig(options.ConfigName)
+			if err != nil {
+				errs <- err
+				return
+			}
+			if configFile != "" && dot.Verbose {
+				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
+			}
+			errs <- nil
+		}(r)
 	}
 
+	for i := 0; i < length; i++ {
+		if err := <- errs; err != nil {
+			fmt.Printf("Role initialization failed: %d/%d\n", i+1, length)
+			return err
+		}
+	}
 	if len(config.Roles) == 0 {
 		fmt.Fprintln(os.Stderr, "No roles to execute")
 		return nil
 	}
-
 	return config.Do(options.ActionFilter)
 }
 
