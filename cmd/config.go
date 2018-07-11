@@ -28,7 +28,7 @@ func (c *Config) Load(name string) (string, error) {
 	}
 	cfg, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
-	    return cfgPath, err
+		return cfgPath, err
 	}
 	err = yaml.Unmarshal(cfg, &c)
 	return cfgPath, err
@@ -47,10 +47,10 @@ func (c *Config) Do(filter []string) error {
 // FindConfig ...
 func FindConfig(s string) (string, error) {
 	if s == "" {
-	    return "", nil
+		return "", nil
 	}
 
-	paths := []string {
+	paths := []string{
 		s, // Current working directory
 		filepath.Join(os.Getenv("HOME"), s),
 		filepath.Join(getConfigDir(), s),

@@ -16,17 +16,17 @@ var actions = []string{"Copy", "Link", "Template"}
 
 // Role ...
 type Role struct {
-	Name string // Name of the role
-	Path string // Local directory
-	URL string // Repository URL
-	OS []string // TODO
-	Env Env
-	Copy Paths
-	Link Paths
+	Name     string   // Name of the role
+	Path     string   // Local directory
+	URL      string   // Repository URL
+	OS       []string // TODO
+	Env      Env
+	Copy     Paths
+	Link     Paths
 	Template Paths
 
 	// v0.0.2
-	Pkg []interface{}
+	Pkg  []interface{}
 	Line map[string]string
 }
 
@@ -140,9 +140,9 @@ func NewRole(name string) *Role {
 		// name = "default"
 		// return nil
 		break
-	// case "all":
-	// 	name = "*"
-	// 	break
+		// case "all":
+		// 	name = "*"
+		// 	break
 	}
 	url := ""
 	if strings.Contains(name, ":") {
@@ -328,7 +328,7 @@ func (r *Role) LoadConfig(name string) (string, error) {
 	}
 	cfg, err := readConfig(cfgPath)
 	if err != nil {
-	    return cfgPath, err
+		return cfgPath, err
 	}
 	rc := &RoleConfig{}
 	// fmt.Printf("+++\n%v\n+++\n", string(cfg))

@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	// "os"
-
 	// "github.com/jessevdk/go-flags"
 )
 
@@ -26,6 +25,7 @@ type InstallCmd struct {
 }
 
 var installCmd InstallCmd
+
 // Install ... var Install *flags.Command
 
 // var installCommands = []*flags.Command{

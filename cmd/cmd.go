@@ -43,7 +43,7 @@ type BaseRoleCmd struct {
 
 // RoleArg ...
 type RoleArg struct {
-	Name string // `default:"default"` // `required:"true"`
+	Name  string // `default:"default"` // `required:"true"`
 	Paths []flags.Filename
 }
 
@@ -90,9 +90,9 @@ func Parse() ([]string, error) {
 				err = Options.Install.Execute(remaining)
 				remaining = []string{}
 				// os.Exit(1)
-			// default:
-			// 	fmt.Println("Error parsing args:", err)
-			// 	os.Exit(1)
+				// default:
+				// 	fmt.Println("Error parsing args:", err)
+				// 	os.Exit(1)
 			}
 		}
 	}

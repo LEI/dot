@@ -56,7 +56,7 @@ func init() {
 		case *DotCmd:
 		case *InstallCmd:
 		case *RemoveCmd:
-			break;
+			break
 		case *CopyCmd:
 			Options.ActionFilter = append(Options.ActionFilter, "Copy")
 			break
@@ -84,9 +84,9 @@ type DotCmd struct {
 	Version bool `short:"V" long:"version" description:"Print the version and exit"`
 
 	// env:"DOT_CONFIG" default:".dot"
-	Config func(s string) error `short:"c" long:"config" description:"Global config file name"`
-	IniConfig func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
-	ConfigName string `short:"C" long:"config-name" description:"Config file name for roles"`
+	Config     func(s string) error `short:"c" long:"config" description:"Global config file name"`
+	IniConfig  func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
+	ConfigName string               `short:"C" long:"config-name" description:"Config file name for roles"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
 
@@ -108,7 +108,7 @@ type DotCmd struct {
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
 
 	ActionFilter []string `short:"a" long:"action" description:"Filter commands by name"`
-	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
+	RoleFilter   []string `short:"r" long:"role" description:"Filter roles by name"`
 }
 
 // CommandHandler ...

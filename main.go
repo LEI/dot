@@ -21,7 +21,7 @@ var (
 	// Shell ...
 	Shell = "bash"
 
-	config *cmd.Config = &cmd.Config{} // {Name: ".dot"}
+	config         *cmd.Config = &cmd.Config{} // {Name: ".dot"}
 	configFileUsed string
 
 	verbosity = 0
@@ -145,7 +145,7 @@ func execute(options *cmd.DotCmd) error {
 	length := len(config.Roles)
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
-		go func (r *cmd.Role) {
+		go func(r *cmd.Role) {
 			if err := r.Init(); err != nil {
 				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
 				return
@@ -163,7 +163,7 @@ func execute(options *cmd.DotCmd) error {
 	}
 
 	for i := 0; i < length; i++ {
-		if err := <- errs; err != nil {
+		if err := <-errs; err != nil {
 			fmt.Printf("Role initialization failed: %d/%d\n", i+1, length)
 			return err
 		}

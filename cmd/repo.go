@@ -13,7 +13,7 @@ import (
 
 // Repo ...
 type Repo struct {
-	Path, URL string
+	Path, URL      string
 	remote, branch string
 }
 
