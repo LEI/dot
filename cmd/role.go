@@ -41,21 +41,26 @@ type Role struct {
 	URL      string   // Repository URL
 	OS       []string // Allowed OSes
 	Env      Env
-	Copy     Paths // Copy
-	Link     Paths // Link
-	Template Paths // Template
+	Copy     Paths
+	Line     Lines
+	Link     Paths
+	Template Paths
 
-	// v0.0.2
-	Pkg         []interface{}
-	Line        map[string]string
+	// Hooks
 	Install     []string
 	PostInstall []string `yaml:"post_install"`
 	Remove      []string
 	PostRemove  []string `yaml:"post_remove"`
 
-	// TODO
-	Dependencies []string
+	// TODO Dependencies []string
+	Pkg Pack
 }
+
+// Env ...
+type Env map[string]string
+
+// Lines ...
+type Lines map[string]string
 
 // // Copy ...
 // type Copy struct {
@@ -73,20 +78,6 @@ type Role struct {
 // type Template struct {
 // 	*Paths
 // 	Format string
-// }
-
-// Env ...
-type Env map[string]string
-
-// // UnmarshalFlag ...
-// func (p *Paths) UnmarshalFlag(value string) error {
-// 	fmt.Println("UnmarshalFlag", value)
-// 	return nil
-// }
-
-// // MarshalFlag ...
-// func (p Paths) MarshalFlag() (string, error) {
-// 	return fmt.Sprintf("MarshalFlag: %+v", p), nil
 // }
 
 // ErrEmptyRole ...
@@ -400,28 +391,26 @@ func (r *Role) Do(a string, filter []string) error {
 	if len(filter) == 0 {
 		filter = defaultTasks
 	}
-	// if r.Env != nil {
-	// 	fmt.Printf("# environment: %+v\n", r.Env)
-	// }
-	// if r.Pkg != nil {
-	// 	fmt.Printf("# packages: %+v\n", r.Pkg)
-	// }
-	// if r.Line != nil {
-	// 	fmt.Printf("# lines: %+v\n", r.Line)
-	// }
 	a = strings.Title(a)
 	v := r.GetField(a)
 	if !v.IsValid() {
 		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
 	}
 	before := v.Interface().([]string)
-	after := r.GetField("Post" + a).Interface().([]string)
 	if len(before) > 0 {
 		for _, c := range before {
-			fmt.Printf("%s\n", c)
+			fmt.Printf("Exec `%s`\n", c)
 		}
 	}
-	// TODO: role task format (cp, ln, tpl...
+	if r.Env != nil {
+		for k, v := range r.Env {
+			k = strings.ToTitle(k)
+			fmt.Printf("%s=%s\n", k, v)
+		}
+	}
+	// if r.Pkg != nil {
+	// 	fmt.Printf("# packages: %+v\n", r.Pkg)
+	// }
 	for _, key := range filter {
 		key = strings.Title(key)
 		val := r.GetField(key).Interface().(Paths)
@@ -430,14 +419,19 @@ func (r *Role) Do(a string, filter []string) error {
 		// 	continue
 		// }
 		for s, t := range val {
+			// TODO: role task format (cp, ln, tpl...)
 			s = strings.TrimPrefix(s, r.Path+"/")
 			t = strings.TrimPrefix(t, target+"/")
-			fmt.Printf("%s %s %s\n", key, s, t)
+			fmt.Printf("%s '%s' '%s'\n", key, s, t)
 		}
 	}
+	if r.Line != nil {
+		fmt.Printf("# lines: %+v\n", r.Line)
+	}
+	after := r.GetField("Post" + a).Interface().([]string)
 	if len(after) > 0 {
 		for _, c := range after {
-			fmt.Printf("%s\n", c)
+			fmt.Printf("Exec `%s`\n", c)
 		}
 	}
 	return nil
