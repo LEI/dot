@@ -8,23 +8,10 @@ import (
 
 // InstallCmd ...
 type InstallCmd struct {
-	BaseCmd
-
-	// Link LinkCmd `command:"link" alias:"l" description:"Symlink file"`
-	// Link map[string]string `short:"l" long:"links" description:"Map source files to target symlinks"`
-	// Link map[string]string `positional-args:"yes" required:"yes" positional-arg-name:"links" description:"Map source files to target symlinks"`
-
-	Copy     CopyCmd     `command:"copy" alias:"cp" description:""`
-	Link     LinkCmd     `command:"link" alias:"ln" description:""`
-	Template TemplateCmd `command:"template" alias:"tpl" description:""`
-
-	// Role struct {
-	// 	Name, URL string
-	// } `required:"1" positional-args:"true"`
-	// Roles map[string]string `short:"r" long:"roles" description:""`
+	BaseTaskCmd
 }
 
-var installCmd InstallCmd
+// var installCmd InstallCmd
 
 // Install ... var Install *flags.Command
 

@@ -9,9 +9,6 @@ type LinkCmd struct {
 	BaseRoleCmd
 }
 
-// Link ...
-var Link LinkCmd
-
 // Execute ...
 func (cmd *LinkCmd) Execute(args []string) error {
 	fmt.Println("execute link command",
@@ -27,6 +24,10 @@ func (cmd *LinkCmd) Execute(args []string) error {
 		return err
 	}
 	for _, p := range cmd.Role.Paths {
+		// err := role.RegisterTask("Link", string(p))
+		// if err != nil {
+		// 	return err
+		// }
 		err := role.RegisterLink(string(p))
 		if err != nil {
 			return err

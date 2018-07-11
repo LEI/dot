@@ -9,9 +9,6 @@ type TemplateCmd struct {
 	BaseRoleCmd
 }
 
-// Template ...
-var Template TemplateCmd
-
 // Execute ...
 func (cmd *TemplateCmd) Execute(args []string) error {
 	fmt.Println("execute template command",

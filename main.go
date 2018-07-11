@@ -45,12 +45,13 @@ func main() {
 	// Parse arguments
 	remaining, err := cmd.Parse()
 	if err != nil {
-		fmt.Println("Command error:", err)
-		cmd.Help(1)
+		fmt.Fprintf(os.Stderr, "Fatal error: %s\n", err)
+		os.Exit(1)
 	}
 	if len(remaining) > 0 {
-		fmt.Println("Remaining arguments:", remaining)
-		cmd.Help(1)
+		// Hint -h, --help?
+		fmt.Fprintf(os.Stderr, "Remaining arguments: %+v\n", remaining)
+		os.Exit(1)
 	}
 
 	// FIXME: &config not working?

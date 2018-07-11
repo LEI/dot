@@ -39,6 +39,7 @@ func (p *Paths) Add(s string) error {
 // UnmarshalYAML ...
 func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// Avoid assignment to entry in nil map
+	// FIXME: invalid memory address or nil pointer dereference
 	if *p == nil {
 		*p = make(Paths)
 	}

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
 	"os"
 	// "reflect"
 	// "strings"
@@ -20,6 +20,15 @@ type BaseCmd struct {
 	flags.Commander
 
 	// Role map[string]string `short:"r" long:"role" description:""`
+}
+
+// BaseTaskCmd ...
+type BaseTaskCmd struct {
+	BaseCmd
+
+	Copy     CopyCmd     `command:"copy" alias:"cp" description:"Copy"`
+	Link     LinkCmd     `command:"link" alias:"ln" description:"Symlink"`
+	Template TemplateCmd `command:"template" alias:"tpl" description:"Template"`
 }
 
 // BaseRoleCmd ...
@@ -47,6 +56,13 @@ type RoleArg struct {
 	Paths []flags.Filename
 }
 
+var parser = flags.NewParser(&Options, flags.HelpFlag | flags.PassDoubleDash)
+
+// GetParser ...
+func GetParser() *flags.Parser {
+	return parser
+}
+
 // Parse ...
 func Parse() ([]string, error) {
 	// TODO: control (mute) output?
@@ -55,35 +71,22 @@ func Parse() ([]string, error) {
 		if flagsErr, ok := err.(*flags.Error); ok {
 			switch flagsErr.Type {
 			case flags.ErrHelp:
+				parser.WriteHelp(os.Stdout)
+				os.Exit(0)
+				// break
+			// case flags.ErrCommandRequired:
+			// 	// FIXME: DotCmd.Execute() never called
+			// 	// when first-level sub commands are optional
+			// 	err = Options.Install.Execute(remaining)
+			// 	remaining = []string{}
+			// 	break
+			default:
+				fmt.Fprintf(os.Stderr, "Error parsing args: %s\n", err)
+				parser.WriteHelp(os.Stdout)
 				os.Exit(1)
-			case flags.ErrCommandRequired:
-				// FIXME: DotCmd.Execute() never called
-				// when first-level sub commands are optional
-				err = Options.Install.Execute(remaining)
-				remaining = []string{}
-				// os.Exit(1)
-				// default:
-				// 	fmt.Println("Error parsing args:", err)
-				// 	os.Exit(1)
 			}
 		}
 	}
 	// WriteIniConfig(parser)
 	return remaining, err
-}
-
-// WriteHelp ...
-// func WriteHelp(o io.Writer) {
-// 	parser.WriteHelp(o)
-// }
-
-// Help ...
-func Help(rc int) {
-	parser.WriteHelp(os.Stdout)
-	os.Exit(rc)
-}
-
-// GetParser ...
-func GetParser() *flags.Parser {
-	return parser
 }

@@ -20,7 +20,9 @@ var defaultTasks = []string{
 }
 
 var ignore = []string{
+	"*.json",
 	"*.md",
+	"*.yml",
 	".git",
 }
 
@@ -39,9 +41,9 @@ type Role struct {
 	URL      string   // Repository URL
 	OS       []string // Allowed OSes
 	Env      Env
-	Copy     Paths
-	Link     Paths
-	Template Paths
+	Copy     Paths // Copy
+	Link     Paths // Link
+	Template Paths // Template
 
 	// v0.0.2
 	Pkg         []interface{}
@@ -54,6 +56,24 @@ type Role struct {
 	// TODO
 	Dependencies []string
 }
+
+// // Copy ...
+// type Copy struct {
+// 	*Paths
+// 	Format string
+// }
+
+// // Link ...
+// type Link struct {
+// 	*Paths
+// 	Format string
+// }
+
+// // Template ...
+// type Template struct {
+// 	*Paths
+// 	Format string
+// }
 
 // Env ...
 type Env map[string]string
@@ -145,6 +165,42 @@ func SplitPath(s string) (src, dst string) {
 	}
 	return src, dst
 }
+
+/*
+// RegisterTask ...
+func (r *Role) RegisterTask(name, s string) error {
+	v := r.GetField(name)
+	i := v.Interface()
+	switch t := i.(type) {
+	case Copy:
+		i = i.(Copy)
+		break
+	case Link:
+		i = i.(Link)
+		break
+	case Template:
+		i = i.(Template)
+		break
+	default:
+		return fmt.Errorf("??? %s", t)
+	}
+	if i == nil {
+		i = map[string]string{}
+	}
+
+	if v.IsValid() {
+		v.SetInterface(i)
+	}
+	fmt.Println(v)
+	// paths := f.Interface().(map[string]string)
+	// if paths == nil {
+	// 	paths = map[string]string{}
+	// }
+	// src, dst := SplitPath(s)
+	// paths[src] = dst
+	return nil
+}
+*/
 
 // RegisterCopy ...
 func (r *Role) RegisterCopy(s string) error {
@@ -253,7 +309,7 @@ func (r *Role) LoadConfig(name string) (string, error) {
 	}
 	cfgPath := filepath.Join(r.Path, name)
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
-		fmt.Println("No role config file found:", cfgPath)
+		fmt.Printf("No role config file found: %s\n", cfgPath)
 		return "", nil
 	}
 	cfg, err := readConfig(cfgPath)
@@ -292,6 +348,7 @@ func (r *Role) Prepare() error {
 
 // PreparePaths ...
 func (r *Role) PreparePaths(p *Paths) error {
+	// in interface{} p := in.(*Paths)
 	target := os.ExpandEnv(string(Options.Target))
 	var paths Paths = make(map[string]string, len(*p))
 	for src, dst := range *p {
@@ -341,7 +398,8 @@ func (r *Role) GetField(key string) reflect.Value {
 
 // Do ...
 func (r *Role) Do(a string, filter []string) error {
-	fmt.Printf("# Role: %+v\n", r.Path)
+	target := os.ExpandEnv(string(Options.Target))
+	fmt.Printf("# Role: %+v\n", r.Name)
 	if len(filter) == 0 {
 		filter = defaultTasks
 	}
@@ -359,9 +417,10 @@ func (r *Role) Do(a string, filter []string) error {
 	after := r.GetField("Post" + a).Interface().([]string)
 	if len(before) > 0 {
 		for _, c := range before {
-			fmt.Printf("$ %s\n", c)
+			fmt.Printf("%s\n", c)
 		}
 	}
+	// TODO: role task format (cp, ln, tpl...
 	for _, key := range filter {
 		key = strings.Title(key)
 		val := r.GetField(key).Interface().(Paths)
@@ -370,14 +429,14 @@ func (r *Role) Do(a string, filter []string) error {
 		// 	continue
 		// }
 		for s, t := range val {
-			// s = filepath.Join(r.Path, s)
-			// cp, ln -s, tpl
-			fmt.Printf("%s '%s' '%s'\n", key, s, t)
+			s = strings.TrimPrefix(s, r.Path + "/")
+			t = strings.TrimPrefix(s, target + "/")
+			fmt.Printf("Do %s %s %s\n", key, s, t)
 		}
 	}
 	if len(after) > 0 {
 		for _, c := range after {
-			fmt.Printf("$ %s\n", c)
+			fmt.Printf("%s\n", c)
 		}
 	}
 	return nil

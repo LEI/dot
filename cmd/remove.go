@@ -7,14 +7,10 @@ import (
 
 // RemoveCmd ...
 type RemoveCmd struct {
-	BaseCmd
-
-	Copy     CopyCmd     `command:"copy" alias:"cp" description:""`
-	Link     LinkCmd     `command:"link" alias:"ln" description:""`
-	Template TemplateCmd `command:"template" alias:"tpl" description:""`
+	BaseTaskCmd
 }
 
-var removeCmd RemoveCmd
+// var removeCmd RemoveCmd
 
 // Execute ...
 func (cmd *RemoveCmd) Execute(args []string) error {

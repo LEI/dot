@@ -9,9 +9,6 @@ type CopyCmd struct {
 	BaseRoleCmd
 }
 
-// Copy ...
-var Copy CopyCmd
-
 // Execute ...
 func (cmd *CopyCmd) Execute(args []string) error {
 	fmt.Println("execute copy command",

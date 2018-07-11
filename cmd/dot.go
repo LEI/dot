@@ -35,8 +35,6 @@ var (
 	Verbose bool
 )
 
-var parser = flags.NewParser(&Options, flags.Default)
-
 var executedCommand flags.Commander
 
 func init() {
@@ -85,16 +83,15 @@ func init() {
 type DotCmd struct {
 	BaseCmd
 
-	// Slice of bool will append 'true' each time the option
-	// is encountered (can be set multiple times, like -vvv)
-	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
-
-	Version bool `short:"V" long:"version" description:"Print the version and exit"`
+	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
+	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
 
 	// env:"DOT_CONFIG" default:".dot"
 	Config    func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
-	IniConfig func(s string) error `short:"i" long:"ini-config" description:"INI config file" no-ini:"true"`
-	RoleDir   string               `long:"role-dir" description:"" default:".dot"`
+	IniConfig func(s string) error `short:"i" long:"ini" description:"INI config file" no-ini:"true"`
+
+	RoleDir   string               `short:"d" long:"role-dir" description:"Role directory name" default:".dot"`
+	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
 
@@ -104,18 +101,14 @@ type DotCmd struct {
 	// Do not error out if unable to git clone or pull
 	NoSync bool `short:"S" long:"no-sync" description:"Skip network operations"`
 
+	// Slice of bool will append 'true' each time the option
+	// is encountered (can be set multiple times, like -vvv)
+	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
+
+	Version bool `short:"V" long:"version" description:"Print the version and exit"`
+
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
-
-	// Role string `short:"r" long:"role" description:""`
-	// URL string `short:"u" long:"url" description:""`
-	// Roles []dot.Role `short:"r" long:"roles" description:""`
-	// Roles map[string]string `short:"r" long:"roles" description:""`
-
-	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
-	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
-
-	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
 }
 
 // CommandHandler ...
