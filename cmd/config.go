@@ -34,16 +34,6 @@ func (c *Config) Load(name string) (string, error) {
 	return cfgPath, err
 }
 
-// Do ...
-func (c *Config) Do(filter []string) error {
-	for _, r := range c.Roles {
-		if err := r.Do(filter); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // FindConfig ...
 func FindConfig(s string) (string, error) {
 	if s == "" {

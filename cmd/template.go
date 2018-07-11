@@ -22,7 +22,7 @@ func (cmd *TemplateCmd) Execute(args []string) error {
 		return nil
 	}
 	// fmt.Println("role:", cmd.Role)
-	role := cmd.Role.New() // Init dot.Role
+	role := NewRole(cmd.Role.Name)
 	if err := role.Register(GlobalConfig); err != nil {
 		return err
 	}

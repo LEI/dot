@@ -20,6 +20,11 @@ var (
 	// Options ...
 	Options DotCmd
 
+	// Action (install/remove)
+	Action string
+	// Only (copy, link, template)
+	Only []string
+
 	// Source ....
 	Source string
 
@@ -52,19 +57,22 @@ func init() {
 		// executedCommand = cmd
 		// return Options.CommandHandler(cmd, args)
 		// fmt.Printf("----------> %+v\n", cmd)
+		Action = "install"
 		switch cmd.(type) {
 		case *DotCmd:
 		case *InstallCmd:
+			break
 		case *RemoveCmd:
+			Action = "remove"
 			break
 		case *CopyCmd:
-			Options.ActionFilter = append(Options.ActionFilter, "Copy")
+			Only = append(Only, "copy")
 			break
 		case *LinkCmd:
-			Options.ActionFilter = append(Options.ActionFilter, "Link")
+			Only = append(Only, "link")
 			break
 		case *TemplateCmd:
-			Options.ActionFilter = append(Options.ActionFilter, "Template")
+			Only = append(Only, "template")
 			break
 		default:
 			return fmt.Errorf("exec cmd (%+v) %+v", reflect.TypeOf(cmd).Elem(), cmd)
@@ -107,7 +115,6 @@ type DotCmd struct {
 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link"`
 
-	ActionFilter []string `short:"a" long:"action" description:"Filter commands by name"`
 	RoleFilter   []string `short:"r" long:"role" description:"Filter roles by name"`
 }
 

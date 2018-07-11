@@ -47,34 +47,6 @@ type RoleArg struct {
 	Paths []flags.Filename
 }
 
-// New dot.Role
-func (a *RoleArg) New() *Role {
-	return NewRole(a.Name)
-}
-
-/*
-var commands = []string{
-	"Copy",
-	"Link",
-	"Template",
-}
-
-func executeCommands(cmd interface{}, args []string) error {
-	fmt.Println(commands)
-	for _, c := range commands {
-		r := reflect.ValueOf(cmd)
-		f := reflect.Indirect(r).FieldByName(c)
-		fmt.Println(f)
-		// fmt.Println(f.Interface().(Executable))
-		// f.Execute([]string{})
-		// if err := cmd[a].Execute([]string{}); err != nil {
-		// 	return err
-		// }
-	}
-	return nil
-}
-*/
-
 // Parse ...
 func Parse() ([]string, error) {
 	// TODO: control (mute) output?

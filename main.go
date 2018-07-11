@@ -172,7 +172,12 @@ func execute(options *cmd.DotCmd) error {
 		fmt.Fprintln(os.Stderr, "No roles to execute")
 		return nil
 	}
-	return config.Do(options.ActionFilter)
+	for _, r := range config.Roles {
+		if err := r.Do(cmd.Action, cmd.Only); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func removeRole(roles []*cmd.Role, rm *cmd.Role) (ret []*cmd.Role) {

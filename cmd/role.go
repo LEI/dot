@@ -12,7 +12,12 @@ import (
 	"github.com/imdario/mergo"
 )
 
-var actions = []string{"Copy", "Link", "Template"}
+// r.<Task>, r.Register<Task>
+var fileTasks = []string{
+	"copy",
+	"link",
+	"template",
+}
 
 // Role ...
 type Role struct {
@@ -26,8 +31,15 @@ type Role struct {
 	Template Paths
 
 	// v0.0.2
-	Pkg  []interface{}
-	Line map[string]string
+	Pkg         []interface{}
+	Line        map[string]string
+	Install     []string
+	PostInstall []string `yaml:"post_install"`
+	Remove      []string
+	PostRemove  []string `yaml:"post_remove"`
+
+	// TODO
+	Dependencies []string
 }
 
 // Env ...
@@ -133,17 +145,13 @@ var ErrEmptyRole = fmt.Errorf("Attempt to register an empty role")
 
 // NewRole ...
 func NewRole(name string) *Role {
-	switch name {
-	case "":
-		fmt.Println("No role name!")
-		// os.Exit(1)
-		// name = "default"
-		// return nil
-		break
-		// case "all":
-		// 	name = "*"
-		// 	break
+	if name == "" {
+		fmt.Println("No role name!!!")
+		os.Exit(1)
 	}
+	// TODO switch name
+	// "" -> default
+	// "all" -> *
 	url := ""
 	if strings.Contains(name, ":") {
 		parts := strings.Split(name, ":")
@@ -158,8 +166,7 @@ func NewRole(name string) *Role {
 	// if strings.Contains(name, "*") {
 	// 	// find glob
 	// }
-	r := &Role{Name: name, URL: url}
-	return r
+	return &Role{Name: name, URL: url}
 }
 
 // Register ...
@@ -252,7 +259,7 @@ func (r *Role) Init() error {
 	if err := r.Sync(); err != nil {
 		return err
 	}
-	for _, c := range actions {
+	for _, c := range fileTasks {
 		if err := r.InitPaths(c); err != nil {
 			return err
 		}
@@ -354,8 +361,8 @@ func (r *Role) GetField(key string) reflect.Value {
 
 // InitPaths ...
 func (r *Role) InitPaths(key string) error {
-	f := r.GetField(key)
-	val := f.Interface().(Paths)
+	key = strings.Title(key)
+	val := r.GetField(key).Interface().(Paths)
 	// fmt.Printf("%s: %+v\n", key, val)
 	var paths Paths = make(map[string]string, len(val))
 	for s, t := range val {
@@ -368,14 +375,30 @@ func (r *Role) InitPaths(key string) error {
 }
 
 // Do ...
-func (r *Role) Do(filter []string) error {
+func (r *Role) Do(a string, filter []string) error {
 	if len(filter) == 0 {
-		filter = actions
+		filter = fileTasks
 	}
-	fmt.Printf("# Role: %+v\n", r.Name)
+	// if r.Env != nil {
+	// 	fmt.Printf("# environment: %+v\n", r.Env)
+	// }
+	// if r.Pkg != nil {
+	// 	fmt.Printf("# packages: %+v\n", r.Pkg)
+	// }
+	// if r.Line != nil {
+	// 	fmt.Printf("# lines: %+v\n", r.Line)
+	// }
+	a = strings.Title(a)
+	before := r.GetField(a).Interface().([]string)
+	after := r.GetField("Post" + a).Interface().([]string)
+	if len(before) > 0 {
+		for _, c := range before {
+			fmt.Printf("$ %s\n", c)
+		}
+	}
 	for _, key := range filter {
-		f := r.GetField(key)
-		val := f.Interface().(Paths)
+		key = strings.Title(key)
+		val := r.GetField(key).Interface().(Paths)
 		// if len(val) == 0 {
 		// 	fmt.Printf("# No %s task for role %s\n", key, r.Name)
 		// 	continue
@@ -384,6 +407,11 @@ func (r *Role) Do(filter []string) error {
 			s = filepath.Join(r.Path, s)
 			// cp, ln -s, tpl
 			fmt.Printf("%s '%s' '%s'\n", key, s, t)
+		}
+	}
+	if len(after) > 0 {
+		for _, c := range after {
+			fmt.Printf("$ %s\n", c)
 		}
 	}
 	return nil
