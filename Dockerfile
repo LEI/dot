@@ -26,9 +26,9 @@ RUN printf "%s\n" \
 
 ENTRYPOINT ["/bin/bash"]
 
-RUN go get github.com/sirupsen/logrus \
-    github.com/spf13/cobra \
-    github.com/spf13/viper
+RUN go get gopkg.in/yaml.v2 \
+    github.com/imdario/mergo \
+    github.com/jessevdk/go-flags
 
 ADD . $DOT
 
