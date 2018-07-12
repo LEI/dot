@@ -26,6 +26,10 @@ type Release struct {
 	// HomeURL string `ini-name:"HOME_URL"`
 	// SupportURL string `ini-name:"SUPPORT_URL"`
 	// BugReportURL string `ini-name:"BUG_REPORT_URL"`
+	DistribID string `ini-name:"DISTRIB_ID"`
+	DistribRelease string `ini-name:"DISTRIB_RELEASE"`
+	DistribCodename string `ini-name:"DISTRIB_CODENAME"`
+	DistribDescription string `ini-name:"DISTRIB_DESCRIPTION"`
 }
 
 var (
@@ -137,13 +141,16 @@ func HasOne(in []string, list []string) bool {
 func GetOSTypes() []string {
 	types := []string{OS}
 	r := parseReleases()
-	if isNum(r.ID) {
-		if r.Name != "" {
-			types = append(types, r.Name)
-			if r.ID != "" {
-				types = append(types, r.Name+r.ID)
-			}
-		}
+	// if isNum(r.ID) {
+	// 	if r.Name != "" {
+	// 		types = append(types, r.Name)
+	// 		if r.ID != "" {
+	// 			types = append(types, r.Name+r.ID)
+	// 		}
+	// 	}
+	// }
+	if r.ID != "" && !isNum(r.ID) {
+		types = append(types, r.Name)
 	} else if r.ID != "" {
 		types = append(types, r.ID)
 	} else if r.Name != "" {
@@ -151,6 +158,9 @@ func GetOSTypes() []string {
 	}
 	if r.IDLike != "" {
 		types = append(types, r.IDLike)
+	}
+	if r.DistribCodename != "" {
+		types = append(types, r.DistribCodename)
 	}
 	types = append(types, parseOSTypes()...)
 	return types
@@ -161,14 +171,30 @@ func isNum(v string) bool {
 	return err == nil
 }
 
-// Read release files as INI
-//
+// /etc/os-release
+
 // PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
 // NAME="Debian GNU/Linux"
 // VERSION_ID="9"
 // VERSION="9 (stretch)"
 // ID=debian
+
+// NAME="Ubuntu"
+// VERSION="14.04.5 LTS, Trusty Tahr"
+// ID=ubuntu
+// ID_LIKE=debian
+// PRETTY_NAME="Ubuntu 14.04.5 LTS"
+// VERSION_ID="14.04"
+
+// /etc/lsb-release
+
+// DISTRIB_ID=Ubuntu
+// DISTRIB_RELEASE=14.04
+// DISTRIB_CODENAME=trusty
+// DISTRIB_DESCRIPTION="Ubuntu 14.04.5 LTS"
 //
+
+// Read release files as INI
 func parseReleases() Release {
 	pattern := "/etc/*-release"
 	paths, err := filepath.Glob(pattern)
@@ -188,7 +214,7 @@ func parseReleases() Release {
 		// if Verbose {
 		// 	fmt.Printf("%s:\n%+v\n", p, release)
 		// }
-		execute("cat", p)
+		// execute("cat", p)
 	}
 	return release
 }
