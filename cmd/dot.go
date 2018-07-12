@@ -20,6 +20,7 @@ var (
 	// Action (install/remove)
 	Action string
 	// Only (copy, link, template)
+	// TODO? --filter=*
 	Only []string
 
 	// Verbose mode
@@ -59,6 +60,12 @@ func init() {
 			break
 		case *CopyCmd:
 			Only = append(Only, "copy")
+			break
+		// case *Exec:
+		// 	Only = append(Only, "exec")
+		// 	break
+		case *LineCmd:
+			Only = append(Only, "line")
 			break
 		case *LinkCmd:
 			Only = append(Only, "link")

@@ -27,6 +27,7 @@ type BaseTaskCmd struct {
 	BaseCmd
 
 	Copy     CopyCmd     `command:"copy" alias:"cp" description:"Copy"`
+	Line     LineCmd     `command:"line-in-file" alias:"line" description:"Line in file"`
 	Link     LinkCmd     `command:"link" alias:"ln" description:"Symlink"`
 	Template TemplateCmd `command:"template" alias:"tpl" description:"Template"`
 }

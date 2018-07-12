@@ -163,32 +163,30 @@ func SplitPath(s string) (src, dst string) {
 	return src, dst
 }
 
-/*
 // RegisterTask ...
 func (r *Role) RegisterTask(name, s string) error {
 	v := r.GetField(name)
 	i := v.Interface()
-	switch t := i.(type) {
-	case Copy:
-		i = i.(Copy)
-		break
-	case Link:
-		i = i.(Link)
-		break
-	case Template:
-		i = i.(Template)
-		break
-	default:
-		return fmt.Errorf("??? %s", t)
-	}
-	if i == nil {
-		i = map[string]string{}
-	}
-
-	if v.IsValid() {
-		v.SetInterface(i)
-	}
-	fmt.Println(v)
+	// switch t := i.(type) {
+	// case Copy:
+	// 	i = i.(Copy)
+	// 	break
+	// case Link:
+	// 	i = i.(Link)
+	// 	break
+	// case Template:
+	// 	i = i.(Template)
+	// 	break
+	// default:
+	// 	return fmt.Errorf("??? %s", t)
+	// }
+	// if i == nil {
+	// 	i = map[string]string{}
+	// }
+	// if v.IsValid() {
+	// 	v.SetInterface(i)
+	// }
+	fmt.Println(v, i)
 	// paths := f.Interface().(map[string]string)
 	// if paths == nil {
 	// 	paths = map[string]string{}
@@ -197,7 +195,6 @@ func (r *Role) RegisterTask(name, s string) error {
 	// paths[src] = dst
 	return nil
 }
-*/
 
 // RegisterCopy ...
 func (r *Role) RegisterCopy(s string) error {
@@ -333,6 +330,9 @@ func (r *Role) Prepare() error {
 	if err := r.PreparePaths(&r.Copy); err != nil {
 		return err
 	}
+	// if err := r.PrepareLines(&r.Line); err != nil {
+	// 	return err
+	// }
 	if err := r.PreparePaths(&r.Link); err != nil {
 		return err
 	}

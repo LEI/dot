@@ -44,7 +44,7 @@ func main() {
 	// Parse arguments
 	remaining, err := cmd.Parse()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Parse error: %s\n", err)
 		os.Exit(1)
 	}
 	if len(remaining) > 0 {
@@ -53,10 +53,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// FIXME: &config not working?
-	//  dot i -c .dot.yml -d
-
-	// TODO: before Execute()
 	if cmd.Options.Version {
 		fmt.Println("v0")
 		os.Exit(0)
@@ -70,58 +66,23 @@ func main() {
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", cmd.Options)
+	// fmt.Printf("Options role: %+v\n", cmd.GetParser().Find("install").FindOptionByLongName("roles"))
 
 	if configFileUsed != "" && verbosity > 0 {
-		fmt.Println("# Using configuration file:", configFileUsed)
+		fmt.Printf("# Using configuration file: %s\n", configFileUsed)
 	}
 
 	if err := execute(&cmd.Options); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-
-	// for k, v := range cmd.Options.Roles {
-	// 	fmt.Println(k, v)
-	// 	config.Roles = append(config.Roles, Role{
-	// 		Name: k,
-	// 		URL: v,
-	// 	})
-	// }
-	// fmt.Printf("=> %+v roles\n", len(config.Roles))
-	// fmt.Println("CLI role:", cmd.GetParser().Find("install").FindOptionByLongName("roles"))
 }
 
 func init() {
 	if err := os.Setenv("OS", OS); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-
-	// i, err := parser.AddCommand("install",
-	// 	"Install",
-	// 	"",
-	// 	&cmd.Install)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
-
-	// // cmd.Install = i
-
-	// r, err := parser.AddCommand("remove",
-	// 	"Remove",
-	// 	"",
-	// 	&cmd.Remove)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
-
-	// // cmd.Remove = r
-	// fmt.Println(i, r)
-	// fmt.Println(cmd.Install, cmd.Remove)
 }
 
 func execute(options *cmd.DotCmd) error {
@@ -225,7 +186,7 @@ func getOsTypes() []string {
 		// fmt.Printf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
 		out, err := exec.Command(Shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 		}
 		if len(out) > 0 {
 			OSTYPE = string(out)
