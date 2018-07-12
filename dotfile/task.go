@@ -1,6 +1,7 @@
 package dotfile
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -20,4 +21,19 @@ type Task interface {
 	// Register(interface{}) error
 	Install() error
 	Remove() error
+	Do(string) error
+}
+
+func do(t Task, a string) (err error) {
+	switch a {
+	case "Install":
+		err = t.Install()
+		break
+	case "Remove":
+		err = t.Remove()
+		break
+	default: // Unhandled action
+		return fmt.Errorf("Unknown task function: %s", a)
+	}
+	return
 }

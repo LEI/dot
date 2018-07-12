@@ -25,6 +25,11 @@ func (t *LinkTask) String() string {
 	return fmt.Sprintf("%s -> %s", t.Source, t.Target)
 }
 
+// Do ...
+func (t *LinkTask) Do(a string) error {
+	return do(t, a)
+}
+
 // Install link
 func (t *LinkTask) Install() error {
 	changed, err := Link(t.Source, t.Target)

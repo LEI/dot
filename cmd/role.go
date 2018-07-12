@@ -55,7 +55,7 @@ type Role struct {
 	PostRemove  []string `yaml:"post_remove"`
 
 	// TODO Dependencies []string
-	Pkg Pack
+	Pkg Packages
 }
 
 // Env ...
@@ -424,6 +424,7 @@ func (r *Role) Do(a string, filter []string) error {
 	before := v.Interface().([]string)
 	if len(before) > 0 {
 		for _, c := range before {
+			// TODO: exec
 			fmt.Printf("Exec `%s`\n", c)
 		}
 	}
@@ -431,18 +432,29 @@ func (r *Role) Do(a string, filter []string) error {
 		for k, v := range r.Env {
 			k = strings.ToTitle(k)
 			fmt.Printf("%s=%s\n", k, v)
+			// TODO: restore env
+			// if err := os.Setenv(k, v); err != nil {
+			// 	// fmt.Fprintf(os.Stderr, err)
+			// 	return err
+			// }
 		}
 	}
-	// if r.Pkg != nil {
-	// 	fmt.Printf("# packages: %+v\n", r.Pkg)
-	// }
+	if r.Pkg != nil {
+		for _, v := range r.Pkg {
+			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
+				continue
+			}
+			// TODO: pacapt
+			fmt.Printf("# Package %s\n", v.Name)
+		}
+	}
 	if r.Copy != nil {
 		for s, t := range r.Copy {
 			task := &dotfile.CopyTask{
 				Source: s,
 				Target: t,
 			}
-			if err := task.Install(); err != nil {
+			if err := task.Do(a); err != nil {
 				return err
 			}
 		}
@@ -453,7 +465,7 @@ func (r *Role) Do(a string, filter []string) error {
 				File: s,
 				Line: t,
 			}
-			if err := task.Install(); err != nil {
+			if err := task.Do(a); err != nil {
 				return err
 			}
 		}
@@ -464,7 +476,7 @@ func (r *Role) Do(a string, filter []string) error {
 				Source: s,
 				Target: t,
 			}
-			if err := task.Install(); err != nil {
+			if err := task.Do(a); err != nil {
 				return err
 			}
 		}
@@ -476,7 +488,7 @@ func (r *Role) Do(a string, filter []string) error {
 				Target: t,
 				Env: r.Env,
 			}
-			if err := task.Install(); err != nil {
+			if err := task.Do(a); err != nil {
 				return err
 			}
 		}
@@ -498,6 +510,7 @@ func (r *Role) Do(a string, filter []string) error {
 	after := r.GetField("Post" + a).Interface().([]string)
 	if len(after) > 0 {
 		for _, c := range after {
+			// TODO: exec
 			fmt.Printf("Exec `%s`\n", c)
 		}
 	}

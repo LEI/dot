@@ -14,6 +14,11 @@ type CopyTask struct {
 	Task
 }
 
+// Do ...
+func (t *CopyTask) Do(a string) error {
+	return do(t, a)
+}
+
 // Install copy
 func (t *CopyTask) Install() error {
 	changed, err := Copy(t)

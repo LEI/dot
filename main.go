@@ -1,23 +1,18 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
 	// "path/filepath"
-	"runtime"
 	"strings"
 
 	// "github.com/jessevdk/go-flags"
 
 	"github.com/LEI/dot/cmd"
+	"github.com/LEI/dot/dotfile"
 )
 
 var (
-	// OS ...
-	OS = runtime.GOOS
-
 	// Shell ...
 	Shell = "bash"
 
@@ -79,7 +74,7 @@ func main() {
 }
 
 func init() {
-	if err := os.Setenv("OS", OS); err != nil {
+	if err := dotfile.InitEnv(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
@@ -89,13 +84,13 @@ func execute(options *cmd.DotCmd) error {
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
 	for _, r := range config.Roles {
-		if len(options.RoleFilter) > 0 && !hasOne([]string{r.Name}, options.RoleFilter) {
+		if len(options.RoleFilter) > 0 && !dotfile.HasOne([]string{r.Name}, options.RoleFilter) {
 			// fmt.Fprintf(os.Stderr, "# [%s] Skipping (filtered)\n", r.Name)
 			config.Roles = removeRole(config.Roles, r)
 			continue
 		}
 		if r.OS != nil {
-			if !hasOne(r.OS, getOsTypes()) { // Skip role
+			if len(r.OS) > 0 && !dotfile.HasOSType(r.OS...) { // Skip role
 				fmt.Fprintf(os.Stderr, "# [%s] Skipping (OS: %s)\n", r.Name, strings.Join(r.OS, ", "))
 				config.Roles = removeRole(config.Roles, r)
 				continue
@@ -155,61 +150,4 @@ func removeRole(roles []*cmd.Role, rm *cmd.Role) (ret []*cmd.Role) {
 		ret = append(ret, r)
 	}
 	return ret
-}
-
-// List of OS name and family/type
-func getOsTypes() []string {
-	types := []string{OS}
-
-	// Add OS family
-	c := exec.Command(Shell, "-c", "cat /etc/*-release")
-	stdout, _ := c.StdoutPipe()
-	// stderr, _ := c.StderrPipe()
-	c.Start()
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		m := scanner.Text()
-		fmt.Println(m)
-		v := strings.TrimLeft(m, "ID=")
-		if m != v {
-			types = append(types, v)
-			break
-		}
-	}
-	c.Wait()
-
-	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	if ok && OSTYPE != "" {
-		types = append(types, OSTYPE)
-	} else { // !ok || OSTYPE == ""
-		// fmt.Printf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
-		out, err := exec.Command(Shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-		}
-		if len(out) > 0 {
-			OSTYPE = string(out)
-			o := strings.Split(OSTYPE, ".")
-			if len(o) > 0 {
-				types = append(types, o[0])
-			}
-			types = append(types, OSTYPE)
-		}
-	}
-	if OSTYPE == "" {
-		fmt.Println("OSTYPE is not set or empty")
-	}
-	return types
-}
-
-func hasOne(in []string, list []string) bool {
-	for _, a := range in {
-		for _, b := range list {
-			if b == a {
-				return true
-			}
-		}
-	}
-	return false
 }

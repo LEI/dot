@@ -17,6 +17,11 @@ type TemplateTask struct {
 	Task
 }
 
+// Do ...
+func (t *TemplateTask) Do(a string) error {
+	return do(t, a)
+}
+
 // Parse template file
 func (t *TemplateTask) Parse() (string, error) {
 	tmpl, err := template.ParseGlob(t.Source)

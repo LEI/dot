@@ -13,9 +13,14 @@ type LineTask struct {
 	Task
 }
 
+// Do ...
+func (t *LineTask) Do(a string) error {
+	return do(t, a)
+}
+
 // Install line
-func (l *LineTask) Install() error {
-	changed, err := LineInFile(l.File, l.Line)
+func (t *LineTask) Install() error {
+	changed, err := LineInFile(t.File, t.Line)
 	if err != nil {
 		return err
 	}
@@ -23,13 +28,13 @@ func (l *LineTask) Install() error {
 	if changed {
 		prefix = ""
 	}
-	fmt.Printf("%secho '%s' >> %s\n", prefix, l.Line, l.File)
+	fmt.Printf("%secho '%s' >> %s\n", prefix, t.Line, t.File)
 	return nil
 }
 
 // Remove line
-func (l *LineTask) Remove() error {
-	changed, err := LineOutFile(l.File, l.Line)
+func (t *LineTask) Remove() error {
+	changed, err := LineOutFile(t.File, t.Line)
 	if err != nil {
 		return err
 	}
@@ -37,7 +42,7 @@ func (l *LineTask) Remove() error {
 	if changed {
 		prefix = ""
 	}
-	fmt.Printf("%ssed -i '#^%s$#d' %s\n", prefix, l.Line, l.File)
+	fmt.Printf("%ssed -i '#^%s$#d' %s\n", prefix, t.Line, t.File)
 	return nil
 }
 
