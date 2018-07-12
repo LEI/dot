@@ -41,7 +41,7 @@ func InitEnv() error {
 }
 
 // GetEnv ...
-func GetEnv() (map[string]string) {
+func GetEnv() map[string]string {
 	env := make(map[string]string, 0)
 	for _, i := range os.Environ() {
 		sep := strings.Index(i, "=")
