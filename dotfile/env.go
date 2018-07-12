@@ -16,11 +16,11 @@ import (
 
 // Release ...
 type Release struct {
-	ID string `ini-name:"ID"` // debian
-	Name string `ini-name:"NAME"` // Debian GNU/Linux
+	ID         string `ini-name:"ID"`          // debian
+	Name       string `ini-name:"NAME"`        // Debian GNU/Linux
 	PrettyName string `ini-name:"PRETTY_NAME"` // Debian GNU/Linux 9 (stretch)
-	Version string `ini-name:"VERSION"` // 9 (stretch)
-	VersionID string `ini-name:"VERSION_ID"` // 9
+	Version    string `ini-name:"VERSION"`     // 9 (stretch)
+	VersionID  string `ini-name:"VERSION_ID"`  // 9
 	// HomeURL string `ini-name:"HOME_URL"`
 	// SupportURL string `ini-name:"SUPPORT_URL"`
 	// BugReportURL string `ini-name:"BUG_REPORT_URL"`
@@ -138,7 +138,7 @@ func GetOSTypes() []string {
 	if r.Name != "" {
 		types = append(types, r.Name)
 		if r.ID != "" {
-			types = append(types, r.Name + r.ID)
+			types = append(types, r.Name+r.ID)
 		}
 	}
 	types = append(types, parseOSTypes()...)

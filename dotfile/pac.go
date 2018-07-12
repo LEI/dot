@@ -21,7 +21,7 @@ const (
 
 var (
 	pacBin string
-	sudo bool
+	sudo   bool
 )
 
 func init() {

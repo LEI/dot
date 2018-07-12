@@ -114,7 +114,7 @@ type DotCmd struct {
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
 
 	Packages bool `short:"P" long:"packages" description:"Install or remove required packages"`
-	Sudo bool `short:"S" long:"sudo" description:"Use sudo to execute package manager"`
+	Sudo     bool `short:"S" long:"sudo" description:"Use sudo to execute package manager"`
 }
 
 // CommandHandler ...
