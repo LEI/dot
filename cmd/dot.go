@@ -91,7 +91,7 @@ type DotCmd struct {
 	Config    func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
 	IniConfig func(s string) error `short:"i" long:"ini" description:"INI config file" no-ini:"true"`
 
-	RoleDir    string   `short:"d" long:"role-dir" description:"Role directory name" default:".dot"`
+	RoleDir    string   `short:"R" long:"role-dir" description:"Role directory name" default:".dot"`
 	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
@@ -101,6 +101,8 @@ type DotCmd struct {
 
 	// Do not error out if unable to git clone or pull
 	NoSync bool `short:"n" long:"no-sync" description:"Skip network operations"`
+
+	DryRun bool `short:"d" long:"dry-run" description:"Do not execute tasks"`
 
 	// Slice of bool will append 'true' each time the option
 	// is encountered (can be set multiple times, like -vvv)

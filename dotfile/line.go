@@ -58,6 +58,10 @@ func LineInFile(file string, line string) (bool, error) {
 			return false, nil
 		}
 	}
+	if DryRun {
+		return true, nil
+	}
+	// Add line
 	lines = append(lines, line) // +"\n"
 	output := strings.Join(lines, "\n")
 	// fmt.Printf("OUT: [%+v] (%d)\n", output, len(lines))
@@ -89,6 +93,9 @@ func LineOutFile(file string, line string) (bool, error) {
 	}
 	if index < 0 {
 		return false, nil
+	}
+	if DryRun {
+		return true, nil
 	}
 	// Remove line
 	lines = append(lines[:index], lines[index+1:]...)

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"reflect"
 )
 
@@ -18,8 +18,9 @@ func (p *Paths) Add(s string) error {
 	// if p.Dst != "" {
 	// 	dst = filepath.Join(p.Dst, dst)
 	// }
-	src = os.ExpandEnv(src)
-	dst = os.ExpandEnv(dst)
+	// TODO r.Env
+	src = ExpandEnv(src)
+	dst = ExpandEnv(dst)
 	(*p)[src] = dst
 	return nil
 }

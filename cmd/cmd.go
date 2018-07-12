@@ -7,6 +7,8 @@ import (
 	// "strings"
 
 	"github.com/jessevdk/go-flags"
+
+	"github.com/LEI/dot/dotfile"
 )
 
 // Executable ...
@@ -58,7 +60,6 @@ func GetParser() *flags.Parser {
 
 // Parse ...
 func Parse() ([]string, error) {
-	// TODO: control (mute) output?
 	remaining, err := parser.Parse()
 	if err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok {
@@ -68,10 +69,9 @@ func Parse() ([]string, error) {
 				os.Exit(0)
 				// break
 			case flags.ErrCommandRequired:
-				err = nil
-				fmt.Println(err, remaining)
 				// err = Options.Install.Execute(remaining)
 				// remaining = []string{}
+				err = nil
 				break
 			default:
 				fmt.Fprintf(os.Stderr, "Error parsing args: %s\n", err)
@@ -80,8 +80,19 @@ func Parse() ([]string, error) {
 			}
 		}
 	}
-	// Update local package variables
-	target = os.ExpandEnv(string(Options.Target))
+	// Update variables
+	target = ExpandEnv(string(Options.Target))
+	dotfile.DryRun = Options.DryRun
 	// WriteIniConfig(parser)
 	return remaining, err
+}
+
+// ExpandEnv ...
+func ExpandEnv(s string, envs ...map[string]string) string {
+	// TODO
+	// for _, e := range envs {
+	// 	s = os.Expand(s, e)
+	// }
+	s = os.ExpandEnv(s)
+	return s
 }

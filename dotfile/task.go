@@ -8,8 +8,11 @@ var (
 	// DryRun ...
 	DryRun bool
 
-	// FileMode default
+	// FileMode ...
 	FileMode os.FileMode = 0644
+
+	// DirMode ...
+	DirMode os.FileMode = 0755
 )
 
 // Task interface

@@ -14,10 +14,6 @@ import (
 	"github.com/LEI/dot/dotfile"
 )
 
-func init() {
-	dotfile.DryRun = true
-}
-
 // r.<Task>, r.Register<Task>
 var defaultTasks = []string{
 	"copy",
@@ -48,7 +44,7 @@ type Role struct {
 	OS       []string // Allowed OSes
 	Env      Env
 	Copy     Paths
-	Line     Lines
+	Line     map[string]string
 	Link     Paths
 	Template Paths
 
@@ -64,9 +60,6 @@ type Role struct {
 
 // Env ...
 type Env map[string]string
-
-// Lines ...
-type Lines map[string]string
 
 // // Copy ...
 // type Copy struct {
@@ -147,18 +140,15 @@ func (r *Role) Merge(role *Role) error {
 // SplitPath ...
 func SplitPath(s string) (src, dst string) {
 	src = s
-	if strings.Contains(s, ":") {
-		parts := strings.Split(s, ":")
+	if strings.Contains(src, ":") {
+		parts := strings.Split(src, ":")
 		if len(parts) == 2 {
 			src = parts[0]
 			dst = parts[1]
 		} else {
-			fmt.Println("Unhandled path spec", s)
+			fmt.Println("Unhandled path spec", src)
 			os.Exit(1)
 		}
-	}
-	if dst == "" {
-		dst = src
 	}
 	return src, dst
 }
@@ -330,9 +320,9 @@ func (r *Role) Prepare() error {
 	if err := r.PreparePaths(&r.Copy); err != nil {
 		return err
 	}
-	// if err := r.PrepareLines(&r.Line); err != nil {
-	// 	return err
-	// }
+	if err := r.PrepareLines(&r.Line); err != nil {
+		return err
+	}
 	if err := r.PreparePaths(&r.Link); err != nil {
 		return err
 	}
@@ -347,6 +337,7 @@ func (r *Role) PreparePaths(p *Paths) error {
 	// in interface{} p := in.(*Paths)
 	var paths Paths = make(map[string]string, len(*p))
 	for src, dst := range *p {
+		//fmt.Println("PREPARE", src, dst)
 		// Prepend role directory to source path
 		src = filepath.Join(r.Path, src)
 		// Check frob globs
@@ -370,19 +361,47 @@ func (r *Role) PreparePaths(p *Paths) error {
 						continue GLOB
 					}
 				}
-				// TODO: Ignore .git, ...
-				_, f := filepath.Split(s)
-				t := filepath.Join(target, dst, f)
+				t, err := prepareTarget(s, dst)
+				if err != nil {
+					return err
+				}
 				paths[s] = t
 			}
 		} else {
-			//fmt.Println("+", src, dst)
-			_, f := filepath.Split(src)
-			t := filepath.Join(target, dst, f)
+			t, err := prepareTarget(src, dst)
+			if err != nil {
+				return err
+			}
 			paths[src] = t
 		}
 	}
 	*p = paths
+	return nil
+}
+
+func prepareTarget(src, dst string) (string, error) {
+	//fmt.Println("+", src, dst)
+	_, f := filepath.Split(src)
+	if f == "" {
+		return "", fmt.Errorf("Error (no source file name) while parsing: %s / %s", src, dst)
+	}
+	baseDir := filepath.Join(target, dst)
+	if _, err := dotfile.CreateDir(baseDir); err != nil {
+		return baseDir, err
+	}
+	t := filepath.Join(baseDir, f)
+	return t, nil
+}
+
+// PrepareLines ...
+func (r *Role) PrepareLines(l *map[string]string) error {
+	lines := make(map[string]string, len(*l))
+	for file, line := range *l {
+		// Prepend role directory to source path
+		file = filepath.Join(target, file)
+		lines[file] = line
+	}
+	*l = lines
 	return nil
 }
 
@@ -419,30 +438,47 @@ func (r *Role) Do(a string, filter []string) error {
 	// }
 	if r.Copy != nil {
 		for s, t := range r.Copy {
-			s = strings.TrimPrefix(s, r.Path+"/")
-			t = strings.TrimPrefix(t, target+"/")
-			fmt.Printf("cp '%s' '%s'\n", s, t)
+			task := &dotfile.CopyTask{
+				Source: s,
+				Target: t,
+			}
+			if err := task.Install(); err != nil {
+				return err
+			}
 		}
 	}
 	if r.Line != nil {
 		for s, t := range r.Line {
-			s = strings.TrimPrefix(s, r.Path+"/")
-			t = strings.TrimPrefix(t, target+"/")
-			fmt.Printf("echo '%s' >> '%s'\n", t, s)
+			task := &dotfile.LineTask{
+				File: s,
+				Line: t,
+			}
+			if err := task.Install(); err != nil {
+				return err
+			}
 		}
 	}
 	if r.Link != nil {
 		for s, t := range r.Link {
-			s = strings.TrimPrefix(s, r.Path+"/")
-			t = strings.TrimPrefix(t, target+"/")
-			fmt.Printf("ln '%s' '%s'\n", s, t)
+			task := &dotfile.LinkTask{
+				Source: s,
+				Target: t,
+			}
+			if err := task.Install(); err != nil {
+				return err
+			}
 		}
 	}
 	if r.Template != nil {
 		for s, t := range r.Template {
-			s = strings.TrimPrefix(s, r.Path+"/")
-			t = strings.TrimPrefix(t, target+"/")
-			fmt.Printf("gotpl '%s' '%s'\n", s, t)
+			task := &dotfile.TemplateTask{
+				Source: s,
+				Target: t,
+				Env: r.Env,
+			}
+			if err := task.Install(); err != nil {
+				return err
+			}
 		}
 	}
 	// for _, key := range filter {
@@ -459,9 +495,6 @@ func (r *Role) Do(a string, filter []string) error {
 	// 		fmt.Printf("%s '%s' '%s'\n", key, s, t)
 	// 	}
 	// }
-	if r.Line != nil {
-		fmt.Printf("# lines: %+v\n", r.Line)
-	}
 	after := r.GetField("Post" + a).Interface().([]string)
 	if len(after) > 0 {
 		for _, c := range after {
