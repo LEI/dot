@@ -32,6 +32,7 @@ func init() {
 		// Unices
 		pacBin = PACAPT
 		downloadFromURL(PACAPTURL, PACAPT, 0755)
+		// execute("sudo", "chmod", "+x", PACAPT)
 	}
 }
 

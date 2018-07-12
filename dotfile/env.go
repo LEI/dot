@@ -164,6 +164,8 @@ func parseReleases() Release {
 		// if Verbose {
 		fmt.Printf("%s:\n%+v\n", p, release)
 		// }
+		out := execute("cat", p)
+		fmt.Println(out)
 	}
 	return release
 }
