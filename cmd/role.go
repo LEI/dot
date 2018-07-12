@@ -92,6 +92,7 @@ func NewRole(name string) *Role {
 	// "" -> default
 	// "all" -> *
 	url := ""
+	// FIXME https://(url) can contain ":"
 	if strings.Contains(name, ":") {
 		parts := strings.Split(name, ":")
 		if len(parts) == 2 {
@@ -139,17 +140,30 @@ func (r *Role) Merge(role *Role) error {
 
 // SplitPath ...
 func SplitPath(s string) (src, dst string) {
-	src = s
-	if strings.Contains(src, ":") {
-		parts := strings.Split(src, ":")
-		if len(parts) == 2 {
-			src = parts[0]
-			dst = parts[1]
-		} else {
-			fmt.Println("Unhandled path spec", src)
-			os.Exit(1)
-		}
+	parts := filepath.SplitList(s)
+	switch len(parts) {
+	case 1:
+		src = s
+		break
+	case 2:
+		src = parts[0]
+		dst = parts[1]
+		break
+	default:
+		fmt.Println("Unhandled path spec", src)
+		os.Exit(1)
 	}
+	// src = s
+	// if strings.Contains(src, ":") {
+	// 	parts := strings.Split(src, ":")
+	// 	if len(parts) == 2 {
+	// 		src = parts[0]
+	// 		dst = parts[1]
+	// 	} else {
+	// 		fmt.Println("Unhandled path spec", src)
+	// 		os.Exit(1)
+	// 	}
+	// }
 	return src, dst
 }
 
@@ -424,15 +438,19 @@ func (r *Role) Do(a string, filter []string) error {
 	before := v.Interface().([]string)
 	if len(before) > 0 {
 		for _, c := range before {
-			// TODO: exec
-			fmt.Printf("Exec `%s`\n", c)
+			task := &dotfile.ExecTask{
+				Cmd: c,
+			}
+			if err := task.Do(a); err != nil {
+				return err
+			}
 		}
 	}
 	if r.Env != nil {
 		for k, v := range r.Env {
 			k = strings.ToTitle(k)
+			// TODO Set role environment
 			fmt.Printf("%s=%s\n", k, v)
-			// TODO: restore env
 			// if err := os.Setenv(k, v); err != nil {
 			// 	// fmt.Fprintf(os.Stderr, err)
 			// 	return err
@@ -444,8 +462,15 @@ func (r *Role) Do(a string, filter []string) error {
 			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
 				continue
 			}
-			// TODO: pacapt
-			fmt.Printf("# Package %s\n", v.Name)
+			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(a) {
+				continue
+			}
+			task := &dotfile.PkgTask{
+				Name: v.Name,
+			}
+			if err := task.Do(a); err != nil {
+				return err
+			}
 		}
 	}
 	if r.Copy != nil {
@@ -493,25 +518,18 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	// for _, key := range filter {
-	// 	key = strings.Title(key)
-	// 	val := r.GetField(key).Interface().(Paths)
-	// 	// if len(val) == 0 {
-	// 	// 	fmt.Printf("# No %s task for role %s\n", key, r.Name)
-	// 	// 	continue
-	// 	// }
-	// 	for s, t := range val {
-	// 		// TODO: role task format (cp, ln, tpl...)
-	// 		s = strings.TrimPrefix(s, r.Path+"/")
-	// 		t = strings.TrimPrefix(t, target+"/")
-	// 		fmt.Printf("%s '%s' '%s'\n", key, s, t)
-	// 	}
-	// }
+	if r.Env != nil {
+		// TODO: Restore original environment
+	}
 	after := r.GetField("Post" + a).Interface().([]string)
 	if len(after) > 0 {
 		for _, c := range after {
-			// TODO: exec
-			fmt.Printf("Exec `%s`\n", c)
+			task := &dotfile.ExecTask{
+				Cmd: c,
+			}
+			if err := task.Do(a); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
