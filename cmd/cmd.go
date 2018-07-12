@@ -81,18 +81,9 @@ func Parse() ([]string, error) {
 		}
 	}
 	// Update variables
-	target = ExpandEnv(string(Options.Target))
+	target = string(Options.Target)
+	target = dotfile.ExpandEnv(target)
 	dotfile.DryRun = Options.DryRun
 	// WriteIniConfig(parser)
 	return remaining, err
-}
-
-// ExpandEnv ...
-func ExpandEnv(s string, envs ...map[string]string) string {
-	// TODO
-	// for _, e := range envs {
-	// 	s = os.Expand(s, e)
-	// }
-	s = os.ExpandEnv(s)
-	return s
 }

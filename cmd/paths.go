@@ -4,6 +4,8 @@ import (
 	"fmt"
 	// "os"
 	"reflect"
+
+	"github.com/LEI/dot/dotfile"
 )
 
 // Paths ...
@@ -18,9 +20,8 @@ func (p *Paths) Add(s string) error {
 	// if p.Dst != "" {
 	// 	dst = filepath.Join(p.Dst, dst)
 	// }
-	// TODO r.Env
-	src = ExpandEnv(src)
-	dst = ExpandEnv(dst)
+	src = dotfile.ExpandEnv(src)
+	dst = dotfile.ExpandEnv(dst)
 	(*p)[src] = dst
 	return nil
 }

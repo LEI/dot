@@ -449,12 +449,11 @@ func (r *Role) Do(a string, filter []string) error {
 	if r.Env != nil {
 		for k, v := range r.Env {
 			k = strings.ToTitle(k)
-			// TODO Set role environment
-			fmt.Printf("%s=%s\n", k, v)
-			// if err := os.Setenv(k, v); err != nil {
-			// 	// fmt.Fprintf(os.Stderr, err)
-			// 	return err
-			// }
+			// Set role environment
+			if err := dotfile.SetEnv(k, v); err != nil {
+				// fmt.Fprintf(os.Stderr, err)
+				return err
+			}
 		}
 	}
 	if r.Pkg != nil {

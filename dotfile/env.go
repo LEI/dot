@@ -2,22 +2,35 @@ package dotfile
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+	"text/template"
 )
 
 var (
-	// OS ...
-	OS = runtime.GOOS
-
 	// Shell ...
 	Shell = "bash"
 
+	// OS ...
+	OS = runtime.GOOS
+
 	osTypes []string
+
+	originalEnv map[string]string
+
+	extraEnv = map[string]string{
+		"OS": OS,
+	}
 )
+
+func init() {
+	osTypes = GetOSTypes()
+	originalEnv = GetEnv()
+}
 
 // InitEnv ...
 func InitEnv() error {
@@ -27,8 +40,62 @@ func InitEnv() error {
 	return nil
 }
 
-func init() {
-	osTypes = getOSTypes()
+// GetEnv ...
+func GetEnv() (map[string]string) {
+	env := make(map[string]string, 0)
+	for _, i := range os.Environ() {
+		sep := strings.Index(i, "=")
+		k := i[0:sep]
+		v := i[sep+1:]
+		env[k] = v
+	}
+	// for k, v := range dotEnv {
+	// 	prefix := ""
+	// 	if _, ok := env[k]; !ok {
+	// 		env[k] = v
+	// 	} else {
+	// 		prefix = "# (SKIPPED) "
+	// 	}
+	// 	cfgLogger.Debugf("%s%s=%+v", prefix, k, v)
+	// }
+	return env
+}
+
+// TemplateEnv ...
+func TemplateEnv(k, v string) (string, error) {
+	if v == "" {
+		return v, nil
+	}
+	templ, err := template.New(k).Option("missingkey=zero").Parse(v)
+	if err != nil {
+		return v, err
+	}
+	buf := &bytes.Buffer{}
+	err = templ.Execute(buf, GetEnv())
+	if err != nil {
+		return v, err
+	}
+	v = buf.String()
+	return v, nil
+}
+
+// SetEnv ...
+func SetEnv(k, v string) error {
+	v, err := TemplateEnv(k, v)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s=%s\n", k, v)
+	return os.Setenv(k, v)
+}
+
+// ExpandEnv ...
+func ExpandEnv(s string, envs ...map[string]string) string {
+	// TODO for _, e := range envs {
+	// 	s = os.Expand(s, e)
+	// }
+	s = os.ExpandEnv(s)
+	return s
 }
 
 // HasOSType ...
@@ -48,8 +115,8 @@ func HasOne(in []string, list []string) bool {
 	return false
 }
 
-// List of OS name and family/type
-func getOSTypes() []string {
+// GetOSTypes (name, family, distrib...)
+func GetOSTypes() []string {
 	types := []string{OS}
 
 	// Add OS family
