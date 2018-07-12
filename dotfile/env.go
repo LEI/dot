@@ -149,12 +149,14 @@ func GetOSTypes() []string {
 	// 		}
 	// 	}
 	// }
-	if r.ID != "" && !isNum(r.ID) {
-		types = append(types, r.Name)
-	} else if r.ID != "" {
-		types = append(types, r.ID)
-	} else if r.Name != "" {
-		types = append(types, strings.ToLower(r.Name))
+	name := strings.ToLower(r.Name)
+	id := strings.ToLower(r.ID)
+	if name != "" && id != "" && isNum(id)  {
+		types = append(types, name + id)
+	} else if id != "" {
+		types = append(types, id)
+	} else if name != "" {
+		types = append(types, name)
 	}
 	if r.IDLike != "" {
 		types = append(types, r.IDLike)
@@ -232,7 +234,7 @@ func parseOSTypes() []string {
 		if len(out) > 0 {
 			s := string(out)
 			o := strings.Split(s, ".")
-			if len(o) > 0 {
+			if len(o) > 0 && o[0] != s {
 				types = append(types, o[0])
 			}
 			types = append(types, s)
