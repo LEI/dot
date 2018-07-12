@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -16,11 +17,12 @@ import (
 
 // Release ...
 type Release struct {
-	ID         string `ini-name:"ID"`          // debian
-	Name       string `ini-name:"NAME"`        // Debian GNU/Linux
-	PrettyName string `ini-name:"PRETTY_NAME"` // Debian GNU/Linux 9 (stretch)
-	Version    string `ini-name:"VERSION"`     // 9 (stretch)
-	VersionID  string `ini-name:"VERSION_ID"`  // 9
+	ID         string `ini-name:"ID"`
+	IDLike     string `ini-name:"ID_LIKE"`
+	Name       string `ini-name:"NAME"`
+	PrettyName string `ini-name:"PRETTY_NAME"`
+	Version    string `ini-name:"VERSION"`
+	VersionID  string `ini-name:"VERSION_ID"`
 	// HomeURL string `ini-name:"HOME_URL"`
 	// SupportURL string `ini-name:"SUPPORT_URL"`
 	// BugReportURL string `ini-name:"BUG_REPORT_URL"`
@@ -43,7 +45,7 @@ var (
 
 func init() {
 	osTypes = GetOSTypes()
-	// fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
+	fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
 	originalEnv = GetEnv()
 	// fmt.Printf("Original env: %+v\n", originalEnv)
 }
@@ -135,21 +137,43 @@ func HasOne(in []string, list []string) bool {
 func GetOSTypes() []string {
 	types := []string{OS}
 	r := parseReleases()
-	if r.Name != "" {
-		types = append(types, r.Name)
-		if r.ID != "" {
-			types = append(types, r.Name+r.ID)
+	if isNum(r.ID) {
+		if r.Name != "" {
+			types = append(types, r.Name)
+			if r.ID != "" {
+				types = append(types, r.Name+r.ID)
+			}
 		}
+	} else if r.ID != "" {
+		types = append(types, r.ID)
+	} else if r.Name != "" {
+		types = append(types, strings.ToLower(r.Name))
+	}
+	if r.IDLike != "" {
+		types = append(types, r.IDLike)
 	}
 	types = append(types, parseOSTypes()...)
 	return types
 }
 
+func isNum(v string) bool {
+	_, err := strconv.Atoi(v)
+	return err == nil
+}
+
 // Read release files as INI
+//
+// PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+// NAME="Debian GNU/Linux"
+// VERSION_ID="9"
+// VERSION="9 (stretch)"
+// ID=debian
+//
 func parseReleases() Release {
-	paths, err := filepath.Glob("/etc/*-release")
+	pattern := "/etc/*-release"
+	paths, err := filepath.Glob(pattern)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", pattern, err)
 		os.Exit(1)
 	}
 	for _, p := range paths {
@@ -158,14 +182,13 @@ func parseReleases() Release {
 		// ini.ParseAsDefaults = true
 		err := ini.ParseFile(p)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
+			fmt.Fprintf(os.Stderr, "%s(ini): %s\n", p, err)
 			os.Exit(1)
 		}
 		// if Verbose {
-		fmt.Printf("%s:\n%+v\n", p, release)
+		// 	fmt.Printf("%s:\n%+v\n", p, release)
 		// }
-		out := execute("cat", p)
-		fmt.Println(out)
+		execute("cat", p)
 	}
 	return release
 }

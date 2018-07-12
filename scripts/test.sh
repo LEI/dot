@@ -15,7 +15,7 @@ ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
 
 tail_bashrc="$(tail -n1 ~/.bashrc)"
 # Travis CI fix: sudo chmod +x /usr/local/bin/pacapt
-if [[ -n "$TRAVIS" ]]; then
+if [[ "$TRAVIS" == "true" ]]; then
   log dot --packages
   yes | sudo dot -P
 else
