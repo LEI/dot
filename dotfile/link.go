@@ -32,6 +32,9 @@ func (t *LinkTask) Do(a string) error {
 
 // Install link
 func (t *LinkTask) Install() error {
+	if err := createBaseDir(t.Target); err != nil {
+		return err
+	}
 	changed, err := Link(t.Source, t.Target)
 	if err != nil {
 		return err
@@ -55,6 +58,9 @@ func (t *LinkTask) Remove() error {
 		prefix = ""
 	}
 	fmt.Printf("%srm %s\n", prefix, t.Target)
+	// if err := removeBaseDir(t.Target); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 

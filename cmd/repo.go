@@ -55,9 +55,9 @@ func (r *Repo) checkRepo() error {
 	c := exec.Command("git", args...)
 	err := c.Run()
 	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
+		if exitError, ok := err.(*exec.ExitError); ok {
 			// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok && status == 256 {
+			if status, ok := exitError.Sys().(syscall.WaitStatus); ok && status == 256 {
 				return ErrDirtyRepo
 			}
 		}

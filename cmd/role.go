@@ -386,9 +386,9 @@ func prepareTarget(src, dst string) (string, error) {
 		return "", fmt.Errorf("Error (no source file name) while parsing: %s / %s", src, dst)
 	}
 	baseDir := filepath.Join(target, dst)
-	if _, err := dotfile.CreateDir(baseDir); err != nil {
-		return baseDir, err
-	}
+	// if _, err := dotfile.CreateDir(baseDir); err != nil {
+	// 	return baseDir, err
+	// }
 	t := filepath.Join(baseDir, f)
 	return t, nil
 }
