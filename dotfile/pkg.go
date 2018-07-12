@@ -1,12 +1,11 @@
 package dotfile
 
-import (
-	"fmt"
-)
+import ()
 
 // PkgTask struct
 type PkgTask struct {
 	Name string
+	Sudo bool
 }
 
 // Do ...
@@ -16,12 +15,12 @@ func (t *PkgTask) Do(a string) error {
 
 // Install copy
 func (t *PkgTask) Install() error {
-	fmt.Printf("TODO install package %s\n", t.Name)
-	return nil
+	sudo = t.Sudo
+	return PacInstall(t.Name)
 }
 
 // Remove copy
 func (t *PkgTask) Remove() error {
-	fmt.Printf("TODO remove package %s\n", t.Name)
-	return nil
+	sudo = t.Sudo
+	return PacInstall(t.Name)
 }

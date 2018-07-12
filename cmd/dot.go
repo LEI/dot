@@ -112,6 +112,9 @@ type DotCmd struct {
 
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
+
+	Packages bool `short:"P" long:"packages" description:"Install or remove required packages"`
+	Sudo bool `short:"S" long:"sudo" description:"Use sudo to execute package manager"`
 }
 
 // CommandHandler ...
@@ -131,7 +134,7 @@ func (cmd *DotCmd) Execute(args []string) error {
 func readIniConfig(parser *flags.Parser) func(s string) error {
 	return func(s string) error {
 		ini := flags.NewIniParser(parser)
-		// i.ParseAsDefaults = true
+		// ini.ParseAsDefaults = true
 		return ini.ParseFile(s)
 	}
 }

@@ -5,7 +5,26 @@
 - [go-flags](https://github.com/jessevdk/go-flags)
 - [pacapt](https://github.com/icy/pacapt)
 
+### Installation
 
-### Configuration
+#### [Install dep](https://golang.github.io/dep/docs/installation.html<Paste>)
+
+##### MacOS
+
+    brew install dep
+
+##### ArchLinux
+
+    pacman -S dep
+
+##### From Source (GOPATH)
+
+    go get -u github.com/golang/dep/cmd/dep
+
+#### Install dependencies
+
+    dep ensure
+
+### Configuration file
 
 `.dot.yml`

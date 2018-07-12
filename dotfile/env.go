@@ -1,22 +1,36 @@
 package dotfile
 
 import (
-	"bufio"
+	// "bufio"
 	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
+
+	"github.com/jessevdk/go-flags"
 )
 
-var (
-	// Shell ...
-	Shell = "bash"
+// Release ...
+type Release struct {
+	ID string `ini-name:"ID"` // debian
+	Name string `ini-name:"NAME"` // Debian GNU/Linux
+	PrettyName string `ini-name:"PRETTY_NAME"` // Debian GNU/Linux 9 (stretch)
+	Version string `ini-name:"VERSION"` // 9 (stretch)
+	VersionID string `ini-name:"VERSION_ID"` // 9
+	// HomeURL string `ini-name:"HOME_URL"`
+	// SupportURL string `ini-name:"SUPPORT_URL"`
+	// BugReportURL string `ini-name:"BUG_REPORT_URL"`
+}
 
+var (
 	// OS ...
 	OS = runtime.GOOS
+
+	release Release
 
 	osTypes []string
 
@@ -29,7 +43,9 @@ var (
 
 func init() {
 	osTypes = GetOSTypes()
+	// fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
 	originalEnv = GetEnv()
+	// fmt.Printf("Original env: %+v\n", originalEnv)
 }
 
 // InitEnv ...
@@ -115,48 +131,61 @@ func HasOne(in []string, list []string) bool {
 	return false
 }
 
-// GetOSTypes (name, family, distrib...)
+// GetOSTypes OS name, release, family, distrib...
 func GetOSTypes() []string {
 	types := []string{OS}
-
-	// Add OS family
-	c := exec.Command(Shell, "-c", "cat /etc/*-release")
-	stdout, _ := c.StdoutPipe()
-	// stderr, _ := c.StderrPipe()
-	c.Start()
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		m := scanner.Text()
-		fmt.Println(m)
-		v := strings.TrimLeft(m, "ID=")
-		if m != v {
-			types = append(types, v)
-			break
+	r := parseReleases()
+	if r.Name != "" {
+		types = append(types, r.Name)
+		if r.ID != "" {
+			types = append(types, r.Name + r.ID)
 		}
 	}
-	c.Wait()
+	types = append(types, parseOSTypes()...)
+	return types
+}
 
-	OSTYPE, ok := os.LookupEnv("OSTYPE")
-	if ok && OSTYPE != "" {
-		types = append(types, OSTYPE)
-	} else { // !ok || OSTYPE == ""
-		// fmt.Printf("OSTYPE='%s' (%v)\n", OSTYPE, ok)
-		out, err := exec.Command(Shell, "-c", "printf '%s' \"$OSTYPE\"").Output()
+// Read release files as INI
+func parseReleases() Release {
+	paths, err := filepath.Glob("/etc/*-release")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+	for _, p := range paths {
+		parser := flags.NewParser(&release, flags.IgnoreUnknown)
+		ini := flags.NewIniParser(parser)
+		// ini.ParseAsDefaults = true
+		err := ini.ParseFile(p)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
+		// if Verbose {
+		fmt.Printf("%s:\n%+v\n", p, release)
+		// }
+	}
+	return release
+}
+
+func parseOSTypes() []string {
+	types := make([]string, 0)
+	if o, ok := os.LookupEnv("OSTYPE"); ok && o != "" {
+		types = append(types, o)
+	} else { // !ok || s == ""
+		// fmt.Printf("OSTYPE='%s' (%v)\n", s, ok)
+		out, err := exec.Command("bash", "-c", "printf '%s' \"$OSTYPE\"").Output()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "# OSTYPE error: %s\n", err)
 		}
 		if len(out) > 0 {
-			OSTYPE = string(out)
-			o := strings.Split(OSTYPE, ".")
+			s := string(out)
+			o := strings.Split(s, ".")
 			if len(o) > 0 {
 				types = append(types, o[0])
 			}
-			types = append(types, OSTYPE)
+			types = append(types, s)
 		}
-	}
-	if OSTYPE == "" {
-		fmt.Println("OSTYPE is not set or empty")
 	}
 	return types
 }

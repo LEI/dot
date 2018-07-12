@@ -456,7 +456,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Pkg != nil {
+	if r.Pkg != nil && Options.Packages {
 		for _, v := range r.Pkg {
 			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
 				continue
@@ -466,6 +466,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 			task := &dotfile.PkgTask{
 				Name: v.Name,
+				Sudo: Options.Sudo,
 			}
 			if err := task.Do(a); err != nil {
 				return err
