@@ -486,7 +486,7 @@ func (r *Role) Do(a string, filter []string) error {
 			task := &dotfile.TemplateTask{
 				Source: s,
 				Target: t,
-				Env: r.Env,
+				Env:    r.Env,
 			}
 			if err := task.Do(a); err != nil {
 				return err

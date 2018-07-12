@@ -12,7 +12,7 @@ type Packages []*Pkg
 // Pkg ...
 type Pkg struct {
 	Name string
-	OS []string
+	OS   []string
 }
 
 // UnmarshalYAML ...
@@ -33,7 +33,7 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			switch V := v.(type) {
 			case string:
 				pkg.Name = V
-				break;
+				break
 			case interface{}:
 				switch m := V.(type) {
 				case map[interface{}]interface{}:
@@ -46,7 +46,7 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 					case []string:
 						pkg.OS = n
 						break
-					case interface {}:
+					case interface{}:
 						// n = n.(interface{})
 						// // FIXME: interface {} is []interface {}, not []string
 						for _, o := range n.([]interface{}) {
