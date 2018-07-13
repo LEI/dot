@@ -12,6 +12,7 @@ import (
 	"github.com/imdario/mergo"
 
 	"github.com/LEI/dot/dotfile"
+	"github.com/LEI/dot/parsers"
 )
 
 // r.<Task>, r.Register<Task>
@@ -43,10 +44,10 @@ type Role struct {
 	URL      string   // Repository URL
 	OS       []string // Allowed OSes
 	Env      Env
-	Copy     Paths
+	Copy     parsers.Paths
 	Line     map[string]string
-	Link     Paths
-	Template Paths
+	Link     parsers.Paths
+	Template parsers.Paths
 
 	// Hooks
 	Install     []string
@@ -54,8 +55,9 @@ type Role struct {
 	Remove      []string
 	PostRemove  []string `yaml:"post_remove"`
 
-	// TODO Dependencies []string
-	Pkg Packages
+	Pkg parsers.Packages
+	Dependencies []string
+	Enabled bool // TODO `default:"true"`
 }
 
 // Env ...
@@ -63,19 +65,19 @@ type Env map[string]string
 
 // // Copy ...
 // type Copy struct {
-// 	*Paths
+// 	*parsers.Paths
 // 	Format string
 // }
 
 // // Link ...
 // type Link struct {
-// 	*Paths
+// 	*parsers.Paths
 // 	Format string
 // }
 
 // // Template ...
 // type Template struct {
-// 	*Paths
+// 	*parsers.Paths
 // 	Format string
 // }
 
@@ -106,7 +108,11 @@ func NewRole(name string) *Role {
 	// if strings.Contains(name, "*") {
 	// 	// find glob
 	// }
-	return &Role{Name: name, URL: url}
+	return &Role{
+		Name: name,
+		URL: url,
+		// FIXME Enabled: true,
+	}
 }
 
 // Register ...
@@ -114,19 +120,17 @@ func (r *Role) Register(cfg *Config) error {
 	if (&Role{}) == r {
 		return ErrEmptyRole
 	}
-	for i, cfgRole := range cfg.Roles {
-		if cfgRole.Name == r.Name {
-			if err := r.Merge(cfgRole); err != nil {
-				return err
-			}
-			cfg.Roles[i] = r
-			return nil
-			// break
-		}
-	}
-	cfg.Roles = append(cfg.Roles, r)
+	cfg.AddRole(r)
 	return nil
 }
+
+// ApplyDeps ...
+// func (r *Role) ApplyDeps(cfg *Config) error {
+// 	for _, n := range r.Deps {
+// 		fmt.Println("DEP", n)
+// 	}
+// 	return nil
+// }
 
 // Merge ...
 func (r *Role) Merge(role *Role) error {
@@ -136,35 +140,6 @@ func (r *Role) Merge(role *Role) error {
 	// reflect.TypeOf(r), reflect.TypeOf(role)
 	// fmt.Printf("%+v\n%+v\n", r, role)
 	return mergo.Merge(r, role)
-}
-
-// SplitPath ...
-func SplitPath(s string) (src, dst string) {
-	parts := filepath.SplitList(s)
-	switch len(parts) {
-	case 1:
-		src = s
-		break
-	case 2:
-		src = parts[0]
-		dst = parts[1]
-		break
-	default:
-		fmt.Println("Unhandled path spec", src)
-		os.Exit(1)
-	}
-	// src = s
-	// if strings.Contains(src, ":") {
-	// 	parts := strings.Split(src, ":")
-	// 	if len(parts) == 2 {
-	// 		src = parts[0]
-	// 		dst = parts[1]
-	// 	} else {
-	// 		fmt.Println("Unhandled path spec", src)
-	// 		os.Exit(1)
-	// 	}
-	// }
-	return src, dst
 }
 
 // RegisterTask ...
@@ -195,7 +170,7 @@ func (r *Role) RegisterTask(name, s string) error {
 	// if paths == nil {
 	// 	paths = map[string]string{}
 	// }
-	// src, dst := SplitPath(s)
+	// src, dst := dotfile.SplitPath(s)
 	// paths[src] = dst
 	return nil
 }
@@ -205,7 +180,7 @@ func (r *Role) RegisterCopy(s string) error {
 	if r.Copy == nil {
 		r.Copy = map[string]string{}
 	}
-	src, dst := SplitPath(s)
+	src, dst := dotfile.SplitPath(s)
 	r.Copy[src] = dst
 	return nil
 }
@@ -215,7 +190,7 @@ func (r *Role) RegisterLink(s string) error {
 	if r.Link == nil {
 		r.Link = map[string]string{}
 	}
-	src, dst := SplitPath(s)
+	src, dst := dotfile.SplitPath(s)
 	r.Link[src] = dst
 	return nil
 }
@@ -225,7 +200,7 @@ func (r *Role) RegisterTemplate(s string) error {
 	if r.Template == nil {
 		r.Template = map[string]string{}
 	}
-	src, dst := SplitPath(s)
+	src, dst := dotfile.SplitPath(s)
 	r.Template[src] = dst
 	return nil
 }
@@ -329,6 +304,29 @@ func (r *Role) ReadConfig(name string) (string, error) {
 	return cfgPath, nil // err
 }
 
+// IsEnabled ...
+func (r *Role) IsEnabled() bool {
+	return r.Enabled
+}
+
+// Enable ...
+func (r *Role) Enable() error {
+	if r.Enabled == true {
+		return fmt.Errorf("Already enabled: %s", r.Name)
+	}
+	r.Enabled = true
+	return nil
+}
+
+// Disable ...
+func (r *Role) Disable() error {
+	if r.Enabled == false {
+		return fmt.Errorf("Already disabled: %s", r.Name)
+	}
+	r.Enabled = false
+	return nil
+}
+
 // Prepare ...
 func (r *Role) Prepare() error {
 	if err := r.PreparePaths(&r.Copy); err != nil {
@@ -347,9 +345,9 @@ func (r *Role) Prepare() error {
 }
 
 // PreparePaths ...
-func (r *Role) PreparePaths(p *Paths) error {
-	// in interface{} p := in.(*Paths)
-	var paths Paths = make(map[string]string, len(*p))
+func (r *Role) PreparePaths(p *parsers.Paths) error {
+	// in interface{} p := in.(*parsers.Paths)
+	var paths parsers.Paths = make(map[string]string, len(*p))
 	for src, dst := range *p {
 		//fmt.Println("PREPARE", src, dst)
 		// Prepend role directory to source path
@@ -536,7 +534,7 @@ func (r *Role) Do(a string, filter []string) error {
 }
 
 /*
-func ParsePath(src, dst string) (Paths, error) {
+func ParsePath(src, dst string) (parsers.Paths, error) {
 	if strings.Contains(src, ":") {
 		parts := strings.Split(src, ":")
 		if len(parts) == 2 {

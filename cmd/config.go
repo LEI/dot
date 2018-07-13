@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	// "fmt"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,6 +13,20 @@ import (
 type Config struct {
 	// Name string
 	Roles []*Role
+	IgnoreDeps bool
+}
+
+var config *Config
+
+// ErrSkipDeps ...
+// var ErrSkipDeps = fmt.Errorf("skip dependencies")
+
+// NewConfig ...
+func NewConfig() *Config {
+	if config == nil {
+		config = &Config{}
+	}
+	return config
 }
 
 // Read ...
@@ -32,14 +46,69 @@ func (c *Config) Read(name string) (string, error) {
 	return cfgPath, err
 }
 
-var config *Config
+// Prepare ...
+func (c *Config) Prepare() error {
+	// for _, n := range r.Deps {
+	// 	fmt.Println("DEP", n)
+	// }
+	return nil
+}
 
-// NewConfig ...
-func NewConfig() *Config {
-	if config == nil {
-		config = &Config{}
+// AddRole ...
+func (c *Config) AddRole(r *Role) error {
+	for i, role := range c.Roles {
+		if role.Name == r.Name {
+			if err := r.Merge(role); err != nil {
+				return err
+			}
+			// c.SetRoleIndex(i, r)
+			c.Roles[i] = r
+			return nil
+			// break
+		}
 	}
-	return config
+	c.Roles = append(c.Roles, r)
+	return nil
+}
+
+// RemoveRole ...
+func (c *Config) RemoveRole(r *Role) (ret []*Role) {
+	for _, role := range c.Roles {
+		if role == r {
+			continue
+		}
+		ret = append(ret, r)
+	}
+	return ret
+}
+
+// Require ...
+func (c *Config) Require() error {
+	if c.IgnoreDeps {
+		return nil
+	}
+	for _, role := range c.Roles {
+		if !role.IsEnabled() {
+			continue
+		}
+		if len(role.Dependencies) < 0 {
+			continue
+		}
+		for _, dep := range role.Dependencies {
+			for _, r := range c.Roles {
+				if r.Name == dep {
+					fmt.Println(role.Name, "requires", r.Name)
+					if !r.IsEnabled() {
+						r.Enable()
+					}
+					break
+				}
+			}
+			return fmt.Errorf("Unable to resolve %s dependency: %s", role.Name, dep)
+		}
+	}
+	// TODO: sort
+	return nil
 }
 
 // FindConfig ...

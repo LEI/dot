@@ -84,15 +84,17 @@ func execute(options *cmd.DotCmd) error {
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
 	for _, r := range config.Roles {
+		r.Enabled = true // Quickfix
 		if len(options.RoleFilter) > 0 && !dotfile.HasOne([]string{r.Name}, options.RoleFilter) {
 			// fmt.Fprintf(os.Stderr, "# [%s] Skipping (filtered)\n", r.Name)
-			config.Roles = removeRole(config.Roles, r)
+			// config.Roles = removeRole(config.Roles, r)
+			r.Disable()
 			continue
 		}
 		if r.OS != nil {
 			if len(r.OS) > 0 && !dotfile.HasOSType(r.OS...) { // Skip role
 				fmt.Fprintf(os.Stderr, "# [%s] Skipping (OS: %s)\n", r.Name, strings.Join(r.OS, ", "))
-				config.Roles = removeRole(config.Roles, r)
+				config.RemoveRole(r)
 				continue
 			}
 		}
@@ -131,7 +133,21 @@ func execute(options *cmd.DotCmd) error {
 		fmt.Fprintln(os.Stderr, "No roles to execute")
 		return nil
 	}
+	// Check dependencies
+	if err := config.Require(); err != nil {
+		return err
+		// switch err {
+		// case cmd.ErrSkipDeps:
+		// 	break
+		// default:
+		// 	return err
+		// }
+	}
 	for _, r := range config.Roles {
+		// Skip disabled roles
+		if !r.IsEnabled() {
+			continue
+		}
 		// if err := r.Prepare(); err != nil {
 		// 	return err
 		// }
@@ -140,14 +156,4 @@ func execute(options *cmd.DotCmd) error {
 		}
 	}
 	return nil
-}
-
-func removeRole(roles []*cmd.Role, rm *cmd.Role) (ret []*cmd.Role) {
-	for _, r := range roles {
-		if r == rm {
-			continue
-		}
-		ret = append(ret, r)
-	}
-	return ret
 }

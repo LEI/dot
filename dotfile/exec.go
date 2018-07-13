@@ -30,7 +30,12 @@ func (t *ExecTask) Remove() error {
 }
 
 func execute(name string, args ...string) error {
-	fmt.Printf("$ %s %s\n", name, strings.Join(args[:], " "))
+	s := fmt.Sprintf("%s %s", name, strings.Join(args[:], " "))
+	fmt.Println(s)
+	if DryRun {
+		// fmt.Println("DRY-RUN, unexpected behavior may occur.")
+		return nil
+	}
 	c := exec.Command(name, args...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr

@@ -93,6 +93,7 @@ type DotCmd struct {
 
 	RoleDir    string   `short:"R" long:"role-dir" description:"Role directory name" default:".dot"`
 	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
+	IgnoreDeps bool `short:"I" long:"ignore-dependencies" description:"Honor the role filter"`
 
 	// Debug bool `short:"D" long:"debug" description:""`
 

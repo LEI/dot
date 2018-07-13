@@ -1,8 +1,9 @@
-package cmd
+package parsers
 
 import (
 	"fmt"
 	// "os"
+	// "path/filepath"
 	"reflect"
 
 	"github.com/LEI/dot/dotfile"
@@ -13,7 +14,7 @@ type Paths map[string]string
 
 // Add ...
 func (p *Paths) Add(s string) error {
-	src, dst := SplitPath(s)
+	src, dst := dotfile.SplitPath(s)
 	// if p.Dir != "" {
 	// 	src = filepath.Join(p.Dir, src)
 	// }
