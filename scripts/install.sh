@@ -1,12 +1,15 @@
-#!/bin/bash
+#!/bin/sh
 
-# https://github.com/LEI/dot/blob/master/scripts/install.sh
+# https://raw.githubusercontent.com/LEI/dot/blob/master/scripts/install.sh | sh
+
+# https://github.com/rootbeersoup/get.darryl.sh/blob/master/scripts/dotfiles.sh
+# https://github.com/golang/dep/blob/master/install.sh
 
 set -e
 
 REPO="$REPO"
 
-if [[ ! -d "$GOPATH/src/$REPO" ]]; then
+if [ ! -d "$GOPATH/src/$REPO" ]; then
   # git clone https://$REPO.git
   # Use --recursive for .gitmodules
 
