@@ -3,7 +3,6 @@ package cmd_test
 import (
 	// "os"
 	"testing"
-
 	// "github.com/LEI/dot/cmd"
 	// "github.com/jessevdk/go-flags"
 )

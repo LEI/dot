@@ -14,7 +14,7 @@ services:
       -l -c '
       source $$DOT/scripts/functions.sh
       run dot --packages --verbose;
-      # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +PlugInstall +qall; exit";
+      # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +Install +qall; exit";
       exec bash -l;'
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
