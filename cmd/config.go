@@ -73,18 +73,19 @@ func (c *Config) AddRole(r *Role) error {
 
 // RemoveRole ...
 func (c *Config) RemoveRole(r *Role) error {
-	ret := []*Role{}
+	ret := []*Role{} // New slice
 	for _, role := range c.Roles {
 		// reflect.DeepEqual(role, r)
 		if role.Name == r.Name {
 			continue
 		}
-		ret = append(ret, r)
+		ret = append(ret, role)
 	}
-	if len(ret) != len(c.Roles) {
+	if len(ret) == len(c.Roles) {
 		return fmt.Errorf("# Unable to remove role '%s' (not found)", r.Name)
 	}
 	c.Roles = ret
+	// (*c).Roles = ret
 	return nil
 }
 
