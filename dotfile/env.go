@@ -26,9 +26,9 @@ type Release struct {
 	// HomeURL string `ini-name:"HOME_URL"`
 	// SupportURL string `ini-name:"SUPPORT_URL"`
 	// BugReportURL string `ini-name:"BUG_REPORT_URL"`
-	DistribID string `ini-name:"DISTRIB_ID"`
-	DistribRelease string `ini-name:"DISTRIB_RELEASE"`
-	DistribCodename string `ini-name:"DISTRIB_CODENAME"`
+	DistribID          string `ini-name:"DISTRIB_ID"`
+	DistribRelease     string `ini-name:"DISTRIB_RELEASE"`
+	DistribCodename    string `ini-name:"DISTRIB_CODENAME"`
 	DistribDescription string `ini-name:"DISTRIB_DESCRIPTION"`
 }
 
@@ -151,8 +151,8 @@ func GetOSTypes() []string {
 	// }
 	name := strings.ToLower(r.Name)
 	id := strings.ToLower(r.ID)
-	if name != "" && id != "" && isNum(id)  {
-		types = append(types, name + id)
+	if name != "" && id != "" && isNum(id) {
+		types = append(types, name+id)
 	} else if id != "" {
 		types = append(types, id)
 	} else if name != "" {
