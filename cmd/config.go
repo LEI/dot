@@ -72,14 +72,20 @@ func (c *Config) AddRole(r *Role) error {
 }
 
 // RemoveRole ...
-func (c *Config) RemoveRole(r *Role) (ret []*Role) {
+func (c *Config) RemoveRole(r *Role) error {
+	ret := []*Role{}
 	for _, role := range c.Roles {
-		if role == r {
+		// reflect.DeepEqual(role, r)
+		if role.Name == r.Name {
 			continue
 		}
 		ret = append(ret, r)
 	}
-	return ret
+	if len(ret) != len(c.Roles) {
+		return fmt.Errorf("# Unable to remove role '%s' (not found)", r.Name)
+	}
+	c.Roles = ret
+	return nil
 }
 
 // Require ...
