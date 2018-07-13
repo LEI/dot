@@ -87,6 +87,7 @@ func (c *Config) Require() error {
 	if c.IgnoreDeps {
 		return nil
 	}
+	CHECK:
 	for _, role := range c.Roles {
 		if !role.IsEnabled() {
 			continue
@@ -101,7 +102,7 @@ func (c *Config) Require() error {
 					if !r.IsEnabled() {
 						r.Enable()
 					}
-					break
+					continue CHECK
 				}
 			}
 			return fmt.Errorf("Unable to resolve %s dependency: %s", role.Name, dep)

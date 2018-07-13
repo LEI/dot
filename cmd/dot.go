@@ -88,8 +88,8 @@ type DotCmd struct {
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
 
 	// env:"DOT_CONFIG" default:".dot"
-	Config    func(s string) error `short:"c" long:"config" description:"Global config file name" default:".dot.yml"`
-	IniConfig func(s string) error `short:"i" long:"ini" description:"INI config file" no-ini:"true"`
+	Config    func(s string) error `short:"c" long:"config" description:"Config file name" default:".dot.yml"`
+	IniConfig func(s string) error `short:"i" long:"ini-config" description:"Path to INI config file" no-ini:"true"`
 
 	RoleDir    string   `short:"R" long:"role-dir" description:"Role directory name" default:".dot"`
 	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
