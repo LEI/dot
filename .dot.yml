@@ -9,9 +9,11 @@ roles:
 
   - name: vim
     url: "https://github.com/LEI/dot-vim"
+    dependencies: ["bash", "git"]
 
   - name: tmux
     url: "https://github.com/LEI/dot-tmux"
+    dependencies: ["git"]
 
   - name: termux
     url: "https://github.com/LEI/dot-termux"
@@ -28,6 +30,11 @@ roles:
   - name: i3
     url: "https://github.com/LEI/dot-i3"
     os: ["arch"]
+
+  - name: rxvt
+    url: "https://github.com/LEI/dot-rxvt"
+    os: ["arch"]
+    dependencies: ["i3"]
 
   - name: usql
     url: "https://github.com/LEI/dot-usql"
