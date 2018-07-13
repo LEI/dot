@@ -55,9 +55,9 @@ type Role struct {
 	Remove      []string
 	PostRemove  []string `yaml:"post_remove"`
 
-	Pkg parsers.Packages
+	Pkg          parsers.Packages
 	Dependencies []string
-	Enabled bool // TODO `default:"true"`
+	Enabled      bool // TODO `default:"true"`
 }
 
 // Env ...
@@ -110,7 +110,7 @@ func NewRole(name string) *Role {
 	// }
 	return &Role{
 		Name: name,
-		URL: url,
+		URL:  url,
 		// FIXME Enabled: true,
 	}
 }

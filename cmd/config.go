@@ -12,7 +12,7 @@ import (
 // Config ...
 type Config struct {
 	// Name string
-	Roles []*Role
+	Roles      []*Role
 	IgnoreDeps bool
 }
 
@@ -87,7 +87,7 @@ func (c *Config) Require() error {
 	if c.IgnoreDeps {
 		return nil
 	}
-	CHECK:
+CHECK:
 	for _, role := range c.Roles {
 		if !role.IsEnabled() {
 			continue
