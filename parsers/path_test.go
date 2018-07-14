@@ -8,6 +8,7 @@ import (
 	// "github.com/LEI/dot/cmd"
 )
 
+// https://github.com/golang/go/wiki/TableDrivenTests
 var pathtests = []struct {
 	in  string
 	out string

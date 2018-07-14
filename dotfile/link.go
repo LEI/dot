@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"os"
 	// "path"
+	// "path/filepath"
 	// "strings"
 )
 
 var (
 	// ErrLinkExist error
-	ErrLinkExist = errors.New("Link exists")
+	ErrLinkExist = errors.New("link exists")
 	// ErrFileExist error
-	ErrFileExist = errors.New("File exists")
+	ErrFileExist = errors.New("file exists")
 )
 
 // LinkTask struct
@@ -67,6 +68,24 @@ func IsSymlink(fi os.FileInfo) bool {
 
 // ReadLink path
 func ReadLink(path string) (string, error) {
+	// fi, err := os.Lstat(path)
+	// fmt.Println("FI", IsSymlink(fi), err)
+	// if err != nil { // os.IsExist(err)
+	// 	// if os.IsNotExist(err) {
+	// 	// return path, nil
+	// 	// }
+	// 	return "", err
+	// }
+	// real, err := os.Readlink(path)
+	// fmt.Println("--->", real, err)
+	// if !IsSymlink(fi) {
+	// 	// Quickfix: directories seem to be ignored
+	// 	real, err = filepath.EvalSymlinks(path)
+	// 	fmt.Println("===>",real, err)
+	// } else if !IsSymlink(fi) {
+	// 	return "", nil
+	// }
+	// return real, err
 	fi, err := os.Lstat(path)
 	if err != nil { // os.IsExist(err)
 		// if os.IsNotExist(err) {
@@ -84,21 +103,40 @@ func ReadLink(path string) (string, error) {
 // Link task
 func Link(src, dst string) (bool, error) {
 	real, err := ReadLink(dst)
+	// if real == "" {
+	// 	// Quickfix: directories seem to be ignored,
+	// 	// so try harder to find the link target
+	// 	real, err = filepath.EvalSymlinks(dst)
+	// 	if real == dst {
+	// 		real = ""
+	// 	}
+	// }
 	if err != nil && os.IsExist(err) {
+		// ErrFileExist
+		if real == src && err == ErrLinkExist {
+			return false, nil
+		}
 		return false, err
 	}
 	if real == src { // Symlink already exists
 		return false, nil
 	}
 	if real != "" {
-		// fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", dst, real, src)
+		fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", dst, real, src)
 		// os.Exit(1)
 		return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
+	}
+	if err != nil && os.IsExist(err) {
+		return false, err
 	}
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
+	// fmt.Println("SRC:", src)
+	// fmt.Println("REAL:", real)
+	// fmt.Println("ERR:", err)
+	// fmt.Println("FI:", fi)
 	if fi != nil {
 		// fmt.Fprintf(os.Stderr, "# %s is already a file\n", dst)
 		// os.Exit(1)

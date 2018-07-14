@@ -39,3 +39,6 @@ roles:
   - name: usql
     url: "https://github.com/LEI/dot-usql"
     os: ["darwin"]
+
+  - name: mutt
+    os: ["darwin"]
