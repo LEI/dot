@@ -21,6 +21,7 @@ var defaultTasks = []string{
 	"exec",
 	"line",
 	"link",
+	"package",
 	"template",
 }
 
@@ -57,7 +58,7 @@ type Role struct {
 	Remove      []string
 	PostRemove  []string `yaml:"post_remove"`
 
-	Pkg          parsers.Packages
+	Package      parsers.Packages
 	Dependencies []string
 	Enabled      bool // TODO `default:"true"`
 }

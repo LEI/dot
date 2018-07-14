@@ -4,15 +4,15 @@ import (
 	"fmt"
 )
 
-// PkgCmd ...
-type PkgCmd struct {
+// PackageCmd ...
+type PackageCmd struct {
 	BaseRoleCmd
 }
 
 // Execute ...
-func (cmd *PkgCmd) Execute(args []string) error {
+func (cmd *PackageCmd) Execute(args []string) error {
 	if Verbose > 2 {
-		fmt.Println("# PkgCmd", cmd.Role.Name, args)
+		fmt.Println("# PackageCmd", cmd.Role.Name, args)
 	}
 	if cmd.Role.Name == "" {
 		return nil
@@ -24,7 +24,7 @@ func (cmd *PkgCmd) Execute(args []string) error {
 	}
 	for _, p := range cmd.Role.Paths {
 		fmt.Println("=>", p)
-		// err := role.RegisterPkg(string(p))
+		// err := role.RegisterPackage(string(p))
 		// if err != nil {
 		// 	return err
 		// }
