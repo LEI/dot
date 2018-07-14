@@ -3,8 +3,7 @@ builds:
 - env:
     - CGO_ENABLED=0
   # main: main.go
-  # "{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-  # binary: dot
+  binary: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
   goos: # https://golang.org/doc/install/source#environment
     - windows
     - darwin
@@ -32,8 +31,10 @@ archive:
   # hooks: {}
 # sign:
 #    artifacts: checksum
-# checksum:
-#   name_template: 'checksums.txt'
+checksum:
+  # name_template: "checksums.txt"
+  name_template: "{{ .Binary }}-checksum.txt"
+  # name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}-checksums.txt"
 snapshot:
   # Default is "SNAPSHOT-{{.Commit}}"
   name_template: "{{ .Tag }}-next"
