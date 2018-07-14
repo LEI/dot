@@ -16,7 +16,7 @@ import (
 // Repo ...
 type Repo struct {
 	Path, URL      string
-	remote, branch string
+	Remote, Branch string
 }
 
 var (
@@ -53,8 +53,8 @@ func NewRepo(p, url string) *Repo {
 	r := &Repo{
 		Path:   p,
 		URL:    url,
-		remote: defaultRemote,
-		branch: defaultBranch,
+		Remote: defaultRemote,
+		Branch: defaultBranch,
 	}
 	return r
 }
@@ -84,10 +84,10 @@ func (r *Repo) Pull() error {
 	if !online {
 		return ErrNetworkUnreachable
 	}
-	args := []string{"-C", r.Path, "pull", r.remote, r.branch, "--quiet"}
+	args := []string{"-C", r.Path, "pull", r.Remote, r.Branch, "--quiet"}
 	// fmt.Printf("git %s\n", strings.Join(args, " "))
 	if Verbose > 0 {
-		fmt.Printf("git pull %s %s\n", r.remote, r.branch)
+		fmt.Printf("git pull %s %s\n", r.Remote, r.Branch)
 	}
 	c := exec.Command("git", args...)
 	c.Stdout = os.Stdout
@@ -106,13 +106,11 @@ func (r *Repo) Clone() error {
 	if exist(r.Path) {
 		return r.checkRemote()
 	}
-	args := []string{
-		"clone",
-		"--branch=", r.branch,
-		"--recursive",
-		r.URL,
-		r.Path,
+	args := []string{"clone", "--recursive"}
+	if r.Branch != "" {
+		args = append(args, "--branch", r.Branch)
 	}
+	args = append(args, r.URL, r.Path)
 	if Verbose > 3 {
 		args = append(args, "--quiet")
 	}
@@ -138,7 +136,8 @@ func networkReachable() bool {
 }
 
 func (r *Repo) checkRemote() error {
-	args := []string{"-C", r.Path, "config", "--local", "--get", "remote." + r.remote + ".url"}
+	urlKey := "remote." + r.Remote + ".url"
+	args := []string{"-C", r.Path, "config", "--local", "--get", urlKey}
 	// fmt.Printf("git %s\n", strings.Join(args, " "))
 	c := exec.Command("git", args...)
 	stdout, err := c.StdoutPipe()
