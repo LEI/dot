@@ -69,8 +69,10 @@ func (r *Repo) checkRepo() error {
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
-			if status, ok := exitError.Sys().(syscall.WaitStatus); ok && status == 256 {
-				return ErrDirtyRepo
+			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
+				if status.ExitStatus() == 256 {
+					return ErrDirtyRepo
+				}
 			}
 		}
 		fmt.Fprintf(os.Stderr, "%s: %s\n", r.Path, err)
