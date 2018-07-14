@@ -9,18 +9,6 @@ os:
 services:
   - docker
 
-addons:
-  apt:
-    packages:
-      # needed for the nfpm pipe:
-      - rpm
-      # needed for the snap pipe:
-      - snapcraft
-
-env:
-  # needed for the snap pipe:
-  - PATH=/snap/bin:$PATH
-
 # cache:
 #   directories:
 #     - $GOPATH/src
@@ -64,6 +52,17 @@ jobs:
         - docker-compose run test
     - stage: deploy
       # TODO: goreleaser
+      addons:
+        apt:
+          packages:
+            # needed for the nfpm pipe:
+            - rpm
+            # needed for the snap pipe:
+            - snapcraft
+
+      env:
+        # needed for the snap pipe:
+        - PATH=/snap/bin:$PATH
       before_deploy:
         # needed for the snap pipe:
         - sudo snap install snapcraft --classic
