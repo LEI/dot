@@ -3,27 +3,39 @@ builds:
 - env:
     - CGO_ENABLED=0
   # main: main.go
+  # "{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
   # binary: dot
-  goos:
+  goos: # https://golang.org/doc/install/source#environment
     - windows
     - darwin
     - linux
+    # - freebsd
   goarch:
     - 386
     - amd64
+  #   - arm
+  #   - arm64
+  # goarm:
+  #   - 6
+  #   - 7
 archive:
-  # format: tar.gz
+  # Upload the binaries directly
+  # name_template and files are ignored
+  format: binary # tar.gz (default), zip
   # replacements:
   #   darwin: Darwin
   #   linux: Linux
   #   windows: Windows
   #   386: i386
   #   amd64: x86_64
-  # files:
-  #   - ...
-checksum:
-  name_template: 'checksums.txt'
+  # files: []
+  # hooks: {}
+# sign:
+#    artifacts: checksum
+# checksum:
+#   name_template: 'checksums.txt'
 snapshot:
+  # Default is "SNAPSHOT-{{.Commit}}"
   name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
