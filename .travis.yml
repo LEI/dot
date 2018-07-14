@@ -15,8 +15,8 @@ services:
 #     - $GOPATH/pkg
 
 stages:
-  # - test
-  # - build
+  - test
+  - build
   - deploy
   # - name: deploy
   #   # if: branch = master
@@ -52,13 +52,20 @@ jobs:
         # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
         - docker-compose run test
     - stage: deploy
-      # TODO: goreleaser NFPM (.deb, .rpm), Snapcraft (snap)...
-      # before_deploy:
-      #   - mkdir -p dist
-      #   - GOOS=darwin  GOARCH=amd64 go build -o dist/dot-darwin-amd64
-      #   - GOOS=linux   GOARCH=amd64 go build -o dist/dot-linux-amd64
-      #   - go get github.com/inconshreveable/mousetrap
-      #   - GOOS=windows GOARCH=amd64 go build -o dist/dot-windows-amd64.exe
+      addons:
+        apt:
+          packages:
+          - rpm
+          - snapd
+      env:
+        - PATH=/snap/bin:$PATH
+      before_deploy:
+        - sudo snap install snapcraft --classic
+        # - mkdir -p dist
+        # - GOOS=darwin  GOARCH=amd64 go build -o dist/dot-darwin-amd64
+        # - GOOS=linux   GOARCH=amd64 go build -o dist/dot-linux-amd64
+        # - go get github.com/inconshreveable/mousetrap
+        # - GOOS=windows GOARCH=amd64 go build -o dist/dot-windows-amd64.exe
       # after_success:
       #   # docker login is required if you want to push docker images.
       #   # DOCKER_PASSWORD should be a secret in your .travis.yml configuration.
