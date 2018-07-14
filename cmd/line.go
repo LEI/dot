@@ -1,6 +1,8 @@
 package cmd
 
-import ()
+import (
+	"fmt"
+)
 
 // LineCmd ...
 type LineCmd struct {
@@ -9,10 +11,12 @@ type LineCmd struct {
 
 // Execute ...
 func (cmd *LineCmd) Execute(args []string) error {
-	// fmt.Println("execute line command",
-	// 	cmd.Role.Name,
-	// 	cmd.Role.Paths,
-	// 	args)
+	if Verbose > 2 {
+		fmt.Println("# LineCmd",
+			cmd.Role.Name,
+			cmd.Role.Paths,
+			args)
+	}
 	if cmd.Role.Name == "" {
 		return nil
 	}

@@ -35,7 +35,7 @@ func (c *Config) Read(name string) (string, error) {
 		return "", nil
 	}
 	cfgPath := name
-	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
+	if !exist(cfgPath) {
 		return "", nil
 	}
 	cfg, err := ioutil.ReadFile(cfgPath)
@@ -166,12 +166,21 @@ func readConfig(s string) ([]byte, error) {
 // 	return !os.IsNotExist(err)
 // }
 
-func isFile(s string) bool {
-	fi, err := os.Stat(s)
-
-	return !os.IsNotExist(err) && !fi.IsDir()
-}
-
 func read(s string) ([]byte, error) {
 	return ioutil.ReadFile(s)
 }
+
+func exist(s string) bool {
+	_, err := os.Stat(s)
+	return err == nil || os.IsExist(err)
+}
+
+func isFile(s string) bool {
+	fi, err := os.Stat(s)
+	return !os.IsNotExist(err) && !fi.IsDir()
+}
+
+// func writeFile(fileName string, data []byte) error {
+// 	os.MkdirAll(path.Dir(fileName), os.ModePerm)
+// 	return ioutil.WriteFile(fileName, data, 0655)
+// }

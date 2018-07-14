@@ -115,6 +115,13 @@ func NewRole(name string) *Role {
 	}
 }
 
+func (r *Role) String() string {
+	if Verbose > 2 {
+		fmt.Sprintf("[%s](%s)%s", r.Name, r.URL, r.Path)
+	}
+	return fmt.Sprintf("%s", r.Name)
+}
+
 // Register ...
 func (r *Role) Register(cfg *Config) error {
 	if (&Role{}) == r {
@@ -207,14 +214,14 @@ func (r *Role) RegisterTemplate(s string) error {
 
 // Init ...
 func (r *Role) Init() error {
-	if _, err := os.Stat(target); os.IsNotExist(err) {
+	if !exist(target) {
 		return fmt.Errorf("Directory does not exist: %s", target)
 	}
 	if r.Path == "" {
 		r.Path = filepath.Join(target, Options.RoleDir, r.Name)
 	}
 	// r.URL = ParseURL(r.URL)
-	if Verbose {
+	if Verbose > 0 {
 		fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
 	}
 	if err := r.Sync(); err != nil {
@@ -225,11 +232,16 @@ func (r *Role) Init() error {
 
 // Sync ...
 func (r *Role) Sync() error {
+	if r.URL == "" && !exist(r.Path) {
+		return fmt.Errorf("# Role %s has no URL and could not be found in %s", r.Name, r.Path)
+	}
 	repo := NewRepo(r.Path, r.URL)
+	exists := exist(repo.Path)
 	// Clone if the local directory does not exist
-	if _, err := os.Stat(repo.Path); os.IsNotExist(err) {
+	if !exist(repo.Path) {
 		switch err := repo.Clone(); err {
 		case nil:
+			exists = true
 			break
 		case ErrNetworkUnreachable:
 			if !Options.NoSync {
@@ -239,20 +251,18 @@ func (r *Role) Sync() error {
 			return err
 		}
 	}
-	switch err := repo.Clone(); err {
-	case nil:
-		break
-	case ErrNetworkUnreachable:
-		if !Options.NoSync {
-			return err
-		}
-	default:
-		return err
-	}
-	// TODO: flag ignore dirty
 	switch err := repo.checkRepo(); err {
 	case nil:
 		break
+	case ErrNoGitDir:
+		if !exists {
+			return err
+		}
+		// Existing directory
+		// but no .git: break
+		// before exit status 128
+		fmt.Printf("Using local %s: %s (no .git)\n", r.Name, r.Path)
+		return nil
 	case ErrDirtyRepo:
 		if !Options.Force {
 			return err
@@ -260,7 +270,6 @@ func (r *Role) Sync() error {
 	default:
 		return err
 	}
-	// TODO: skip if just cloned
 	switch err := repo.Pull(); err {
 	case nil:
 		break
@@ -280,7 +289,7 @@ func (r *Role) ReadConfig(name string) (string, error) {
 		return "", nil
 	}
 	cfgPath := filepath.Join(r.Path, name)
-	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
+	if !exist(cfgPath) {
 		fmt.Printf("No role config file found: %s\n", cfgPath)
 		return "", nil
 	}

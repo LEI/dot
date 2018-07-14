@@ -6,6 +6,7 @@ import ()
 type PkgTask struct {
 	Name string
 	Sudo bool
+	Task
 }
 
 // Do ...

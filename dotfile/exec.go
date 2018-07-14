@@ -10,6 +10,7 @@ import (
 // ExecTask struct
 type ExecTask struct {
 	Cmd string
+	Task
 }
 
 // Do ...
@@ -19,21 +20,29 @@ func (t *ExecTask) Do(a string) error {
 
 // Install copy
 func (t *ExecTask) Install() error {
-	fmt.Printf("%s\n", t.Cmd)
+	name, args := t.Cmd[0], t.Cmd[1:]
+	fmt.Println(name, args)
 	return nil
+	// return execute(name, args...)
 }
 
 // Remove copy
 func (t *ExecTask) Remove() error {
-	fmt.Printf("%s\n", t.Cmd)
+	name, args := t.Cmd[0], t.Cmd[1:]
+	fmt.Println(name, args)
 	return nil
+	// return execute(name, args...)
 }
 
+var execWarned bool
+
 func execute(name string, args ...string) error {
-	s := fmt.Sprintf("%s %s", name, strings.Join(args[:], " "))
-	fmt.Println(s)
+	if DryRun && !execWarned {
+		fmt.Println("DRY-RUN, unexpected behavior may occur.")
+		execWarned = true
+	}
+	fmt.Printf("%s %s\n", name, strings.Join(args[:], " "))
 	if DryRun {
-		// fmt.Println("DRY-RUN, unexpected behavior may occur.")
 		return nil
 	}
 	c := exec.Command(name, args...)

@@ -14,6 +14,8 @@ type RemoveCmd struct {
 
 // Execute ...
 func (cmd *RemoveCmd) Execute(args []string) error {
-	fmt.Println("exec remove cmd", args)
+	if Verbose > 2 {
+		fmt.Println("# RemoveCmd", args)
+	}
 	return nil // executeCommands(cmd, args)
 }

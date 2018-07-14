@@ -27,9 +27,9 @@ func (t *LineTask) Install() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
 	fmt.Printf("%secho '%s' >> %s\n", prefix, t.Line, t.File)
 	return nil
@@ -41,11 +41,12 @@ func (t *LineTask) Remove() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
 	fmt.Printf("%ssed -i '#^%s$#d' %s\n", prefix, t.Line, t.File)
+	// RemoveIfEmpty?
 	// if err := removeBaseDir(t.File); err != nil {
 	// 	return err
 	// }

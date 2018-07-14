@@ -56,20 +56,21 @@ func PacRemove(args ...string) error {
 
 func pacDo(a string, args ...string) error {
 	pa := []string{} // pacapt args
+	opts := ""
+	if Verbose == 0 {
+		opts+= "q"
+	}
 	switch strings.ToLower(a) {
 	case "install":
-		pa = append(pa, "-S")
+		pa = append(pa, "-S" + opts)
 		break
 	// case "remove":
-	// 	pa = append(pa, "-R")
+	// 	pa = append(pa, "-R" + opts)
 	// 	break
 	default:
 		fmt.Println("abort pacDo")
 		return nil
 	}
-	// if !Verbose {
-	// 	opt+= "q"
-	// }
 	if ok := HasOne([]string{"darwin"}, GetOSTypes()); !ok {
 		pa = append(pa, "--noconfirm")
 	}

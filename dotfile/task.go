@@ -10,6 +10,9 @@ var (
 	// DryRun ...
 	DryRun bool
 
+	// Verbose ...
+	Verbose int
+
 	// FileMode ...
 	FileMode os.FileMode = 0644
 
@@ -19,6 +22,7 @@ var (
 
 // Task interface
 type Task interface {
+	String() string
 	// Register(interface{}) error
 	Install() error
 	Remove() error

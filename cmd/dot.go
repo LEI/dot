@@ -23,8 +23,8 @@ var (
 	// TODO? --filter=*
 	Only []string
 
-	// Verbose mode
-	Verbose bool
+	// Verbose level (verbosity)
+	Verbose int
 )
 
 var executedCommand flags.Commander

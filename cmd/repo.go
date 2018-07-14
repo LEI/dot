@@ -5,6 +5,7 @@ import (
 	"fmt"
 	// "io/ioutil"
 	"net"
+	"path/filepath"
 	"os"
 	"os/exec"
 	"strings"
@@ -24,11 +25,16 @@ var (
 	defaultRemote = "origin"
 	defaultBranch = "master"
 
+	repoFmt = "https://github.com/%s.git"
+
+	// ErrNoGitDir ...
+	ErrNoGitDir = fmt.Errorf("no .git directory")
+
 	// ErrDirtyRepo ...
-	ErrDirtyRepo = fmt.Errorf("Dirty repository")
+	ErrDirtyRepo = fmt.Errorf("dirty repository")
 
 	// ErrNetworkUnreachable ...
-	ErrNetworkUnreachable = fmt.Errorf("Network unreachable")
+	ErrNetworkUnreachable = fmt.Errorf("network unreachable")
 )
 
 func init() {
@@ -37,20 +43,26 @@ func init() {
 
 // NewRepo ...
 func NewRepo(p, url string) *Repo {
-	if !strings.Contains(url, "https://") {
-		url = "https://github.com/" + url
+	if url != "" && !strings.Contains(url, "https://") {
+		url = fmt.Sprintf(repoFmt, url)
+		fmt.Println("NewRepo URL:", url)
+	} else if url == "" && strings.Contains(p, "/") && string(p[0]) != "/" && string(p[0]) != "~" {
+		url = fmt.Sprintf(repoFmt, p)
+		fmt.Println("NewRepo URL:", url)
 	}
-	r := &Repo{Path: p, URL: url}
-	if r.remote == "" {
-		r.remote = defaultRemote
-	}
-	if r.branch == "" {
-		r.branch = defaultBranch
+	r := &Repo{
+		Path: p,
+		URL: url,
+		remote: defaultRemote,
+		branch: defaultBranch,
 	}
 	return r
 }
 
 func (r *Repo) checkRepo() error {
+	if !isGitDir(r.Path) {
+		return ErrNoGitDir
+	}
 	args := []string{"-C", r.Path, "diff-index", "--quiet", "HEAD"}
 	c := exec.Command("git", args...)
 	err := c.Run()
@@ -74,7 +86,7 @@ func (r *Repo) Pull() error {
 	}
 	args := []string{"-C", r.Path, "pull", r.remote, r.branch, "--quiet"}
 	// fmt.Printf("git %s\n", strings.Join(args, " "))
-	if Verbose {
+	if Verbose > 0 {
 		fmt.Printf("git pull %s %s\n", r.remote, r.branch)
 	}
 	c := exec.Command("git", args...)
@@ -91,12 +103,12 @@ func (r *Repo) Clone() error {
 	if !online {
 		return ErrNetworkUnreachable
 	}
-	if _, err := os.Stat(r.Path); err == nil {
+	if exist(r.Path) {
 		return r.checkRemote()
 	}
 	args := []string{"clone", r.URL, r.Path, "--recursive", "--quiet"}
 	// fmt.Printf("git %s\n", strings.Join(args, " "))
-	if Verbose {
+	if Verbose > 0 {
 		fmt.Printf("git clone %s %s\n", r.URL, r.Path)
 	}
 	c := exec.Command("git", args...)
@@ -157,4 +169,8 @@ func parseRepo(str string) string {
 		return strings.Join(parts[len(parts)-2:], "/")
 	}
 	return str
+}
+
+func isGitDir(s string) bool {
+	return exist(filepath.Join(s, ".git"))
 }

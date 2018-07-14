@@ -15,7 +15,9 @@ type InstallCmd struct {
 
 // Execute ...
 func (cmd *InstallCmd) Execute(args []string) error {
-	// fmt.Println("exec install cmd", args)
+	if Verbose > 2 {
+		fmt.Println("# InstallCmd", args)
+	}
 	if err := cmd.Copy.Execute([]string{}); err != nil {
 		fmt.Println("copy err", err)
 		// os.Exit(1)

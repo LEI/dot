@@ -21,10 +21,6 @@ type LinkTask struct {
 	Task
 }
 
-func (t *LinkTask) String() string {
-	return fmt.Sprintf("%s -> %s", t.Source, t.Target)
-}
-
 // Do ...
 func (t *LinkTask) Do(a string) error {
 	return do(t, a)
@@ -39,9 +35,9 @@ func (t *LinkTask) Install() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
 	fmt.Printf("%sln -s %s %s\n", prefix, t.Source, t.Target)
 	return nil
@@ -53,9 +49,9 @@ func (t *LinkTask) Remove() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
 	fmt.Printf("%srm %s\n", prefix, t.Target)
 	// if err := removeBaseDir(t.Target); err != nil {

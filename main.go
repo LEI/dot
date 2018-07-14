@@ -54,6 +54,7 @@ func main() {
 	}
 
 	verbosity = len(cmd.Options.Verbose)
+	dotfile.Verbose = verbosity
 	// if verbosity > 0 {
 	// 	fmt.Printf("Verbosity: %v\n", verbosity)
 	// }
@@ -83,6 +84,7 @@ func init() {
 func execute(options *cmd.DotCmd) error {
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
+	enabledCount := 0
 	for _, r := range config.Roles {
 		r.Enabled = true // Quickfix
 		if len(options.RoleFilter) > 0 && !dotfile.HasOne([]string{r.Name}, options.RoleFilter) {
@@ -100,9 +102,13 @@ func execute(options *cmd.DotCmd) error {
 				continue
 			}
 		}
+		enabledCount++
 	}
-	// Compute length after filtering roles
+	// Compute length after removing roles
 	length := len(config.Roles)
+	if length == 0 {
+		return fmt.Errorf("# No roles, at least for this OS")
+	}
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
 		go func(r *cmd.Role) {
@@ -119,7 +125,7 @@ func execute(options *cmd.DotCmd) error {
 				errs <- err
 				return
 			}
-			if configFile != "" && verbosity > 0 {
+			if configFile != "" && verbosity > 1 {
 				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
 			}
 			errs <- nil
@@ -131,19 +137,22 @@ func execute(options *cmd.DotCmd) error {
 			return err
 		}
 	}
-	if len(config.Roles) == 0 {
-		fmt.Fprintln(os.Stderr, "No roles to execute")
-		return nil
+	if enabledCount == 0 {
+		return fmt.Errorf("# No roles to execute in: %s", config.Roles)
 	}
-	// Check dependencies
-	if err := config.Require(); err != nil {
-		return err
-		// switch err {
-		// case cmd.ErrSkipDeps:
-		// 	break
-		// default:
-		// 	return err
-		// }
+	switch cmd.Action {
+	case "install":
+		// Resolve dependencies
+		if err := config.Require(); err != nil {
+			return err
+			// switch err {
+			// case cmd.ErrSkipDeps:
+			// 	break
+			// default:
+			// 	return err
+			// }
+		}
+		break
 	}
 	for _, r := range config.Roles {
 		// Skip disabled roles

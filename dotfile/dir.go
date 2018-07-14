@@ -15,8 +15,9 @@ func CreateDir(dir string) (bool, error) {
 	if err == nil && fi.IsDir() {
 		return false, nil
 	}
-	// if Verbose {}
+	// if Verbose {
 	fmt.Printf("mkdir -p %s\n", dir)
+	// }
 	if DryRun {
 		return true, nil
 	}
@@ -32,7 +33,9 @@ func RemoveDir(dir string) (bool, error) {
 	if err == nil && !fi.IsDir() {
 		return false, nil
 	}
-	// if Verbose {}
+	// if Verbose {
+	fmt.Printf("rmdir %s\n", dir)
+	// }
 	if DryRun {
 		return true, nil
 	}
