@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # https://raw.githubusercontent.com/LEI/dot/master/scripts/install.sh
+# https://git.io/dot.lei.sh
 # curl -sSL https://dot.lei.sh | sh
 # wget -qO- https://dot.lei.sh | sh
 
