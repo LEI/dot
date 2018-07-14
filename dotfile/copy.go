@@ -28,9 +28,9 @@ func (t *CopyTask) Install() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
 	fmt.Printf("%scp %s %s\n", prefix, t.Source, t.Target)
 	return nil
@@ -42,9 +42,9 @@ func (t *CopyTask) Remove() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
 	fmt.Printf("%srm %s\n", prefix, t.Target)
 	if err := removeBaseDir(t.Target); err != nil {
