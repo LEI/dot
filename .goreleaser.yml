@@ -33,3 +33,23 @@ changelog:
       - '^test:'
 git:
   short_hash: true
+brew:
+  # name: dot
+  # github:
+  #   owner: LEI
+  #   name: homebrew-tap
+  # download_strategy:
+  # commit_author:
+  #   name:
+  #   email:
+  # folder: Formula
+  # caveats: ""
+  homepage: "https://github.com/LEI/dot"
+  # description: ""
+  dependencies:
+    - git
+    # - bash
+  # conflicts: []
+  # plist: |
+  # test: |
+  # install (default: bin.install "program"°
