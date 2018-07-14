@@ -1,5 +1,6 @@
 # dot
 
+[![GoDoc](https://godoc.org/github.com/LEI/dot?status.svg)](https://godoc.org/github.com/LEI/dot)
 [![Build Status](https://travis-ci.org/LEI/dot.svg?branch=master)](https://travis-ci.org/LEI/dot)
 
 - [go-flags](https://github.com/jessevdk/go-flags)
