@@ -213,7 +213,7 @@ func parseReleases() Release {
 			fmt.Fprintf(os.Stderr, "%s(ini): %s\n", p, err)
 			os.Exit(1)
 		}
-		if Verbose > 1{
+		if Verbose > 1 {
 			fmt.Printf("%s:\n%+v\n", p, release)
 		}
 		if Verbose > 2 {

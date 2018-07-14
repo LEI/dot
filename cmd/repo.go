@@ -5,9 +5,9 @@ import (
 	"fmt"
 	// "io/ioutil"
 	"net"
-	"path/filepath"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -51,8 +51,8 @@ func NewRepo(p, url string) *Repo {
 		fmt.Println("NewRepo URL:", url)
 	}
 	r := &Repo{
-		Path: p,
-		URL: url,
+		Path:   p,
+		URL:    url,
 		remote: defaultRemote,
 		branch: defaultBranch,
 	}

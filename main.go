@@ -87,7 +87,7 @@ func execute(options *cmd.DotCmd) error {
 		if r.OS != nil {
 			if len(r.OS) > 0 && !dotfile.HasOSType(r.OS...) { // Skip role
 				fmt.Fprintf(os.Stderr, "# [%s] Skipping (OS: %s)\n", r.Name, strings.Join(r.OS, ", "))
-				if err:= config.RemoveRole(r); err != nil {
+				if err := config.RemoveRole(r); err != nil {
 					return err
 				}
 				continue

@@ -18,6 +18,8 @@ import (
 // r.<Task>, r.Register<Task>
 var defaultTasks = []string{
 	"copy",
+	"exec",
+	"line",
 	"link",
 	"template",
 }
@@ -443,7 +445,7 @@ func (r *Role) Do(a string, filter []string) error {
 		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
 	}
 	before := v.Interface().([]string)
-	if len(before) > 0 {
+	if len(before) > 0 && dotfile.HasOne([]string{"exec"}, filter) {
 		for _, c := range before {
 			task := &dotfile.ExecTask{
 				Cmd: c,
@@ -463,7 +465,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Pkg != nil && Options.Packages {
+	if r.Pkg != nil && Options.Packages && dotfile.HasOne([]string{"package"}, filter) {
 		for _, v := range r.Pkg {
 			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
 				continue
@@ -480,7 +482,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Copy != nil {
+	if r.Copy != nil && dotfile.HasOne([]string{"copy"}, filter) {
 		for s, t := range r.Copy {
 			task := &dotfile.CopyTask{
 				Source: s,
@@ -491,7 +493,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Line != nil {
+	if r.Line != nil && dotfile.HasOne([]string{"line"}, filter) {
 		for s, t := range r.Line {
 			task := &dotfile.LineTask{
 				File: s,
@@ -502,7 +504,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Link != nil {
+	if r.Link != nil && dotfile.HasOne([]string{"link"}, filter) {
 		for s, t := range r.Link {
 			task := &dotfile.LinkTask{
 				Source: s,
@@ -513,7 +515,7 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Template != nil {
+	if r.Template != nil && dotfile.HasOne([]string{"template"}, filter) {
 		for s, t := range r.Template {
 			task := &dotfile.TemplateTask{
 				Source: s,
@@ -529,7 +531,7 @@ func (r *Role) Do(a string, filter []string) error {
 		// TODO: Restore original environment
 	}
 	after := r.GetField("Post" + a).Interface().([]string)
-	if len(after) > 0 {
+	if len(after) > 0 && dotfile.HasOne([]string{"exec"}, filter) {
 		for _, c := range after {
 			task := &dotfile.ExecTask{
 				Cmd: c,

@@ -22,11 +22,12 @@ func (cmd *PkgCmd) Execute(args []string) error {
 	if err := role.Register(config); err != nil {
 		return err
 	}
-	// for _, p := range cmd.Role.Paths {
-	// 	err := role.RegisterPkg(string(p))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	for _, p := range cmd.Role.Paths {
+		fmt.Println("=>", p)
+		// err := role.RegisterPkg(string(p))
+		// if err != nil {
+		// 	return err
+		// }
+	}
 	return nil
 }

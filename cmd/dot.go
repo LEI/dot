@@ -122,8 +122,11 @@ func init() {
 		case *TemplateCmd:
 			Only = append(Only, "template")
 			break
+		case *PkgCmd:
+			Only = append(Only, "package")
+			break
 		default:
-			return fmt.Errorf("exec cmd (%+v) %+v", reflect.TypeOf(cmd).Elem(), cmd)
+			return fmt.Errorf("# Unhandled command (%+v): %+v", reflect.TypeOf(cmd).Elem(), cmd)
 		}
 		return cmd.Execute(args)
 	}
