@@ -122,7 +122,7 @@ func init() {
 		case *TemplateCmd:
 			Only = append(Only, "template")
 			break
-		case *PkgCmd:
+		case *PackageCmd:
 			Only = append(Only, "package")
 			break
 		default:

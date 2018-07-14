@@ -4,9 +4,7 @@ import (
 	// "fmt"
 	// "os"
 	"testing"
-
 	// "github.com/jessevdk/go-flags"
-
 	// "github.com/LEI/dot/cmd"
 )
 

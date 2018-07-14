@@ -58,7 +58,7 @@ type Role struct {
 	Remove      []string
 	PostRemove  []string `yaml:"post_remove"`
 
-	Package      parsers.Packages
+	Pkg          parsers.Packages
 	Dependencies []string
 	Enabled      bool // TODO `default:"true"`
 }
