@@ -116,6 +116,7 @@ func Link(src, dst string) (bool, error) {
 		if real == src && err == ErrLinkExist {
 			return false, nil
 		}
+		fmt.Fprintf(os.Stderr, "# %s is a file? at least not a link to %s\n", dst, src)
 		return false, err
 	}
 	if real == src { // Symlink already exists
@@ -138,7 +139,7 @@ func Link(src, dst string) (bool, error) {
 	// fmt.Println("ERR:", err)
 	// fmt.Println("FI:", fi)
 	if fi != nil {
-		// fmt.Fprintf(os.Stderr, "# %s is already a file\n", dst)
+		fmt.Fprintf(os.Stderr, "# %s is already a file\n", dst)
 		// os.Exit(1)
 		return false, ErrFileExist // fmt.Errorf("%s already exists, could not link %s", dst, src)
 	}
