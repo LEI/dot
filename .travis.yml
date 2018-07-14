@@ -51,22 +51,9 @@ jobs:
         # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
         - docker-compose run test
     - stage: deploy
-      # TODO: goreleaser
-      addons:
-        apt:
-          packages:
-            # needed for the nfpm pipe:
-            - rpm
-            # needed for the snap pipe:
-            - snapcraft
-
-      env:
-        # needed for the snap pipe:
-        - PATH=/snap/bin:$PATH
+      # TODO: goreleaser NFPM (.deb, .rpm), Snapcraft (snap)...
       before_deploy:
-        # needed for the snap pipe:
-        - sudo snap install snapcraft --classic
-        # Run goreleaser (dist must not exist)
+        # Build into dist and release go program
         - curl -sL https://git.io/goreleaser | bash
         # - mkdir -p dist
         # - GOOS=darwin  GOARCH=amd64 go build -o dist/dot-darwin-amd64
