@@ -10,6 +10,55 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+// DotCmd ...
+type DotCmd struct {
+	BaseCmd
+
+	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
+	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
+
+	// env:"DOT_CONFIG" default:".dot"
+	Config    func(s string) error `short:"c" long:"config" description:"Config file name" default:".dot.yml"`
+	IniConfig func(s string) error `short:"i" long:"ini-config" description:"Path to INI config file" no-ini:"true"`
+
+	RoleDir    string   `short:"R" long:"role-dir" description:"Role directory name" default:".dot"`
+	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
+	IgnoreDeps bool     `short:"I" long:"ignore-dependencies" description:"Honor the role filter"`
+
+	// Debug bool `short:"D" long:"debug" description:""`
+
+	// Ignore uncommitted changes in repository
+	Force bool `short:"f" long:"force" description:"Ignore uncommitted changes"`
+
+	// Do not error out if unable to git clone or pull
+	NoSync bool `short:"n" long:"no-sync" description:"Skip network operations"`
+
+	DryRun bool `short:"d" long:"dry-run" description:"Do not execute tasks"`
+
+	// Slice of bool will append 'true' each time the option
+	// is encountered (can be set multiple times, like -vvv)
+	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
+
+	Version bool `short:"V" long:"version" description:"Print the version and exit"`
+
+	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
+	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
+
+	Packages bool `short:"P" long:"packages" description:"Install or remove required packages"`
+	Sudo     bool `short:"S" long:"sudo" description:"Use sudo to execute package manager"`
+}
+
+// CommandHandler ...
+// func (cmd *DotCmd) CommandHandler(command flags.Commander, args []string) error {
+// 	return command.Execute(args)
+// }
+
+// Execute ...
+func (cmd *DotCmd) Execute(args []string) error {
+	// fmt.Println("exec dot cmd", args)
+	return cmd.Install.Execute(args)
+}
+
 var (
 	// Options ...
 	Options DotCmd
@@ -78,55 +127,6 @@ func init() {
 		}
 		return cmd.Execute(args)
 	}
-}
-
-// DotCmd ...
-type DotCmd struct {
-	BaseCmd
-
-	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
-	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
-
-	// env:"DOT_CONFIG" default:".dot"
-	Config    func(s string) error `short:"c" long:"config" description:"Config file name" default:".dot.yml"`
-	IniConfig func(s string) error `short:"i" long:"ini-config" description:"Path to INI config file" no-ini:"true"`
-
-	RoleDir    string   `short:"R" long:"role-dir" description:"Role directory name" default:".dot"`
-	RoleFilter []string `short:"r" long:"role" description:"Filter roles by name"`
-	IgnoreDeps bool     `short:"I" long:"ignore-dependencies" description:"Honor the role filter"`
-
-	// Debug bool `short:"D" long:"debug" description:""`
-
-	// Ignore uncommitted changes in repository
-	Force bool `short:"f" long:"force" description:"Ignore uncommitted changes"`
-
-	// Do not error out if unable to git clone or pull
-	NoSync bool `short:"n" long:"no-sync" description:"Skip network operations"`
-
-	DryRun bool `short:"d" long:"dry-run" description:"Do not execute tasks"`
-
-	// Slice of bool will append 'true' each time the option
-	// is encountered (can be set multiple times, like -vvv)
-	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
-
-	Version bool `short:"V" long:"version" description:"Print the version and exit"`
-
-	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
-	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
-
-	Packages bool `short:"P" long:"packages" description:"Install or remove required packages"`
-	Sudo     bool `short:"S" long:"sudo" description:"Use sudo to execute package manager"`
-}
-
-// CommandHandler ...
-// func (cmd *DotCmd) CommandHandler(command flags.Commander, args []string) error {
-// 	return command.Execute(args)
-// }
-
-// Execute ...
-func (cmd *DotCmd) Execute(args []string) error {
-	// fmt.Println("exec dot cmd", args)
-	return cmd.Install.Execute(args)
 }
 
 // func readConfig(config *dot.Config) func(s string) error {

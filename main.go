@@ -19,8 +19,6 @@ var (
 	config = cmd.NewConfig()
 	// *cmd.Config = &cmd.Config{} // {Name: ".dot"}
 	configFileUsed string
-
-	verbosity = 0
 )
 
 func main() {
@@ -47,27 +45,20 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Remaining arguments: %+v\n", remaining)
 		os.Exit(1)
 	}
-
 	if cmd.Options.Version {
 		fmt.Println("v0")
 		os.Exit(0)
 	}
-
-	verbosity = len(cmd.Options.Verbose)
-	dotfile.Verbose = verbosity
-	// if verbosity > 0 {
-	// 	fmt.Printf("Verbosity: %v\n", verbosity)
+	// if cmd.Verbose > 0 {
+	// 	fmt.Printf("Verbosity: %v\n", cmd.Verbose)
 	// }
-
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
 	// fmt.Printf("Options: %+v\n", cmd.Options)
 	// fmt.Printf("Options role: %+v\n", cmd.GetParser().Find("install").FindOptionByLongName("roles"))
-
-	if configFileUsed != "" && verbosity > 0 {
+	if configFileUsed != "" && cmd.Verbose > 0 {
 		fmt.Printf("# Using configuration file: %s\n", configFileUsed)
 	}
-
 	if err := execute(&cmd.Options); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -125,7 +116,7 @@ func execute(options *cmd.DotCmd) error {
 				errs <- err
 				return
 			}
-			if configFile != "" && verbosity > 1 {
+			if configFile != "" && cmd.Verbose > 1 {
 				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
 			}
 			errs <- nil

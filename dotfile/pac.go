@@ -56,16 +56,12 @@ func PacRemove(args ...string) error {
 
 func pacDo(a string, args ...string) error {
 	pa := []string{} // pacapt args
-	opts := ""
-	if Verbose == 0 {
-		opts+= "q"
-	}
 	switch strings.ToLower(a) {
 	case "install":
-		pa = append(pa, "-S" + opts)
+		pa = append(pa, "-S")
 		break
 	// case "remove":
-	// 	pa = append(pa, "-R" + opts)
+	// 	pa = append(pa, "-R")
 	// 	break
 	default:
 		fmt.Println("abort pacDo")

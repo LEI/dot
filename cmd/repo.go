@@ -106,7 +106,16 @@ func (r *Repo) Clone() error {
 	if exist(r.Path) {
 		return r.checkRemote()
 	}
-	args := []string{"clone", r.URL, r.Path, "--recursive", "--quiet"}
+	args := []string{
+		"--branch=" + r.branch,
+		"clone",
+		r.URL,
+		r.Path,
+		"--recursive",
+	}
+	if Verbose > 3 {
+		args = append(args, "--quiet")
+	}
 	// fmt.Printf("git %s\n", strings.Join(args, " "))
 	if Verbose > 0 {
 		fmt.Printf("git clone %s %s\n", r.URL, r.Path)
