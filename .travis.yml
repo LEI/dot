@@ -16,6 +16,7 @@ services:
 
 stages:
   - test
+  - build
   - name: deploy
     # if: branch = master
 
@@ -42,7 +43,7 @@ jobs:
         # - test -d $HOME/.vim/plugged
         # go test -v ./.. -covermode=count -coverprofile=coverage.out
         # - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
-    - stage: test
+    - stage: build
       install: true
       before_script:
         - docker-compose build

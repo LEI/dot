@@ -117,7 +117,7 @@ func NewRole(name string) *Role {
 
 func (r *Role) String() string {
 	if Verbose > 2 {
-		fmt.Sprintf("[%s](%s)%s", r.Name, r.URL, r.Path)
+		return fmt.Sprintf("[%s](%s)%s", r.Name, r.URL, r.Path)
 	}
 	return fmt.Sprintf("%s", r.Name)
 }
