@@ -41,4 +41,5 @@ roles:
     os: ["darwin"]
 
   - name: mutt
+    url: "https://github.com/LEI/dot-mutt"
     os: ["darwin"]

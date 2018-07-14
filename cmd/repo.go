@@ -74,7 +74,7 @@ func (r *Repo) checkRepo() error {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
 			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
-				if status.ExitStatus() == 256 {
+				if status.ExitStatus() == 1 {
 					return ErrDirtyRepo
 				}
 			}
@@ -91,9 +91,8 @@ func (r *Repo) Pull() error {
 		return ErrNetworkUnreachable
 	}
 	args := []string{"-C", r.Path, "pull", r.Remote, r.Branch, "--quiet"}
-	// fmt.Printf("git %s\n", strings.Join(args, " "))
 	if Verbose > 0 {
-		fmt.Printf("git pull %s %s\n", r.Remote, r.Branch)
+		fmt.Printf("git %s\n", strings.Join(args, " "))
 	}
 	c := exec.Command("git", args...)
 	c.Stdout = os.Stdout
@@ -120,8 +119,9 @@ func (r *Repo) Clone() error {
 	if Verbose > 3 {
 		args = append(args, "--quiet")
 	}
-	// fmt.Printf("git %s\n", strings.Join(args, " "))
-	if Verbose > 0 {
+	if Verbose > 1 {
+		fmt.Printf("git %s\n", strings.Join(args, " "))
+	} else if Verbose > 0 {
 		fmt.Printf("git clone %s %s\n", r.URL, r.Path)
 	}
 	c := exec.Command("git", args...)
