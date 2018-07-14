@@ -39,7 +39,7 @@ snapshot:
   # Default is "SNAPSHOT-{{.Commit}}"
   name_template: "{{ .Tag }}-next"
 changelog:
-  sort: asc
+  # sort: asc
   filters:
     exclude:
       - '^docs:'
@@ -47,10 +47,10 @@ changelog:
 git:
   short_hash: true
 brew:
-  # name: dot
-  # github:
-  #   owner: LEI
-  #   name: homebrew-tap
+  name: dot
+  github:
+    owner: LEI
+    name: homebrew-dot
   # download_strategy:
   # commit_author:
   #   name:
