@@ -107,11 +107,11 @@ func (r *Repo) Clone() error {
 		return r.checkRemote()
 	}
 	args := []string{
-		"--branch=" + r.branch,
 		"clone",
+		"--branch=", r.branch,
+		"--recursive",
 		r.URL,
 		r.Path,
-		"--recursive",
 	}
 	if Verbose > 3 {
 		args = append(args, "--quiet")
