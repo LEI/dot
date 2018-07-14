@@ -15,8 +15,9 @@ services:
 #     - $GOPATH/pkg
 
 stages:
-  - test
-  - build
+  # - test
+  # - build
+  - deploy
   # - name: deploy
   #   # if: branch = master
 
@@ -52,26 +53,27 @@ jobs:
         - docker-compose run test
     - stage: deploy
       # TODO: goreleaser NFPM (.deb, .rpm), Snapcraft (snap)...
-      before_deploy:
-        # Build into dist and release go program
-        - curl -sL https://git.io/goreleaser | bash
-        # - mkdir -p dist
-        # - GOOS=darwin  GOARCH=amd64 go build -o dist/dot-darwin-amd64
-        # - GOOS=linux   GOARCH=amd64 go build -o dist/dot-linux-amd64
-        # - go get github.com/inconshreveable/mousetrap
-        # - GOOS=windows GOARCH=amd64 go build -o dist/dot-windows-amd64.exe
+      # before_deploy:
+      #   - mkdir -p dist
+      #   - GOOS=darwin  GOARCH=amd64 go build -o dist/dot-darwin-amd64
+      #   - GOOS=linux   GOARCH=amd64 go build -o dist/dot-linux-amd64
+      #   - go get github.com/inconshreveable/mousetrap
+      #   - GOOS=windows GOARCH=amd64 go build -o dist/dot-windows-amd64.exe
       # after_success:
       #   # docker login is required if you want to push docker images.
       #   # DOCKER_PASSWORD should be a secret in your .travis.yml configuration.
       #   - test -n "$TRAVIS_TAG" && docker login -u=myuser -p="$DOCKER_PASSWORD"
-      deploy: # goreleaser can also handle ghreleases?
-        provider: releases
-        # prerelease: true
-        # draft: true
-        api_key:
-          secure: "$DEPLOY_API_KEY"
-        file: dist/*
-        file_glob: true
+      deploy:
+        provider: script
+        # Build into dist and release go program
+        script: curl -sL https://git.io/goreleaser | bash
+        # provider: releases
+        # api_key:
+        #   secure: "$DEPLOY_API_KEY"
+        # # prerelease: true
+        # # draft: true
+        # file: dist/*
+        # file_glob: true
         skip_cleanup: true
         on:
           repo: LEI/dot
