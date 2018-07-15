@@ -22,7 +22,7 @@ func (cmd *PackageCmd) Execute(args []string) error {
 	if err := role.Register(config); err != nil {
 		return err
 	}
-	for _, p := range cmd.Role.Paths {
+	for _, p := range cmd.Role.Args {
 		fmt.Println("=>", p)
 		// err := role.RegisterPackage(string(p))
 		// if err != nil {

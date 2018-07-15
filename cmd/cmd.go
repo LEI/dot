@@ -48,7 +48,7 @@ type BaseRoleCmd struct {
 // RoleArg ...
 type RoleArg struct {
 	Name  string // `default:"default"` // `required:"true"`
-	Paths []flags.Filename
+	Args []flags.Filename
 }
 
 var parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)

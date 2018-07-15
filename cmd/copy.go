@@ -14,7 +14,7 @@ func (cmd *CopyCmd) Execute(args []string) error {
 	if Verbose > 2 {
 		fmt.Println("# CopyCmd",
 			cmd.Role.Name,
-			cmd.Role.Paths,
+			cmd.Role.Args,
 			args)
 	}
 	if cmd.Role.Name == "" {
@@ -25,7 +25,7 @@ func (cmd *CopyCmd) Execute(args []string) error {
 	if err := role.Register(config); err != nil {
 		return err
 	}
-	for _, p := range cmd.Role.Paths {
+	for _, p := range cmd.Role.Args {
 		err := role.RegisterCopy(string(p))
 		if err != nil {
 			return err

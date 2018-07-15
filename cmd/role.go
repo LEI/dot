@@ -435,27 +435,13 @@ func (r *Role) GetField(key string) reflect.Value {
 }
 
 // Do ...
-func (r *Role) Do(a string, filter []string) error {
+func (r *Role) Do(a string, run []string) error {
 	fmt.Printf("# Role: %+v\n", r.Name)
-	if len(filter) == 0 {
-		filter = defaultTasks
+	if len(run) == 0 {
+		run = defaultTasks
 	}
-	a = strings.Title(a)
-	v := r.GetField(a)
-	if !v.IsValid() {
-		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
-	}
-	before := v.Interface().([]string)
-	if len(before) > 0 && dotfile.HasOne([]string{"exec"}, filter) {
-		for _, c := range before {
-			task := &dotfile.ExecTask{
-				Cmd: c,
-			}
-			if err := task.Do(a); err != nil {
-				return err
-			}
-		}
-	}
+	// Env
+	savedEnv := dotfile.GetEnv()
 	if r.Env != nil {
 		for k, v := range r.Env {
 			k = strings.ToTitle(k)
@@ -466,7 +452,25 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Pkg != nil && Options.Packages && dotfile.HasOne([]string{"package"}, filter) {
+	// Pre-install/remove hook
+	a = strings.Title(a)
+	v := r.GetField(a)
+	if !v.IsValid() {
+		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
+	}
+	before := v.Interface().([]string)
+	if len(before) > 0 && dotfile.HasOne([]string{"exec"}, run) {
+		for _, c := range before {
+			task := &dotfile.ExecTask{
+				Cmd: c,
+			}
+			if err := task.Do(a); err != nil {
+				return err
+			}
+		}
+	}
+	// System packages
+	if r.Pkg != nil && Options.Packages && dotfile.HasOne([]string{"package"}, run) {
 		for _, v := range r.Pkg {
 			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
 				continue
@@ -483,7 +487,8 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Copy != nil && dotfile.HasOne([]string{"copy"}, filter) {
+	// NOOP: Copy
+	if r.Copy != nil && dotfile.HasOne([]string{"copy"}, run) {
 		for s, t := range r.Copy {
 			task := &dotfile.CopyTask{
 				Source: s,
@@ -494,7 +499,8 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Line != nil && dotfile.HasOne([]string{"line"}, filter) {
+	// Line in file
+	if r.Line != nil && dotfile.HasOne([]string{"line"}, run) {
 		for s, t := range r.Line {
 			task := &dotfile.LineTask{
 				File: s,
@@ -505,7 +511,8 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Link != nil && dotfile.HasOne([]string{"link"}, filter) {
+	// Symlink files
+	if r.Link != nil && dotfile.HasOne([]string{"link"}, run) {
 		for s, t := range r.Link {
 			task := &dotfile.LinkTask{
 				Source: s,
@@ -516,7 +523,8 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
-	if r.Template != nil && dotfile.HasOne([]string{"template"}, filter) {
+	// Templates
+	if r.Template != nil && dotfile.HasOne([]string{"template"}, run) {
 		for s, t := range r.Template {
 			task := &dotfile.TemplateTask{
 				Source: s,
@@ -528,11 +536,15 @@ func (r *Role) Do(a string, filter []string) error {
 			}
 		}
 	}
+	// Restore original environment
 	if r.Env != nil {
-		// TODO: Restore original environment
+		if err := dotfile.RestoreEnv(savedEnv); err != nil {
+			return nil
+		}
 	}
+	// Post-install/remove hook
 	after := r.GetField("Post" + a).Interface().([]string)
-	if len(after) > 0 && dotfile.HasOne([]string{"exec"}, filter) {
+	if len(after) > 0 && dotfile.HasOne([]string{"exec"}, run) {
 		for _, c := range after {
 			task := &dotfile.ExecTask{
 				Cmd: c,

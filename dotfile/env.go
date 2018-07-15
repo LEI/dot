@@ -83,6 +83,17 @@ func GetEnv() map[string]string {
 	return env
 }
 
+// RestoreEnv ...
+func RestoreEnv(env map[string]string) error {
+	os.Clearenv()
+	for k, v := range env {
+		if err := os.Setenv(k, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // TemplateEnv ...
 func TemplateEnv(k, v string) (string, error) {
 	if v == "" {
@@ -107,7 +118,9 @@ func SetEnv(k, v string) error {
 	if err != nil {
 		return err
 	}
+	// if Verbose > 0 {
 	fmt.Printf("%s=%s\n", k, v)
+	// }
 	return os.Setenv(k, v)
 }
 

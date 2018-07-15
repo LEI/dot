@@ -49,15 +49,17 @@ func (t *TemplateTask) Install() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
+	/*
 	vars := []string{}
 	for k, v := range t.Env { // + dotEnv
 		// fmt.Printf("%s=\"%s\"\n", k, v)
 		vars = append(vars, fmt.Sprintf("%s: %s", k, v))
 	}
+	*/
 	// envsubst
 	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)
 	// fmt.Printf("%sgotpl %s <<< '%s' | tee %s\n", prefix, t.Source, strings.Join(vars, "\n"), t.Target)
@@ -74,13 +76,13 @@ func (t *TemplateTask) Remove() error {
 	if err != nil {
 		return err
 	}
-	prefix := "# "
-	if changed {
-		prefix = ""
+	prefix := ""
+	if !changed {
+		prefix = "# "
 	}
-	for k, v := range t.Env { // + dotEnv
+	/*for k, v := range t.Env { // + dotEnv
 		fmt.Printf("%s=\"%s\"\n", k, v)
-	}
+	}*/
 	fmt.Printf("%srm %s\n", prefix, t.Target)
 	// if err := removeBaseDir(t.Target); err != nil {
 	// 	return err
