@@ -120,9 +120,70 @@ func NewRole(name string) *Role {
 
 func (r *Role) String() string {
 	if Verbose > 2 {
-		return fmt.Sprintf("[%s](%s)%s", r.Name, r.URL, r.Path)
+		return r.Sprint()
 	}
 	return fmt.Sprintf("%s", r.Name)
+}
+
+// Sprint verbose string
+func (r *Role) Sprint() string {
+	s := fmt.Sprintf("[%s:%s](%s)", r.Name, r.Path, r.URL)
+	ind := "  "
+	pre := "\n" + ind
+	if r.OS != nil && len(r.OS) > 0 {
+		s = s + fmt.Sprintf("%sOS: %s", pre, r.OS)
+	}
+	if r.Env != nil && len(r.Env) > 0 {
+		s = s + fmt.Sprintf("%sEnv: %s", pre, r.Env)
+	}
+	if r.Pkg != nil && len(r.Pkg) > 0 {
+		s = s + fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
+		for _, v := range r.Pkg {
+			s = s + fmt.Sprintf("%s + %+v", pre + ind, v)
+		}
+	}
+	if r.Dependencies != nil && len(r.Dependencies) > 0 {
+		s = s + fmt.Sprintf("%sDeps: %d", pre, len(r.Dependencies))
+		for _, v := range r.Dependencies {
+			s = s + fmt.Sprintf("%s < %+v", pre + ind, v)
+		}
+	}
+	if r.Copy != nil && len(r.Copy) > 0 {
+		s = s + fmt.Sprintf("%sCopy: %d", pre, len(r.Copy))
+		for k, v := range r.Copy {
+			s = s + fmt.Sprintf("%s%s => %s", pre + ind, k, v)
+		}
+	}
+	if r.Line != nil && len(r.Line) > 0 {
+		s = s + fmt.Sprintf("%sLine: %d", pre, len(r.Line))
+		for k, v := range r.Line {
+			s = s + fmt.Sprintf("%s%s >> %s", pre + ind, k, v)
+		}
+	}
+	if r.Link != nil && len(r.Link) > 0 {
+		s = s + fmt.Sprintf("%sLink: %d", pre, len(r.Link))
+		for k, v := range r.Link {
+			s = s + fmt.Sprintf("%s%s -> %s", pre + ind, k, v)
+		}
+	}
+	if r.Template != nil && len(r.Template) > 0 {
+		s = s + fmt.Sprintf("%sTemplate: %d", pre, len(r.Template))
+		for k, v := range r.Template {
+			s = s + fmt.Sprintf("%s%s +> %s", pre + ind, k, v)
+		}
+	}
+	switch true {
+	case len(r.Install) > 0:
+	case len(r.PostInstall) > 0:
+	case len(r.Remove) > 0:
+	case len(r.PostRemove) > 0:
+		s = s + fmt.Sprintf("%sHas exec: %s", pre, "yes")
+		break
+	}
+	// if r.Enabled {
+	// 	s = s + fmt.Sprintf("%sEnabled: %s", pre, r.Enabled)
+	// }
+	return fmt.Sprintf("%s", s)
 }
 
 // Register ...
@@ -436,6 +497,11 @@ func (r *Role) GetField(key string) reflect.Value {
 
 // Do ...
 func (r *Role) Do(a string, run []string) error {
+	if runTask("list", run) {
+		// Just print the role fields
+		fmt.Printf("# Role %+v\n", r.Sprint())
+		return nil
+	}
 	fmt.Printf("# Role: %+v\n", r.Name)
 	if len(run) == 0 {
 		run = defaultTasks
@@ -459,7 +525,7 @@ func (r *Role) Do(a string, run []string) error {
 		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
 	}
 	before := v.Interface().([]string)
-	if len(before) > 0 && dotfile.HasOne([]string{"exec"}, run) {
+	if len(before) > 0 && runTask("exec", run) {
 		for _, c := range before {
 			task := &dotfile.ExecTask{
 				Cmd: c,
@@ -470,7 +536,7 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// System packages
-	if r.Pkg != nil && Options.Packages && dotfile.HasOne([]string{"package"}, run) {
+	if r.Pkg != nil && Options.Packages && runTask("package", run) {
 		for _, v := range r.Pkg {
 			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
 				continue
@@ -488,7 +554,7 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// NOOP: Copy
-	if r.Copy != nil && dotfile.HasOne([]string{"copy"}, run) {
+	if r.Copy != nil && runTask("copy", run) {
 		for s, t := range r.Copy {
 			task := &dotfile.CopyTask{
 				Source: s,
@@ -500,7 +566,7 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// Line in file
-	if r.Line != nil && dotfile.HasOne([]string{"line"}, run) {
+	if r.Line != nil && runTask("line", run) {
 		for s, t := range r.Line {
 			task := &dotfile.LineTask{
 				File: s,
@@ -512,7 +578,7 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// Symlink files
-	if r.Link != nil && dotfile.HasOne([]string{"link"}, run) {
+	if r.Link != nil && runTask("link", run) {
 		for s, t := range r.Link {
 			task := &dotfile.LinkTask{
 				Source: s,
@@ -524,7 +590,7 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// Templates
-	if r.Template != nil && dotfile.HasOne([]string{"template"}, run) {
+	if r.Template != nil && runTask("template", run) {
 		for s, t := range r.Template {
 			task := &dotfile.TemplateTask{
 				Source: s,
@@ -544,7 +610,7 @@ func (r *Role) Do(a string, run []string) error {
 	}
 	// Post-install/remove hook
 	after := r.GetField("Post" + a).Interface().([]string)
-	if len(after) > 0 && dotfile.HasOne([]string{"exec"}, run) {
+	if len(after) > 0 && runTask("exec", run) {
 		for _, c := range after {
 			task := &dotfile.ExecTask{
 				Cmd: c,
@@ -555,6 +621,11 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	return nil
+}
+
+// Check if a given task name should be run
+func runTask(s string, filter []string) bool {
+	return dotfile.HasOne([]string{s}, filter)
 }
 
 /*

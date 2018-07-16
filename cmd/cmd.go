@@ -28,10 +28,10 @@ type BaseCmd struct {
 type BaseTaskCmd struct {
 	BaseCmd
 
-	Copy     CopyCmd     `command:"copy" alias:"cp" description:"Copy"`
+	Copy     CopyCmd     `command:"copy" alias:"cp" description:"Copy files"`
 	Line     LineCmd     `command:"line-in-file" alias:"line" description:"Line in file"`
-	Link     LinkCmd     `command:"link" alias:"ln" description:"Symlink"`
-	Template TemplateCmd `command:"template" alias:"tpl" description:"Template"`
+	Link     LinkCmd     `command:"link" alias:"ln" description:"Symlink files"`
+	Template TemplateCmd `command:"template" alias:"tpl" description:"Template files"`
 	Package  PackageCmd  `command:"package" alias:"p" description:"Manage packages"`
 	// Exec     ExecCmd      `command:"exec" alias:"e" description:"Execute a command"`
 }

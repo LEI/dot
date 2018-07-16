@@ -6,15 +6,19 @@ import (
 	"reflect"
 )
 
-// Packages ...
-type Packages []*Pkg
-
 // Pkg ...
 type Pkg struct {
 	Name   string
 	OS     []string
 	Action string // install, remove
 }
+
+func (p *Pkg) String() string {
+	return fmt.Sprintf("%s %s%s", p.Name, p.Action, p.OS)
+}
+
+// Packages ...
+type Packages []*Pkg
 
 // UnmarshalYAML ...
 func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {

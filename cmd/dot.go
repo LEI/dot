@@ -41,6 +41,7 @@ type DotCmd struct {
 
 	Version bool `short:"V" long:"version" description:"Print the version and exit"`
 
+	List    ListCmd    `command:"list" alias:"ls" description:"List roles"`
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"r" description:"Remove"`
 
@@ -53,10 +54,10 @@ type DotCmd struct {
 // 	return command.Execute(args)
 // }
 
-// Execute ...
+// Execute default action (list roles)
 func (cmd *DotCmd) Execute(args []string) error {
-	// fmt.Println("exec dot cmd", args)
-	return cmd.Install.Execute(args)
+	return cmd.List.Execute(args)
+	// return cmd.Install.Execute(args)
 }
 
 var (
@@ -68,9 +69,9 @@ var (
 
 	// Action (install/remove)
 	Action string
-	// Only (copy, link, template)
-	// TODO? --filter=*
-	Only []string
+
+	// RunOnly task filter
+	RunOnly []string
 
 	// Verbose level (verbosity)
 	Verbose int
@@ -97,33 +98,50 @@ func init() {
 		// return Options.CommandHandler(cmd, args)
 		// fmt.Printf("----------> %+v\n", cmd)
 		Action = "install"
+		// Note: cannot fallthrough in type switch
 		switch cmd.(type) {
 		case nil:
-			cmd = &DotCmd{}
-			// cmd = &InstallCmd{}
+			cmd = &ListCmd{}
+			// Options.Force = true
+			// Options.NoSync = true
+			RunOnly = append(RunOnly, "list")
+			break
 		case *DotCmd:
+			RunOnly = append(RunOnly, "list")
+			break
+		case *ListCmd:
+			RunOnly = append(RunOnly, "list")
+			break
+		// case nil:
+		// 	cmd = &DotCmd{}
+		// 	// cmd = &InstallCmd{}
+		// 	fallthrough
+		// case *DotCmd:
+		// 	fallthrough
 		case *InstallCmd:
+			// Default action: install all
 			break
 		case *RemoveCmd:
 			Action = "remove"
+			// Run all
 			break
 		case *CopyCmd:
-			Only = append(Only, "copy")
+			RunOnly = append(RunOnly, "copy")
 			break
 		// case *Exec:
-		// 	Only = append(Only, "exec")
+		// 	RunOnly = append(RunOnly, "exec")
 		// 	break
 		case *LineCmd:
-			Only = append(Only, "line")
+			RunOnly = append(RunOnly, "line")
 			break
 		case *LinkCmd:
-			Only = append(Only, "link")
+			RunOnly = append(RunOnly, "link")
 			break
 		case *TemplateCmd:
-			Only = append(Only, "template")
+			RunOnly = append(RunOnly, "template")
 			break
 		case *PackageCmd:
-			Only = append(Only, "package")
+			RunOnly = append(RunOnly, "package")
 			break
 		default:
 			return fmt.Errorf("# Unhandled command (%+v): %+v", reflect.TypeOf(cmd).Elem(), cmd)

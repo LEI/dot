@@ -12,6 +12,14 @@ import (
 // Paths ...
 type Paths map[string]string
 
+func (p *Paths) String() string {
+	s := ""
+	for k, v := range *p {
+		s+= fmt.Sprintf("%s:%s", k, v)
+	}
+	return s
+}
+
 // Add ...
 func (p *Paths) Add(s string) error {
 	src, dst := dotfile.SplitPath(s)

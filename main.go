@@ -153,7 +153,7 @@ func execute(options *cmd.DotCmd) error {
 		// if err := r.Prepare(); err != nil {
 		// 	return err
 		// }
-		if err := r.Do(cmd.Action, cmd.Only); err != nil {
+		if err := r.Do(cmd.Action, cmd.RunOnly); err != nil {
 			return err
 		}
 	}
