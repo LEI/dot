@@ -38,6 +38,9 @@ func (t *TemplateTask) Parse() (string, error) {
 	// for k, v := range t.Vars {
 	// 	fmt.Println("VAR", k, "=", v)
 	// }
+	if t.Vars == nil {
+		t.Vars = make(map[string]interface{}, 0)
+	}
 	for k, v := range t.Env {
 		t.Vars[k] = v
 	}
@@ -111,9 +114,9 @@ func Template(t *TemplateTask) (bool, error) {
 		return false, nil
 	}
 	if DryRun {
-		// if Verbose > 0 {
-		// 	fmt.Println(str)
-		// }
+		if Verbose > 1 {
+			fmt.Printf("---START---\n%s\n----END----\n", str)
+		}
 		return true, nil
 	}
 	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
