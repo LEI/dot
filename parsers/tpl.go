@@ -3,13 +3,16 @@ package parsers
 import (
 	"fmt"
 	"reflect"
-	// "github.com/LEI/dot/dotfile"
+	"strings"
 )
 
 // Tpl ...
 type Tpl struct {
 	Source, Target string
-	Data           interface{}
+	Ext            string `default:"tpl"`
+	Env            map[string]string
+	Vars           map[string]interface{}
+	// Data           interface{}
 }
 
 // Templates ...
@@ -22,6 +25,15 @@ type Templates []*Tpl
 // 	}
 // 	return s
 // }
+
+// Append ...
+func (t *Templates) Append(tpl *Tpl) *Templates {
+	if tpl.Target != "" && tpl.Ext != "" && strings.HasSuffix(tpl.Target, "."+tpl.Ext) {
+		tpl.Target = strings.TrimSuffix(tpl.Target, "." + tpl.Ext)
+	}
+	*t = append(*t, tpl)
+	return t
+}
 
 // Add ...
 func (t *Templates) Add(i interface{}) error {
@@ -44,9 +56,20 @@ func (t *Templates) Add(i interface{}) error {
 		if ok {
 			tpl.Target = dst
 		}
-		data, ok := val["vars"].(interface{})
-		if ok {
-			tpl.Data = data
+		if ext, ok := val["ext"].(string); ok {
+			tpl.Ext = ext
+		}
+		if env, ok := val["env"].(map[string]string); ok {
+			// tpl.Env = NewSlice(env.(*Slice))
+			tpl.Env = env
+		} else {
+			tpl.Env = make(map[string]string, 0)
+		}
+		if vars, ok := val["vars"].(map[string]interface{}); ok {
+			tpl.Vars = vars
+			// tpl.Data = data
+		} else {
+			tpl.Vars = make(map[string]interface{}, 0)
 		}
 		// } else if val, ok := i.(*Tpl); ok {
 		// 	tpl = val

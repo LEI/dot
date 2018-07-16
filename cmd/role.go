@@ -46,7 +46,7 @@ type Role struct {
 	Path      string   // Local directory
 	URL       string   // Repository URL
 	OS        []string // Allowed OSes
-	Env       Env
+	Env       map[string]string
 	Vars      map[string]interface{}
 	Copies    parsers.Map       `yaml:"copy"`
 	Lines     map[string]string `yaml:"line"`
@@ -64,8 +64,8 @@ type Role struct {
 	Enabled bool     // TODO `default:"true"`
 }
 
-// Env ...
-type Env map[string]string
+// // Env ...
+// type Env map[string]string
 
 // // Copy ...
 // type Copy struct {
@@ -211,7 +211,7 @@ func (r *Role) PrintRoles() (s string) {
 		for _, v := range r.Templates {
 			v.Source = strings.TrimPrefix(v.Source, r.Path+"/")
 			v.Target = strings.TrimPrefix(v.Target, target+"/")
-			s += fmt.Sprintf("%s%s +> %s %+v", pre+ind, v.Source, v.Target, v.Data)
+			s += fmt.Sprintf("%s%s +> %s\nENV:%+v\nVARS:%+v", pre+ind, v.Source, v.Target, v.Env, v.Vars)
 		}
 	}
 	return s
@@ -465,6 +465,9 @@ func (r *Role) PrepareLines(l *map[string]string) error {
 func (r *Role) PrepareTemplates(t *parsers.Templates) error {
 	templates := make(parsers.Templates, 0)
 	for _, v := range *t {
+		if v.Ext == "" {
+			v.Ext = "tpl"
+		}
 		if v.Target == "" {
 			s, t := splitPath(v.Source)
 			v.Source = s
@@ -502,7 +505,7 @@ func (r *Role) PrepareTemplates(t *parsers.Templates) error {
 				}
 				v.Source = s
 				v.Target = t
-				templates = append(templates, v) // paths[s] = t
+				templates.Append(v) // paths[s] = t
 			}
 		} else {
 			t, err := prepareTarget(v.Source, v.Target)
@@ -510,7 +513,7 @@ func (r *Role) PrepareTemplates(t *parsers.Templates) error {
 				return err
 			}
 			v.Target = t
-			templates = append(templates, v) // paths[src] = t
+			templates.Append(v) // paths[src] = t
 		}
 	}
 	*t = templates
@@ -688,18 +691,25 @@ func (r *Role) Do(a string, run []string) error {
 	}
 	// Templates
 	if r.Templates != nil && runTask("template", run) {
-		// TODO
-		// for s, t := range r.Templates {
-		// 	task := &dotfile.TemplateTask{
-		// 		Source: s,
-		// 		Target: t,
-		// 		Env:    r.Env,
-		// 		Vars:   r.Vars,
-		// 	}
-		// 	if err := task.Do(a); err != nil {
-		// 		return err
-		// 	}
-		// }
+		for _, t := range r.Templates {
+			env := r.Env // map[string]string{}
+			if err := mergo.Merge(&env, t.Env); err != nil {
+				return err
+			}
+			vars := r.Vars // map[string]interface{}{}
+			if err := mergo.Merge(&vars, t.Vars); err != nil {
+				return err
+			}
+			task := &dotfile.TemplateTask{
+				Source: t.Source,
+				Target: t.Target,
+				Env:    env,
+				Vars:   vars,
+			}
+			if err := task.Do(a); err != nil {
+				return err
+			}
+		}
 	}
 	// Restore original environment
 	if r.Env != nil {

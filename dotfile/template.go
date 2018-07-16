@@ -14,6 +14,7 @@ import (
 type TemplateTask struct {
 	// parsers.Tpl
 	Source, Target string
+	Ext            string // `default:"tpl"`
 	Env            map[string]string
 	Vars           map[string]interface{}
 	Task
@@ -116,10 +117,10 @@ func Template(t *TemplateTask) (bool, error) {
 	if str == string(b) {
 		return false, nil
 	}
+	if Verbose > 1 {
+		fmt.Printf("---START---\n%s\n----END----\n", str)
+	}
 	if DryRun {
-		if Verbose > 1 {
-			fmt.Printf("---START---\n%s\n----END----\n", str)
-		}
 		return true, nil
 	}
 	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
