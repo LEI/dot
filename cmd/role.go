@@ -121,24 +121,43 @@ func NewRole(name string) *Role {
 
 func (r *Role) String() string {
 	// if Verbose > 2 {
-	// 	return r.Display()
+	// 	return r.Sprint()
 	// }
 	return fmt.Sprintf("%s", r.Name)
 }
 
-// Display verbose string
-func (r *Role) Display() string {
+// Sprint verbose string
+func (r *Role) Sprint() string {
 	s := fmt.Sprintf("[%s:%s](%s)", r.Name, r.Path, r.URL)
 	ind := "  "
 	pre := "\n" + ind
 	if r.OS != nil && len(r.OS) > 0 {
 		s = s + fmt.Sprintf("%sOS: %s", pre, r.OS)
 	}
+	if !r.Enabled {
+		s = s + fmt.Sprintf("%sDISABLED", pre)
+	}
+	switch true {
+	case len(r.Install) > 0:
+	case len(r.PostInstall) > 0:
+	case len(r.Remove) > 0:
+	case len(r.PostRemove) > 0:
+		s = s + fmt.Sprintf("%sHas exec: %s", pre, "yes")
+		break
+	}
+	// Role environment
 	if r.Env != nil && len(r.Env) > 0 {
 		s = s + fmt.Sprintf("%sEnv: %+v", pre, r.Env)
 	}
+	// Common variables
 	if r.Vars != nil && len(r.Vars) > 0 {
 		s = s + fmt.Sprintf("%sVars: %+v", pre, r.Vars)
+	}
+	if r.Deps != nil && len(r.Deps) > 0 {
+		s = s + fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
+		for _, v := range r.Deps {
+			s = s + fmt.Sprintf("%s%+v", pre + ind, v)
+		}
 	}
 	if r.Pkg != nil && len(r.Pkg) > 0 {
 		s = s + fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
@@ -154,12 +173,6 @@ func (r *Role) Display() string {
 				}
 				s = s + fmt.Sprintf("]")
 			}
-		}
-	}
-	if r.Deps != nil && len(r.Deps) > 0 {
-		s = s + fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
-		for _, v := range r.Deps {
-			s = s + fmt.Sprintf("%s%+v", pre + ind, v)
 		}
 	}
 	if r.Copies != nil && len(r.Copies) > 0 {
@@ -193,17 +206,6 @@ func (r *Role) Display() string {
 			s = s + fmt.Sprintf("%s%s +> %s %+v", pre + ind, v.Source, v.Target, v.Data)
 		}
 	}
-	switch true {
-	case len(r.Install) > 0:
-	case len(r.PostInstall) > 0:
-	case len(r.Remove) > 0:
-	case len(r.PostRemove) > 0:
-		s = s + fmt.Sprintf("%sHas exec: %s", pre, "yes")
-		break
-	}
-	// if r.Enabled {
-	// 	s = s + fmt.Sprintf("%sEnabled: %s", pre, r.Enabled)
-	// }
 	return fmt.Sprintf("%s", s)
 }
 
@@ -262,7 +264,7 @@ func (r *Role) RegisterTask(name, s string) error {
 	// if paths == nil {
 	// 	paths = map[string]string{}
 	// }
-	// src, dst := dotfile.SplitPath(s)
+	// src, dst := splitPath(s)
 	// paths[src] = dst
 	return nil
 }
@@ -272,7 +274,7 @@ func (r *Role) RegisterCopy(s string) error {
 	// if r.Copies == nil {
 	// 	r.Copies = map[string]string{}
 	// }
-	// src, dst := dotfile.SplitPath(s)
+	// src, dst := splitPath(s)
 	// r.Copies[src] = dst
 	return nil
 }
@@ -282,7 +284,7 @@ func (r *Role) RegisterLink(s string) error {
 	if r.Links == nil {
 		r.Links = *&parsers.Map{} // map[string]string{}
 	}
-	src, dst := dotfile.SplitPath(s)
+	src, dst := splitPath(s)
 	// fmt.Println("RegisterLink", s, "=", src, "+", dst)
 	r.Links.Add(src, dst)
 	// r.Links[src] = dst
@@ -294,7 +296,7 @@ func (r *Role) RegisterTemplate(s string) error {
 	// if r.Template == nil {
 	// 	r.Template = map[string]string{}
 	// }
-	// src, dst := dotfile.SplitPath(s)
+	// src, dst := splitPath(s)
 	// r.Template[src] = dst
 	return nil
 }
@@ -446,6 +448,7 @@ func (r *Role) PrepareLines(l *map[string]string) error {
 	for file, line := range *l {
 		// Prepend role directory to source path
 		file = filepath.Join(target, file)
+		file = dotfile.ExpandEnv(file)
 		lines[file] = line
 	}
 	*l = lines
@@ -457,7 +460,7 @@ func (r *Role) PrepareTemplates(t *parsers.Templates) error {
 	templates := make(parsers.Templates, 0)
 	for _, v := range *t {
 		if v.Target == "" {
-			s, t := dotfile.SplitPath(v.Source)
+			s, t := splitPath(v.Source)
 			v.Source = s
 			v.Target = t
 		}
@@ -515,7 +518,7 @@ func (r *Role) PreparePaths(p *parsers.Map) error {
 	paths := make(parsers.Map)
 	for src, dst := range *p {
 		if dst == "" {
-			s, t := dotfile.SplitPath(src)
+			s, t := splitPath(src)
 			src = s
 			dst = t
 		}
@@ -587,7 +590,7 @@ func (r *Role) GetField(key string) reflect.Value {
 func (r *Role) Do(a string, run []string) error {
 	if runTask("list", run) {
 		// Just print the role fields
-		fmt.Printf("# Role %+v\n", r.Display())
+		fmt.Printf("# Role %+v\n", r.Sprint())
 		return nil
 	}
 	fmt.Printf("# Role: %+v\n", r.Name)
@@ -716,6 +719,34 @@ func (r *Role) Do(a string, run []string) error {
 // Check if a given task name should be run
 func runTask(s string, filter []string) bool {
 	return dotfile.HasOne([]string{s}, filter)
+}
+
+func splitPath(s string) (src, dst string) {
+	parts := filepath.SplitList(s)
+	switch len(parts) {
+	case 1:
+		src = s
+		break
+	case 2:
+		src = parts[0]
+		dst = parts[1]
+		break
+	default:
+		fmt.Println("Unhandled path spec", src)
+		os.Exit(1)
+	}
+	// src = s
+	// if strings.Contains(src, ":") {
+	// 	parts := strings.Split(src, ":")
+	// 	if len(parts) == 2 {
+	// 		src = parts[0]
+	// 		dst = parts[1]
+	// 	} else {
+	// 		fmt.Println("Unhandled path spec", src)
+	// 		os.Exit(1)
+	// 	}
+	// }
+	return src, dst
 }
 
 /*
