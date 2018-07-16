@@ -65,11 +65,11 @@ func (t *TemplateTask) Install() error {
 		prefix = "# "
 	}
 	/*
-	vars := []string{}
-	for k, v := range t.Env { // + dotEnv
-		// fmt.Printf("%s=\"%s\"\n", k, v)
-		vars = append(vars, fmt.Sprintf("%s: %s", k, v))
-	}
+		vars := []string{}
+		for k, v := range t.Env { // + dotEnv
+			// fmt.Printf("%s=\"%s\"\n", k, v)
+			vars = append(vars, fmt.Sprintf("%s: %s", k, v))
+		}
 	*/
 	// envsubst
 	// fmt.Printf("%senvsubst < %s | tee %s\n", prefix, t.Source, dst)

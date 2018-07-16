@@ -40,7 +40,7 @@ type BaseRoleCmd struct {
 	BaseCmd
 
 	Role struct {
-		Name  string // `default:"default"` // `required:"true"`
+		Name string // `default:"default"` // `required:"true"`
 		Args []flags.Filename
 	} `positional-args:"true" positional-arg-name:"paths"` // required:"1"
 
@@ -49,7 +49,7 @@ type BaseRoleCmd struct {
 
 var (
 	source, target string
-	parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
+	parser         = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
 )
 
 // GetParser ...

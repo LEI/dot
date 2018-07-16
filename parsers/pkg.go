@@ -42,19 +42,19 @@ func (p *Packages) Add(i interface{}) error {
 		if ok {
 			pkg.Action = action
 		}
-	// } else if val, ok := i.(*Pkg); ok {
-	// 	pkg = val
-	// } else if val, ok := i.([]string); ok {
-	// 	fmt.Println("MS", val)
-	// } else if val, ok := i.([]interface{}); ok {
-	// 	// pkg.OS = *NewSlice(val["os"])
-	// 	fmt.Println("IS", val)
-	// } else if val, ok := i.(map[string]string); ok {
-	// 	fmt.Println("MSS", val, i)
-	// } else if val, ok := i.(map[string]interface{}); ok {
-	// 	fmt.Println("MSI", val, i)
-	// } else if val, ok := i.(interface{}); ok {
-	// 	fmt.Println("II", val, i)
+		// } else if val, ok := i.(*Pkg); ok {
+		// 	pkg = val
+		// } else if val, ok := i.([]string); ok {
+		// 	fmt.Println("MS", val)
+		// } else if val, ok := i.([]interface{}); ok {
+		// 	// pkg.OS = *NewSlice(val["os"])
+		// 	fmt.Println("IS", val)
+		// } else if val, ok := i.(map[string]string); ok {
+		// 	fmt.Println("MSS", val, i)
+		// } else if val, ok := i.(map[string]interface{}); ok {
+		// 	fmt.Println("MSI", val, i)
+		// } else if val, ok := i.(interface{}); ok {
+		// 	fmt.Println("II", val, i)
 	} else {
 		return fmt.Errorf("Unable to assert Pkg: %+v", i)
 	}

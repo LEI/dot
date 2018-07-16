@@ -3,14 +3,13 @@ package parsers
 import (
 	"fmt"
 	"reflect"
-
 	// "github.com/LEI/dot/dotfile"
 )
 
 // Tpl ...
 type Tpl struct {
 	Source, Target string
-	Data interface{}
+	Data           interface{}
 }
 
 // Templates ...
@@ -49,19 +48,19 @@ func (t *Templates) Add(i interface{}) error {
 		if ok {
 			tpl.Data = data
 		}
-	// } else if val, ok := i.(*Tpl); ok {
-	// 	tpl = val
-	// } else if val, ok := i.([]string); ok {
-	// 	fmt.Println("MS", val)
-	// } else if val, ok := i.([]interface{}); ok {
-	// 	// tpl.OS = *NewSlice(val["os"])
-	// 	fmt.Println("IS", val)
-	// } else if val, ok := i.(map[string]string); ok {
-	// 	fmt.Println("MSS", val, i)
-	// } else if val, ok := i.(map[string]interface{}); ok {
-	// 	fmt.Println("MSI", val, i)
-	// } else if val, ok := i.(interface{}); ok {
-	// 	fmt.Println("II", val, i)
+		// } else if val, ok := i.(*Tpl); ok {
+		// 	tpl = val
+		// } else if val, ok := i.([]string); ok {
+		// 	fmt.Println("MS", val)
+		// } else if val, ok := i.([]interface{}); ok {
+		// 	// tpl.OS = *NewSlice(val["os"])
+		// 	fmt.Println("IS", val)
+		// } else if val, ok := i.(map[string]string); ok {
+		// 	fmt.Println("MSS", val, i)
+		// } else if val, ok := i.(map[string]interface{}); ok {
+		// 	fmt.Println("MSI", val, i)
+		// } else if val, ok := i.(interface{}); ok {
+		// 	fmt.Println("II", val, i)
 	} else {
 		return fmt.Errorf("Unable to assert Tpl: %+v", i)
 	}

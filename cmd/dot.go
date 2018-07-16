@@ -23,15 +23,15 @@ type DotCmd struct {
 	Source flags.Filename `short:"s" long:"source" description:"Path to source file"`
 	Target flags.Filename `short:"t" long:"target" description:"Path to target link" default:"$HOME"`
 
-	RoleDir    string   `long:"role-dir" description:"Role directory name relative to source" default:".dot"`
+	RoleDir string `long:"role-dir" description:"Role directory name relative to source" default:".dot"`
 
 	// env:"DOT_CONFIG" default:".dot"
 	Config    func(s string) error `short:"c" long:"config" description:"Config file name" default:".dot.yml"`
 	IniConfig func(s string) error `hidden:"true" short:"i" long:"ini-config" description:"Path to INI config file" no-ini:"true"`
 
-	RoleFilter []string `short:"n" long:"name" description:"Filter roles by name"`
-	IgnoreDeps bool     `short:"I" long:"ignore-dependencies" description:"Honor the role filter"`
-	RemoveEmptyDirs bool `short:"R" long:"remove-empty-dirs" description:"Remove modified directories if empty"`
+	RoleFilter      []string `short:"n" long:"name" description:"Filter roles by name"`
+	IgnoreDeps      bool     `short:"I" long:"ignore-dependencies" description:"Honor the role filter"`
+	RemoveEmptyDirs bool     `short:"R" long:"remove-empty-dirs" description:"Remove modified directories if empty"`
 
 	Packages bool `short:"P" long:"packages" description:"Install or remove required packages"`
 	Sudo     bool `short:"S" long:"sudo" description:"Use sudo to execute package manager"`

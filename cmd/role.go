@@ -42,15 +42,15 @@ type RoleConfig struct {
 
 // Role ...
 type Role struct {
-	Name     string   // Name of the role
-	Path     string   // Local directory
-	URL      string   // Repository URL
-	OS       []string // Allowed OSes
-	Env      Env
-	Vars     map[string]interface{}
-	Copies     parsers.Map `yaml:"copy"`
+	Name      string   // Name of the role
+	Path      string   // Local directory
+	URL       string   // Repository URL
+	OS        []string // Allowed OSes
+	Env       Env
+	Vars      map[string]interface{}
+	Copies    parsers.Map       `yaml:"copy"`
 	Lines     map[string]string `yaml:"line"`
-	Links     parsers.Map `yaml:"link"`
+	Links     parsers.Map       `yaml:"link"`
 	Templates parsers.Templates `yaml:"template"`
 
 	// Hooks
@@ -59,9 +59,9 @@ type Role struct {
 	Remove      []string
 	PostRemove  []string `yaml:"post_remove"`
 
-	Pkg          parsers.Packages
-	Deps []string `yaml:"dependencies"`
-	Enabled      bool // TODO `default:"true"`
+	Pkg     parsers.Packages
+	Deps    []string `yaml:"dependencies"`
+	Enabled bool     // TODO `default:"true"`
 }
 
 // Env ...
@@ -130,7 +130,7 @@ func (r *Role) String() string {
 func (r *Role) Print(v bool) string {
 	s := fmt.Sprintf("[%s:%s](%s)", r.Name, r.Path, r.URL)
 	if v {
-		s+= r.PrintRoles()
+		s += r.PrintRoles()
 	}
 	return s
 }
@@ -164,20 +164,20 @@ func (r *Role) PrintRoles() (s string) {
 	if r.Deps != nil && len(r.Deps) > 0 {
 		s += fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
 		for _, v := range r.Deps {
-			s += fmt.Sprintf("%s%+v", pre + ind, v)
+			s += fmt.Sprintf("%s%+v", pre+ind, v)
 		}
 	}
 	if r.Pkg != nil && len(r.Pkg) > 0 {
 		s += fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
 		for _, v := range r.Pkg {
-			s += fmt.Sprintf("%s%s", pre + ind, v.Name)
+			s += fmt.Sprintf("%s%s", pre+ind, v.Name)
 			if v.Action != "" {
 				s += fmt.Sprintf(" (%s only)", v.Action)
 			}
 			if v.OS != nil && len(v.OS) > 0 {
 				s += fmt.Sprintf(" [OS:")
 				for _, o := range v.OS.Value() {
-					s += fmt.Sprintf("%s",  o)
+					s += fmt.Sprintf("%s", o)
 				}
 				s += fmt.Sprintf("]")
 			}
@@ -188,14 +188,14 @@ func (r *Role) PrintRoles() (s string) {
 		for k, v := range r.Copies {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			v = strings.TrimPrefix(v, target+"/")
-			s += fmt.Sprintf("%s%s => %s", pre + ind, k, v)
+			s += fmt.Sprintf("%s%s => %s", pre+ind, k, v)
 		}
 	}
 	if r.Lines != nil && len(r.Lines) > 0 {
 		s += fmt.Sprintf("%sLine: %d", pre, len(r.Lines))
 		for k, v := range r.Lines {
 			k = strings.TrimPrefix(k, r.Path+"/")
-			s += fmt.Sprintf("%s%s >> %s", pre + ind, k, v)
+			s += fmt.Sprintf("%s%s >> %s", pre+ind, k, v)
 		}
 	}
 	if r.Links != nil && len(r.Links) > 0 {
@@ -203,7 +203,7 @@ func (r *Role) PrintRoles() (s string) {
 		for k, v := range r.Links {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			v = strings.TrimPrefix(v, target+"/")
-			s += fmt.Sprintf("%s%s -> %s", pre + ind, k, v)
+			s += fmt.Sprintf("%s%s -> %s", pre+ind, k, v)
 		}
 	}
 	if r.Templates != nil && len(r.Templates) > 0 {
@@ -211,7 +211,7 @@ func (r *Role) PrintRoles() (s string) {
 		for _, v := range r.Templates {
 			v.Source = strings.TrimPrefix(v.Source, r.Path+"/")
 			v.Target = strings.TrimPrefix(v.Target, target+"/")
-			s += fmt.Sprintf("%s%s +> %s %+v", pre + ind, v.Source, v.Target, v.Data)
+			s += fmt.Sprintf("%s%s +> %s %+v", pre+ind, v.Source, v.Target, v.Data)
 		}
 	}
 	return s

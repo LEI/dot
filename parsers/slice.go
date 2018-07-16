@@ -1,8 +1,8 @@
 package parsers
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"reflect"
 )
 

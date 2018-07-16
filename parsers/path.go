@@ -5,7 +5,6 @@ import (
 	// "os"
 	// "path/filepath"
 	"reflect"
-
 	// "github.com/LEI/dot/dotfile"
 )
 
@@ -15,7 +14,7 @@ type Paths map[string]string
 func (p *Paths) String() string {
 	s := ""
 	for k, v := range *p {
-		s+= fmt.Sprintf("%s:%s", k, v)
+		s += fmt.Sprintf("%s:%s", k, v)
 	}
 	return s
 }
@@ -28,7 +27,7 @@ func (p *Paths) Add(i interface{}) error {
 	var src, dst string
 	if val, ok := i.(string); ok {
 		src = val
-	} else if val, ok := i.(struct{Source, Target string}); ok {
+	} else if val, ok := i.(struct{ Source, Target string }); ok {
 		src = val.Source
 		dst = val.Target
 	} else if val, ok := i.(map[interface{}]interface{}); ok {
