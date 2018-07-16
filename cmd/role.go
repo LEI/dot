@@ -48,10 +48,10 @@ type Role struct {
 	OS       []string // Allowed OSes
 	Env      Env
 	Vars     map[string]interface{}
-	Copy     parsers.Paths
+	Copy     parsers.Map
 	Line     map[string]string
-	Link     parsers.Paths
-	Template parsers.Paths
+	Link     parsers.Map
+	Template parsers.Map
 
 	// Hooks
 	Install     []string
@@ -60,7 +60,7 @@ type Role struct {
 	PostRemove  []string `yaml:"post_remove"`
 
 	Pkg          parsers.Packages
-	Dependencies []string
+	Deps []string `yaml:"dependencies"`
 	Enabled      bool // TODO `default:"true"`
 }
 
@@ -143,36 +143,52 @@ func (r *Role) Sprint() string {
 	if r.Pkg != nil && len(r.Pkg) > 0 {
 		s = s + fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
 		for _, v := range r.Pkg {
-			s = s + fmt.Sprintf("%s + %+v", pre + ind, v)
+			s = s + fmt.Sprintf("%s%s", pre + ind, v.Name)
+			if v.Action != "" {
+				s = s + fmt.Sprintf(" (%s only)", v.Action)
+			}
+			if v.OS != nil && len(v.OS) > 0 {
+				s = s + fmt.Sprintf(" [OS:")
+				for _, o := range v.OS.GetStringSlice() {
+					s = s + fmt.Sprintf("%s",  o)
+				}
+				s = s + fmt.Sprintf("]")
+			}
 		}
 	}
-	if r.Dependencies != nil && len(r.Dependencies) > 0 {
-		s = s + fmt.Sprintf("%sDeps: %d", pre, len(r.Dependencies))
-		for _, v := range r.Dependencies {
-			s = s + fmt.Sprintf("%s < %+v", pre + ind, v)
+	if r.Deps != nil && len(r.Deps) > 0 {
+		s = s + fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
+		for _, v := range r.Deps {
+			s = s + fmt.Sprintf("%s%+v", pre + ind, v)
 		}
 	}
 	if r.Copy != nil && len(r.Copy) > 0 {
 		s = s + fmt.Sprintf("%sCopy: %d", pre, len(r.Copy))
 		for k, v := range r.Copy {
+			k = strings.TrimPrefix(k, r.Path+"/")
+			v = strings.TrimPrefix(v, target+"/")
 			s = s + fmt.Sprintf("%s%s => %s", pre + ind, k, v)
 		}
 	}
 	if r.Line != nil && len(r.Line) > 0 {
 		s = s + fmt.Sprintf("%sLine: %d", pre, len(r.Line))
 		for k, v := range r.Line {
+			k = strings.TrimPrefix(k, r.Path+"/")
 			s = s + fmt.Sprintf("%s%s >> %s", pre + ind, k, v)
 		}
 	}
 	if r.Link != nil && len(r.Link) > 0 {
 		s = s + fmt.Sprintf("%sLink: %d", pre, len(r.Link))
 		for k, v := range r.Link {
+			k = strings.TrimPrefix(k, r.Path+"/")
+			v = strings.TrimPrefix(v, target+"/")
 			s = s + fmt.Sprintf("%s%s -> %s", pre + ind, k, v)
 		}
 	}
 	if r.Template != nil && len(r.Template) > 0 {
 		s = s + fmt.Sprintf("%sTemplate: %d", pre, len(r.Template))
 		for k, v := range r.Template {
+			k = strings.TrimPrefix(k, r.Path+"/")
 			s = s + fmt.Sprintf("%s%s +> %s", pre + ind, k, v)
 		}
 	}
@@ -240,7 +256,7 @@ func (r *Role) RegisterTask(name, s string) error {
 	// if v.IsValid() {
 	// 	v.SetInterface(i)
 	// }
-	fmt.Println(v, i)
+	fmt.Println("REGISTER TASK", v, "i=", i)
 	// paths := f.Interface().(map[string]string)
 	// if paths == nil {
 	// 	paths = map[string]string{}
@@ -252,31 +268,33 @@ func (r *Role) RegisterTask(name, s string) error {
 
 // RegisterCopy ...
 func (r *Role) RegisterCopy(s string) error {
-	if r.Copy == nil {
-		r.Copy = map[string]string{}
-	}
-	src, dst := dotfile.SplitPath(s)
-	r.Copy[src] = dst
+	// if r.Copy == nil {
+	// 	r.Copy = map[string]string{}
+	// }
+	// src, dst := dotfile.SplitPath(s)
+	// r.Copy[src] = dst
 	return nil
 }
 
 // RegisterLink ...
 func (r *Role) RegisterLink(s string) error {
 	if r.Link == nil {
-		r.Link = map[string]string{}
+		r.Link = *&parsers.Map{} // map[string]string{}
 	}
 	src, dst := dotfile.SplitPath(s)
-	r.Link[src] = dst
+	// fmt.Println("RegisterLink", s, "=", src, "+", dst)
+	r.Link.Add(src, dst)
+	// r.Link[src] = dst
 	return nil
 }
 
 // RegisterTemplate ...
 func (r *Role) RegisterTemplate(s string) error {
-	if r.Template == nil {
-		r.Template = map[string]string{}
-	}
-	src, dst := dotfile.SplitPath(s)
-	r.Template[src] = dst
+	// if r.Template == nil {
+	// 	r.Template = map[string]string{}
+	// }
+	// src, dst := dotfile.SplitPath(s)
+	// r.Template[src] = dst
 	return nil
 }
 
@@ -421,17 +439,37 @@ func (r *Role) Prepare() error {
 	return nil
 }
 
+// PrepareLines ...
+func (r *Role) PrepareLines(l *map[string]string) error {
+	lines := make(map[string]string, len(*l))
+	for file, line := range *l {
+		// Prepend role directory to source path
+		file = filepath.Join(target, file)
+		lines[file] = line
+	}
+	*l = lines
+	return nil
+}
+
 // PreparePaths ...
-func (r *Role) PreparePaths(p *parsers.Paths) error {
-	// in interface{} p := in.(*parsers.Paths)
-	var paths parsers.Paths = make(map[string]string, len(*p))
+func (r *Role) PreparePaths(p *parsers.Map) error {
+	// in interface{} p := in.(*parsers.Map)
+	// var paths = make(map[string]string, len(*p))
+	var m = make(parsers.Map)
 	for src, dst := range *p {
-		//fmt.Println("PREPARE", src, dst)
+		if dst == "" {
+			s, t := dotfile.SplitPath(src)
+			src = s
+			dst = t
+		}
+		// fmt.Println("src", src, "dst", dst)
+		src = os.ExpandEnv(src)
+		dst = os.ExpandEnv(dst)
 		// Prepend role directory to source path
 		src = filepath.Join(r.Path, src)
 		// Check frob globs
 		if strings.Contains(src, "*") {
-			//fmt.Println("*", src, dst)
+			// fmt.Println("*", src, dst)
 			glob, err := filepath.Glob(src)
 			if err != nil {
 				return err
@@ -454,17 +492,18 @@ func (r *Role) PreparePaths(p *parsers.Paths) error {
 				if err != nil {
 					return err
 				}
-				paths[s] = t
+				m.Add(s, t) // paths[s] = t
 			}
 		} else {
 			t, err := prepareTarget(src, dst)
 			if err != nil {
 				return err
 			}
-			paths[src] = t
+			m.Add(src, t) // paths[src] = t
 		}
 	}
-	*p = paths
+	// *p = *(p.Merge(paths))
+	*p = m
 	return nil
 }
 
@@ -480,18 +519,6 @@ func prepareTarget(src, dst string) (string, error) {
 	// }
 	t := filepath.Join(baseDir, f)
 	return t, nil
-}
-
-// PrepareLines ...
-func (r *Role) PrepareLines(l *map[string]string) error {
-	lines := make(map[string]string, len(*l))
-	for file, line := range *l {
-		// Prepend role directory to source path
-		file = filepath.Join(target, file)
-		lines[file] = line
-	}
-	*l = lines
-	return nil
 }
 
 // GetField ...
@@ -542,7 +569,7 @@ func (r *Role) Do(a string, run []string) error {
 	// System packages
 	if r.Pkg != nil && Options.Packages && runTask("package", run) {
 		for _, v := range r.Pkg {
-			if len(v.OS) > 0 && !dotfile.HasOSType(v.OS...) {
+			if v.OS != nil && len(v.OS) > 0 && !dotfile.HasOSType(v.OS.GetStringSlice()...) {
 				continue
 			}
 			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(a) {

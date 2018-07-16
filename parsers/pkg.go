@@ -2,19 +2,63 @@ package parsers
 
 import (
 	"fmt"
-	// "os"
+	"os"
 	"reflect"
 )
 
 // Pkg ...
 type Pkg struct {
 	Name   string
-	OS     []string
+	OS     Slice
 	Action string // install, remove
 }
 
-func (p *Pkg) String() string {
-	return fmt.Sprintf("%s %s%s", p.Name, p.Action, p.OS)
+// func (p *Pkg) String() string {
+// 	return fmt.Sprintf("%s %s%+v", p.Name, p.Action, p.OS)
+// }
+
+// NewPkg ...
+func NewPkg(i interface{}) *Pkg {
+	p := &Pkg{}
+	if i == nil {
+		return p
+	}
+	if val, ok := i.(string); ok {
+		p.Name = val
+	} else if val, ok := i.(Pkg); ok {
+		*p = val
+	} else if val, ok := i.(map[interface{}]interface{}); ok {
+		// Get name
+		name, ok := val["name"].(string)
+		if !ok {
+			fmt.Printf("Missing pkg name: %+v\n", val)
+			os.Exit(1)
+		}
+		p.Name = name
+		p.OS = *NewSlice(val["os"])
+		// p.Action = NewSlice(val["action"])
+		action, ok := val["action"].(string)
+		if ok {
+			p.Action = action
+		}
+	// } else if val, ok := i.(*Pkg); ok {
+	// 	p = val
+	// } else if val, ok := i.([]string); ok {
+	// 	fmt.Println("MS", val)
+	// } else if val, ok := i.([]interface{}); ok {
+	// 	// p.OS = *NewSlice(val["os"])
+	// 	fmt.Println("IS", val)
+	// } else if val, ok := i.(map[string]string); ok {
+	// 	fmt.Println("MSS", val, i)
+	// } else if val, ok := i.(map[string]interface{}); ok {
+	// 	fmt.Println("MSI", val, i)
+	// } else if val, ok := i.(interface{}); ok {
+	// 	fmt.Println("II", val, i)
+	} else {
+		fmt.Printf("Unable to assert Pkg: %+v\n", i)
+		os.Exit(1)
+	}
+	return p
 }
 
 // Packages ...
@@ -29,94 +73,12 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	switch val := i.(type) {
 	case []string:
 		for _, v := range val {
-			*p = append(*p, &Pkg{Name: v})
+			*p = append(*p, NewPkg(v)) // &Pkg{Name: v}
 		}
 		break
 	case []interface{}:
 		for _, v := range val {
-			pkg := &Pkg{}
-			switch V := v.(type) {
-			case string:
-				pkg.Name = V
-				break
-			case interface{}:
-				switch m := V.(type) {
-				case map[interface{}]interface{}:
-					// Get name
-					name, ok := m["name"].(string)
-					if !ok {
-						return fmt.Errorf("Missing pkg name: %+v", m)
-					}
-					pkg.Name = name
-					// Get action
-					action, ok := m["action"].(string)
-					if ok {
-						pkg.Action = action
-					}
-					// Get OS
-					switch n := m["os"].(type) {
-					case nil:
-						break
-					case []string:
-						pkg.OS = n
-						break
-					case interface{}:
-						// n = n.(interface{})
-						// // FIXME: interface {} is []interface {}, not []string
-						for _, o := range n.([]interface{}) {
-							pkg.OS = append(pkg.OS, o.(string))
-						}
-						break
-					case []interface{}:
-						for _, o := range n {
-							pkg.OS = append(pkg.OS, o.(string))
-						}
-						break
-					default:
-						t := reflect.TypeOf(n)
-						T := t.Elem()
-						if t.Kind() == reflect.Map {
-							T = reflect.MapOf(t.Key(), T)
-						}
-						return fmt.Errorf("Unable to unmarshal %s pkg os: %+v", T, n)
-					}
-					// m, ok := w["os"].([]string)
-					// if ok {
-					// 	pkg.OS = m
-					// } else {
-					// 	if n, ok := w["os"].([]interface{}); ok {
-					// 		for _, o := range n {
-					// 			pkg.OS = append(pkg.OS, o.(string))
-					// 		}
-					// 	} else if w != nil {
-					// 		return fmt.Errorf("Invalid pkg os list: %+v", w)
-					// 	}
-					// }
-					break
-				default:
-					t := reflect.TypeOf(m)
-					T := t.Elem()
-					if t.Kind() == reflect.Map {
-						T = reflect.MapOf(t.Key(), T)
-					}
-					return fmt.Errorf("Unable to unmarshal %s pkg: %+v", T, m)
-				}
-				break
-			// case map[string]string:
-			// 	fmt.Println("s!!!!!!!!!!", V)
-			// 	break
-			// case map[interface{}]interface{}:
-			// 	fmt.Println("i!!!!!!!!!!", V)
-			// 	break
-			default:
-				t := reflect.TypeOf(V)
-				T := t.Elem()
-				if t.Kind() == reflect.Map {
-					T = reflect.MapOf(t.Key(), T)
-				}
-				return fmt.Errorf("Unable to unmarshal %s into struct: %+v", T, V)
-			}
-			*p = append(*p, pkg)
+			*p = append(*p, NewPkg(v))
 		}
 		break
 	default:
@@ -125,7 +87,7 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if t.Kind() == reflect.Map {
 			T = reflect.MapOf(t.Key(), t.Elem())
 		}
-		return fmt.Errorf("Unable to unmarshal %s into struct: %+v", T, val)
+		return fmt.Errorf("Unable to unmarshal packages (%s) into struct: %+v", T, val)
 	}
 	return nil
 }

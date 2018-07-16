@@ -99,10 +99,10 @@ CHECK:
 		if !role.IsEnabled() {
 			continue
 		}
-		if len(role.Dependencies) < 0 {
+		if len(role.Deps) < 0 {
 			continue
 		}
-		for _, dep := range role.Dependencies {
+		for _, dep := range role.Deps {
 			for _, r := range c.Roles {
 				if r.Name == dep {
 					fmt.Println(role.Name, "requires", r.Name)

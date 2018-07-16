@@ -53,7 +53,7 @@ type RoleArg struct {
 
 var parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
 
-var target string
+var source, target string
 
 // GetParser ...
 func GetParser() *flags.Parser {
@@ -83,8 +83,8 @@ func Parse() ([]string, error) {
 		}
 	}
 	// Update variables
-	target = string(Options.Target)
-	target = dotfile.ExpandEnv(target)
+	source = dotfile.ExpandEnv(string(Options.Source))
+	target = dotfile.ExpandEnv(string(Options.Target))
 	dotfile.DryRun = Options.DryRun
 	Verbose = len(Options.Verbose)
 	dotfile.Verbose = Verbose
