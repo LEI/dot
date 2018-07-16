@@ -169,7 +169,7 @@ func getConfigDir() string {
 	return dir
 }
 
-func readConfig(s string) ([]byte, error) {
+func readConfigFile(s string) ([]byte, error) {
 	bytes, err := read(s)
 	// str := string(bytes)
 	// if err != nil {

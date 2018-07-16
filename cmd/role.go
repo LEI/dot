@@ -383,12 +383,12 @@ func (r *Role) ReadConfig(name string) (string, error) {
 	if r.Path == "" || name == "" {
 		return "", nil
 	}
-	cfgPath := filepath.Join(r.Path, name)
+	cfgPath := filepath.Join(r.Path, name) // !filepath.IsAbs(name)
 	if !exist(cfgPath) {
 		fmt.Printf("No role config file found: %s\n", cfgPath)
 		return "", nil
 	}
-	cfg, err := readConfig(cfgPath)
+	cfg, err := readConfigFile(cfgPath)
 	if err != nil {
 		return cfgPath, err
 	}

@@ -36,10 +36,13 @@ roles:
     os: ["arch"]
     dependencies: ["i3"]
 
+  - name: mutt
+    url: "https://github.com/LEI/dot-mutt"
+    os: ["darwin"]
+
   - name: usql
     url: "https://github.com/LEI/dot-usql"
     os: ["darwin"]
 
-  - name: mutt
-    url: "https://github.com/LEI/dot-mutt"
-    os: ["darwin"]
+  - name: pgp
+    url: "https://github.com/LEI/dot-pgp"

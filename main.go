@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	// "path/filepath"
+	"path/filepath"
 	"strings"
 
 	// "github.com/jessevdk/go-flags"
@@ -24,9 +24,12 @@ var (
 func main() {
 	// cmd.Options.Source = "" // .
 	// cmd.Options.Target = "$HOME" // os.Getenv("HOME")
-	cmd.Options.Config = func(s string) error {
-		cmd.ConfigName = s
-		configFile, err := config.Read(s)
+	cmd.Options.Config = func(in string) error {
+		if in != "" {
+			_, s := filepath.Split(in)
+			cmd.ConfigName = s
+		}
+		configFile, err := config.Read(in)
 		if err != nil {
 			return err
 		}
@@ -73,8 +76,7 @@ func init() {
 }
 
 func execute(options *cmd.DotCmd) error {
-	// Do not attempt to sync for listing
-	listOnly := dotfile.HasOne([]string{"list"}, cmd.RunOnly)
+	// listOnly := dotfile.HasOne([]string{"list"}, cmd.RunOnly)
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
 	enabledCount := 0
@@ -113,18 +115,16 @@ func execute(options *cmd.DotCmd) error {
 				errs <- fmt.Errorf("# [%s] init error: %s", r.Name, err)
 				return
 			}
-			if !listOnly {
-				if cmd.Verbose > 0 {
-					fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
-				}
-				if err := r.Sync(); err != nil {
-					if err == cmd.ErrDirtyRepo {
-						errs <- fmt.Errorf("# [%s] Uncommitted changes in %s, use --force to continue", r.Name, r.Path)
-						return
-					}
-					errs <- fmt.Errorf("# [%s] sync error: %s", r.Name, err)
+			if cmd.Verbose > 0 {
+				fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
+			}
+			if err := r.Sync(); err != nil {
+				if err == cmd.ErrDirtyRepo {
+					errs <- fmt.Errorf("# [%s] Uncommitted changes in %s, use --force to continue", r.Name, r.Path)
 					return
 				}
+				errs <- fmt.Errorf("# [%s] sync error: %s", r.Name, err)
+				return
 			}
 			configFile, err := r.ReadConfig(cmd.ConfigName)
 			if err != nil {
