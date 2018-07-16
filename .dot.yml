@@ -4,8 +4,12 @@ roles:
   - name: bash
     url: "https://github.com/LEI/dot-bash"
 
+  - name: pgp
+    url: "https://github.com/LEI/dot-pgp"
+
   - name: git
     url: "https://github.com/LEI/dot-git"
+    # dependencies: ["pgp"]
 
   - name: vim
     url: "https://github.com/LEI/dot-vim"
@@ -39,10 +43,9 @@ roles:
   - name: mutt
     url: "https://github.com/LEI/dot-mutt"
     os: ["darwin"]
+    dependencies: ["pgp"]
 
   - name: usql
     url: "https://github.com/LEI/dot-usql"
     os: ["darwin"]
 
-  - name: pgp
-    url: "https://github.com/LEI/dot-pgp"
