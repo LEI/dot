@@ -11,12 +11,12 @@ type ListCmd struct {
 
 // Execute ...
 func (cmd *ListCmd) Execute(args []string) error {
-	// if Verbose > 2 {
-	fmt.Println("# ListCmd",
-		cmd.Role.Name,
-		cmd.Role.Args,
-		args)
-	// }
+	if Verbose > 2 {
+		fmt.Println("# ListCmd",
+			cmd.Role.Name,
+			cmd.Role.Args,
+			args)
+	}
 	if cmd.Role.Name == "" {
 		return nil
 	}

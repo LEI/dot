@@ -2,7 +2,6 @@ package parsers
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 )
 
@@ -17,36 +16,38 @@ type Pkg struct {
 // 	return fmt.Sprintf("%s %s%+v", p.Name, p.Action, p.OS)
 // }
 
-// NewPkg ...
-func NewPkg(i interface{}) *Pkg {
-	p := &Pkg{}
+// Packages ...
+type Packages []*Pkg
+
+// Add ...
+func (p *Packages) Add(i interface{}) error {
+	pkg := &Pkg{}
 	if i == nil {
-		return p
+		return fmt.Errorf("Trying to add nil to pkgs: %+v", p)
 	}
 	if val, ok := i.(string); ok {
-		p.Name = val
+		pkg.Name = val
 	} else if val, ok := i.(Pkg); ok {
-		*p = val
+		*pkg = val
 	} else if val, ok := i.(map[interface{}]interface{}); ok {
 		// Get name
 		name, ok := val["name"].(string)
 		if !ok {
-			fmt.Printf("Missing pkg name: %+v\n", val)
-			os.Exit(1)
+			return fmt.Errorf("Missing pkg name: %+v", val)
 		}
-		p.Name = name
-		p.OS = *NewSlice(val["os"])
-		// p.Action = NewSlice(val["action"])
+		pkg.Name = name
+		pkg.OS = *NewSlice(val["os"])
+		// pkg.Action = NewSlice(val["action"])
 		action, ok := val["action"].(string)
 		if ok {
-			p.Action = action
+			pkg.Action = action
 		}
 	// } else if val, ok := i.(*Pkg); ok {
-	// 	p = val
+	// 	pkg = val
 	// } else if val, ok := i.([]string); ok {
 	// 	fmt.Println("MS", val)
 	// } else if val, ok := i.([]interface{}); ok {
-	// 	// p.OS = *NewSlice(val["os"])
+	// 	// pkg.OS = *NewSlice(val["os"])
 	// 	fmt.Println("IS", val)
 	// } else if val, ok := i.(map[string]string); ok {
 	// 	fmt.Println("MSS", val, i)
@@ -55,14 +56,11 @@ func NewPkg(i interface{}) *Pkg {
 	// } else if val, ok := i.(interface{}); ok {
 	// 	fmt.Println("II", val, i)
 	} else {
-		fmt.Printf("Unable to assert Pkg: %+v\n", i)
-		os.Exit(1)
+		return fmt.Errorf("Unable to assert Pkg: %+v", i)
 	}
-	return p
+	*p = append(*p, pkg)
+	return nil
 }
-
-// Packages ...
-type Packages []*Pkg
 
 // UnmarshalYAML ...
 func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -73,12 +71,16 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	switch val := i.(type) {
 	case []string:
 		for _, v := range val {
-			*p = append(*p, NewPkg(v)) // &Pkg{Name: v}
+			if err := p.Add(v); err != nil {
+				return err
+			}
 		}
 		break
 	case []interface{}:
 		for _, v := range val {
-			*p = append(*p, NewPkg(v))
+			if err := p.Add(v); err != nil {
+				return err
+			}
 		}
 		break
 	default:

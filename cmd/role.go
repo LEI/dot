@@ -48,10 +48,10 @@ type Role struct {
 	OS       []string // Allowed OSes
 	Env      Env
 	Vars     map[string]interface{}
-	Copy     parsers.Map
-	Line     map[string]string
-	Link     parsers.Map
-	Template parsers.Map
+	Copies     parsers.Map `yaml:"copy"`
+	Lines     map[string]string `yaml:"line"`
+	Links     parsers.Map `yaml:"link"`
+	Templates parsers.Templates `yaml:"template"`
 
 	// Hooks
 	Install     []string
@@ -120,14 +120,14 @@ func NewRole(name string) *Role {
 }
 
 func (r *Role) String() string {
-	if Verbose > 2 {
-		return r.Sprint()
-	}
+	// if Verbose > 2 {
+	// 	return r.Display()
+	// }
 	return fmt.Sprintf("%s", r.Name)
 }
 
-// Sprint verbose string
-func (r *Role) Sprint() string {
+// Display verbose string
+func (r *Role) Display() string {
 	s := fmt.Sprintf("[%s:%s](%s)", r.Name, r.Path, r.URL)
 	ind := "  "
 	pre := "\n" + ind
@@ -162,34 +162,35 @@ func (r *Role) Sprint() string {
 			s = s + fmt.Sprintf("%s%+v", pre + ind, v)
 		}
 	}
-	if r.Copy != nil && len(r.Copy) > 0 {
-		s = s + fmt.Sprintf("%sCopy: %d", pre, len(r.Copy))
-		for k, v := range r.Copy {
+	if r.Copies != nil && len(r.Copies) > 0 {
+		s = s + fmt.Sprintf("%sCopy: %d", pre, len(r.Copies))
+		for k, v := range r.Copies {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			v = strings.TrimPrefix(v, target+"/")
 			s = s + fmt.Sprintf("%s%s => %s", pre + ind, k, v)
 		}
 	}
-	if r.Line != nil && len(r.Line) > 0 {
-		s = s + fmt.Sprintf("%sLine: %d", pre, len(r.Line))
-		for k, v := range r.Line {
+	if r.Lines != nil && len(r.Lines) > 0 {
+		s = s + fmt.Sprintf("%sLine: %d", pre, len(r.Lines))
+		for k, v := range r.Lines {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			s = s + fmt.Sprintf("%s%s >> %s", pre + ind, k, v)
 		}
 	}
-	if r.Link != nil && len(r.Link) > 0 {
-		s = s + fmt.Sprintf("%sLink: %d", pre, len(r.Link))
-		for k, v := range r.Link {
+	if r.Links != nil && len(r.Links) > 0 {
+		s = s + fmt.Sprintf("%sLink: %d", pre, len(r.Links))
+		for k, v := range r.Links {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			v = strings.TrimPrefix(v, target+"/")
 			s = s + fmt.Sprintf("%s%s -> %s", pre + ind, k, v)
 		}
 	}
-	if r.Template != nil && len(r.Template) > 0 {
-		s = s + fmt.Sprintf("%sTemplate: %d", pre, len(r.Template))
-		for k, v := range r.Template {
-			k = strings.TrimPrefix(k, r.Path+"/")
-			s = s + fmt.Sprintf("%s%s +> %s", pre + ind, k, v)
+	if r.Templates != nil && len(r.Templates) > 0 {
+		s = s + fmt.Sprintf("%sTemplate: %d", pre, len(r.Templates))
+		for _, v := range r.Templates {
+			v.Source = strings.TrimPrefix(v.Source, r.Path+"/")
+			v.Target = strings.TrimPrefix(v.Target, target+"/")
+			s = s + fmt.Sprintf("%s%s +> %s %+v", pre + ind, v.Source, v.Target, v.Data)
 		}
 	}
 	switch true {
@@ -268,23 +269,23 @@ func (r *Role) RegisterTask(name, s string) error {
 
 // RegisterCopy ...
 func (r *Role) RegisterCopy(s string) error {
-	// if r.Copy == nil {
-	// 	r.Copy = map[string]string{}
+	// if r.Copies == nil {
+	// 	r.Copies = map[string]string{}
 	// }
 	// src, dst := dotfile.SplitPath(s)
-	// r.Copy[src] = dst
+	// r.Copies[src] = dst
 	return nil
 }
 
 // RegisterLink ...
 func (r *Role) RegisterLink(s string) error {
-	if r.Link == nil {
-		r.Link = *&parsers.Map{} // map[string]string{}
+	if r.Links == nil {
+		r.Links = *&parsers.Map{} // map[string]string{}
 	}
 	src, dst := dotfile.SplitPath(s)
 	// fmt.Println("RegisterLink", s, "=", src, "+", dst)
-	r.Link.Add(src, dst)
-	// r.Link[src] = dst
+	r.Links.Add(src, dst)
+	// r.Links[src] = dst
 	return nil
 }
 
@@ -424,16 +425,16 @@ func (r *Role) Disable() error {
 
 // Prepare ...
 func (r *Role) Prepare() error {
-	if err := r.PreparePaths(&r.Copy); err != nil {
+	if err := r.PreparePaths(&r.Copies); err != nil {
 		return err
 	}
-	if err := r.PrepareLines(&r.Line); err != nil {
+	if err := r.PrepareLines(&r.Lines); err != nil {
 		return err
 	}
-	if err := r.PreparePaths(&r.Link); err != nil {
+	if err := r.PreparePaths(&r.Links); err != nil {
 		return err
 	}
-	if err := r.PreparePaths(&r.Template); err != nil {
+	if err := r.PrepareTemplates(&r.Templates); err != nil {
 		return err
 	}
 	return nil
@@ -441,7 +442,7 @@ func (r *Role) Prepare() error {
 
 // PrepareLines ...
 func (r *Role) PrepareLines(l *map[string]string) error {
-	lines := make(map[string]string, len(*l))
+	lines := make(map[string]string, 0)
 	for file, line := range *l {
 		// Prepend role directory to source path
 		file = filepath.Join(target, file)
@@ -451,11 +452,67 @@ func (r *Role) PrepareLines(l *map[string]string) error {
 	return nil
 }
 
+// PrepareTemplates ...
+func (r *Role) PrepareTemplates(t *parsers.Templates) error {
+	templates := make(parsers.Templates, 0)
+	for _, v := range *t {
+		if v.Target == "" {
+			s, t := dotfile.SplitPath(v.Source)
+			v.Source = s
+			v.Target = t
+		}
+		// fmt.Println("src", v.Source, "dst", v.Target)
+		v.Source = os.ExpandEnv(v.Source)
+		v.Target = os.ExpandEnv(v.Target)
+		// Prepend role directory to source path
+		v.Source = filepath.Join(r.Path, v.Source)
+		// Check frob globs
+		if strings.Contains(v.Source, "*") {
+			// fmt.Println("*", v.Source, v.Target)
+			glob, err := filepath.Glob(v.Source)
+			if err != nil {
+				return err
+			}
+		GLOB:
+			for _, s := range glob {
+				// Extract source file name
+				_, n := filepath.Split(s)
+				for _, i := range ignore {
+					// Check for ignored patterns
+					matched, err := filepath.Match(i, n)
+					if err != nil {
+						return err
+					}
+					if matched {
+						continue GLOB
+					}
+				}
+				t, err := prepareTarget(s, v.Target)
+				if err != nil {
+					return err
+				}
+				v.Source = s
+				v.Target = t
+				templates = append(templates, v) // paths[s] = t
+			}
+		} else {
+			t, err := prepareTarget(v.Source, v.Target)
+			if err != nil {
+				return err
+			}
+			v.Target = t
+			templates = append(templates, v) // paths[src] = t
+		}
+	}
+	*t = templates
+	return nil
+}
+
 // PreparePaths ...
 func (r *Role) PreparePaths(p *parsers.Map) error {
 	// in interface{} p := in.(*parsers.Map)
-	// var paths = make(map[string]string, len(*p))
-	var m = make(parsers.Map)
+	// var paths = make(map[string]string, 0)
+	paths := make(parsers.Map)
 	for src, dst := range *p {
 		if dst == "" {
 			s, t := dotfile.SplitPath(src)
@@ -492,18 +549,18 @@ func (r *Role) PreparePaths(p *parsers.Map) error {
 				if err != nil {
 					return err
 				}
-				m.Add(s, t) // paths[s] = t
+				paths.Add(s, t) // paths[s] = t
 			}
 		} else {
 			t, err := prepareTarget(src, dst)
 			if err != nil {
 				return err
 			}
-			m.Add(src, t) // paths[src] = t
+			paths.Add(src, t) // paths[src] = t
 		}
 	}
 	// *p = *(p.Merge(paths))
-	*p = m
+	*p = paths
 	return nil
 }
 
@@ -530,7 +587,7 @@ func (r *Role) GetField(key string) reflect.Value {
 func (r *Role) Do(a string, run []string) error {
 	if runTask("list", run) {
 		// Just print the role fields
-		fmt.Printf("# Role %+v\n", r.Sprint())
+		fmt.Printf("# Role %+v\n", r.Display())
 		return nil
 	}
 	fmt.Printf("# Role: %+v\n", r.Name)
@@ -584,9 +641,9 @@ func (r *Role) Do(a string, run []string) error {
 			}
 		}
 	}
-	// NOOP: Copy
-	if r.Copy != nil && runTask("copy", run) {
-		for s, t := range r.Copy {
+	// NOOP: Copies
+	if r.Copies != nil && runTask("copy", run) {
+		for s, t := range r.Copies {
 			task := &dotfile.CopyTask{
 				Source: s,
 				Target: t,
@@ -597,8 +654,8 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// Line in file
-	if r.Line != nil && runTask("line", run) {
-		for s, t := range r.Line {
+	if r.Lines != nil && runTask("line", run) {
+		for s, t := range r.Lines {
 			task := &dotfile.LineTask{
 				File: s,
 				Line: t,
@@ -609,8 +666,8 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// Symlink files
-	if r.Link != nil && runTask("link", run) {
-		for s, t := range r.Link {
+	if r.Links != nil && runTask("link", run) {
+		for s, t := range r.Links {
 			task := &dotfile.LinkTask{
 				Source: s,
 				Target: t,
@@ -621,18 +678,19 @@ func (r *Role) Do(a string, run []string) error {
 		}
 	}
 	// Templates
-	if r.Template != nil && runTask("template", run) {
-		for s, t := range r.Template {
-			task := &dotfile.TemplateTask{
-				Source: s,
-				Target: t,
-				Env:    r.Env,
-				Vars:   r.Vars,
-			}
-			if err := task.Do(a); err != nil {
-				return err
-			}
-		}
+	if r.Templates != nil && runTask("template", run) {
+		// TODO
+		// for s, t := range r.Templates {
+		// 	task := &dotfile.TemplateTask{
+		// 		Source: s,
+		// 		Target: t,
+		// 		Env:    r.Env,
+		// 		Vars:   r.Vars,
+		// 	}
+		// 	if err := task.Do(a); err != nil {
+		// 		return err
+		// 	}
+		// }
 	}
 	// Restore original environment
 	if r.Env != nil {

@@ -12,6 +12,7 @@ import (
 
 // TemplateTask struct
 type TemplateTask struct {
+	// parsers.Tpl
 	Source, Target string
 	Env            map[string]string
 	Vars           map[string]interface{}

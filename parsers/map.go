@@ -18,22 +18,13 @@ type Map map[string]string // *MapItem // map[interface{}]interface{}
 // 	return fmt.Sprintf("MapItem{%+v}", i.Name)
 // }
 
-// NewMap ...
-func NewMap(i interface{}) *Map {
-	m := &Map{}
-	if i != nil {
-		fmt.Println("TODO NewMap", i)
-	}
-	return m
-}
-
 // Len ...
 // func (m *Map) Len() int {
 // 	return len(*m)
 // }
 
 // Add ...
-func (m *Map) Add(key, val interface{}) {
+func (m *Map) Add(key, val interface{}) error {
 	k := key.(string)
 	v := val.(string)
 	// s, ok := val.(string)
@@ -45,6 +36,7 @@ func (m *Map) Add(key, val interface{}) {
 	// 	// TODO log.Fatal
 	// }
 	(*m)[k] = v
+	return nil
 }
 
 // // Merge ...
@@ -106,7 +98,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 					break
 				// case interface{}:
 				default:
-					return fmt.Errorf("??? %+v", w)
+					return fmt.Errorf("# Unable to unmarshal: expected string, found %+v", w)
 				}
 			}
 			break

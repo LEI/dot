@@ -6,7 +6,7 @@ import (
 	// "path/filepath"
 	"reflect"
 
-	"github.com/LEI/dot/dotfile"
+	// "github.com/LEI/dot/dotfile"
 )
 
 // Paths ...
@@ -21,16 +21,37 @@ func (p *Paths) String() string {
 }
 
 // Add ...
-func (p *Paths) Add(s string) error {
-	src, dst := dotfile.SplitPath(s)
-	// if p.Dir != "" {
-	// 	src = filepath.Join(p.Dir, src)
-	// }
-	// if p.Dst != "" {
-	// 	dst = filepath.Join(p.Dst, dst)
-	// }
-	src = dotfile.ExpandEnv(src)
-	dst = dotfile.ExpandEnv(dst)
+func (p *Paths) Add(i interface{}) error {
+	if i == nil {
+		return fmt.Errorf("Trying to add nil to paths: %+v", p)
+	}
+	var src, dst string
+	if val, ok := i.(string); ok {
+		src = val
+	} else if val, ok := i.(struct{Source, Target string}); ok {
+		src = val.Source
+		dst = val.Target
+	} else if val, ok := i.(map[interface{}]interface{}); ok {
+		// Get name
+		s, ok := val["source"].(string)
+		if !ok {
+			return fmt.Errorf("Missing path source: %+v", val)
+		}
+		src = s
+		t, _ := val["target"].(string)
+		if ok {
+			dst = t
+		}
+	}
+	// src, dst := dotfile.SplitPath(s)
+	// // if p.Dir != "" {
+	// // 	src = filepath.Join(p.Dir, src)
+	// // }
+	// // if p.Dst != "" {
+	// // 	dst = filepath.Join(p.Dst, dst)
+	// // }
+	// src = dotfile.ExpandEnv(src)
+	// dst = dotfile.ExpandEnv(dst)
 	(*p)[src] = dst
 	return nil
 }
@@ -71,40 +92,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// 	(*p)[s] = s
 	case []interface{}:
 		for _, v := range val {
-			// (*p)[v.(string)] = v.(string)
-			p.Add(v.(string))
-			// TODO: Env/Vars scoped per template
-			// switch V := v.(type) {
-			// case string:
-			// 	p.Add(v.(string))
-			// 	break
-			// case interface{}:
-			// 	fmt.Println("->", V)
-			// 	switch m := V.(type) {
-			// 	case map[interface{}]interface{}:
-			// 		src, ok := m["source"].(string)
-			// 		if !ok {
-			// 			return fmt.Errorf("Missing path source: %+v", m)
-			// 		}
-			// 		fmt.Println("=>", src, m)
-			// 		break
-			// 	default:
-			// 		t := reflect.TypeOf(m)
-			// 		T := t.Elem()
-			// 		if t.Kind() == reflect.Map {
-			// 			T = reflect.MapOf(t.Key(), T)
-			// 		}
-			// 		return fmt.Errorf("Unable to unmarshal %s path: %+v", T, m)
-			// 	}
-			// 	break
-			// default:
-			// 	t := reflect.TypeOf(V)
-			// 	T := t.Elem()
-			// 	if t.Kind() == reflect.Map {
-			// 		T = reflect.MapOf(t.Key(), t.Elem())
-			// 	}
-			// 	return fmt.Errorf("Unable to unmarshal %s into: %+v", T, V)
-			// }
+			p.Add(v)
 		}
 		break
 	case map[string]string:
