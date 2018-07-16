@@ -102,9 +102,6 @@ func NewSlice(i interface{}) *Slice {
 // Value return a new iterator
 func (s *Slice) Value() []string {
 	r := []string{}
-	// if *s == nil {
-	// 	return r
-	// }
 	for _, v := range *s {
 		r = append(r, v)
 	}
@@ -120,7 +117,6 @@ func (s *Slice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&i); err != nil {
 		return err
 	}
-	fmt.Println("S ================>", i)
 	switch val := i.(type) {
 	case []string:
 		// 	*s = append(*s, &item)

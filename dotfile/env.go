@@ -51,8 +51,9 @@ var (
 
 func init() {
 	homeDir = os.Getenv("HOME")
+	// fmt.Println("HOME", homeDir)
 	osTypes = GetOSTypes()
-	fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
+	// fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
 	originalEnv = GetEnv()
 	// fmt.Printf("Original env: %+v\n", originalEnv)
 }

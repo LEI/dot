@@ -121,92 +121,100 @@ func NewRole(name string) *Role {
 
 func (r *Role) String() string {
 	// if Verbose > 2 {
-	// 	return r.Sprint()
+	// 	return r.Print()
 	// }
 	return fmt.Sprintf("%s", r.Name)
 }
 
-// Sprint verbose string
-func (r *Role) Sprint() string {
+// Print ...
+func (r *Role) Print(v bool) string {
 	s := fmt.Sprintf("[%s:%s](%s)", r.Name, r.Path, r.URL)
+	if v {
+		s+= r.PrintRoles()
+	}
+	return s
+}
+
+// PrintRoles ...
+func (r *Role) PrintRoles() (s string) {
 	ind := "  "
 	pre := "\n" + ind
 	if r.OS != nil && len(r.OS) > 0 {
-		s = s + fmt.Sprintf("%sOS: %s", pre, r.OS)
+		s += fmt.Sprintf("%sOS: %s", pre, r.OS)
 	}
 	if !r.Enabled {
-		s = s + fmt.Sprintf("%sDISABLED", pre)
+		s += fmt.Sprintf("%sDISABLED", pre)
 	}
 	switch true {
 	case len(r.Install) > 0:
 	case len(r.PostInstall) > 0:
 	case len(r.Remove) > 0:
 	case len(r.PostRemove) > 0:
-		s = s + fmt.Sprintf("%sHas exec: %s", pre, "yes")
+		s += fmt.Sprintf("%sHas exec: %s", pre, "yes")
 		break
 	}
 	// Role environment
 	if r.Env != nil && len(r.Env) > 0 {
-		s = s + fmt.Sprintf("%sEnv: %+v", pre, r.Env)
+		s += fmt.Sprintf("%sEnv: %+v", pre, r.Env)
 	}
 	// Common variables
 	if r.Vars != nil && len(r.Vars) > 0 {
-		s = s + fmt.Sprintf("%sVars: %+v", pre, r.Vars)
+		s += fmt.Sprintf("%sVars: %+v", pre, r.Vars)
 	}
 	if r.Deps != nil && len(r.Deps) > 0 {
-		s = s + fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
+		s += fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
 		for _, v := range r.Deps {
-			s = s + fmt.Sprintf("%s%+v", pre + ind, v)
+			s += fmt.Sprintf("%s%+v", pre + ind, v)
 		}
 	}
 	if r.Pkg != nil && len(r.Pkg) > 0 {
-		s = s + fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
+		s += fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
 		for _, v := range r.Pkg {
-			s = s + fmt.Sprintf("%s%s", pre + ind, v.Name)
+			s += fmt.Sprintf("%s%s", pre + ind, v.Name)
 			if v.Action != "" {
-				s = s + fmt.Sprintf(" (%s only)", v.Action)
+				s += fmt.Sprintf(" (%s only)", v.Action)
 			}
 			if v.OS != nil && len(v.OS) > 0 {
-				s = s + fmt.Sprintf(" [OS:")
+				s += fmt.Sprintf(" [OS:")
 				for _, o := range v.OS.Value() {
-					s = s + fmt.Sprintf("%s",  o)
+					s += fmt.Sprintf("%s",  o)
 				}
-				s = s + fmt.Sprintf("]")
+				s += fmt.Sprintf("]")
 			}
 		}
 	}
 	if r.Copies != nil && len(r.Copies) > 0 {
-		s = s + fmt.Sprintf("%sCopy: %d", pre, len(r.Copies))
+		s += fmt.Sprintf("%sCopy: %d", pre, len(r.Copies))
 		for k, v := range r.Copies {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			v = strings.TrimPrefix(v, target+"/")
-			s = s + fmt.Sprintf("%s%s => %s", pre + ind, k, v)
+			s += fmt.Sprintf("%s%s => %s", pre + ind, k, v)
 		}
 	}
 	if r.Lines != nil && len(r.Lines) > 0 {
-		s = s + fmt.Sprintf("%sLine: %d", pre, len(r.Lines))
+		s += fmt.Sprintf("%sLine: %d", pre, len(r.Lines))
 		for k, v := range r.Lines {
 			k = strings.TrimPrefix(k, r.Path+"/")
-			s = s + fmt.Sprintf("%s%s >> %s", pre + ind, k, v)
+			s += fmt.Sprintf("%s%s >> %s", pre + ind, k, v)
 		}
 	}
 	if r.Links != nil && len(r.Links) > 0 {
-		s = s + fmt.Sprintf("%sLink: %d", pre, len(r.Links))
+		s += fmt.Sprintf("%sLink: %d", pre, len(r.Links))
 		for k, v := range r.Links {
 			k = strings.TrimPrefix(k, r.Path+"/")
 			v = strings.TrimPrefix(v, target+"/")
-			s = s + fmt.Sprintf("%s%s -> %s", pre + ind, k, v)
+			s += fmt.Sprintf("%s%s -> %s", pre + ind, k, v)
 		}
 	}
 	if r.Templates != nil && len(r.Templates) > 0 {
-		s = s + fmt.Sprintf("%sTemplate: %d", pre, len(r.Templates))
+		s += fmt.Sprintf("%sTemplate: %d", pre, len(r.Templates))
 		for _, v := range r.Templates {
 			v.Source = strings.TrimPrefix(v.Source, r.Path+"/")
 			v.Target = strings.TrimPrefix(v.Target, target+"/")
-			s = s + fmt.Sprintf("%s%s +> %s %+v", pre + ind, v.Source, v.Target, v.Data)
+			s += fmt.Sprintf("%s%s +> %s %+v", pre + ind, v.Source, v.Target, v.Data)
 		}
 	}
-	return fmt.Sprintf("%s", s)
+	return s
 }
 
 // Register ...
@@ -310,12 +318,6 @@ func (r *Role) Init() error {
 		r.Path = filepath.Join(target, Options.RoleDir, r.Name)
 	}
 	// r.URL = ParseURL(r.URL)
-	if Verbose > 0 {
-		fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
-	}
-	if err := r.Sync(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -594,7 +596,7 @@ func (r *Role) GetField(key string) reflect.Value {
 func (r *Role) Do(a string, run []string) error {
 	if runTask("list", run) {
 		// Just print the role fields
-		fmt.Printf("# Role %+v\n", r.Sprint())
+		fmt.Printf("# Role %+v\n", r.Print(Verbose > 0))
 		return nil
 	}
 	fmt.Printf("# Role: %+v\n", r.Name)

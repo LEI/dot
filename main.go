@@ -73,6 +73,8 @@ func init() {
 }
 
 func execute(options *cmd.DotCmd) error {
+	// Do not attempt to sync for listing
+	listOnly := dotfile.HasOne([]string{"list"}, cmd.RunOnly)
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
 	enabledCount := 0
@@ -100,10 +102,6 @@ func execute(options *cmd.DotCmd) error {
 	if length == 0 {
 		return fmt.Errorf("# No roles, at least for this OS")
 	}
-	// Do not attempt to sync for listing
-	if dotfile.HasOne([]string{"list"}, cmd.RunOnly) {
-		return config.Do(cmd.Action, cmd.RunOnly)
-	}
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
 		go func(r *cmd.Role) {
@@ -112,8 +110,21 @@ func execute(options *cmd.DotCmd) error {
 				return
 			}
 			if err := r.Init(); err != nil {
-				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
+				errs <- fmt.Errorf("# [%s] init error: %s", r.Name, err)
 				return
+			}
+			if !listOnly {
+				if cmd.Verbose > 0 {
+					fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
+				}
+				if err := r.Sync(); err != nil {
+					if err == cmd.ErrDirtyRepo {
+						errs <- fmt.Errorf("# [%s] Uncommitted changes in %s, use --force to continue", r.Name, r.Path)
+						return
+					}
+					errs <- fmt.Errorf("# [%s] sync error: %s", r.Name, err)
+					return
+				}
 			}
 			configFile, err := r.ReadConfig(cmd.ConfigName)
 			if err != nil {
