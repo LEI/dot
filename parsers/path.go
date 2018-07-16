@@ -73,6 +73,38 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		for _, v := range val {
 			// (*p)[v.(string)] = v.(string)
 			p.Add(v.(string))
+			// TODO: Env/Vars scoped per template
+			// switch V := v.(type) {
+			// case string:
+			// 	p.Add(v.(string))
+			// 	break
+			// case interface{}:
+			// 	fmt.Println("->", V)
+			// 	switch m := V.(type) {
+			// 	case map[interface{}]interface{}:
+			// 		src, ok := m["source"].(string)
+			// 		if !ok {
+			// 			return fmt.Errorf("Missing path source: %+v", m)
+			// 		}
+			// 		fmt.Println("=>", src, m)
+			// 		break
+			// 	default:
+			// 		t := reflect.TypeOf(m)
+			// 		T := t.Elem()
+			// 		if t.Kind() == reflect.Map {
+			// 			T = reflect.MapOf(t.Key(), T)
+			// 		}
+			// 		return fmt.Errorf("Unable to unmarshal %s path: %+v", T, m)
+			// 	}
+			// 	break
+			// default:
+			// 	t := reflect.TypeOf(V)
+			// 	T := t.Elem()
+			// 	if t.Kind() == reflect.Map {
+			// 		T = reflect.MapOf(t.Key(), t.Elem())
+			// 	}
+			// 	return fmt.Errorf("Unable to unmarshal %s into: %+v", T, V)
+			// }
 		}
 		break
 	case map[string]string:

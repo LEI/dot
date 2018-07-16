@@ -47,6 +47,7 @@ type Role struct {
 	URL      string   // Repository URL
 	OS       []string // Allowed OSes
 	Env      Env
+	Vars     map[string]interface{}
 	Copy     parsers.Paths
 	Line     map[string]string
 	Link     parsers.Paths
@@ -134,7 +135,10 @@ func (r *Role) Sprint() string {
 		s = s + fmt.Sprintf("%sOS: %s", pre, r.OS)
 	}
 	if r.Env != nil && len(r.Env) > 0 {
-		s = s + fmt.Sprintf("%sEnv: %s", pre, r.Env)
+		s = s + fmt.Sprintf("%sEnv: %+v", pre, r.Env)
+	}
+	if r.Vars != nil && len(r.Vars) > 0 {
+		s = s + fmt.Sprintf("%sVars: %+v", pre, r.Vars)
 	}
 	if r.Pkg != nil && len(r.Pkg) > 0 {
 		s = s + fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
@@ -596,6 +600,7 @@ func (r *Role) Do(a string, run []string) error {
 				Source: s,
 				Target: t,
 				Env:    r.Env,
+				Vars:   r.Vars,
 			}
 			if err := task.Do(a); err != nil {
 				return err

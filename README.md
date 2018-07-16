@@ -6,7 +6,7 @@
 - [go-flags](https://github.com/jessevdk/go-flags)
 - [pacapt](https://github.com/icy/pacapt)
 
-### Installation
+### Requirements
 
 #### [Install dep](https://golang.github.io/dep/docs/installation.html<Paste>)
 
@@ -26,6 +26,12 @@
 
     dep ensure
 
-### Configuration file
+### Installation
+
+Download a [release](https://github.com/LEI/dot/releases) or install manually:
+
+    got get github.com/LEI/dot
+
+### Configuration
 
 `.dot.yml`

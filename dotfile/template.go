@@ -14,6 +14,7 @@ import (
 type TemplateTask struct {
 	Source, Target string
 	Env            map[string]string
+	Vars           map[string]interface{}
 	Task
 }
 
@@ -34,7 +35,13 @@ func (t *TemplateTask) Parse() (string, error) {
 	// if err != nil {
 	// 	return false, err
 	// }
-	if err = tmpl.Execute(buf, t.Env); err != nil {
+	// for k, v := range t.Vars {
+	// 	fmt.Println("VAR", k, "=", v)
+	// }
+	for k, v := range t.Env {
+		t.Vars[k] = v
+	}
+	if err = tmpl.Execute(buf, t.Vars); err != nil {
 		return buf.String(), err
 	}
 	return buf.String(), nil
@@ -104,6 +111,9 @@ func Template(t *TemplateTask) (bool, error) {
 		return false, nil
 	}
 	if DryRun {
+		// if Verbose > 0 {
+		// 	fmt.Println(str)
+		// }
 		return true, nil
 	}
 	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
