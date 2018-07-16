@@ -45,9 +45,12 @@ var (
 	extraEnv = map[string]string{
 		"OS": OS,
 	}
+
+	homeDir string
 )
 
 func init() {
+	homeDir = os.Getenv("HOME")
 	osTypes = GetOSTypes()
 	fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
 	originalEnv = GetEnv()
@@ -138,7 +141,7 @@ func HasOSType(s ...string) bool {
 	return HasOne(s, osTypes)
 }
 
-// HasOne ...
+// HasOne check if two slices intersect
 func HasOne(in []string, list []string) bool {
 	for _, a := range in {
 		for _, b := range list {

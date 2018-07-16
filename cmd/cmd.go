@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	// "fmt"
+	// "os"
 	// "reflect"
 	// "strings"
 
 	"github.com/jessevdk/go-flags"
-
-	"github.com/LEI/dot/dotfile"
 )
 
 // Executable ...
@@ -28,6 +26,7 @@ type BaseCmd struct {
 type BaseTaskCmd struct {
 	BaseCmd
 
+	List     ListCmd     `command:"list" alias:"ls" description:"List files"`
 	Copy     CopyCmd     `command:"copy" alias:"cp" description:"Copy files"`
 	Line     LineCmd     `command:"line-in-file" alias:"line" description:"Line in file"`
 	Link     LinkCmd     `command:"link" alias:"ln" description:"Symlink files"`
@@ -40,54 +39,20 @@ type BaseTaskCmd struct {
 type BaseRoleCmd struct {
 	BaseCmd
 
-	Role RoleArg `positional-args:"true" positional-arg-name:"paths"` // required:"1"
+	Role struct {
+		Name  string // `default:"default"` // `required:"true"`
+		Args []flags.Filename
+	} `positional-args:"true" positional-arg-name:"paths"` // required:"1"
 
 	Executable
 }
 
-// RoleArg ...
-type RoleArg struct {
-	Name  string // `default:"default"` // `required:"true"`
-	Args []flags.Filename
-}
-
-var parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
-
-var source, target string
+var (
+	source, target string
+	parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
+)
 
 // GetParser ...
 func GetParser() *flags.Parser {
 	return parser
-}
-
-// Parse ...
-func Parse() ([]string, error) {
-	remaining, err := parser.Parse()
-	if err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok {
-			switch flagsErr.Type {
-			case flags.ErrHelp:
-				parser.WriteHelp(os.Stdout)
-				os.Exit(0)
-				// break
-			case flags.ErrCommandRequired:
-				// err = Options.Install.Execute(remaining)
-				// remaining = []string{}
-				err = nil
-				break
-			default:
-				fmt.Fprintf(os.Stderr, "Error parsing args: %s\n", err)
-				parser.WriteHelp(os.Stdout)
-				os.Exit(1)
-			}
-		}
-	}
-	// Update variables
-	source = dotfile.ExpandEnv(string(Options.Source))
-	target = dotfile.ExpandEnv(string(Options.Target))
-	dotfile.DryRun = Options.DryRun
-	Verbose = len(Options.Verbose)
-	dotfile.Verbose = Verbose
-	// WriteIniConfig(parser)
-	return remaining, err
 }

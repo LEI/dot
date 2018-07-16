@@ -53,7 +53,7 @@ func (t *TemplateTask) Parse() (string, error) {
 
 // Install template
 func (t *TemplateTask) Install() error {
-	if err := createBaseDir(t.Target); err != nil {
+	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
 		return err
 	}
 	changed, err := Template(t) // t.Source, dst, t.Env
@@ -95,9 +95,11 @@ func (t *TemplateTask) Remove() error {
 		fmt.Printf("%s=\"%s\"\n", k, v)
 	}*/
 	fmt.Printf("%srm %s\n", prefix, t.Target)
-	// if err := removeBaseDir(t.Target); err != nil {
-	// 	return err
-	// }
+	if RemoveEmptyDirs {
+		if err := removeBaseDir(t.Target); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

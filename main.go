@@ -77,13 +77,13 @@ func execute(options *cmd.DotCmd) error {
 	// Initialize role config
 	enabledCount := 0
 	for _, r := range config.Roles {
-		r.Enabled = true // Quickfix
 		if len(options.RoleFilter) > 0 && !dotfile.HasOne([]string{r.Name}, options.RoleFilter) {
 			// fmt.Fprintf(os.Stderr, "# [%s] Skipping (filtered)\n", r.Name)
 			// config.Roles = removeRole(config.Roles, r)
-			r.Disable()
+			// r.Disable()
 			continue
 		}
+		r.Enabled = true // Quickfix
 		if r.OS != nil {
 			if len(r.OS) > 0 && !dotfile.HasOSType(r.OS...) { // Skip role
 				fmt.Fprintf(os.Stderr, "# [%s] Skipping (OS: %s)\n", r.Name, strings.Join(r.OS, ", "))
@@ -100,9 +100,17 @@ func execute(options *cmd.DotCmd) error {
 	if length == 0 {
 		return fmt.Errorf("# No roles, at least for this OS")
 	}
+	// Do not attempt to sync for listing
+	if dotfile.HasOne([]string{"list"}, cmd.RunOnly) {
+		return config.Do(cmd.Action, cmd.RunOnly)
+	}
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
 		go func(r *cmd.Role) {
+			if !r.IsEnabled() {
+				errs <- nil
+				return
+			}
 			if err := r.Init(); err != nil {
 				errs <- fmt.Errorf("# %s init error: %s", r.Name, err)
 				return
@@ -112,12 +120,12 @@ func execute(options *cmd.DotCmd) error {
 				errs <- err
 				return
 			}
+			if configFile != "" && cmd.Verbose > 1 {
+				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
+			}
 			if err := r.Prepare(); err != nil {
 				errs <- err
 				return
-			}
-			if configFile != "" && cmd.Verbose > 1 {
-				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
 			}
 			errs <- nil
 		}(r)
@@ -145,17 +153,5 @@ func execute(options *cmd.DotCmd) error {
 		}
 		break
 	}
-	for _, r := range config.Roles {
-		// Skip disabled roles
-		if !r.IsEnabled() {
-			continue
-		}
-		// if err := r.Prepare(); err != nil {
-		// 	return err
-		// }
-		if err := r.Do(cmd.Action, cmd.RunOnly); err != nil {
-			return err
-		}
-	}
-	return nil
+	return config.Do(cmd.Action, cmd.RunOnly)
 }

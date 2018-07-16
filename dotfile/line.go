@@ -20,7 +20,7 @@ func (t *LineTask) Do(a string) error {
 
 // Install line
 func (t *LineTask) Install() error {
-	if err := createBaseDir(t.File); err != nil {
+	if err := createBaseDir(t.File); err != nil && err != ErrDirShouldExist {
 		return err
 	}
 	changed, err := LineInFile(t.File, t.Line)
@@ -46,10 +46,11 @@ func (t *LineTask) Remove() error {
 		prefix = "# "
 	}
 	fmt.Printf("%ssed -i '#^%s$#d' %s\n", prefix, t.Line, t.File)
-	// RemoveIfEmpty?
-	// if err := removeBaseDir(t.File); err != nil {
-	// 	return err
-	// }
+	if RemoveEmptyDirs {
+		if err := removeBaseDir(t.File); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

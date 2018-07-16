@@ -21,7 +21,7 @@ func (t *CopyTask) Do(a string) error {
 
 // Install copy
 func (t *CopyTask) Install() error {
-	if err := createBaseDir(t.Target); err != nil {
+	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
 		return err
 	}
 	changed, err := Copy(t)
@@ -47,8 +47,10 @@ func (t *CopyTask) Remove() error {
 		prefix = "# "
 	}
 	fmt.Printf("%srm %s\n", prefix, t.Target)
-	if err := removeBaseDir(t.Target); err != nil {
-		return err
+	if RemoveEmptyDirs {
+		if err := removeBaseDir(t.Target); err != nil {
+			return err
+		}
 	}
 	return nil
 }

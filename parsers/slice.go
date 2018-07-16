@@ -99,8 +99,8 @@ func NewSlice(i interface{}) *Slice {
 	return s
 }
 
-// GetStringSlice return a new iterator
-func (s *Slice) GetStringSlice() []string {
+// Value return a new iterator
+func (s *Slice) Value() []string {
 	r := []string{}
 	// if *s == nil {
 	// 	return r

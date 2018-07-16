@@ -124,8 +124,8 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// GetStringMapString ...
-func (m *Map) GetStringMapString() map[string]string {
+// Value ...
+func (m *Map) Value() map[string]string {
 	r := map[string]string{}
 	for k, v := range *m {
 		r[k] = v // .(string)

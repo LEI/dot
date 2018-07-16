@@ -168,7 +168,7 @@ func (r *Role) Sprint() string {
 			}
 			if v.OS != nil && len(v.OS) > 0 {
 				s = s + fmt.Sprintf(" [OS:")
-				for _, o := range v.OS.GetStringSlice() {
+				for _, o := range v.OS.Value() {
 					s = s + fmt.Sprintf("%s",  o)
 				}
 				s = s + fmt.Sprintf("]")
@@ -323,6 +323,10 @@ func (r *Role) Init() error {
 func (r *Role) Sync() error {
 	if r.URL == "" && !exist(r.Path) {
 		return fmt.Errorf("# Role %s has no URL and could not be found in %s", r.Name, r.Path)
+	}
+	if !r.IsEnabled() {
+		// if !exist(r.Path) { }
+		return fmt.Errorf("No enabled: %s", r.Name)
 	}
 	repo := NewRepo(r.Path, r.URL)
 	exists := exist(repo.Path)
@@ -629,7 +633,7 @@ func (r *Role) Do(a string, run []string) error {
 	// System packages
 	if r.Pkg != nil && Options.Packages && runTask("package", run) {
 		for _, v := range r.Pkg {
-			if v.OS != nil && len(v.OS) > 0 && !dotfile.HasOSType(v.OS.GetStringSlice()...) {
+			if v.OS != nil && len(v.OS) > 0 && !dotfile.HasOSType(v.OS.Value()...) {
 				continue
 			}
 			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(a) {

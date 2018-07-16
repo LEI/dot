@@ -6,18 +6,30 @@ import (
 	"path/filepath"
 )
 
+var (
+	existingDirs = []string{"/", homeDir}
+
+	// RemoveEmptyDirs ...
+	RemoveEmptyDirs bool
+
+	// ErrDirShouldExist ...
+	ErrDirShouldExist = fmt.Errorf("skip directory")
+)
+
 // CreateDir ...
 func CreateDir(dir string) (bool, error) {
 	fi, err := os.Stat(dir)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
+	if HasOne([]string{dir}, existingDirs) {
+		return false, ErrDirShouldExist
+	}
 	if err == nil && fi.IsDir() {
+		fmt.Printf("# mkdir -p %s\n", dir)
 		return false, nil
 	}
-	// if Verbose {
 	fmt.Printf("mkdir -p %s\n", dir)
-	// }
 	if DryRun {
 		return true, nil
 	}
@@ -30,12 +42,14 @@ func RemoveDir(dir string) (bool, error) {
 	if err != nil && !os.IsExist(err) {
 		return false, err
 	}
+	if HasOne([]string{dir}, existingDirs) {
+		return false, ErrDirShouldExist
+	}
 	if err == nil && !fi.IsDir() {
+		fmt.Printf("# rmdir %s\n", dir)
 		return false, nil
 	}
-	// if Verbose {
 	fmt.Printf("rmdir %s\n", dir)
-	// }
 	if DryRun {
 		return true, nil
 	}
@@ -54,16 +68,14 @@ func createBaseDir(t string) error {
 	if dirs["created"][t] {
 		return nil
 	}
-	changed, err := CreateDir(t)
+	_, err := CreateDir(t)
 	if err != nil {
+		if err == ErrDirShouldExist {
+			return nil
+		}
 		return err
 	}
 	dirs["created"][t] = true
-	prefix := "# "
-	if changed {
-		prefix = ""
-	}
-	fmt.Printf("%smkdir -p %s\n", prefix, t)
 	return nil
 }
 
@@ -73,15 +85,13 @@ func removeBaseDir(t string) error {
 	if dirs["removed"][t] {
 		return nil
 	}
-	changed, err := RemoveDir(t)
+	_, err := RemoveDir(t)
 	if err != nil {
+		if err == ErrDirShouldExist {
+			return nil
+		}
 		return err
 	}
 	dirs["removed"][t] = true
-	prefix := "# "
-	if changed {
-		prefix = ""
-	}
-	fmt.Printf("%srmdir %s\n", prefix, t)
 	return nil
 }
