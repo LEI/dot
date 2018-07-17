@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	// "path"
-	// "strings"
+	"strings"
 	"text/template"
 )
 
@@ -40,13 +40,27 @@ func (t *TemplateTask) Parse() (string, error) {
 	// for k, v := range t.Vars {
 	// 	fmt.Println("VAR", k, "=", v)
 	// }
-	if t.Vars == nil {
-		t.Vars = make(map[string]interface{}, 0)
+	data := make(map[string]interface{}, 0)
+	for k, v := range baseEnv {
+		k = strings.ToTitle(k)
+		v, err := TemplateEnv(k, v)
+		if err != nil {
+			return "", err
+		}
+		data[k] = v
 	}
 	for k, v := range t.Env {
-		t.Vars[k] = v
+		k = strings.ToTitle(k)
+		v, err := TemplateEnv(k, v)
+		if err != nil {
+			return "", err
+		}
+		data[k] = v
 	}
-	if err = tmpl.Execute(buf, t.Vars); err != nil {
+	for k, v := range t.Vars {
+		data[k] = v
+	}
+	if err = tmpl.Execute(buf, data); err != nil {
 		return buf.String(), err
 	}
 	return buf.String(), nil

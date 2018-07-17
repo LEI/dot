@@ -42,7 +42,7 @@ var (
 
 	originalEnv map[string]string
 
-	extraEnv = map[string]string{
+	baseEnv = map[string]string{
 		"OS": OS,
 	}
 
