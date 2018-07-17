@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -36,26 +37,31 @@ var (
 	// OS ...
 	OS = runtime.GOOS
 
+	// OriginalEnv ...
+	OriginalEnv map[string]string
+
 	release Release
 
 	osTypes []string
 
-	originalEnv map[string]string
+	homeDir string
 
 	baseEnv = map[string]string{
 		"OS": OS,
 	}
-
-	homeDir string
 )
 
 func init() {
-	homeDir = os.Getenv("HOME")
+	usr, _ := user.Current()
+	homeDir := usr.HomeDir
+	if homeDir == "" {
+		homeDir = os.Getenv("HOME")
+	}
 	// fmt.Println("HOME", homeDir)
 	osTypes = GetOSTypes()
 	// fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
-	originalEnv = GetEnv()
-	// fmt.Printf("Original env: %+v\n", originalEnv)
+	OriginalEnv = GetEnv()
+	// fmt.Printf("Original env: %+v\n", OriginalEnv)
 }
 
 // InitEnv ...
@@ -103,12 +109,12 @@ func TemplateEnv(k, v string) (string, error) {
 	if v == "" {
 		return v, nil
 	}
-	templ, err := template.New(k).Option("missingkey=zero").Parse(v)
+	tmpl, err := template.New(k).Option("missingkey=zero").Funcs(tplFuncMap).Parse(v)
 	if err != nil {
 		return v, err
 	}
 	buf := &bytes.Buffer{}
-	err = templ.Execute(buf, GetEnv())
+	err = tmpl.Execute(buf, GetEnv())
 	if err != nil {
 		return v, err
 	}

@@ -2,8 +2,13 @@ package parsers
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Tpl ...
@@ -72,8 +77,17 @@ func (t *Templates) Add(i interface{}) error {
 		} else {
 			tpl.Vars = make(map[string]interface{}, 0)
 		}
-		if incl, ok := val["include_vars"].(string); ok {
-			fmt.Println("INCLUDE VARS", incl)
+		// Included variables override existing tpl.Vars keys
+		if file, ok := val["include_vars"].(string); ok {
+			// tpl.IncludeVars = file // os.ExpandEnv(file)
+			inclVars, err := parseTemplate(file)
+			if err != nil {
+				return err
+			}
+			for k, v := range inclVars {
+				// if w, ok := tpl.Vars[k]; ok { return fmt.Errorf... }
+				tpl.Vars[k] = v
+			}
 		}
 		// } else if val, ok := i.(*Tpl); ok {
 		// 	tpl = val
@@ -129,4 +143,18 @@ func (t *Templates) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return fmt.Errorf("Unable to unmarshal templates (%s) into struct: %+v", T, val)
 	}
 	return nil
+}
+
+func parseTemplate(file string) (vars map[string]interface{}, err error) {
+	if strings.HasPrefix(file, "~/") {
+		file = filepath.Join(os.Getenv("HOME"), file[2:])
+	}
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return vars, err
+	}
+	if err := yaml.Unmarshal(bytes, &vars); err != nil {
+		return vars, err
+	}
+	return vars, nil
 }

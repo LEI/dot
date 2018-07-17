@@ -606,8 +606,7 @@ func (r *Role) Do(a string, run []string) error {
 	if len(run) == 0 {
 		run = defaultTasks
 	}
-	// Env
-	savedEnv := dotfile.GetEnv()
+	// originalEnv := dotfile.GetEnv() // Saved in dotfile.OriginalEnv
 	if r.Env != nil {
 		for k, v := range r.Env {
 			k = strings.ToTitle(k)
@@ -713,7 +712,7 @@ func (r *Role) Do(a string, run []string) error {
 	}
 	// Restore original environment
 	if r.Env != nil {
-		if err := dotfile.RestoreEnv(savedEnv); err != nil {
+		if err := dotfile.RestoreEnv(dotfile.OriginalEnv); err != nil {
 			return nil
 		}
 	}

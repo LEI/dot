@@ -6,8 +6,27 @@ import (
 	"io/ioutil"
 	"os"
 	// "path"
+	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
+)
+
+var (
+	tplFuncMap = template.FuncMap{
+		"lcFirst": func (s string) string {
+			for i, v := range s {
+				return string(unicode.ToLower(v)) + s[i+1:]
+			}
+			return ""
+		},
+		"ucFirst": func (s string) string {
+			for i, v := range s {
+				return string(unicode.ToUpper(v)) + s[i+1:]
+			}
+			return ""
+		},
+	}
 )
 
 // TemplateTask struct
@@ -27,20 +46,24 @@ func (t *TemplateTask) Do(a string) error {
 
 // Parse template file
 func (t *TemplateTask) Parse() (string, error) {
-	tmpl, err := template.ParseGlob(t.Source)
+	_, name := filepath.Split(t.Source)
+	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(t.Source)
+	// b, err := ioutil.ReadFile(t.Source)
+	// c := string(b) // Template contents
+	// if err != nil && os.IsExist(err) {
+	// 	return c, err
+	// }
+	// tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).Parse(c)
 	if err != nil {
 		return "", err
 	}
-	tmpl = tmpl.Option("missingkey=zero")
 	buf := &bytes.Buffer{}
-	// env, err := GetEnv()
-	// if err != nil {
-	// 	return false, err
-	// }
-	// for k, v := range t.Vars {
-	// 	fmt.Println("VAR", k, "=", v)
-	// }
 	data := make(map[string]interface{}, 0)
+	// Global environment variables
+	// for k, v := range GetEnv() {
+	// 	data[k] = v
+	// }
+	// Custom application environment
 	for k, v := range baseEnv {
 		k = strings.ToTitle(k)
 		v, err := TemplateEnv(k, v)
@@ -49,6 +72,7 @@ func (t *TemplateTask) Parse() (string, error) {
 		}
 		data[k] = v
 	}
+	// Specific role environment
 	for k, v := range t.Env {
 		k = strings.ToTitle(k)
 		v, err := TemplateEnv(k, v)
@@ -57,6 +81,7 @@ func (t *TemplateTask) Parse() (string, error) {
 		}
 		data[k] = v
 	}
+	// Extra variables (not string only)
 	for k, v := range t.Vars {
 		data[k] = v
 	}
@@ -128,10 +153,10 @@ func Template(t *TemplateTask) (bool, error) {
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	curr := string(b)
-	if str == curr {
+	c := string(b) // Current contents
+	if str == c {
 		return false, nil
-	} else if str != curr && curr != "" {
+	} else if str != c && c != "" {
 		// TODO: cache checksum of previous run to compare
 		// or ask for user confirmation to remove the file
 		diff := t.Source // TODO diff
@@ -162,8 +187,8 @@ func Untemplate(t *TemplateTask) (bool, error) {
 	if len(b) == 0 { // Empty file
 		return false, nil
 	}
-	curr := string(b)
-	if str != curr && curr != "" {
+	c := string(b) // Current contents
+	if str != c && c != "" {
 		return false, fmt.Errorf("# /!\\ Template content mismatch: %s", t.Target)
 	}
 	if DryRun {
