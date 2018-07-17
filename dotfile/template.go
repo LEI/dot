@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	// "path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -13,6 +12,8 @@ import (
 )
 
 var (
+	tplCache = &Cache{}
+
 	tplFuncMap = template.FuncMap{
 		"lcFirst": func (s string) string {
 			for i, v := range s {
@@ -49,7 +50,7 @@ func (t *TemplateTask) Parse() (string, error) {
 	_, name := filepath.Split(t.Source)
 	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(t.Source)
 	// b, err := ioutil.ReadFile(t.Source)
-	// c := string(b) // Template contents
+	// c := string(b) // Template file content
 	// if err != nil && os.IsExist(err) {
 	// 	return c, err
 	// }
@@ -153,7 +154,7 @@ func Template(t *TemplateTask) (bool, error) {
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	c := string(b) // Current contents
+	c := string(b) // Current file content
 	if str == c {
 		return false, nil
 	} else if str != c && c != "" {
@@ -162,11 +163,15 @@ func Template(t *TemplateTask) (bool, error) {
 		diff := t.Source // TODO diff
 		return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
 	}
+	// TODO tplCache.Get(t.Target)
 	if Verbose > 1 {
 		fmt.Printf("---START---\n%s\n----END----\n", str)
 	}
 	if DryRun {
 		return true, nil
+	}
+	if err := tplCache.WriteKey(t.Target, str); err != nil {
+		return false, err
 	}
 	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
 		return false, err
@@ -187,7 +192,7 @@ func Untemplate(t *TemplateTask) (bool, error) {
 	if len(b) == 0 { // Empty file
 		return false, nil
 	}
-	c := string(b) // Current contents
+	c := string(b) // Current file content
 	if str != c && c != "" {
 		return false, fmt.Errorf("# /!\\ Template content mismatch: %s", t.Target)
 	}
