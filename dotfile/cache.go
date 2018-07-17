@@ -45,11 +45,8 @@ func (c *Cache) Put(k, v string) error {
 	if c.Map == nil {
 		c.Map = make(map[string]string, 0)
 	}
-	// Replace path delimiters
-	key := strings.Replace(k, osPathSep, cachePathSep, -1)
-	// Create hash from contents
-	h := md5.Sum([]byte(v))
-	val := fmt.Sprintf("%x", string(h[:16]))
+	key := cacheSerialize(k)
+	val := cacheHashValue(v)
 	c.Map[key] = val
 	return nil
 }
@@ -77,4 +74,16 @@ func (c *Cache) Write() error {
 // Read ...
 func (c *Cache) Read() error {
 	return nil
+}
+
+func cacheSerialize(s string) string {
+	// return url.QueryEscape(k)
+	// Replace path delimiters
+	return strings.Replace(s, osPathSep, cachePathSep, -1)
+}
+
+// Create hash from file content
+func cacheHashValue(s string) string {
+	h := md5.Sum([]byte(s))
+	return fmt.Sprintf("%x", string(h[:16]))
 }
