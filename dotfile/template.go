@@ -128,8 +128,14 @@ func Template(t *TemplateTask) (bool, error) {
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	if str == string(b) {
+	curr := string(b)
+	if str == curr {
 		return false, nil
+	} else if str != curr && curr != "" {
+		// TODO: cache checksum of previous run to compare
+		// or ask for user confirmation to remove the file
+		diff := t.Source // TODO diff
+		return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
 	}
 	if Verbose > 1 {
 		fmt.Printf("---START---\n%s\n----END----\n", str)
@@ -156,9 +162,9 @@ func Untemplate(t *TemplateTask) (bool, error) {
 	if len(b) == 0 { // Empty file
 		return false, nil
 	}
-	if str != string(b) { // Mismatching content
-		fmt.Printf("Warn: mismatching content %s\n", t.Target)
-		return false, nil
+	curr := string(b)
+	if str != curr && curr != "" {
+		return false, fmt.Errorf("# /!\\ Template content mismatch: %s", t.Target)
 	}
 	if DryRun {
 		return true, nil

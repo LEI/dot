@@ -12,6 +12,7 @@ type Tpl struct {
 	Ext            string `default:"tpl"`
 	Env            map[string]string
 	Vars           map[string]interface{}
+	IncludeVars    string `yaml:"include_vars"`
 	// Data           interface{}
 }
 
@@ -70,6 +71,9 @@ func (t *Templates) Add(i interface{}) error {
 			// tpl.Data = data
 		} else {
 			tpl.Vars = make(map[string]interface{}, 0)
+		}
+		if incl, ok := val["include_vars"].(string); ok {
+			fmt.Println("INCLUDE VARS", incl)
 		}
 		// } else if val, ok := i.(*Tpl); ok {
 		// 	tpl = val
