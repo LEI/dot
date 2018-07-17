@@ -13,8 +13,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
+
+	"github.com/LEI/dot/dotfile"
 )
 
 // Repo ...
@@ -68,20 +69,26 @@ func (r *Repo) checkRepo() error {
 		return ErrNoGitDir
 	}
 	args := []string{"-C", r.Path, "diff-index", "--quiet", "HEAD"}
-	c := exec.Command("git", args...)
-	err := c.Run()
-	if err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
-			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
-				if status.ExitStatus() == 1 {
-					return ErrDirtyRepo
-				}
-			}
-		}
-		fmt.Fprintf(os.Stderr, "%s: %s\n", r.Path, err)
-		return err
+	_, stderr, status := dotfile.ExecCommand("git", args...)
+	if status == 1 {
+		return ErrDirtyRepo
+	} else if status != 0 {
+		return fmt.Errorf("Check repo unknown error: %s", stderr)
 	}
+	// c := exec.Command("git", args...)
+	// err := c.Run()
+	// if err != nil {
+	// 	if exitError, ok := err.(*exec.ExitError); ok {
+	// 		// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
+	// 		if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
+	// 			if status.ExitStatus() == 1 {
+	// 				return ErrDirtyRepo
+	// 			}
+	// 		}
+	// 	}
+	// 	fmt.Fprintf(os.Stderr, "%s: %s\n", r.Path, err)
+	// 	return err
+	// }
 	return nil
 }
 

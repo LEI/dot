@@ -13,9 +13,6 @@ import (
 )
 
 var (
-	// Shell ...
-	Shell = "bash"
-
 	config = cmd.NewConfig()
 	// *cmd.Config = &cmd.Config{} // {Name: ".dot"}
 	configFileUsed string

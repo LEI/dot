@@ -1,10 +1,17 @@
 package dotfile
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
+)
+
+var (
+	// Shell ...
+	Shell = "bash"
 )
 
 // ExecTask struct
@@ -20,18 +27,12 @@ func (t *ExecTask) Do(a string) error {
 
 // Install copy
 func (t *ExecTask) Install() error {
-	name, args := t.Cmd[0], t.Cmd[1:]
-	fmt.Println(name, args)
-	return nil
-	// return execute(name, args...)
+	return execute(Shell, "-c", t.Cmd)
 }
 
 // Remove copy
 func (t *ExecTask) Remove() error {
-	name, args := t.Cmd[0], t.Cmd[1:]
-	fmt.Println(name, args)
-	return nil
-	// return execute(name, args...)
+	return execute(Shell, "-c", t.Cmd)
 }
 
 var execWarned bool
@@ -49,4 +50,46 @@ func execute(name string, args ...string) error {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	return c.Run()
+}
+
+const defaultStatusFailed = 1
+
+// ShellExec ...
+func ShellExec(c string) (stdout, stderr string, status int) {
+	args := []string{"-c", c}
+	stdout, stderr, status = ExecCommand(Shell, args...)
+	return
+}
+
+// ExecCommand ...
+func ExecCommand(name string, args ...string) (stdout, stderr string, status int) {
+	var outbuf, errbuf bytes.Buffer
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+	err := cmd.Run()
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			if ws, ok := exitError.Sys().(syscall.WaitStatus); ok {
+				status = ws.ExitStatus()
+			} else {
+				fmt.Fprintf(os.Stderr, "Could not get exit status: %+v\n", args)
+				status = defaultStatusFailed
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Could not get exit error: %+v\n", args)
+			status = defaultStatusFailed
+			if stderr == "" {
+				stderr = err.Error()
+			}
+		}
+	} else {
+		if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
+			status = ws.ExitStatus()
+		} else {
+			fmt.Fprintf(os.Stderr, "Could not get processed status: %+v\n", args)
+			status = defaultStatusFailed
+		}
+	}
+	return
 }

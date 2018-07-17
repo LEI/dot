@@ -4,17 +4,18 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
+	// "strings"
 )
 
 var (
 	cacheDir string
 
-	cachePathSep = "=+"
+	// cachePathSep = "=+"
 
-	osPathSep = string(os.PathSeparator)
+	// osPathSep = string(os.PathSeparator)
 )
 
 func init() {
@@ -33,11 +34,21 @@ type Cache struct {
 
 // Get ...
 func (c *Cache) Get(k string) string {
-	if c.Map == nil {
-		return ""
-	}
+	// if c.Map == nil {
+	// 	return ""
+	// }
+	key := cacheSerialize(k)
 	// v, ok := c.Map[k]
-	return c.Map[k]
+	return c.Map[key]
+}
+
+// Validate ...
+func (c *Cache) Validate(k, v string) error {
+	cached := c.Get(k)
+	if cached != "" && cached != cacheHashValue(v) {
+		return fmt.Errorf("Mismatching cached file: %s", k)
+	}
+	return nil
 }
 
 // Put ...
@@ -73,13 +84,13 @@ func (c *Cache) Write() error {
 
 // Read ...
 func (c *Cache) Read() error {
+	// TODO
 	return nil
 }
 
 func cacheSerialize(s string) string {
-	// return url.QueryEscape(k)
-	// Replace path delimiters
-	return strings.Replace(s, osPathSep, cachePathSep, -1)
+	// return strings.Replace(s, osPathSep, cachePathSep, -1)
+	return url.QueryEscape(s) // url.QueryUnescape(f)
 }
 
 // Create hash from file content

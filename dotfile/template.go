@@ -155,8 +155,11 @@ func Template(t *TemplateTask) (bool, error) {
 		return false, err
 	}
 	c := string(b) // Current file content
-	if str == c {
+	if str == c { // Same file content
 		return false, nil
+	} else if err := tplCache.Validate(t.Target, c); err != nil {
+		// Target changed
+		return false, err
 	} else if str != c && c != "" {
 		// TODO: cache checksum of previous run to compare
 		// or ask for user confirmation to remove the file
