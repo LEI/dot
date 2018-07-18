@@ -39,8 +39,7 @@ func init() {
 			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
 			os.Exit(1)
 		}
-	}
-	if _, err := tplCache.Read(); err != nil {
+	} else if _, err := tplCache.Read(); err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
 		os.Exit(1)
 	}
@@ -192,6 +191,9 @@ func Template(t *TemplateTask) (bool, error) {
 				fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", t.Source, t.Target)
 				return false, nil
 			}
+			if err := Backup(t.Target); err != nil {
+				return false, err
+			}
 		}
 		// fmt.Println("OK FOR TPL", t.Source, t.Target)
 	} // else if str != c && c == "" && OverwriteEmptyFiles {}
@@ -201,6 +203,8 @@ func Template(t *TemplateTask) (bool, error) {
 	if DryRun {
 		return true, nil
 	}
+	// fmt.Println("------------------- xxx", str, "xxx")
+	// fmt.Println("------------------- yyy", c, "yyy")
 	if err := tplCache.Put(t.Target, str); err != nil {
 		return false, err
 	}

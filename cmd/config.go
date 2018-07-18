@@ -178,11 +178,6 @@ func readConfigFile(s string) ([]byte, error) {
 	return bytes, err
 }
 
-// func exists(s string) bool {
-// 	_, err := os.Stat(s)
-// 	return !os.IsNotExist(err)
-// }
-
 func read(s string) ([]byte, error) {
 	return ioutil.ReadFile(s)
 }
@@ -190,6 +185,7 @@ func read(s string) ([]byte, error) {
 func exist(s string) bool {
 	_, err := os.Stat(s)
 	return err == nil || os.IsExist(err)
+	// return !os.IsNotExist(err)
 }
 
 func isFile(s string) bool {

@@ -2,8 +2,9 @@ package dotfile
 
 import (
 	"fmt"
+	"io"
 	// "io/ioutil"
-	// "os"
+	"os"
 	// "path"
 	// "strings"
 )
@@ -24,7 +25,7 @@ func (t *CopyTask) Install() error {
 	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
 		return err
 	}
-	changed, err := Copy(t)
+	changed, err := Copy(t.Source, t.Target)
 	if err != nil {
 		return err
 	}
@@ -38,7 +39,7 @@ func (t *CopyTask) Install() error {
 
 // Remove copy
 func (t *CopyTask) Remove() error {
-	changed, err := Uncopy(t)
+	changed, err := Uncopy(t.Source, t.Target)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,41 @@ func (t *CopyTask) Remove() error {
 }
 
 // Copy task
-func Copy(t *CopyTask) (bool, error) {
+// https://stackoverflow.com/a/21067803/7796750
+func Copy(src, dst string) (bool, error) {
+	/*fi, err := os.Stat(src)
+	if err != nil {
+		return false, err
+	}
+	if !fi.Mode().IsRegular() {
+		// cannot copy non-regular files (e.g., directories, symlinks, devices, etc.)
+		return false, fmt.Errorf("Copy: non-regular source file %s (%q)", fi.Name(), fi.Mode().String())
+	}*/
+	in, err := os.Open(src)
+	if err != nil {
+		return false, err
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return false, err
+	}
+	// defer func() {
+	// 	cerr := out.Close()
+	// 	if err == nil {
+	// 		err = cerr
+	// 	}
+	// }()
+	if _, err = io.Copy(out, in); err != nil {
+		return false, err
+	}
+	err = out.Sync()
+	if err := out.Close(); err != nil {
+		return false, err
+	}
+	return true, nil
+
+
 	// str, err := t.Parse()
 	// if err != nil {
 	// 	return false, err
@@ -74,11 +109,51 @@ func Copy(t *CopyTask) (bool, error) {
 	// if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
 	// 	return false, err
 	// }
-	return true, nil
+
+	/*
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	return out.Close()
+	*/
+
+	/*
+	from, err := os.Open("./sourcefile.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile("./sourcefile.copy.txt", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	if err != nil {
+		log.Fatal(err)
+	}
+	*/
+
+	// return true, nil
 }
 
 // Uncopy task
-func Uncopy(t *CopyTask) (bool, error) {
+func Uncopy(src, dst string) (bool, error) {
 	// str, err := t.Parse()
 	// if err != nil {
 	// 	return false, err

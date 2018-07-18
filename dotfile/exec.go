@@ -96,7 +96,7 @@ func ExecCommand(name string, args ...string) (stdout, stderr string, status int
 }
 
 // AskConfirmation ...
-func AskConfirmation(s string) bool {
+func AskConfirmation(s string) (ret bool) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Printf("%s [y/n]: ", s)
@@ -107,9 +107,13 @@ func AskConfirmation(s string) bool {
 		}
 		res = strings.ToLower(strings.TrimSpace(res))
 		if res == "y" || res == "yes" {
-			return true
+			ret = true
+			break
 		} else if res == "n" || res == "no" {
-			return false
+			ret = false
+			break
 		}
 	}
+	fmt.Printf("\n") // FIXME: no new line if enter is pressed before prev fmt.Printf
+	return
 }
