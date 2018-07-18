@@ -12,7 +12,10 @@ import (
 )
 
 var (
-	tplCache = &Cache{}
+	// ClearCache  ...
+	ClearCache = true
+
+	tplCache = &Cache{} // {Map: map[string]string}
 
 	tplFuncMap = template.FuncMap{
 		"lcFirst": func (s string) string {
@@ -29,6 +32,20 @@ var (
 		},
 	}
 )
+
+func init() {
+	if ClearCache {
+		if err := tplCache.Clear(); err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
+			os.Exit(1)
+		}
+	} else {
+		if _, err := tplCache.Read(); err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
+			os.Exit(1)
+		}
+	}
+}
 
 // TemplateTask struct
 type TemplateTask struct {
@@ -156,24 +173,32 @@ func Template(t *TemplateTask) (bool, error) {
 	}
 	c := string(b) // Current file content
 	if str == c { // Same file content
+		// if !DryRun {
+		// 	if err := tplCache.WriteKey(t.Target, str); err != nil {
+		// 		return false, err
+		// 	}
+		// }
 		return false, nil
-	} else if err := tplCache.Validate(t.Target, c); err != nil {
+	} else if c != "" { // str != c
 		// Target changed
-		return false, err
-	} else if str != c && c != "" {
-		// TODO: cache checksum of previous run to compare
-		// or ask for user confirmation to remove the file
-		diff := t.Source // TODO diff
-		return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
-	}
-	// TODO tplCache.Get(t.Target)
+		ok, err := tplCache.Validate(t.Target, c)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			// diff := t.Source // TODO diff?
+			// return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
+			return false, fmt.Errorf("Unable to validate key: %s", t.Target)
+		}
+		fmt.Println("OK FOR TPL", t.Source, t.Target)
+	} // else if str != c && c == "" && OverwriteEmptyFiles {}
 	if Verbose > 1 {
 		fmt.Printf("---START---\n%s\n----END----\n", str)
 	}
 	if DryRun {
 		return true, nil
 	}
-	if err := tplCache.WriteKey(t.Target, str); err != nil {
+	if err := tplCache.Put(t.Target, str); err != nil {
 		return false, err
 	}
 	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
