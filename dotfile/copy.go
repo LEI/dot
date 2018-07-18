@@ -111,7 +111,6 @@ func Copy(src, dst string) (bool, error) {
 	}
 	return true, nil
 
-
 	// str, err := t.Parse()
 	// if err != nil {
 	// 	return false, err
@@ -129,47 +128,6 @@ func Copy(src, dst string) (bool, error) {
 	// if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
 	// 	return false, err
 	// }
-
-	/*
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	return out.Close()
-	*/
-
-	/*
-	from, err := os.Open("./sourcefile.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer from.Close()
-
-	to, err := os.OpenFile("./sourcefile.copy.txt", os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer to.Close()
-
-	_, err = io.Copy(to, from)
-	if err != nil {
-		log.Fatal(err)
-	}
-	*/
-
-	// return true, nil
 }
 
 // Uncopy task

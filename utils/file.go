@@ -64,7 +64,7 @@ func Compare(src, dst string) (bool, error) {
 	if content == "" {
 		return ok, ErrEmpty
 	}
-	return ok , nil
+	return ok, nil
 }
 
 // CompareFileContent ...

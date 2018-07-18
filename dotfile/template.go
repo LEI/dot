@@ -2,11 +2,11 @@ package dotfile
 
 import (
 	"bytes"
-	"os/exec"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -22,13 +22,13 @@ var (
 	tplCache = &Cache{} // {Map: map[string]string}
 
 	tplFuncMap = template.FuncMap{
-		"lcFirst": func (s string) string {
+		"lcFirst": func(s string) string {
 			for i, v := range s {
 				return string(unicode.ToLower(v)) + s[i+1:]
 			}
 			return ""
 		},
-		"ucFirst": func (s string) string {
+		"ucFirst": func(s string) string {
 			for i, v := range s {
 				return string(unicode.ToUpper(v)) + s[i+1:]
 			}

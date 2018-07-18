@@ -35,7 +35,7 @@ type Templates []*Tpl
 // Append ...
 func (t *Templates) Append(tpl *Tpl) *Templates {
 	if tpl.Target != "" && tpl.Ext != "" && strings.HasSuffix(tpl.Target, "."+tpl.Ext) {
-		tpl.Target = strings.TrimSuffix(tpl.Target, "." + tpl.Ext)
+		tpl.Target = strings.TrimSuffix(tpl.Target, "."+tpl.Ext)
 	}
 	*t = append(*t, tpl)
 	return t

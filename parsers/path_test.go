@@ -1,11 +1,11 @@
 package parsers
 
 import (
-	// "fmt"
-	// "os"
-	// "testing"
-	// "github.com/jessevdk/go-flags"
-	// "github.com/LEI/dot/cmd"
+// "fmt"
+// "os"
+// "testing"
+// "github.com/jessevdk/go-flags"
+// "github.com/LEI/dot/cmd"
 )
 
 // https://github.com/golang/go/wiki/TableDrivenTests
