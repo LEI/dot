@@ -67,9 +67,9 @@ func pacDo(a string, args ...string) error {
 		fmt.Println("abort pacDo")
 		return nil
 	}
-	if HasOSType("darwin") {
-		pa = append(pa, "--noconfirm")
-	}
+	// if HasOSType("darwin") {
+	pa = append(pa, "--noconfirm")
+	// }
 	pa = append(pa, args...)
 	if sudo {
 		pa = append([]string{pacBin}, pa...)
