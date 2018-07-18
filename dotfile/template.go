@@ -165,19 +165,17 @@ func Template(t *TemplateTask) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if ok, err := HasContent(t.Target, str); err != nil || ok {
+		return false, err
+	}
 	b, err := ioutil.ReadFile(t.Target)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
 	c := string(b) // Current file content
 	if str == c { // Same file content
-		// if !DryRun {
-		// 	if err := tplCache.WriteKey(t.Target, str); err != nil {
-		// 		return false, err
-		// 	}
-		// }
-		return false, nil
-	} else if c != "" { // str != c
+		return false, fmt.Errorf("Same file content for %s, should be handled by HasContent", t.Target)
+	} else if str != c && c != "" {
 		// Target changed
 		ok, err := tplCache.Validate(t.Target, c)
 		if err != nil {

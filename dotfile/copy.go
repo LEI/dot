@@ -3,7 +3,7 @@ package dotfile
 import (
 	"fmt"
 	"io"
-	// "io/ioutil"
+	"io/ioutil"
 	"os"
 	// "path"
 	// "strings"
@@ -59,6 +59,9 @@ func (t *CopyTask) Remove() error {
 // Copy task
 // https://stackoverflow.com/a/21067803/7796750
 func Copy(src, dst string) (bool, error) {
+	if ok, err := SameContent(src, dst); err != nil || ok {
+		return false, err
+	}
 	/*fi, err := os.Stat(src)
 	if err != nil {
 		return false, err
@@ -175,5 +178,26 @@ func Uncopy(src, dst string) (bool, error) {
 	// if err := os.Remove(t.Target); err != nil {
 	// 	return false, err
 	// }
+	return true, nil
+}
+
+// SameContent ...
+func SameContent(src, dst string) (bool, error) {
+	b, err := ioutil.ReadFile(src)
+	if err != nil && os.IsNotExist(err) {
+		return false, err
+	}
+	return HasContent(dst, string(b))
+}
+
+// HasContent ...
+func HasContent(s, str string) (bool, error) {
+	b, err := ioutil.ReadFile(s)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	if str != string(b) {
+		return false, nil
+	}
 	return true, nil
 }
