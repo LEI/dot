@@ -1,7 +1,5 @@
 package dotfile
 
-import ()
-
 // PkgTask struct
 type PkgTask struct {
 	Name string

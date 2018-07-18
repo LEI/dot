@@ -57,8 +57,8 @@ func RemoveDir(dir string) (bool, error) {
 
 // Cache directories for dry-run mode output
 var dirs = map[string]map[string]bool{
-	"created": map[string]bool{},
-	"removed": map[string]bool{},
+	"created": {},
+	"removed": {},
 }
 
 func createBaseDir(t string) error {
