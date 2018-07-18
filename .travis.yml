@@ -4,7 +4,7 @@ language: go
 
 os:
   - linux
-  - osx # brew install docker-compose
+  # - osx # brew install docker-compose
 
 services:
   - docker
@@ -25,13 +25,13 @@ jobs:
   include:
     - stage: test
       script: scripts/test.sh
+      if: $TRAVIS_OS_NAME = linux
     - stage: build
       install: true
       before_script:
         - docker-compose build
-      script:
-        # - "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
-        - docker-compose run test
+      # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
+      script: docker-compose run test
     - stage: deploy
       addons:
         apt:
