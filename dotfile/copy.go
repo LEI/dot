@@ -100,7 +100,9 @@ func Copy(src, dst string) (bool, error) {
 	if _, err = io.Copy(out, in); err != nil {
 		return false, err
 	}
-	err = out.Sync()
+	if err := out.Sync(); err != nil {
+		return false, err
+	}
 	if err := out.Close(); err != nil {
 		return false, err
 	}

@@ -1,3 +1,6 @@
+/*
+Package utils file helpers
+*/
 package utils
 
 // https://github.com/sergi/go-diff

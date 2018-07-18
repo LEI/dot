@@ -1,3 +1,6 @@
+/*
+Package cmd flags
+*/
 package cmd
 
 import (

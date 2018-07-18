@@ -1,3 +1,6 @@
+/*
+Package dotfile tasks
+*/
 package dotfile
 
 import (
