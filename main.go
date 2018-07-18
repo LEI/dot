@@ -21,16 +21,30 @@ var (
 func main() {
 	// cmd.Options.Source = "" // .
 	// cmd.Options.Target = "$HOME" // os.Getenv("HOME")
-	cmd.Options.Config = func(in string) error {
-		if in != "" {
-			_, s := filepath.Split(in)
-			cmd.ConfigName = s
-		}
-		configFile, err := config.Read(in)
+	cmd.Options.Config = func(name string) error {
+		fmt.Println("Config flag:", name)
+		cfgPath, err := cmd.FindConfig(name)
 		if err != nil {
 			return err
 		}
-		configFileUsed = configFile
+		if cfgPath == "" {
+			fmt.Println("Unable to find roles config file")
+			return nil
+		}
+		_, s := filepath.Split(cfgPath)
+
+		// TODO allow alternative role config names
+		cmd.ConfigName = s
+
+		if err := config.Read(cfgPath); err != nil {
+			return err
+		}
+		// fmt.Printf("CONFIG: %+v\n", config)
+		configFileUsed = cfgPath
+		// configFile != "" &&
+		// if configFile != cmd.ConfigName {
+		// 	configFileUsed = configFile
+		// }
 		return nil
 	}
 

@@ -94,6 +94,9 @@ func ExecCommand(name string, args ...string) (stdout, stderr string, status int
 	}
 	stdout = outbuf.String()
 	stderr = errbuf.String() // + stderr
+	// fmt.Println("CMD:", args)
+	// fmt.Println("OUT:", stdout)
+	// fmt.Println("ERR:", stderr)
 	return
 }
 

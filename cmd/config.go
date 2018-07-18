@@ -32,20 +32,18 @@ func NewConfig() *Config {
 }
 
 // Read ...
-func (c *Config) Read(name string) (string, error) {
-	if name == "" {
-		return "", nil
+func (c *Config) Read(s string) error {
+	if s == "" {
+		return nil
 	}
-	cfgPath := name
-	if !utils.Exist(cfgPath) {
-		return "", nil
+	if !utils.Exist(s) {
+		return nil
 	}
-	cfg, err := ioutil.ReadFile(cfgPath)
+	cfg, err := ioutil.ReadFile(s)
 	if err != nil {
-		return cfgPath, err
+		return err
 	}
-	err = yaml.Unmarshal(cfg, &c)
-	return cfgPath, err
+	return yaml.Unmarshal(cfg, &c)
 }
 
 // Prepare ...
@@ -138,23 +136,29 @@ func (c *Config) Do(a string, run []string) error {
 }
 
 // FindConfig ...
-func FindConfig(s string) (string, error) {
-	if s == "" {
+func FindConfig(name string) (string, error) {
+	if name == "" {
 		return "", nil
 	}
-
-	paths := []string{
-		s, // Current working directory
-		filepath.Join(os.Getenv("HOME"), s),
-		filepath.Join(getConfigDir(), s),
+	cwd, err := filepath.Abs(name)
+	if err != nil {
+		return name, err
 	}
-
+	paths := []string{
+		filepath.Join(os.Getenv("HOME"), name),
+		filepath.Join(getConfigDir(), name),
+		cwd, // Current working directory
+		// Search in CWD last to prevent an eventual
+		// local role config to be found before
+		// TODO: relative to target directory
+	}
+	// fmt.Println("Config: searching in", paths)
 	for _, p := range paths {
 		if utils.IsFile(p) {
+			// fmt.Println("Config: found config", p)
 			return p, nil
 		}
 	}
-
 	return "", nil
 }
 

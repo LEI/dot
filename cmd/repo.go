@@ -6,8 +6,9 @@ package cmd
 
 import (
 	"fmt"
-	// "io/ioutil"
 	"net"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -95,16 +96,21 @@ func (r *Repo) Pull() error {
 	if !online {
 		return ErrNetworkUnreachable
 	}
-	args := []string{"-C", r.Path, "pull", r.Remote, r.Branch, "--quiet"}
-	if Verbose > 0 {
+	args := []string{"-C", r.Path, "pull", r.Remote, r.Branch}
+	switch true {
+	case Verbose == 0:
+		args = append(args, "--quiet")
+	// case Verbose == 1:
+	// 	fmt.Printf("git pull %s %s\n", r.Remote, r.Branch)
+	case Verbose > 1:
 		fmt.Printf("git %s\n", strings.Join(args, " "))
 	}
-	stdout, stderr, status := dotfile.ExecCommand("git", args...)
-	if status != 0 {
-		return fmt.Errorf(stderr)
+	c := exec.Command("git", args...)
+	if Verbose > 0 {
+		c.Stdout = os.Stdout
 	}
-	fmt.Println(stdout)
-	return nil
+	c.Stderr = os.Stderr
+	return c.Run()
 }
 
 // Clone ...
@@ -120,21 +126,20 @@ func (r *Repo) Clone() error {
 		args = append(args, "--branch", r.Branch)
 	}
 	args = append(args, r.URL, r.Path)
-	if Verbose > 3 {
+	switch true {
+	case Verbose == 0:
 		args = append(args, "--quiet")
-	}
-	if Verbose > 1 {
+	// case Verbose == 1:
+	// 	fmt.Printf("git clone %s %s\n", r.URL, r.Path)
+	case Verbose > 1:
 		fmt.Printf("git %s\n", strings.Join(args, " "))
-	} else if Verbose > 0 {
-		fmt.Printf("git clone %s %s\n", r.URL, r.Path)
 	}
-	stdout, stderr, status := dotfile.ExecCommand("git", args...)
-	if status != 0 {
-		return fmt.Errorf(stderr)
+	c := exec.Command("git", args...)
+	if Verbose > 0 {
+		c.Stdout = os.Stdout
 	}
-	fmt.Println(stdout)
-	// actual := strings.TrimRight(out, "\n")
-	return nil
+	c.Stderr = os.Stderr
+	return c.Run()
 }
 
 func networkReachable() bool {

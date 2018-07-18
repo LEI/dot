@@ -162,7 +162,11 @@ func (r *Role) PrintRoles() (s string) {
 	}
 	// Common variables
 	if r.Vars != nil && len(r.Vars) > 0 {
-		s += fmt.Sprintf("%sVars: %+v", pre, r.Vars)
+		if Verbose > 1 {
+			s += fmt.Sprintf("%sVars: %+v", pre, r.Vars)
+		} else {
+			s += fmt.Sprintf("%s%d vars", pre, len(r.Vars))
+		}
 	}
 	if r.Deps != nil && len(r.Deps) > 0 {
 		s += fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
@@ -214,7 +218,11 @@ func (r *Role) PrintRoles() (s string) {
 		for _, v := range r.Templates {
 			v.Source = strings.TrimPrefix(v.Source, r.Path+"/")
 			v.Target = strings.TrimPrefix(v.Target, target+"/")
-			s += fmt.Sprintf("%s%s +> %s\nENV:%+v\nVARS:%+v", pre+ind, v.Source, v.Target, v.Env, v.Vars)
+			if Verbose > 1 {
+				s += fmt.Sprintf("%s%s +> %s\nENV:%+v\nVARS: %+v", pre+ind, v.Source, v.Target, v.Env, v.Vars)
+			} else {
+				s += fmt.Sprintf("%s%s +> %s\nENV:%+v\n%d VARS", pre+ind, v.Source, v.Target, v.Env, len(v.Vars))
+			}
 		}
 	}
 	return s
