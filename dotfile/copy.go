@@ -3,7 +3,7 @@ package dotfile
 import (
 	"fmt"
 	"io"
-	// "io/ioutil"
+	"io/ioutil"
 	"os"
 	// "path"
 	// "strings"
@@ -63,21 +63,16 @@ func (t *CopyTask) Remove() error {
 func Copy(src, dst string) (bool, error) {
 	// TODO: check cache (see tplCache)
 	if utils.Exist(dst) {
-		ok, err := utils.Compare(src, dst)
+		ok, err := checkCopy(src, dst)
 		if err != nil {
 			return false, err
 		}
-		if !ok {
-			q := fmt.Sprintf("Overwrite existing copy target: %s", dst)
-			if !AskConfirmation(q) {
-				fmt.Fprintf(os.Stderr, "Skipping copy %s because its target exists: %s", src, dst)
-				return false, nil
-			}
-			if err := Backup(dst); err != nil {
-				return false, err
-			}
+		if ok {
+			return false, nil
 		}
-		return false, nil
+		if !ok {
+			return false, fmt.Errorf("Different copy target: %s", dst)
+		}
 	}
 	/*fi, err := os.Stat(src)
 	if err != nil {
@@ -109,6 +104,14 @@ func Copy(src, dst string) (bool, error) {
 	if err := out.Close(); err != nil {
 		return false, err
 	}
+	b, err := ioutil.ReadFile(dst)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	c := string(b)
+	if err := dotCache.Put(dst, c); err != nil {
+		return false, err
+	}
 	return true, nil
 
 	// str, err := t.Parse()
@@ -135,12 +138,12 @@ func Uncopy(src, dst string) (bool, error) {
 	if !utils.Exist(dst) {
 		return false, nil
 	}
-	ok, err := utils.Compare(src, dst)
+	ok, err := checkCopy(src, dst)
 	if err != nil {
 		return false, err
 	}
 	if !ok {
-		return false, fmt.Errorf("Not the same content: %s / %s", src, dst)
+		return false, fmt.Errorf("Different uncopy target: %s", dst)
 	}
 	// str, err := t.Parse()
 	// if err != nil {
@@ -162,6 +165,39 @@ func Uncopy(src, dst string) (bool, error) {
 	}
 	if err := os.Remove(dst); err != nil {
 		return false, err
+	}
+	if err := dotCache.Del(dst); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func checkCopy(src, dst string) (bool, error) {
+	ok, err := utils.Compare(src, dst)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	b, err := ioutil.ReadFile(dst)
+	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	c := string(b)
+	ok, err = dotCache.Validate(dst, c)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		q := fmt.Sprintf("Overwrite existing copy target: %s", dst)
+		if !AskConfirmation(q) {
+			fmt.Fprintf(os.Stderr, "Skipping copy %s because its target exists: %s", src, dst)
+			return false, nil
+		}
+		if err := Backup(dst); err != nil {
+			return false, err
+		}
 	}
 	return true, nil
 }

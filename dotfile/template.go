@@ -16,11 +16,6 @@ import (
 )
 
 var (
-	// ClearCache  ...
-	ClearCache bool // = true
-
-	tplCache = &Cache{} // {Map: map[string]string}
-
 	tplFuncMap = template.FuncMap{
 		"lcFirst": func(s string) string {
 			for i, v := range s {
@@ -36,18 +31,6 @@ var (
 		},
 	}
 )
-
-func init() {
-	if ClearCache {
-		if err := tplCache.Clear(); err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
-			os.Exit(1)
-		}
-	} else if _, err := tplCache.Read(); err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
-		os.Exit(1)
-	}
-}
 
 // TemplateTask struct
 type TemplateTask struct {
@@ -178,7 +161,7 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 			// if err != nil || !changed {
 			// 	return changed, err
 			// }
-			return false, fmt.Errorf("Different template target exist: %s", dst)
+			return false, fmt.Errorf("Different template target: %s", dst)
 		}
 	}
 	if DryRun {
@@ -189,7 +172,7 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 	if err := ioutil.WriteFile(dst, []byte(content), FileMode); err != nil {
 		return false, err
 	}
-	if err := tplCache.Put(dst, content); err != nil {
+	if err := dotCache.Put(dst, content); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -212,7 +195,7 @@ func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 	// 	return false, nil
 	// }
 	if !ok {
-		return false, fmt.Errorf("Different untemplate target exist: %s", dst)
+		return false, fmt.Errorf("Different untemplate target: %s", dst)
 	}
 	// b, err := ioutil.ReadFile(t.Target)
 	// if err != nil && os.IsExist(err) {
@@ -231,7 +214,7 @@ func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 	if err := os.Remove(dst); err != nil {
 		return false, err
 	}
-	if err := tplCache.Del(dst); err != nil {
+	if err := dotCache.Del(dst); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -276,7 +259,7 @@ func checkTpl(src, dst, content string) (bool, error) {
 		return false, fmt.Errorf("Same file content for %s, should be handled by CheckFile", dst)
 	} else if content != c && c != "" {
 		// Target changed
-		ok, err := tplCache.Validate(dst, c)
+		ok, err := dotCache.Validate(dst, c)
 		if err != nil {
 			return false, err
 		}
@@ -319,7 +302,7 @@ func printDiff(s, content string) error {
 	if err != nil {
 		return err
 	}
-	// defer stdin.Close()
+	defer stdin.Close()
 	diffCmd.Stdout = os.Stdout
 	diffCmd.Stderr = os.Stderr
 	fmt.Println("START")

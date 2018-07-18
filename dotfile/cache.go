@@ -14,12 +14,13 @@ var (
 	// CacheDir ...
 	CacheDir string
 
-	// cachePathSep = "=+"
-
-	// osPathSep = string(os.PathSeparator)
+	// ClearCache  ...
+	ClearCache bool // = true
 
 	// ErrCacheKeyNotFound ...
 	ErrCacheKeyNotFound = fmt.Errorf("Cache entry not found")
+
+	dotCache = &Cache{Map: map[string]string{}}
 )
 
 func init() {
@@ -29,10 +30,22 @@ func init() {
 		fmt.Fprintf(os.Stderr, "Unable to create directory: %s", CacheDir)
 		os.Exit(1)
 	}
+	if ClearCache {
+		if err := dotCache.Clear(); err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
+			os.Exit(1)
+		}
+	} else if _, err := dotCache.Read(); err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
+		os.Exit(1)
+	}
 }
 
 // Cache ...
 type Cache struct {
+	// FIXME: allow different cache types
+	// (copies, templates...) TODO init
+	// Dir string
 	Map map[string]string
 }
 
@@ -108,12 +121,11 @@ func (c *Cache) Del(k string) error {
 // Read ...
 func (c *Cache) Read() (map[string]string, error) {
 	c.Init()
-	p := filepath.Join(CacheDir, "*")
-	s, err := filepath.Glob(p)
+	list, err := c.List()
 	if err != nil {
 		return c.Map, err
 	}
-	for _, f := range s {
+	for _, f := range list {
 		b, err := ioutil.ReadFile(f)
 		if err != nil {
 			return c.Map, err
@@ -141,15 +153,20 @@ func (c *Cache) Write() error {
 	return nil
 }
 
+// List ...
+func (c *Cache) List() ([]string, error) {
+	p := filepath.Join(CacheDir, "*")
+	return filepath.Glob(p)
+}
+
 // Clear ...
 func (c *Cache) Clear() error {
 	c = c.New()
-	p := filepath.Join(CacheDir, "*")
-	s, err := filepath.Glob(p)
+	list, err := c.List()
 	if err != nil {
 		return err
 	}
-	for _, f := range s {
+	for _, f := range list {
 		if err := os.Remove(f); err != nil {
 			return err
 		}
@@ -158,7 +175,6 @@ func (c *Cache) Clear() error {
 }
 
 func cacheSerialize(s string) string {
-	// return strings.Replace(s, osPathSep, cachePathSep, -1)
 	return url.QueryEscape(s)
 }
 
