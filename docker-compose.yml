@@ -24,4 +24,4 @@ services:
       - dotimg
     container_name: dot_test
     # entrypoint: /bin/bash
-    command: -l -c '$$DOT/scripts/test.sh'
+    command: -l -c '$$DOT/scripts/e2e-test.sh'

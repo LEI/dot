@@ -2,28 +2,22 @@
 
 set -e
 
-DIR="${BASH_SOURCE%/*}"
-source "$DIR/functions.sh"
+# sudo apt-get -qq update
+# sudo apt-get install -y vim tmux
+#GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
+# go get ./...
+go get github.com/golang/lint/golint
+# go get github.com/mattn/goveralls
 
-ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
-
-# run dot sync -u "https://github.com/LEI/dot-git" -s ~/.dot/git
-# run dot install link -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig" ".gitignore"
-# CREDENTIAL_HELPER=cache run dot install template -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig.local.tpl"
-# run dot install line -u "https://github.com/LEI/dot-git" -s ~/.dot/git
-# run dot -- git
-
-tail_bashrc="$(tail -n1 ~/.bashrc)"
-# Travis CI fix: sudo chmod +x /usr/local/bin/pacapt
-run dot list
-yes | run dot install --packages # --verbose
-run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
-for f in "$HOME"/.gitconfig; do run test -f "$f"; done
-for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -s "$d"; done
-[[ "$(tail -n1 ~/.bashrc)" != "$tail_bashrc" ]] || exit 1
-# yes | run dot remove -c $DOT/.dotrc.yml
-# yes | run dot rm --https --empty;
-# [[ "$(tail -n1 ~/.bashrc)" == "$tail_bashrc" ]] || exit 1
-# touch ~/{.bashrc,.vim/init.vim}
-# yes | run dot install -s -f bash,vim -c $DOT/.dotrc.yml
-# # for d in $HOME/.dot/*; do yes | run dot "${d##*/}"; done'
+#test -z $(gofmt -s -l $GO_FILES)
+go test -v ./...
+go vet ./...
+golint -set_exit_status $(go list ./...)
+# go install
+# yes | dot --https
+# # curl -sfLo ~/.vim/autoload/plug.vim --create-dirs 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+# tmux new-session -n test "vim -E -s -u $HOME/.vim/vimrc +PlugInstall +qall; exit"
+# test -d $HOME/.tmux/plugins/tpm
+# test -d $HOME/.vim/plugged
+# go test -v ./.. -covermode=count -coverprofile=coverage.out
+# goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
