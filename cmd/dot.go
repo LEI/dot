@@ -167,7 +167,7 @@ func init() {
 		default:
 			return fmt.Errorf("# Unhandled command (%+v): %+v", reflect.TypeOf(cmd).Elem(), cmd)
 		}
-		// return fmt.Errorf("Execute %+v: %+v\n %+v", reflect.TypeOf(cmd).Elem(), RunOnly, cmd)
+		// return fmt.Errorf("execute %+v: %+v\n %+v", reflect.TypeOf(cmd).Elem(), RunOnly, cmd)
 		return cmd.Execute(args)
 	}
 }

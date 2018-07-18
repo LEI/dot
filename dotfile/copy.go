@@ -71,7 +71,7 @@ func Copy(src, dst string) (bool, error) {
 			return false, nil
 		}
 		if !ok {
-			return false, fmt.Errorf("Different copy target: %s", dst)
+			return false, fmt.Errorf("different copy target: %s", dst)
 		}
 	}
 	/*fi, err := os.Stat(src)
@@ -143,7 +143,7 @@ func Uncopy(src, dst string) (bool, error) {
 		return false, err
 	}
 	if !ok {
-		return false, fmt.Errorf("Different uncopy target: %s", dst)
+		return false, fmt.Errorf("different uncopy target: %s", dst)
 	}
 	// str, err := t.Parse()
 	// if err != nil {

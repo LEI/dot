@@ -45,7 +45,7 @@ func (t *Templates) Append(tpl *Tpl) *Templates {
 func (t *Templates) Add(i interface{}) error {
 	tpl := &Tpl{}
 	if i == nil {
-		return fmt.Errorf("Trying to add nil to tmpls: %+v", t)
+		return fmt.Errorf("trying to add nil to tmpls: %+v", t)
 	}
 	if val, ok := i.(string); ok {
 		tpl.Source = val
@@ -55,7 +55,7 @@ func (t *Templates) Add(i interface{}) error {
 		// Get source
 		src, ok := val["source"].(string)
 		if !ok {
-			return fmt.Errorf("Missing tpl source: %+v", val)
+			return fmt.Errorf("missing tpl source: %+v", val)
 		}
 		tpl.Source = src
 		dst, ok := val["target"].(string)
@@ -103,7 +103,7 @@ func (t *Templates) Add(i interface{}) error {
 		// } else if val, ok := i.(interface{}); ok {
 		// 	fmt.Println("II", val, i)
 	} else {
-		return fmt.Errorf("Unable to assert Tpl: %+v", i)
+		return fmt.Errorf("unable to assert Tpl: %+v", i)
 	}
 	*t = append(*t, tpl)
 	return nil
@@ -120,7 +120,7 @@ func (t *Templates) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		fmt.Println("Unmarshal tpl -> map[string]string", val)
 		for k, v := range val {
 			if k != "" {
-				return fmt.Errorf("Unexpected key: %s", k)
+				return fmt.Errorf("unexpected key: %s", k)
 			}
 			if err := t.Add(v); err != nil {
 				return err
@@ -138,7 +138,7 @@ func (t *Templates) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if t.Kind() == reflect.Map {
 			T = reflect.MapOf(t.Key(), t.Elem())
 		}
-		return fmt.Errorf("Unable to unmarshal templates (%s) into struct: %+v", T, val)
+		return fmt.Errorf("unable to unmarshal templates (%s) into struct: %+v", T, val)
 	}
 	return nil
 }

@@ -132,7 +132,7 @@ func (s *Slice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if t.Kind() == reflect.Map {
 			T = reflect.MapOf(t.Key(), t.Elem())
 		}
-		return fmt.Errorf("Unable to unmarshal %s into struct: %+v", T, val)
+		return fmt.Errorf("unable to unmarshal %s into struct: %+v", T, val)
 	}
 	return nil
 }

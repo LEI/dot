@@ -23,7 +23,7 @@ type Packages []*Pkg
 func (p *Packages) Add(i interface{}) error {
 	pkg := &Pkg{}
 	if i == nil {
-		return fmt.Errorf("Trying to add nil to pkgs: %+v", p)
+		return fmt.Errorf("trying to add nil to pkgs: %+v", p)
 	}
 	if val, ok := i.(string); ok {
 		pkg.Name = val
@@ -33,7 +33,7 @@ func (p *Packages) Add(i interface{}) error {
 		// Get name
 		name, ok := val["name"].(string)
 		if !ok {
-			return fmt.Errorf("Missing pkg name: %+v", val)
+			return fmt.Errorf("missing pkg name: %+v", val)
 		}
 		pkg.Name = name
 		pkg.OS = *NewSlice(val["os"])
@@ -56,7 +56,7 @@ func (p *Packages) Add(i interface{}) error {
 		// } else if val, ok := i.(interface{}); ok {
 		// 	fmt.Println("II", val, i)
 	} else {
-		return fmt.Errorf("Unable to assert Pkg: %+v", i)
+		return fmt.Errorf("unable to assert Pkg: %+v", i)
 	}
 	*p = append(*p, pkg)
 	return nil
@@ -87,7 +87,7 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if t.Kind() == reflect.Map {
 			T = reflect.MapOf(t.Key(), t.Elem())
 		}
-		return fmt.Errorf("Unable to unmarshal packages (%s) into struct: %+v", T, val)
+		return fmt.Errorf("unable to unmarshal packages (%s) into struct: %+v", T, val)
 	}
 	return nil
 }

@@ -82,7 +82,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		// 		if t.Kind() == reflect.Map {
 		// 			T = reflect.MapOf(t.Key(), t.Elem())
 		// 		}
-		// 		return fmt.Errorf("Unable to unmarshal %s into MapItem: %+v", T, w)
+		// 		return fmt.Errorf("unable to unmarshal %s into MapItem: %+v", T, w)
 		// 	}
 		// }
 	case interface{}:
@@ -96,7 +96,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 					(*m)[x] = "" // w.(interface{})
 				// case interface{}:
 				default:
-					return fmt.Errorf("# Unable to unmarshal: expected string, found %+v", w)
+					return fmt.Errorf("unable to unmarshal: expected string, found %+v", w)
 				}
 			}
 		// case interface{}:
@@ -107,7 +107,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if t.Kind() == reflect.Map {
 				T = reflect.MapOf(t.Key(), t.Elem())
 			}
-			return fmt.Errorf("Unable to unmarshal %s into MapItem: %+v", T, v)
+			return fmt.Errorf("unable to unmarshal %s into MapItem: %+v", T, v)
 		}
 	default:
 		t := reflect.TypeOf(val)
@@ -115,7 +115,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if t.Kind() == reflect.Map {
 			T = reflect.MapOf(t.Key(), t.Elem())
 		}
-		return fmt.Errorf("Unable to unmarshal %s into Map: %+v", T, val)
+		return fmt.Errorf("unable to unmarshal %s into Map: %+v", T, val)
 	}
 	return nil
 }

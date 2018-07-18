@@ -85,7 +85,7 @@ func CompareFileContent(s, str string) (string, bool, error) {
 		return "", false, err
 	}
 	if stat != nil && !stat.Mode().IsRegular() {
-		return "", false, fmt.Errorf("Not a regular file: %s (%q)", stat.Name(), stat.Mode().String())
+		return "", false, fmt.Errorf("not a regular file: %s (%q)", stat.Name(), stat.Mode().String())
 	}
 	// b, err := ioutil.ReadFile(s)
 	// if err != nil && os.IsExist(err) {

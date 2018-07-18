@@ -87,7 +87,7 @@ type Role struct {
 // }
 
 // ErrEmptyRole ...
-var ErrEmptyRole = fmt.Errorf("Attempt to register an empty role")
+var ErrEmptyRole = fmt.Errorf("attempt to register an empty role")
 
 // NewRole ...
 func NewRole(name string) *Role {
@@ -312,7 +312,7 @@ func (r *Role) RegisterTemplate(s string) error {
 // Init ...
 func (r *Role) Init() error {
 	if !utils.Exist(target) {
-		return fmt.Errorf("Directory does not exist: %s", target)
+		return fmt.Errorf("directory does not exist: %s", target)
 	}
 	if r.Path == "" {
 		r.Path = filepath.Join(target, Options.RoleDir, r.Name)
@@ -328,15 +328,15 @@ func (r *Role) Sync() error {
 	}
 	if !r.IsEnabled() {
 		// if !utils.Exist(r.Path) { }
-		return fmt.Errorf("No enabled: %s", r.Name)
+		return fmt.Errorf("not enabled: %s", r.Name)
 	}
 	repo := NewRepo(r.Path, r.URL)
-	exists := utils.Exist(repo.Path)
+	repoExists := utils.Exist(repo.Path)
 	// Clone if the local directory does not exist
-	if !utils.Exist(repo.Path) {
+	if !repoExists {
 		switch err := repo.Clone(); err {
 		case nil:
-			exists = true
+			repoExists = true
 		case ErrNetworkUnreachable:
 			if !Options.NoSync {
 				return err
@@ -348,8 +348,8 @@ func (r *Role) Sync() error {
 	switch err := repo.checkRepo(); err {
 	case nil:
 	case ErrNoGitDir:
-		fmt.Println("CHECK REPO", exists, repo.Path)
-		if !exists {
+		fmt.Println("CHECK REPO", repoExists, repo.Path)
+		if !repoExists {
 			return err
 		}
 		// Existing directory
@@ -414,7 +414,7 @@ func (r *Role) IsEnabled() bool {
 // Enable ...
 func (r *Role) Enable() error {
 	if r.Enabled == true {
-		return fmt.Errorf("Already enabled: %s", r.Name)
+		return fmt.Errorf("already enabled: %s", r.Name)
 	}
 	r.Enabled = true
 	return nil
@@ -423,7 +423,7 @@ func (r *Role) Enable() error {
 // Disable ...
 func (r *Role) Disable() error {
 	if r.Enabled == false {
-		return fmt.Errorf("Already disabled: %s", r.Name)
+		return fmt.Errorf("already disabled: %s", r.Name)
 	}
 	r.Enabled = false
 	return nil
@@ -578,7 +578,7 @@ func prepareTarget(src, dst string) (string, error) {
 	//fmt.Println("+", src, dst)
 	_, f := filepath.Split(src)
 	if f == "" {
-		return "", fmt.Errorf("Error (no source file name) while parsing: %s / %s", src, dst)
+		return "", fmt.Errorf("error (no source file name) while parsing: %s / %s", src, dst)
 	}
 	baseDir := filepath.Join(target, dst)
 	// if _, err := dotfile.CreateDir(baseDir); err != nil {
@@ -619,7 +619,7 @@ func (r *Role) Do(a string, run []string) error {
 	a = strings.Title(a)
 	v := r.GetField(a)
 	if !v.IsValid() {
-		return fmt.Errorf("Could not get field %s: %s / %s", a, v, a)
+		return fmt.Errorf("could not get field %s: %s / %s", a, v, a)
 	}
 	before := v.Interface().([]string)
 	if len(before) > 0 && runTask("exec", run) {

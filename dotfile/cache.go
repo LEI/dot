@@ -18,7 +18,7 @@ var (
 	ClearCache bool // = true
 
 	// ErrCacheKeyNotFound ...
-	ErrCacheKeyNotFound = fmt.Errorf("Cache entry not found")
+	ErrCacheKeyNotFound = fmt.Errorf("cache entry not found")
 
 	dotCache = &Cache{Map: map[string]string{}}
 )

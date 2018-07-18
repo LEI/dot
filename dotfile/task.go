@@ -36,7 +36,7 @@ func do(t Task, a string) (err error) {
 	case "Remove":
 		err = t.Remove()
 	default: // Unhandled action
-		return fmt.Errorf("Unknown task function: %s", a)
+		return fmt.Errorf("unknown task function: %s", a)
 	}
 	return
 }

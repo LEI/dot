@@ -113,7 +113,7 @@ CHECK:
 					continue CHECK
 				}
 			}
-			return fmt.Errorf("Unable to resolve %s dependency: %s", role.Name, dep)
+			return fmt.Errorf("unable to resolve %s dependency: %s", role.Name, dep)
 		}
 	}
 	// TODO: sort

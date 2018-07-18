@@ -153,7 +153,7 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 			// if err != nil || !changed {
 			// 	return changed, err
 			// }
-			return false, fmt.Errorf("Different template target: %s", dst)
+			return false, fmt.Errorf("different template target: %s", dst)
 		}
 	}
 	if DryRun {
@@ -187,7 +187,7 @@ func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 	// 	return false, nil
 	// }
 	if !ok {
-		return false, fmt.Errorf("Different untemplate target: %s", dst)
+		return false, fmt.Errorf("different untemplate target: %s", dst)
 	}
 	// b, err := ioutil.ReadFile(t.Target)
 	// if err != nil && os.IsExist(err) {
@@ -248,7 +248,7 @@ func checkTpl(src, dst, content string) (bool, error) {
 	// }
 	// c := string(b) // Current file content
 	if content == c { // Same file content
-		return false, fmt.Errorf("Same file content for %s, should be handled by CheckFile", dst)
+		return false, fmt.Errorf("same file content for %s, should be handled by CheckFile", dst)
 	} else if content != c && c != "" {
 		// Target changed
 		ok, err := dotCache.Validate(dst, c)

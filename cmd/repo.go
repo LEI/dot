@@ -74,13 +74,13 @@ func (r *Repo) checkRepo() error {
 	if status == 1 {
 		return ErrDirtyRepo
 	} else if status != 0 {
-		return fmt.Errorf("Check repo unknown error: %s", stderr)
+		return fmt.Errorf("check repo unknown error: %s", stderr)
 	}
 	// c := exec.Command("git", args...)
 	// err := c.Run()
 	// if err != nil {
 	// 	if exitError, ok := err.(*exec.ExitError); ok {
-	// 		// fmt.Fprintf(os.Stderr, "Uncommited changes in '%s'", r.Path)
+	// 		// fmt.Fprintf(os.Stderr, "Uncommitted changes in '%s'", r.Path)
 	// 		if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
 	// 			if status.ExitStatus() == 1 {
 	// 				return ErrDirtyRepo
@@ -178,7 +178,7 @@ func (r *Repo) checkRemote() error {
 	url := strings.TrimRight(out, "\n")
 	// fmt.Println(parseRepo(r.URL), parseRepo(url))
 	if parseRepo(r.URL) != parseRepo(url) {
-		return fmt.Errorf("Remote mismatch: url is '%s' but existing repo has '%s'", r.URL, url)
+		return fmt.Errorf("remote mismatch: url is '%s' but existing repo has '%s'", r.URL, url)
 	}
 	return nil
 }

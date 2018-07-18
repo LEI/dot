@@ -22,7 +22,7 @@ func (p *Paths) String() string {
 // Add ...
 func (p *Paths) Add(i interface{}) error {
 	if i == nil {
-		return fmt.Errorf("Trying to add nil to paths: %+v", p)
+		return fmt.Errorf("trying to add nil to paths: %+v", p)
 	}
 	var src, dst string
 	if val, ok := i.(string); ok {
@@ -34,7 +34,7 @@ func (p *Paths) Add(i interface{}) error {
 		// Get name
 		s, ok := val["source"].(string)
 		if !ok {
-			return fmt.Errorf("Missing path source: %+v", val)
+			return fmt.Errorf("missing path source: %+v", val)
 		}
 		src = s
 		t, _ := val["target"].(string)
@@ -114,7 +114,7 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if t.Kind() == reflect.Map {
 			T = reflect.MapOf(t.Key(), t.Elem())
 		}
-		return fmt.Errorf("Unable to unmarshal %s into struct: %+v", T, val)
+		return fmt.Errorf("unable to unmarshal %s into struct: %+v", T, val)
 	}
 	return nil
 }
