@@ -80,9 +80,9 @@ func ExecCommand(name string, args ...string) (stdout, stderr string, status int
 		} else {
 			fmt.Fprintf(os.Stderr, "Could not get exit error: %+v\n", args)
 			status = defaultStatusFailed
-			if stderr == "" {
-				stderr = err.Error()
-			}
+			// if stderr == "" {
+			// 	stderr = err.Error()
+			// }
 		}
 	} else {
 		if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
@@ -92,6 +92,8 @@ func ExecCommand(name string, args ...string) (stdout, stderr string, status int
 			status = defaultStatusFailed
 		}
 	}
+	stdout = outbuf.String()
+	stderr = errbuf.String() // + stderr
 	return
 }
 

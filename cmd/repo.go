@@ -5,12 +5,9 @@ package cmd
 // https://github.com/libgit2/git2go
 
 import (
-	"bytes"
 	"fmt"
 	// "io/ioutil"
 	"net"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -102,12 +99,11 @@ func (r *Repo) Pull() error {
 	if Verbose > 0 {
 		fmt.Printf("git %s\n", strings.Join(args, " "))
 	}
-	c := exec.Command("git", args...)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		return err
+	stdout, stderr, status := dotfile.ExecCommand("git", args...)
+	if status != 0 {
+		return fmt.Errorf(stderr)
 	}
+	fmt.Println(stdout)
 	return nil
 }
 
@@ -132,12 +128,11 @@ func (r *Repo) Clone() error {
 	} else if Verbose > 0 {
 		fmt.Printf("git clone %s %s\n", r.URL, r.Path)
 	}
-	c := exec.Command("git", args...)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		return err
+	stdout, stderr, status := dotfile.ExecCommand("git", args...)
+	if status != 0 {
+		return fmt.Errorf(stderr)
 	}
+	fmt.Println(stdout)
 	// actual := strings.TrimRight(out, "\n")
 	return nil
 }
@@ -153,30 +148,11 @@ func (r *Repo) checkRemote() error {
 	urlKey := "remote." + r.Remote + ".url"
 	args := []string{"-C", r.Path, "config", "--local", "--get", urlKey}
 	// fmt.Printf("git %s\n", strings.Join(args, " "))
-	c := exec.Command("git", args...)
-	stdout, err := c.StdoutPipe()
-	if err != nil {
-		return err
+	stdout, stderr, status := dotfile.ExecCommand("git", args...)
+	if status != 0 {
+		return fmt.Errorf(stderr)
 	}
-	// stderr, err := c.StderrPipe()
-	// if err != nil {
-	// 	return err
-	// }
-	if err := c.Start(); err != nil {
-		return err
-	}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(stdout)
-	out := buf.String()
-	// out, _ := ioutil.ReadAll(stdout)
-	// fmt.Printf("stdout: %s\n", out)
-	// outErr, _ := ioutil.ReadAll(stderr)
-	// fmt.Printf("stderr: %s\n", outErr)
-	if err := c.Wait(); err != nil {
-		return err
-	}
-	url := strings.TrimRight(out, "\n")
-	// fmt.Println(parseRepo(r.URL), parseRepo(url))
+	url := strings.TrimRight(stdout, "\n")
 	if parseRepo(r.URL) != parseRepo(url) {
 		return fmt.Errorf("remote mismatch: url is '%s' but existing repo has '%s'", r.URL, url)
 	}
