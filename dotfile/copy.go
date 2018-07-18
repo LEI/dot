@@ -3,10 +3,12 @@ package dotfile
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
+	// "io/ioutil"
 	"os"
 	// "path"
 	// "strings"
+
+	"github.com/LEI/dot/utils"
 )
 
 // CopyTask struct
@@ -59,8 +61,23 @@ func (t *CopyTask) Remove() error {
 // Copy task
 // https://stackoverflow.com/a/21067803/7796750
 func Copy(src, dst string) (bool, error) {
-	if ok, err := SameContent(src, dst); err != nil || ok {
-		return false, err
+	// TODO: check cache (see tplCache)
+	if utils.Exist(dst) {
+		ok, err := utils.Compare(src, dst)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			q := fmt.Sprintf("Overwrite existing copy target: %s", dst)
+			if !AskConfirmation(q) {
+				fmt.Fprintf(os.Stderr, "Skipping copy %s because its target exists: %s", src, dst)
+				return false, nil
+			}
+			if err := Backup(dst); err != nil {
+				return false, err
+			}
+		}
+		return false, nil
 	}
 	/*fi, err := os.Stat(src)
 	if err != nil {
@@ -157,6 +174,16 @@ func Copy(src, dst string) (bool, error) {
 
 // Uncopy task
 func Uncopy(src, dst string) (bool, error) {
+	if !utils.Exist(dst) {
+		return false, nil
+	}
+	ok, err := utils.Compare(src, dst)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, fmt.Errorf("Not the same content: %s / %s", src, dst)
+	}
 	// str, err := t.Parse()
 	// if err != nil {
 	// 	return false, err
@@ -172,32 +199,11 @@ func Uncopy(src, dst string) (bool, error) {
 	// 	fmt.Printf("Warn: mismatching content %s\n", t.Target)
 	// 	return false, nil
 	// }
-	// if DryRun {
-	// 	return true, nil
-	// }
-	// if err := os.Remove(t.Target); err != nil {
-	// 	return false, err
-	// }
-	return true, nil
-}
-
-// SameContent ...
-func SameContent(src, dst string) (bool, error) {
-	b, err := ioutil.ReadFile(src)
-	if err != nil && os.IsNotExist(err) {
-		return false, err
+	if DryRun {
+		return true, nil
 	}
-	return HasContent(dst, string(b))
-}
-
-// HasContent ...
-func HasContent(s, str string) (bool, error) {
-	b, err := ioutil.ReadFile(s)
-	if err != nil && os.IsExist(err) {
+	if err := os.Remove(dst); err != nil {
 		return false, err
-	}
-	if str != string(b) {
-		return false, nil
 	}
 	return true, nil
 }

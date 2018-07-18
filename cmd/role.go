@@ -13,6 +13,7 @@ import (
 
 	"github.com/LEI/dot/dotfile"
 	"github.com/LEI/dot/parsers"
+	"github.com/LEI/dot/utils"
 )
 
 // r.<Task>, r.Register<Task>
@@ -147,11 +148,13 @@ func (r *Role) PrintRoles() (s string) {
 	}
 	switch true {
 	case len(r.Install) > 0:
+		fallthrough
 	case len(r.PostInstall) > 0:
+		fallthrough
 	case len(r.Remove) > 0:
+		fallthrough
 	case len(r.PostRemove) > 0:
 		s += fmt.Sprintf("%sHas exec: %s", pre, "yes")
-		break
 	}
 	// Role environment
 	if r.Env != nil && len(r.Env) > 0 {
@@ -251,13 +254,10 @@ func (r *Role) RegisterTask(name, s string) error {
 	// switch t := i.(type) {
 	// case Copy:
 	// 	i = i.(Copy)
-	// 	break
 	// case Link:
 	// 	i = i.(Link)
-	// 	break
 	// case Template:
 	// 	i = i.(Template)
-	// 	break
 	// default:
 	// 	return fmt.Errorf("??? %s", t)
 	// }
@@ -311,7 +311,7 @@ func (r *Role) RegisterTemplate(s string) error {
 
 // Init ...
 func (r *Role) Init() error {
-	if !exist(target) {
+	if !utils.Exist(target) {
 		return fmt.Errorf("Directory does not exist: %s", target)
 	}
 	if r.Path == "" {
@@ -323,21 +323,20 @@ func (r *Role) Init() error {
 
 // Sync ...
 func (r *Role) Sync() error {
-	if r.URL == "" && !exist(r.Path) {
+	if r.URL == "" && !utils.Exist(r.Path) {
 		return fmt.Errorf("# Role %s has no URL and could not be found in %s", r.Name, r.Path)
 	}
 	if !r.IsEnabled() {
-		// if !exist(r.Path) { }
+		// if !utils.Exist(r.Path) { }
 		return fmt.Errorf("No enabled: %s", r.Name)
 	}
 	repo := NewRepo(r.Path, r.URL)
-	exists := exist(repo.Path)
+	exists := utils.Exist(repo.Path)
 	// Clone if the local directory does not exist
-	if !exist(repo.Path) {
+	if !utils.Exist(repo.Path) {
 		switch err := repo.Clone(); err {
 		case nil:
 			exists = true
-			break
 		case ErrNetworkUnreachable:
 			if !Options.NoSync {
 				return err
@@ -348,7 +347,6 @@ func (r *Role) Sync() error {
 	}
 	switch err := repo.checkRepo(); err {
 	case nil:
-		break
 	case ErrNoGitDir:
 		if !exists {
 			return err
@@ -367,7 +365,6 @@ func (r *Role) Sync() error {
 	}
 	switch err := repo.Pull(); err {
 	case nil:
-		break
 	case ErrNetworkUnreachable:
 		if !Options.NoSync {
 			return err
@@ -384,11 +381,11 @@ func (r *Role) ReadConfig(name string) (string, error) {
 		return "", nil
 	}
 	cfgPath := filepath.Join(r.Path, name) // !filepath.IsAbs(name)
-	if !exist(cfgPath) {
+	if !utils.Exist(cfgPath) {
 		fmt.Printf("No role config file found: %s\n", cfgPath)
 		return "", nil
 	}
-	cfg, err := readConfigFile(cfgPath)
+	cfg, err := utils.Read(cfgPath)
 	if err != nil {
 		return cfgPath, err
 	}
@@ -741,11 +738,9 @@ func splitPath(s string) (src, dst string) {
 	switch len(parts) {
 	case 1:
 		src = s
-		break
 	case 2:
 		src = parts[0]
 		dst = parts[1]
-		break
 	default:
 		fmt.Println("Unhandled path spec", src)
 		os.Exit(1)

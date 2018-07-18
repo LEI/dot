@@ -85,7 +85,6 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			// (*p)[v] = v
 			p.Add(v)
 		}
-		break
 	// case interface{}:
 	// 	s := val.(string)
 	// 	(*p)[s] = s
@@ -93,7 +92,6 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		for _, v := range val {
 			p.Add(v)
 		}
-		break
 	case map[string]string:
 		// p = i.(*Paths)
 		for k, v := range val {
@@ -102,7 +100,6 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			p.Add(v)
 		}
-		break
 	case map[interface{}]interface{}:
 		for k, v := range val {
 			if k.(string) != "" {
@@ -111,7 +108,6 @@ func (p *Paths) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			// (*p)[v.(string)] = v.(string)
 			p.Add(v.(string))
 		}
-		break
 	default:
 		t := reflect.TypeOf(val)
 		T := t.Elem()

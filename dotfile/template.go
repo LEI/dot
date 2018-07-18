@@ -2,13 +2,17 @@ package dotfile
 
 import (
 	"bytes"
+	"os/exec"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"unicode"
+
+	"github.com/LEI/dot/utils"
 )
 
 var (
@@ -60,59 +64,19 @@ func (t *TemplateTask) Do(a string) error {
 	return do(t, a)
 }
 
-// Parse template file
-func (t *TemplateTask) Parse() (string, error) {
-	_, name := filepath.Split(t.Source)
-	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(t.Source)
-	// b, err := ioutil.ReadFile(t.Source)
-	// c := string(b) // Template file content
-	// if err != nil && os.IsExist(err) {
-	// 	return c, err
-	// }
-	// tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).Parse(c)
-	if err != nil {
-		return "", err
-	}
-	buf := &bytes.Buffer{}
-	data := make(map[string]interface{}, 0)
-	// Global environment variables
-	// for k, v := range GetEnv() {
-	// 	data[k] = v
-	// }
-	// Custom application environment
-	for k, v := range baseEnv {
-		k = strings.ToTitle(k)
-		v, err := TemplateEnv(k, v)
-		if err != nil {
-			return "", err
-		}
-		data[k] = v
-	}
-	// Specific role environment
-	for k, v := range t.Env {
-		k = strings.ToTitle(k)
-		v, err := TemplateEnv(k, v)
-		if err != nil {
-			return "", err
-		}
-		data[k] = v
-	}
-	// Extra variables (not string only)
-	for k, v := range t.Vars {
-		data[k] = v
-	}
-	if err = tmpl.Execute(buf, data); err != nil {
-		return buf.String(), err
-	}
-	return buf.String(), nil
-}
-
 // Install template
 func (t *TemplateTask) Install() error {
+	// if utils.Exist(dst) {
+	// 	return nil
+	// }
 	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
 		return err
 	}
-	changed, err := Template(t) // t.Source, dst, t.Env
+	data, err := t.Data()
+	if err != nil {
+		return err
+	}
+	changed, err := Template(t.Source, t.Target, data)
 	if err != nil {
 		return err
 	}
@@ -139,7 +103,11 @@ func (t *TemplateTask) Install() error {
 
 // Remove template
 func (t *TemplateTask) Remove() error {
-	changed, err := Untemplate(t)
+	data, err := t.Data()
+	if err != nil {
+		return err
+	}
+	changed, err := Untemplate(t.Source, t.Target, data)
 	if err != nil {
 		return err
 	}
@@ -159,81 +127,209 @@ func (t *TemplateTask) Remove() error {
 	return nil
 }
 
+// Data ...
+func (t *TemplateTask) Data() (map[string]interface{}, error) {
+	data := make(map[string]interface{}, 0)
+	// Global environment variables
+	// for k, v := range GetEnv() {
+	// 	data[k] = v
+	// }
+	// Custom application environment
+	for k, v := range baseEnv {
+		k = strings.ToTitle(k)
+		v, err := TemplateEnv(k, v)
+		if err != nil {
+			return data, err
+		}
+		data[k] = v
+	}
+	// Specific role environment
+	for k, v := range t.Env {
+		k = strings.ToTitle(k)
+		v, err := TemplateEnv(k, v)
+		if err != nil {
+			return data, err
+		}
+		data[k] = v
+	}
+	// Extra variables (not string only)
+	for k, v := range t.Vars {
+		data[k] = v
+	}
+	return data, nil
+}
+
 // Template task
-func Template(t *TemplateTask) (bool, error) {
-	str, err := t.Parse()
+func Template(src, dst string, data map[string]interface{}) (bool, error) {
+	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
-	if ok, err := HasContent(t.Target, str); err != nil || ok {
-		return false, err
-	}
-	b, err := ioutil.ReadFile(t.Target)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	c := string(b) // Current file content
-	if str == c { // Same file content
-		return false, fmt.Errorf("Same file content for %s, should be handled by HasContent", t.Target)
-	} else if str != c && c != "" {
-		// Target changed
-		ok, err := tplCache.Validate(t.Target, c)
+	if utils.Exist(dst) {
+		ok, err := checkTpl(src, dst, content)
 		if err != nil {
 			return false, err
 		}
-		if !ok {
-			q := fmt.Sprintf("Overwrite existing template target: %s", t.Target)
-			if !AskConfirmation(q) {
-				// diff := t.Source // TODO diff?
-				// return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
-				fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", t.Source, t.Target)
-				return false, nil
-			}
-			if err := Backup(t.Target); err != nil {
-				return false, err
-			}
+		if ok {
+			return false, nil
 		}
-		// fmt.Println("OK FOR TPL", t.Source, t.Target)
-	} // else if str != c && c == "" && OverwriteEmptyFiles {}
-	if Verbose > 1 {
-		fmt.Printf("---START---\n%s\n----END----\n", str)
+		if !ok {
+			// changed, err := tplOverwrite(src, dst, content)
+			// if err != nil || !changed {
+			// 	return changed, err
+			// }
+			return false, fmt.Errorf("Different template target exist: %s", dst)
+		}
 	}
 	if DryRun {
 		return true, nil
 	}
-	// fmt.Println("------------------- xxx", str, "xxx")
+	// fmt.Println("------------------- xxx", content, "xxx")
 	// fmt.Println("------------------- yyy", c, "yyy")
-	if err := tplCache.Put(t.Target, str); err != nil {
+	if err := ioutil.WriteFile(dst, []byte(content), FileMode); err != nil {
 		return false, err
 	}
-	if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
+	if err := tplCache.Put(dst, content); err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
 // Untemplate task
-func Untemplate(t *TemplateTask) (bool, error) {
-	str, err := t.Parse()
+func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
+	if !utils.Exist(dst) {
+		return false, nil
+	}
+	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
-	b, err := ioutil.ReadFile(t.Target)
-	if err != nil && os.IsExist(err) {
+	ok, err := checkTpl(src, dst, content)
+	if err != nil {
 		return false, err
 	}
-	if len(b) == 0 { // Empty file
-		return false, nil
+	// if ok {
+	// 	return false, nil
+	// }
+	if !ok {
+		return false, fmt.Errorf("Different untemplate target exist: %s", dst)
 	}
-	c := string(b) // Current file content
-	if str != c && c != "" {
-		return false, fmt.Errorf("# /!\\ Template content mismatch: %s", t.Target)
-	}
+	// b, err := ioutil.ReadFile(t.Target)
+	// if err != nil && os.IsExist(err) {
+	// 	return false, err
+	// }
+	// if len(b) == 0 { // Empty file
+	// 	return false, nil
+	// }
+	// c := string(b) // Current file content
+	// if content != c && c != "" {
+	// 	return false, fmt.Errorf("# /!\\ Template content mismatch: %s", t.Target)
+	// }
 	if DryRun {
 		return true, nil
 	}
-	if err := os.Remove(t.Target); err != nil {
+	if err := os.Remove(dst); err != nil {
+		return false, err
+	}
+	if err := tplCache.Del(dst); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func parseTpl(src string, data map[string]interface{}) (string, error) {
+	_, name := filepath.Split(src)
+	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(src)
+	// b, err := ioutil.ReadFile(src)
+	// c := string(b) // Template file content
+	// if err != nil && os.IsExist(err) {
+	// 	return c, err
+	// }
+	// tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).Parse(c)
+	if err != nil {
+		return "", err
+	}
+	buf := &bytes.Buffer{}
+	if err != nil {
+		return buf.String(), err
+	}
+	if err = tmpl.Execute(buf, data); err != nil {
+		return buf.String(), err
+	}
+	return buf.String(), nil
+}
+
+func checkTpl(src, dst, content string) (bool, error) {
+	c, ok, err := utils.CompareFileContent(dst, content)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	// b, err := ioutil.ReadFile(dst)
+	// if err != nil && os.IsExist(err) {
+	// 	return content, false, err
+	// }
+	// c := string(b) // Current file content
+	if content == c { // Same file content
+		return false, fmt.Errorf("Same file content for %s, should be handled by CheckFile", dst)
+	} else if content != c && c != "" {
+		// Target changed
+		ok, err := tplCache.Validate(dst, c)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			changed, err := tplOverwrite(src, dst, content)
+			if err != nil || !changed {
+				return changed, err
+			}
+		}
+		// fmt.Println("OK FOR TPL", src, dst)
+	} // else if content != c && c == "" && OverwriteEmptyFiles {}
+	if Verbose > 1 {
+		fmt.Printf("---START---\n%s\n----END----\n", content)
+	}
+	fmt.Println("++++++++++++++ checkTpl", src, dst, len(content))
+	return true, nil
+}
+
+func tplOverwrite(src, dst, content string) (bool, error) {
+	if err := printDiff(dst, content); err != nil {
+		return false, err
+	}
+	q := fmt.Sprintf("Overwrite existing template target: %s", dst)
+	if !AskConfirmation(q) {
+		// diff := src // TODO diff?
+		// return content, false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", dst, diff)
+		fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", src, dst)
+		return false, nil
+	}
+	if err := Backup(dst); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func printDiff(s, content string) error {
+	// stdout, stderr, status := ExecCommand("")
+	diffCmd := exec.Command("diff", s, "-")
+	stdin, err := diffCmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+	// defer stdin.Close()
+	diffCmd.Stdout = os.Stdout
+	diffCmd.Stderr = os.Stderr
+	fmt.Println("START")
+	if err := diffCmd.Start(); err != nil {
+		return err
+	}
+	io.WriteString(stdin, content)
+	fmt.Println("WAIT")
+	stdin.Close()
+	diffCmd.Wait()
+	fmt.Println("END")
+	return nil
 }

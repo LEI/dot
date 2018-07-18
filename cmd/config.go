@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/LEI/dot/utils"
 )
 
 // Config ...
@@ -35,7 +37,7 @@ func (c *Config) Read(name string) (string, error) {
 		return "", nil
 	}
 	cfgPath := name
-	if !exist(cfgPath) {
+	if !utils.Exist(cfgPath) {
 		return "", nil
 	}
 	cfg, err := ioutil.ReadFile(cfgPath)
@@ -64,7 +66,6 @@ func (c *Config) AddRole(r *Role) error {
 			// c.SetRoleIndex(i, r)
 			c.Roles[i] = r
 			return nil
-			// break
 		}
 	}
 	c.Roles = append(c.Roles, r)
@@ -149,7 +150,7 @@ func FindConfig(s string) (string, error) {
 	}
 
 	for _, p := range paths {
-		if isFile(p) {
+		if utils.IsFile(p) {
 			return p, nil
 		}
 	}
@@ -168,32 +169,3 @@ func getConfigDir() string {
 	// XDG_CONFIG_DIRS /etc/xdg
 	return dir
 }
-
-func readConfigFile(s string) ([]byte, error) {
-	bytes, err := read(s)
-	// str := string(bytes)
-	// if err != nil {
-	// 	return str, err
-	// }
-	return bytes, err
-}
-
-func read(s string) ([]byte, error) {
-	return ioutil.ReadFile(s)
-}
-
-func exist(s string) bool {
-	_, err := os.Stat(s)
-	return err == nil || os.IsExist(err)
-	// return !os.IsNotExist(err)
-}
-
-func isFile(s string) bool {
-	fi, err := os.Stat(s)
-	return !os.IsNotExist(err) && !fi.IsDir()
-}
-
-// func writeFile(fileName string, data []byte) error {
-// 	os.MkdirAll(path.Dir(fileName), os.ModePerm)
-// 	return ioutil.WriteFile(fileName, data, 0655)
-// }

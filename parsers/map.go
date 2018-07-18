@@ -89,22 +89,18 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		switch v := val.(type) {
 		case map[interface{}]interface{}:
 			fmt.Println("TODO i{} -> map[interface{}]interface{}", v)
-			break
 		case []interface{}:
 			for _, w := range v {
 				switch x := w.(type) {
 				case string:
 					(*m)[x] = "" // w.(interface{})
-					break
 				// case interface{}:
 				default:
 					return fmt.Errorf("# Unable to unmarshal: expected string, found %+v", w)
 				}
 			}
-			break
 		// case interface{}:
 		// 	fmt.Println("i{} -> interface{}", v)
-		// 	break
 		default:
 			t := reflect.TypeOf(v)
 			T := t.Elem()

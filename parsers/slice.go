@@ -125,7 +125,6 @@ func (s *Slice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			fmt.Println("=", v)
 			// *s = append(*s, &item)
 		}
-		break
 	// case map[string]interface{}:
 	default:
 		t := reflect.TypeOf(val)

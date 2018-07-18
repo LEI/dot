@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/LEI/dot/dotfile"
+	"github.com/LEI/dot/utils"
 )
 
 // Repo ...
@@ -115,7 +116,7 @@ func (r *Repo) Clone() error {
 	if !online {
 		return ErrNetworkUnreachable
 	}
-	if exist(r.Path) {
+	if utils.Exist(r.Path) {
 		return r.checkRemote()
 	}
 	args := []string{"clone", "--recursive"}
@@ -193,5 +194,5 @@ func parseRepo(str string) string {
 }
 
 func isGitDir(s string) bool {
-	return exist(filepath.Join(s, ".git"))
+	return utils.Exist(filepath.Join(s, ".git"))
 }

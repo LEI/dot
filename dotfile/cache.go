@@ -88,6 +88,23 @@ func (c *Cache) Put(k, v string) error {
 	return ioutil.WriteFile(file, []byte(val), FileMode)
 }
 
+// Del ...
+func (c *Cache) Del(k string) error {
+	c.Init()
+
+	nc := c.New()
+	for key, val := range c.Map {
+		if key != k {
+			nc.Map[key] = val
+		}
+	}
+	c = nc
+
+	key := cacheSerialize(k)
+	file := filepath.Join(CacheDir, key)
+	return os.Remove(file)
+}
+
 // Read ...
 func (c *Cache) Read() (map[string]string, error) {
 	c.Init()

@@ -61,12 +61,10 @@ func Parse() ([]string, error) {
 			case flags.ErrHelp:
 				parser.WriteHelp(os.Stdout)
 				os.Exit(0)
-				// break
 			case flags.ErrCommandRequired:
 				// err = Options.Install.Execute(remaining)
 				// remaining = []string{}
 				err = nil
-				break
 			default:
 				fmt.Fprintf(os.Stderr, "Error parsing args: %s\n", err)
 				parser.WriteHelp(os.Stdout)
@@ -113,8 +111,6 @@ var (
 	Verbose int
 )
 
-var executedCommand flags.Commander
-
 func init() {
 	// args, err := flags.Parse(&options)
 
@@ -130,24 +126,22 @@ func init() {
 	Options.IniConfig = readIniConfig(parser)
 
 	parser.CommandHandler = func(cmd flags.Commander, args []string) error {
-		// executedCommand = cmd
 		// return Options.CommandHandler(cmd, args)
-		// fmt.Printf("----------> %+v\n", cmd)
-		Action = "install"
-		// Note: cannot fallthrough in type switch
+		if parser.Active != nil {
+			Action = parser.Active.Name
+		} else {
+			Action = "install"
+		}
 		switch cmd.(type) {
-		case nil:
+		case nil: // Default to list
 			cmd = &ListCmd{}
 			// Options.Force = true
 			// Options.NoSync = true
 			RunOnly = append(RunOnly, "list")
-			break
 		case *DotCmd:
 			RunOnly = append(RunOnly, "list")
-			break
 		case *ListCmd:
 			RunOnly = append(RunOnly, "list")
-			break
 		// case nil:
 		// 	cmd = &DotCmd{}
 		// 	// cmd = &InstallCmd{}
@@ -155,30 +149,21 @@ func init() {
 		// case *DotCmd:
 		// 	fallthrough
 		case *InstallCmd:
-			// Default action: install all
-			break
+			// Install all
 		case *RemoveCmd:
-			Action = "remove"
-			// Run all
-			break
+			// Remove all
 		case *CopyCmd:
 			RunOnly = append(RunOnly, "copy")
-			break
 		// case *Exec:
 		// 	RunOnly = append(RunOnly, "exec")
-		// 	break
 		case *LineCmd:
 			RunOnly = append(RunOnly, "line")
-			break
 		case *LinkCmd:
 			RunOnly = append(RunOnly, "link")
-			break
 		case *TemplateCmd:
 			RunOnly = append(RunOnly, "template")
-			break
 		case *PackageCmd:
 			RunOnly = append(RunOnly, "package")
-			break
 		default:
 			return fmt.Errorf("# Unhandled command (%+v): %+v", reflect.TypeOf(cmd).Elem(), cmd)
 		}

@@ -75,14 +75,12 @@ func (p *Packages) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return err
 			}
 		}
-		break
 	case []interface{}:
 		for _, v := range val {
 			if err := p.Add(v); err != nil {
 				return err
 			}
 		}
-		break
 	default:
 		t := reflect.TypeOf(val)
 		T := t.Elem()

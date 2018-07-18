@@ -154,12 +154,10 @@ func execute(options *cmd.DotCmd) error {
 			return err
 			// switch err {
 			// case cmd.ErrSkipDeps:
-			// 	break
 			// default:
 			// 	return err
 			// }
 		}
-		break
 	}
 	return config.Do(cmd.Action, cmd.RunOnly)
 }

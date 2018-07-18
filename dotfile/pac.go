@@ -59,10 +59,8 @@ func pacDo(a string, args ...string) error {
 	switch strings.ToLower(a) {
 	case "install":
 		pa = append(pa, "-S")
-		break
 	// case "remove":
 	// 	pa = append(pa, "-R")
-	// 	break
 	default:
 		fmt.Println("abort pacDo")
 		return nil
