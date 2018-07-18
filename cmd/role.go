@@ -348,6 +348,7 @@ func (r *Role) Sync() error {
 	switch err := repo.checkRepo(); err {
 	case nil:
 	case ErrNoGitDir:
+		fmt.Println("CHECK REPO", exists, repo.Path)
 		if !exists {
 			return err
 		}

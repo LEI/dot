@@ -114,6 +114,7 @@ func AskConfirmation(s string) (ret bool) {
 			break
 		}
 	}
-	fmt.Printf("\n") // FIXME: no new line if enter is pressed before prev fmt.Printf
+	// FIXME: no new line if enter is pressed before the last fmt.Printf
+	// fmt.Printf("\n")
 	return
 }

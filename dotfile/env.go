@@ -53,7 +53,7 @@ var (
 
 func init() {
 	usr, _ := user.Current()
-	homeDir := usr.HomeDir
+	homeDir = usr.HomeDir
 	if homeDir == "" {
 		homeDir = os.Getenv("HOME")
 	}
@@ -66,8 +66,10 @@ func init() {
 
 // InitEnv ...
 func InitEnv() error {
-	if err := os.Setenv("OS", OS); err != nil {
-		return err
+	for k, v := range baseEnv {
+		if err := os.Setenv(k, v); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -7,8 +7,6 @@ import (
 )
 
 var (
-	existingDirs = []string{"/", homeDir}
-
 	// RemoveEmptyDirs ...
 	RemoveEmptyDirs bool
 
@@ -22,7 +20,7 @@ func CreateDir(dir string) (bool, error) {
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	if Contains(existingDirs, dir) {
+	if dir == homeDir {
 		return false, ErrDirShouldExist
 	}
 	if err == nil && fi.IsDir() {
@@ -42,7 +40,7 @@ func RemoveDir(dir string) (bool, error) {
 	if err != nil && !os.IsExist(err) {
 		return false, err
 	}
-	if Contains(existingDirs, dir) {
+	if dir == homeDir {
 		return false, ErrDirShouldExist
 	}
 	if err == nil && !fi.IsDir() {

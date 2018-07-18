@@ -114,16 +114,8 @@ func (t *TemplateTask) Remove() error {
 func (t *TemplateTask) Data() (map[string]interface{}, error) {
 	data := make(map[string]interface{}, 0)
 	// Global environment variables
-	// for k, v := range GetEnv() {
-	// 	data[k] = v
-	// }
-	// Custom application environment
-	for k, v := range baseEnv {
-		k = strings.ToTitle(k)
-		v, err := TemplateEnv(k, v)
-		if err != nil {
-			return data, err
-		}
+	// and custom application baseEnv
+	for k, v := range GetEnv() {
 		data[k] = v
 	}
 	// Specific role environment
@@ -269,12 +261,10 @@ func checkTpl(src, dst, content string) (bool, error) {
 				return changed, err
 			}
 		}
-		// fmt.Println("OK FOR TPL", src, dst)
 	} // else if content != c && c == "" && OverwriteEmptyFiles {}
-	if Verbose > 1 {
-		fmt.Printf("---START---\n%s\n----END----\n", content)
-	}
-	fmt.Println("++++++++++++++ checkTpl", src, dst, len(content))
+	// if Verbose > 1 {
+	// 	fmt.Printf("---START---\n%s\n----END----\n", content)
+	// }
 	return true, nil
 }
 
