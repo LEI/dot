@@ -145,16 +145,24 @@ func ExpandEnv(s string, envs ...map[string]string) string {
 
 // HasOSType ...
 func HasOSType(s ...string) bool {
-	return HasOne(s, osTypes)
+	return Intersects(s, osTypes)
 }
 
-// HasOne check if two slices intersect
-func HasOne(in []string, list []string) bool {
+// Contains check if a slice contains a given string
+func Contains(in []string, s string) bool {
 	for _, a := range in {
-		for _, b := range list {
-			if b == a {
-				return true
-			}
+		if a == s {
+			return true
+		}
+	}
+	return false
+}
+
+// Intersects check if a slice contains at least one element from the other
+func Intersects(in []string, list []string) bool {
+	for _, a := range in {
+		if Contains(list, a) {
+			return true
 		}
 	}
 	return false

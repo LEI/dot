@@ -73,12 +73,12 @@ func init() {
 }
 
 func execute(options *cmd.DotCmd) error {
-	// listOnly := dotfile.HasOne([]string{"list"}, cmd.RunOnly)
+	// listOnly := dotfile.Contains(cmd.RunOnly, "list")
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
 	enabledCount := 0
 	for _, r := range config.Roles {
-		if len(options.RoleFilter) > 0 && !dotfile.HasOne([]string{r.Name}, options.RoleFilter) {
+		if len(options.RoleFilter) > 0 && !dotfile.Contains(options.RoleFilter, r.Name) {
 			// fmt.Fprintf(os.Stderr, "# [%s] Skipping (filtered)\n", r.Name)
 			// config.Roles = removeRole(config.Roles, r)
 			// r.Disable()

@@ -1,6 +1,7 @@
 package dotfile
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"os"
@@ -92,4 +93,23 @@ func ExecCommand(name string, args ...string) (stdout, stderr string, status int
 		}
 	}
 	return
+}
+
+// AskConfirmation ...
+func AskConfirmation(s string) bool {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Printf("%s [y/n]: ", s)
+		res, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not read input from stdin: %s\n", err)
+			os.Exit(1)
+		}
+		res = strings.ToLower(strings.TrimSpace(res))
+		if res == "y" || res == "yes" {
+			return true
+		} else if res == "n" || res == "no" {
+			return false
+		}
+	}
 }

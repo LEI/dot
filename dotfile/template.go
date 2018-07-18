@@ -13,7 +13,7 @@ import (
 
 var (
 	// ClearCache  ...
-	ClearCache = true
+	ClearCache bool // = true
 
 	tplCache = &Cache{} // {Map: map[string]string}
 
@@ -39,11 +39,10 @@ func init() {
 			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
 			os.Exit(1)
 		}
-	} else {
-		if _, err := tplCache.Read(); err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
-			os.Exit(1)
-		}
+	}
+	if _, err := tplCache.Read(); err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
+		os.Exit(1)
 	}
 }
 
@@ -186,11 +185,15 @@ func Template(t *TemplateTask) (bool, error) {
 			return false, err
 		}
 		if !ok {
-			// diff := t.Source // TODO diff?
-			// return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
-			return false, fmt.Errorf("Unable to validate key: %s", t.Target)
+			q := fmt.Sprintf("Overwrite existing template target: %s", t.Target)
+			if !AskConfirmation(q) {
+				// diff := t.Source // TODO diff?
+				// return false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", t.Target, diff)
+				fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", t.Source, t.Target)
+				return false, nil
+			}
 		}
-		fmt.Println("OK FOR TPL", t.Source, t.Target)
+		// fmt.Println("OK FOR TPL", t.Source, t.Target)
 	} // else if str != c && c == "" && OverwriteEmptyFiles {}
 	if Verbose > 1 {
 		fmt.Printf("---START---\n%s\n----END----\n", str)

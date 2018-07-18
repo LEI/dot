@@ -733,7 +733,7 @@ func (r *Role) Do(a string, run []string) error {
 
 // Check if a given task name should be run
 func runTask(s string, filter []string) bool {
-	return dotfile.HasOne([]string{s}, filter)
+	return dotfile.Contains(filter, s)
 }
 
 func splitPath(s string) (src, dst string) {

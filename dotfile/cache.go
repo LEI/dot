@@ -52,8 +52,9 @@ func (c *Cache) Init() *Cache {
 // Get ...
 func (c *Cache) Get(k string) (string, error) {
 	c.Init()
-	key := cacheSerialize(k)
-	v, ok := c.Map[key]
+	// key := cacheSerialize(k)
+	v, ok := c.Map[k]
+	fmt.Println(k, "=>", ok, v)
 	if !ok {
 		return v, ErrCacheKeyNotFound
 	}
@@ -71,11 +72,7 @@ func (c *Cache) Validate(k, v string) (bool, error) {
 	// 	return true, nil
 	// }
 	if err == ErrCacheKeyNotFound {
-		fmt.Println("CACHE KEY NOT FOUND, PUT", k)
-		// err := c.Put(k, v)
-		// if err != nil {
-		// 	return false, err
-		// }
+		fmt.Println("CACHE KEY NOT FOUND", k)
 		return true, nil
 	}
 	return cached == cacheHashValue(v), nil
@@ -86,7 +83,7 @@ func (c *Cache) Put(k, v string) error {
 	c.Init()
 	key := cacheSerialize(k)
 	val := cacheHashValue(v)
-	c.Map[key] = val
+	(*c).Map[key] = val
 	file := filepath.Join(CacheDir, key)
 	fmt.Println("Write cache", file, val)
 	return ioutil.WriteFile(file, []byte(val), FileMode)
@@ -111,8 +108,9 @@ func (c *Cache) Read() (map[string]string, error) {
 			return c.Map, err
 		}
 		v := string(b)
-		c.Map[k] = v
+		(*c).Map[k] = v
 	}
+	fmt.Println("READ", c)
 	return c.Map, nil
 }
 

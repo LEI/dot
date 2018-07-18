@@ -22,7 +22,7 @@ func CreateDir(dir string) (bool, error) {
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	if HasOne([]string{dir}, existingDirs) {
+	if Contains(existingDirs, dir) {
 		return false, ErrDirShouldExist
 	}
 	if err == nil && fi.IsDir() {
@@ -42,7 +42,7 @@ func RemoveDir(dir string) (bool, error) {
 	if err != nil && !os.IsExist(err) {
 		return false, err
 	}
-	if HasOne([]string{dir}, existingDirs) {
+	if Contains(existingDirs, dir) {
 		return false, ErrDirShouldExist
 	}
 	if err == nil && !fi.IsDir() {
