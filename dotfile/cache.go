@@ -102,7 +102,7 @@ func (c *Cache) Validate(k, v string) (bool, error) {
 	// }
 	if err == ErrCacheKeyNotFound {
 		// fmt.Println("Cache key not found", k)
-		return true, nil
+		return false, nil
 	}
 	return cached == cacheHashValue(v), nil
 }

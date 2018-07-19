@@ -30,9 +30,6 @@ var (
 			return ""
 		},
 	}
-
-	// ErrSameFile ...
-	ErrSameFile = fmt.Errorf("same file")
 )
 
 // TemplateTask struct
@@ -146,9 +143,7 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 	if utils.Exist(dst) {
 		overwrite, err := askOverwriteTpl(src, dst, content)
 		if err != nil {
-			if err != ErrSameFile {
-				return false, err
-			}
+			return false, err
 		}
 		if !overwrite {
 			// if err := dotCache.Put(dst, content); err != nil {
@@ -193,9 +188,7 @@ func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 	}
 	overwrite, err := askOverwriteTpl(src, dst, content)
 	if err != nil {
-		if err != ErrSameFile {
-			return false, err
-		}
+		return false, err
 	} else if !overwrite {
 		return false, fmt.Errorf("different untemplate target: %s", dst)
 	}
@@ -242,32 +235,30 @@ func askOverwriteTpl(src, dst, content string) (bool, error) {
 		return false, err
 	}
 	if ok {
-		return false, ErrSameFile // true, ErrSameFile
+		return false, nil
 	}
 	// b, err := ioutil.ReadFile(dst)
 	// if err != nil && os.IsExist(err) {
 	// 	return content, false, err
 	// }
 	// c := string(b) // Current file content
-	if content == c { // Same file content
-		return false, fmt.Errorf("same file content for %s, should be handled by CheckFile", dst)
-	} else if content != c && c != "" {
-		// Target changed
-		ok, err := dotCache.Validate(dst, c)
+	// if content == c { // Same file content
+	// 	return false, fmt.Errorf("same file content for %s, should be handled by CheckFile", dst)
+	// } else if content != c && c != "" { // Target changed
+	valid, err := dotCache.Validate(dst, c)
+	if err != nil {
+		return false, err
+	}
+	if !valid {
+		overwrite, err := tplOverwrite(src, dst, content)
+		// if err != nil || !overwrite {
+		// 	return overwrite, err
+		// }
 		if err != nil {
 			return false, err
 		}
-		if !ok {
-			overwrite, err := tplOverwrite(src, dst, content)
-			// if err != nil || !overwrite {
-			// 	return overwrite, err
-			// }
-			if err != nil {
-				return false, err
-			}
-			if !overwrite {
-				return false, nil
-			}
+		if !overwrite {
+			return false, nil
 		}
 	} // else if content != c && c == "" && OverwriteEmptyFiles {}
 	// if Verbose > 1 {
