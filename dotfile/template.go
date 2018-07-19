@@ -141,16 +141,35 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 		return false, err
 	}
 	if utils.Exist(dst) {
-		overwrite, err := askOverwriteTpl(src, dst, content)
+		c, ok, err := utils.CompareFileContent(dst, content)
 		if err != nil {
 			return false, err
 		}
-		if !overwrite {
-			// if err := dotCache.Put(dst, content); err != nil {
-			// 	return false, err
-			// }
+		if ok {
 			return false, nil
 		}
+		valid, err := dotCache.Validate(dst, c)
+		if err != nil {
+			return false, err
+		}
+		if !valid {
+			overwrite, err := tplOverwrite(src, dst, content)
+			// if err != nil || !overwrite {
+			// 	return overwrite, err
+			// }
+			if err != nil {
+				return false, err
+			}
+			if !overwrite {
+				return false, nil
+			}
+		}
+		// if !overwrite {
+		// 	// if err := dotCache.Put(dst, content); err != nil {
+		// 	// 	return false, err
+		// 	// }
+		// 	return false, nil
+		// }
 		// if !ok {
 		// 	// overwrite, err := tplOverwrite(src, dst, content)
 		// 	// if err != nil || !overwrite {
@@ -186,15 +205,28 @@ func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	overwrite, err := askOverwriteTpl(src, dst, content)
+	c, ok, err := utils.CompareFileContent(dst, content)
 	if err != nil {
 		return false, err
-	} else if !overwrite {
-		return false, fmt.Errorf("different untemplate target: %s", dst)
 	}
-	// if overwrite {
-	// 	return false, nil
-	// }
+	if !ok {
+		valid, err := dotCache.Validate(dst, c)
+		if err != nil {
+			return false, err
+		}
+		if !valid {
+			overwrite, err := tplOverwrite(src, dst, content)
+			// if err != nil || !overwrite {
+			// 	return overwrite, err
+			// }
+			if err != nil {
+				return false, err
+			}
+			if !overwrite {
+				return false, nil
+			}
+		}
+	}
 	if DryRun {
 		return true, nil
 	}
@@ -235,7 +267,9 @@ func askOverwriteTpl(src, dst, content string) (bool, error) {
 		return false, err
 	}
 	if ok {
-		return false, nil
+		// FIXME untemplate?
+		fmt.Println("COMPARED OK", dst)
+		return true, nil // false, nil
 	}
 	// b, err := ioutil.ReadFile(dst)
 	// if err != nil && os.IsExist(err) {
@@ -290,6 +324,7 @@ func tplOverwrite(src, dst, content string) (bool, error) {
 func printDiff(s, content string) error {
 	// stdout, stderr, status := ExecCommand("")
 	diffCmd := exec.Command("diff", s, "-")
+	// --side-by-side --suppress-common-lines
 	stdin, err := diffCmd.StdinPipe()
 	if err != nil {
 		return err
@@ -297,14 +332,14 @@ func printDiff(s, content string) error {
 	defer stdin.Close()
 	diffCmd.Stdout = os.Stdout
 	diffCmd.Stderr = os.Stderr
-	fmt.Println("START")
+	fmt.Println("START DIFF", s)
 	if err := diffCmd.Start(); err != nil {
 		return err
 	}
 	io.WriteString(stdin, content)
-	fmt.Println("WAIT")
+	// fmt.Println("WAIT")
 	stdin.Close()
 	diffCmd.Wait()
-	fmt.Println("END")
+	fmt.Println("END DIFF", s)
 	return nil
 }
