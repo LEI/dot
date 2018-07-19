@@ -68,20 +68,16 @@ func Copy(src, dst string) (bool, error) {
 			return false, err
 		}
 		if ok {
+			// TODO: c
+			// if err := dotCache.Put(dst, c); err != nil {
+			// 	return false, err
+			// }
 			return false, nil
 		}
 		if !ok {
 			return false, fmt.Errorf("different copy target: %s", dst)
 		}
 	}
-	/*fi, err := os.Stat(src)
-	if err != nil {
-		return false, err
-	}
-	if !fi.Mode().IsRegular() {
-		// cannot copy non-regular files (e.g., directories, symlinks, devices, etc.)
-		return false, fmt.Errorf("Copy: non-regular source file %s (%q)", fi.Name(), fi.Mode().String())
-	}*/
 	in, err := os.Open(src)
 	if err != nil {
 		return false, err
@@ -115,29 +111,14 @@ func Copy(src, dst string) (bool, error) {
 		return false, err
 	}
 	return true, nil
-
-	// str, err := t.Parse()
-	// if err != nil {
-	// 	return false, err
-	// }
-	// b, err := ioutil.ReadFile(t.Target)
-	// if err != nil && os.IsExist(err) {
-	// 	return false, err
-	// }
-	// if str == string(b) {
-	// 	return false, nil
-	// }
-	// if DryRun {
-	// 	return true, nil
-	// }
-	// if err := ioutil.WriteFile(t.Target, []byte(str), FileMode); err != nil {
-	// 	return false, err
-	// }
 }
 
 // Uncopy task
 func Uncopy(src, dst string) (bool, error) {
 	if !utils.Exist(dst) {
+		// if err := dotCache.Del(dst); err != nil {
+		// 	return false, err
+		// }
 		return false, nil
 	}
 	ok, err := checkCopy(src, dst)
@@ -147,21 +128,6 @@ func Uncopy(src, dst string) (bool, error) {
 	if !ok {
 		return false, fmt.Errorf("different uncopy target: %s", dst)
 	}
-	// str, err := t.Parse()
-	// if err != nil {
-	// 	return false, err
-	// }
-	// b, err := ioutil.ReadFile(t.Target)
-	// if err != nil && os.IsExist(err) {
-	// 	return false, err
-	// }
-	// if len(b) == 0 { // Empty file
-	// 	return false, nil
-	// }
-	// if str != string(b) { // Mismatching content
-	// 	fmt.Printf("Warn: mismatching content %s\n", t.Target)
-	// 	return false, nil
-	// }
 	if DryRun {
 		return true, nil
 	}

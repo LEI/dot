@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	// "strings"
+
+	"github.com/LEI/dot/utils"
 )
 
 var (
@@ -20,25 +22,13 @@ var (
 	// ErrCacheKeyNotFound ...
 	ErrCacheKeyNotFound = fmt.Errorf("cache entry not found")
 
-	dotCache = &Cache{Map: map[string]string{}}
+	dotCache *Cache
 )
 
 func init() {
 	CacheDir = os.ExpandEnv("$HOME/.cache/dot")
-	_, err := CreateDir(CacheDir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create directory: %s", CacheDir)
-		os.Exit(1)
-	}
-	if ClearCache {
-		if err := dotCache.Clear(); err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
-			os.Exit(1)
-		}
-	} else if _, err := dotCache.Read(); err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
-		os.Exit(1)
-	}
+
+	dotCache = NewCache() // &Cache{Map: map[string]string{}}
 }
 
 // Cache ...
@@ -49,6 +39,19 @@ type Cache struct {
 	Map map[string]string
 }
 
+// NewCache ...
+func NewCache() *Cache {
+	c := &Cache{
+		Map: map[string]string{},
+	}
+	return c.New() // .Init()
+}
+
+// InitCache ...
+func InitCache() {
+	dotCache.Init()
+}
+
 // New ...
 func (c *Cache) New() *Cache {
 	return &Cache{Map: map[string]string{}}
@@ -57,14 +60,28 @@ func (c *Cache) New() *Cache {
 // Init ...
 func (c *Cache) Init() *Cache {
 	if c.Map == nil {
-		*c = *c.New()
+		// *c = *c.New()
+		c.Map = make(map[string]string, 0)
+	}
+	_, err := CreateDir(CacheDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create directory: %s", CacheDir)
+		os.Exit(1)
+	}
+	if ClearCache {
+		if err := c.Clear(); err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
+			os.Exit(1)
+		}
+	} else if _, err := c.Read(); err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
+		os.Exit(1)
 	}
 	return c
 }
 
 // Get ...
 func (c *Cache) Get(k string) (string, error) {
-	c.Init()
 	// key := cacheSerialize(k)
 	v, ok := c.Map[k]
 	if !ok {
@@ -80,11 +97,11 @@ func (c *Cache) Validate(k, v string) (bool, error) {
 		return false, err
 	}
 	// if cached == "" {
-	// 	fmt.Println("VALIDATED EMPTY CACHE", k, cacheHashValue(v))
+	// 	fmt.Println("Validated empty cache", k, cacheHashValue(v))
 	// 	return true, nil
 	// }
 	if err == ErrCacheKeyNotFound {
-		fmt.Println("CACHE KEY NOT FOUND", k)
+		// fmt.Println("Cache key not found", k)
 		return true, nil
 	}
 	return cached == cacheHashValue(v), nil
@@ -92,7 +109,6 @@ func (c *Cache) Validate(k, v string) (bool, error) {
 
 // Put ...
 func (c *Cache) Put(k, v string) error {
-	c.Init()
 	key := cacheSerialize(k)
 	val := cacheHashValue(v)
 	c.Map[key] = val // (*c)
@@ -103,24 +119,23 @@ func (c *Cache) Put(k, v string) error {
 
 // Del ...
 func (c *Cache) Del(k string) error {
-	c.Init()
-
-	nc := c.New()
+	m := make(map[string]string, 0)
 	for key, val := range c.Map {
 		if key != k {
-			nc.Map[key] = val
+			m[key] = val
 		}
 	}
-	c = nc
-
+	c.Map = m
 	key := cacheSerialize(k)
 	file := filepath.Join(CacheDir, key)
+	if !utils.Exist(file) {
+		return nil
+	}
 	return os.Remove(file)
 }
 
 // Read ...
 func (c *Cache) Read() (map[string]string, error) {
-	c.Init()
 	list, err := c.List()
 	if err != nil {
 		return c.Map, err
@@ -161,7 +176,7 @@ func (c *Cache) List() ([]string, error) {
 
 // Clear ...
 func (c *Cache) Clear() error {
-	c = c.New()
+	c.Map = make(map[string]string, 0)
 	list, err := c.List()
 	if err != nil {
 		return err

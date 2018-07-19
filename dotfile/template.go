@@ -30,6 +30,9 @@ var (
 			return ""
 		},
 	}
+
+	// ErrSameFile ...
+	ErrSameFile = fmt.Errorf("same file")
 )
 
 // TemplateTask struct
@@ -141,26 +144,32 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 		return false, err
 	}
 	if utils.Exist(dst) {
-		ok, err := checkTpl(src, dst, content)
+		overwrite, err := askOverwriteTpl(src, dst, content)
 		if err != nil {
-			return false, err
+			if err != ErrSameFile {
+				return false, err
+			}
 		}
-		if ok {
+		if !overwrite {
+			// if err := dotCache.Put(dst, content); err != nil {
+			// 	return false, err
+			// }
 			return false, nil
 		}
-		if !ok {
-			// changed, err := tplOverwrite(src, dst, content)
-			// if err != nil || !changed {
-			// 	return changed, err
-			// }
-			return false, fmt.Errorf("different template target: %s", dst)
-		}
+		// if !ok {
+		// 	// overwrite, err := tplOverwrite(src, dst, content)
+		// 	// if err != nil || !overwrite {
+		// 	// 	return overwrite, err
+		// 	// }
+		// 	return false, fmt.Errorf("different template target: %s", dst)
+		// }
 	}
 	if DryRun {
 		return true, nil
 	}
 	// fmt.Println("------------------- xxx", content, "xxx")
 	// fmt.Println("------------------- yyy", c, "yyy")
+	// fmt.Println("WRITE", content, "ENDWRITE")
 	if err := ioutil.WriteFile(dst, []byte(content), FileMode); err != nil {
 		return false, err
 	}
@@ -173,32 +182,25 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 // Untemplate task
 func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 	if !utils.Exist(dst) {
+		if err := dotCache.Del(dst); err != nil {
+			return false, err
+		}
 		return false, nil
 	}
 	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
-	ok, err := checkTpl(src, dst, content)
+	overwrite, err := askOverwriteTpl(src, dst, content)
 	if err != nil {
-		return false, err
-	}
-	// if ok {
-	// 	return false, nil
-	// }
-	if !ok {
+		if err != ErrSameFile {
+			return false, err
+		}
+	} else if !overwrite {
 		return false, fmt.Errorf("different untemplate target: %s", dst)
 	}
-	// b, err := ioutil.ReadFile(t.Target)
-	// if err != nil && os.IsExist(err) {
-	// 	return false, err
-	// }
-	// if len(b) == 0 { // Empty file
+	// if overwrite {
 	// 	return false, nil
-	// }
-	// c := string(b) // Current file content
-	// if content != c && c != "" {
-	// 	return false, fmt.Errorf("# /!\\ Template content mismatch: %s", t.Target)
 	// }
 	if DryRun {
 		return true, nil
@@ -234,13 +236,13 @@ func parseTpl(src string, data map[string]interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-func checkTpl(src, dst, content string) (bool, error) {
+func askOverwriteTpl(src, dst, content string) (bool, error) {
 	c, ok, err := utils.CompareFileContent(dst, content)
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		return true, nil
+		return false, ErrSameFile // true, ErrSameFile
 	}
 	// b, err := ioutil.ReadFile(dst)
 	// if err != nil && os.IsExist(err) {
@@ -256,9 +258,15 @@ func checkTpl(src, dst, content string) (bool, error) {
 			return false, err
 		}
 		if !ok {
-			changed, err := tplOverwrite(src, dst, content)
-			if err != nil || !changed {
-				return changed, err
+			overwrite, err := tplOverwrite(src, dst, content)
+			// if err != nil || !overwrite {
+			// 	return overwrite, err
+			// }
+			if err != nil {
+				return false, err
+			}
+			if !overwrite {
+				return false, nil
 			}
 		}
 	} // else if content != c && c == "" && OverwriteEmptyFiles {}
@@ -278,6 +286,9 @@ func tplOverwrite(src, dst, content string) (bool, error) {
 		// return content, false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", dst, diff)
 		fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", src, dst)
 		return false, nil
+	}
+	if DryRun {
+		return true, nil
 	}
 	if err := Backup(dst); err != nil {
 		return false, err

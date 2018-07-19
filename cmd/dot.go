@@ -45,6 +45,8 @@ type DotCmd struct {
 	// Debug bool `short:"D" long:"debug" description:""`
 	DryRun bool `short:"d" long:"dry-run" description:"Do not execute tasks"`
 
+	ClearCache bool `short:"C" long:"clear" description:"Wipe local cache"`
+
 	// Slice of bool will append 'true' each time the option
 	// is encountered (can be set multiple times, like -vvv)
 	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
@@ -75,10 +77,17 @@ func Parse() ([]string, error) {
 	// Update variables
 	source = dotfile.ExpandEnv(string(Options.Source))
 	target = dotfile.ExpandEnv(string(Options.Target))
+
 	dotfile.DryRun = Options.DryRun
+
+	dotfile.ClearCache = Options.ClearCache
+	dotfile.InitCache()
+
+	dotfile.RemoveEmptyDirs = Options.RemoveEmptyDirs
+
 	Verbose = len(Options.Verbose)
 	dotfile.Verbose = Verbose
-	dotfile.RemoveEmptyDirs = Options.RemoveEmptyDirs
+
 	// WriteIniConfig(parser)
 	return remaining, err
 }
