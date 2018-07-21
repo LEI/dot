@@ -22,7 +22,7 @@ func main() {
 	// cmd.Options.Source = "" // .
 	// cmd.Options.Target = "$HOME" // os.Getenv("HOME")
 	cmd.Options.Config = func(name string) error {
-		fmt.Println("Config flag:", name)
+		//fmt.Println("Config flag:", name)
 		cfgPath, err := cmd.FindConfig(name)
 		if err != nil {
 			return err

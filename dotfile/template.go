@@ -17,6 +17,11 @@ import (
 
 var (
 	tplFuncMap = template.FuncMap{
+		// https://github.com/hashicorp/consul-template/blob/de2ebf4/template_functions.go#L727-L901
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"title": strings.Title,
 		"lcFirst": func(s string) string {
 			for i, v := range s {
 				return string(unicode.ToLower(v)) + s[i+1:]
@@ -242,12 +247,6 @@ func Untemplate(src, dst string, data map[string]interface{}) (bool, error) {
 func parseTpl(src string, data map[string]interface{}) (string, error) {
 	_, name := filepath.Split(src)
 	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(src)
-	// b, err := ioutil.ReadFile(src)
-	// c := string(b) // Template file content
-	// if err != nil && os.IsExist(err) {
-	// 	return c, err
-	// }
-	// tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).Parse(c)
 	if err != nil {
 		return "", err
 	}
