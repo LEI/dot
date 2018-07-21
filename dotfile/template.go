@@ -311,9 +311,9 @@ func tplOverwrite(src, dst, content string) (bool, error) {
 		fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", src, dst)
 		return false, nil
 	}
-	if DryRun {
-		return true, nil
-	}
+	// if DryRun {
+	// 	return true, nil
+	// }
 	if err := Backup(dst); err != nil {
 		return false, err
 	}

@@ -78,6 +78,9 @@ func Copy(src, dst string) (bool, error) {
 			return false, fmt.Errorf("different copy target: %s", dst)
 		}
 	}
+	if DryRun {
+		return true, nil
+	}
 	in, err := os.Open(src)
 	if err != nil {
 		return false, err

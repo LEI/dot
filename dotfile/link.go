@@ -125,9 +125,15 @@ func Link(src, dst string) (bool, error) {
 		return false, nil
 	}
 	if real != "" {
-		fmt.Fprintf(os.Stderr, "# %s is a link to %s, not %s\n", dst, real, src)
-		// os.Exit(1)
-		return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
+		// return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
+		q := fmt.Sprintf("Replace %s link to %s with %s", dst, real, src)
+		if !AskConfirmation(q) {
+			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target exists: %s", src, dst)
+			return false, nil
+		}
+		// if err := Backup(dst); err != nil {
+		// 	return false, err
+		// }
 	}
 	if err != nil && os.IsExist(err) {
 		return false, err

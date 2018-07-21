@@ -32,6 +32,7 @@ func Backup(src string) error {
 	if _, err := os.Stat(src); os.IsExist(err) {
 		return fmt.Errorf("could not make backup of %s to %s: destination already exists", src, dst)
 	}
+	// FIXME no such file or directory
 	changed, err := Copy(src, dst)
 	if err != nil {
 		return fmt.Errorf("could not make backup of %s to: %s: %s", src, dst, err)
