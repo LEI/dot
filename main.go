@@ -90,7 +90,7 @@ func execute(options *cmd.DotCmd) error {
 	// listOnly := dotfile.Contains(cmd.RunOnly, "list")
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
-	enabledCount := 0
+	// enabledCount := 0
 	for _, r := range config.Roles {
 		if len(options.RoleFilter) > 0 && !dotfile.Contains(options.RoleFilter, r.Name) {
 			// fmt.Fprintf(os.Stderr, "# [%s] Skipping (filtered)\n", r.Name)
@@ -108,13 +108,14 @@ func execute(options *cmd.DotCmd) error {
 				continue
 			}
 		}
-		enabledCount++
+		// enabledCount++
 	}
 	// Compute length after removing roles
 	length := len(config.Roles)
 	if length == 0 {
 		return fmt.Errorf("# No roles, at least for this OS")
 	}
+	// Sync roles
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
 		go func(r *cmd.Role) {
@@ -158,9 +159,10 @@ func execute(options *cmd.DotCmd) error {
 			return err
 		}
 	}
-	if enabledCount == 0 {
-		return fmt.Errorf("# No roles to execute in: %s", config.Roles)
-	}
+	// if enabledCount == 0 {
+	// 	return fmt.Errorf("# No roles to execute in: %s", config.Roles)
+	// }
+	// TODO: sync missing roles enabled by dependencies
 	switch cmd.Action {
 	case "install":
 		// Resolve dependencies

@@ -93,28 +93,39 @@ func (c *Config) Require() error {
 	if c.IgnoreDeps {
 		return nil
 	}
-CHECK:
+	// CHECK:
 	for _, role := range c.Roles {
-		if !role.IsEnabled() {
-			continue
-		}
-		if len(role.Deps) < 0 {
-			continue
-		}
-		for _, dep := range role.Deps {
-			for _, r := range c.Roles {
-				if r.Name == dep {
-					fmt.Println(role.Name, "requires", r.Name)
-					if !r.IsEnabled() {
-						r.Enable()
-					}
-					continue CHECK
-				}
-			}
-			return fmt.Errorf("unable to resolve %s dependency: %s", role.Name, dep)
+		if err := c.RequireRole(role); err != nil {
+			return err
 		}
 	}
 	// TODO: sort
+	return nil
+}
+
+// RequireRole ...
+func (c *Config) RequireRole(role *Role) error {
+	if c.IgnoreDeps {
+		return nil
+	}
+	if !role.IsEnabled() {
+		return nil
+	}
+	if len(role.Deps) < 0 {
+		return nil
+	}
+	for _, dep := range role.Deps {
+		for _, r := range c.Roles {
+			if r.Name == dep {
+				fmt.Println(role.Name, "requires", r.Name)
+				if !r.IsEnabled() {
+					r.Enable()
+				}
+				return nil // continue CHECK
+			}
+		}
+		return fmt.Errorf("unable to resolve %s dependency: %s", role.Name, dep)
+	}
 	return nil
 }
 
