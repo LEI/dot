@@ -14,9 +14,8 @@ set -e
 DOT_REPO="github.com/LEI/dot"
 JOBBER_REPO="github.com/LEI/jobber"
 # JOBBER_REPO="github.com/dshearer/jobber"
-# JOBBER_BRANCH="v1.3.2" # undefined sudo_cmd
-JOBBER_VER="v1.3.1"
-JOBBER_SRC_HASH="8d8cdeb941710e168f8f63abbfc06aab2aadfdfc22b3f6de7108f56403860476"
+# JOBBER_VER="v1.3.2"
+# JOBBER_SRC_HASH="8d8cdeb941710e168f8f63abbfc06aab2aadfdfc22b3f6de7108f56403860476"
 
 has() {
   hash "$1" 2> /dev/null
