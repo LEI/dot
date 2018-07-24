@@ -2,30 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/absfs/absfs"
-  packages = ["."]
-  revision = "872ab3c5d329bb7e2b8a8363a8c867f8d03724ce"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/absfs/basefs"
-  packages = ["."]
-  revision = "5cbf30a70b0c1cc478ea4cc49ed4952303435b90"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/absfs/osfs"
-  packages = ["."]
-  revision = "dc906a79b13c8e3ca168467c778139456402c2bc"
-
-[[projects]]
-  name = "github.com/fatih/color"
-  packages = ["."]
-  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
-  version = "v1.7.0"
-
-[[projects]]
   name = "github.com/imdario/mergo"
   packages = ["."]
   revision = "9316a62528ac99aaecb4e47eadd6dc8aa6533d58"
@@ -38,24 +14,6 @@
   version = "v1.4.0"
 
 [[projects]]
-  name = "github.com/mattn/go-colorable"
-  packages = ["."]
-  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
-  version = "v0.0.9"
-
-[[projects]]
-  name = "github.com/mattn/go-isatty"
-  packages = ["."]
-  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
-  version = "v0.0.3"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/sys"
-  packages = ["unix"]
-  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
-
-[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -64,6 +22,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8891aa8f8c5aed0ccddc1d60d2fc432069bc6a1cb5e8bc5d2840af247ecd9e51"
+  inputs-digest = "ea3eec65560c4c8571ff9573b364eeaa83d8e36532dd16187f3fd4e74ae52f2e"
   solver-name = "gps-cdcl"
   solver-version = 1

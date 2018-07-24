@@ -81,12 +81,12 @@ func Copy(src, dst string) (bool, error) {
 	if DryRun {
 		return true, nil
 	}
-	in, err := fs.Open(src)
+	in, err := os.Open(src)
 	if err != nil {
 		return false, err
 	}
 	defer in.Close()
-	out, err := fs.Create(dst)
+	out, err := os.Create(dst)
 	if err != nil {
 		return false, err
 	}
@@ -134,7 +134,7 @@ func Uncopy(src, dst string) (bool, error) {
 	if DryRun {
 		return true, nil
 	}
-	if err := fs.Remove(dst); err != nil {
+	if err := os.Remove(dst); err != nil {
 		return false, err
 	}
 	if err := dotCache.Del(dst); err != nil {
