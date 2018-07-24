@@ -175,5 +175,14 @@ func execute(options *cmd.DotCmd) error {
 			// }
 		}
 	}
-	return config.Do(cmd.Action, cmd.RunOnly)
+	// Install, remove...
+	if err := config.Do(cmd.Action, cmd.RunOnly); err != nil {
+		return err
+	}
+	switch cmd.Action {
+	case "remove":
+		if err := config.ClearCache(); err != nil {
+			return err
+		}
+	}
 }

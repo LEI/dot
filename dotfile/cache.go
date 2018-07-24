@@ -31,14 +31,6 @@ func init() {
 	dotCache = NewCache() // &Cache{Map: map[string]string{}}
 }
 
-// Cache ...
-type Cache struct {
-	// FIXME: allow different cache types
-	// (copies, templates...) TODO init
-	// Dir string
-	Map map[string]string
-}
-
 // NewCache ...
 func NewCache() *Cache {
 	c := &Cache{
@@ -50,6 +42,36 @@ func NewCache() *Cache {
 // InitCache ...
 func InitCache() {
 	dotCache.Init()
+}
+
+/*// ClearCache ...
+func ClearCache() error {
+	list, err := dotCache.List()
+	if err != nil {
+		return err
+	}
+	for _, f := range list {
+		k, err := cacheUnserialize(f)
+		if err != nil {
+			return err
+		}
+		// TODO: check k!
+		// if err := os.Remove(k); err != nil {
+		// 	return err
+		// }
+		if err := os.Remove(f); err != nil {
+			return err
+		}
+	}
+	return nil
+}*/
+
+// Cache ...
+type Cache struct {
+	// FIXME: allow different cache types
+	// (copies, templates...) TODO init
+	// Dir string
+	Map map[string]string
 }
 
 // New ...
