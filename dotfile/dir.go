@@ -16,7 +16,7 @@ var (
 
 // CreateDir ...
 func CreateDir(dir string) (bool, error) {
-	fi, err := os.Stat(dir)
+	fi, err := fs.Stat(dir)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
@@ -31,12 +31,12 @@ func CreateDir(dir string) (bool, error) {
 	if DryRun {
 		return true, nil
 	}
-	return true, os.MkdirAll(dir, DirMode)
+	return true, fs.MkdirAll(dir, DirMode)
 }
 
 // RemoveDir ...
 func RemoveDir(dir string) (bool, error) {
-	fi, err := os.Stat(dir)
+	fi, err := fs.Stat(dir)
 	if err != nil && !os.IsExist(err) {
 		return false, err
 	}
@@ -52,7 +52,7 @@ func RemoveDir(dir string) (bool, error) {
 		return true, nil
 	}
 	// RemoveAll for recursive
-	return true, os.Remove(dir)
+	return true, fs.Remove(dir)
 }
 
 // Cache directories for dry-run mode output

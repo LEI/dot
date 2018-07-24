@@ -131,7 +131,7 @@ func (c *Cache) Del(k string) error {
 	if !utils.Exist(file) {
 		return nil
 	}
-	return os.Remove(file)
+	return fs.Remove(file)
 }
 
 // Read ...
@@ -182,7 +182,7 @@ func (c *Cache) Clear() error {
 		return err
 	}
 	for _, f := range list {
-		if err := os.Remove(f); err != nil {
+		if err := fs.Remove(f); err != nil {
 			return err
 		}
 	}

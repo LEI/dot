@@ -24,18 +24,6 @@ var (
 	sudo   bool
 )
 
-func init() {
-	if has(PACMAN) {
-		// Arch Linux
-		pacBin = PACMAN
-	} else {
-		// Unices
-		pacBin = PACAPT
-		downloadFromURL(PACAPTURL, PACAPT, 0755)
-		// execute("sudo", "chmod", "+x", PACAPT)
-	}
-}
-
 func has(p string) bool {
 	path, err := exec.LookPath(p)
 	if err != nil {
@@ -55,25 +43,35 @@ func PacRemove(args ...string) error {
 }
 
 func pacDo(a string, args ...string) error {
-	pa := []string{} // pacapt args
+	// Init
+	if has(PACMAN) {
+		// Arch Linux
+		pacBin = PACMAN
+	} else {
+		// Unices
+		pacBin = PACAPT
+		downloadFromURL(PACAPTURL, PACAPT, 0755)
+		// execute("sudo", "chmod", "+x", PACAPT)
+	}
+	pacArgs := []string{}
 	switch strings.ToLower(a) {
 	case "install":
-		pa = append(pa, "-S")
+		pacArgs = append(pacArgs, "-S")
 	// case "remove":
-	// 	pa = append(pa, "-R")
+	// 	pacArgs = append(pacArgs, "-R")
 	default:
 		fmt.Println("abort pacDo")
 		return nil
 	}
 	// if HasOSType("darwin") {
-	pa = append(pa, "--noconfirm")
+	pacArgs = append(pacArgs, "--noconfirm")
 	// }
-	pa = append(pa, args...)
+	pacArgs = append(pacArgs, args...)
 	if sudo {
-		pa = append([]string{pacBin}, pa...)
-		return execute("sudo", pa...)
+		pacArgs = append([]string{pacBin}, pacArgs...)
+		return execute("sudo", pacArgs...)
 	}
-	return execute(pacBin, pa...)
+	return execute(pacBin, pacArgs...)
 }
 
 func downloadFromURL(url, dst string, perm os.FileMode) {
