@@ -1,12 +1,12 @@
 package parsers
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
-var pkgTests = []struct{
-	in interface{}
+var pkgTests = []struct {
+	in  interface{}
 	out *Pkg
 }{
 	{"a", &Pkg{Name: "a"}},

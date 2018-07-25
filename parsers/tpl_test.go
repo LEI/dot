@@ -1,12 +1,12 @@
 package parsers
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
-var tplTests = []struct{
-	in interface{}
+var tplTests = []struct {
+	in  interface{}
 	out *Tpl
 }{
 	{"a", &Tpl{Source: "a"}},

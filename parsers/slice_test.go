@@ -1,12 +1,12 @@
 package parsers
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
-var sliceTests = []struct{
-	in interface{}
+var sliceTests = []struct {
+	in  interface{}
 	out []string
 }{
 	{"a", []string{"a"}},

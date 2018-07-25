@@ -4,13 +4,12 @@ import (
 	// "fmt"
 	// "os"
 	"testing"
-
 	// "golang.org/x/tools/godoc/vfs"
 )
 
-var copyTests = []struct{
+var copyTests = []struct {
 	// in *CopyTask
-	in string
+	in  string
 	out string
 }{
 	// {&CopyTask{Source:"a", Target:"b"}, "c"},

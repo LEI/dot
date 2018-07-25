@@ -1,17 +1,17 @@
 package parsers
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
-var mapTests = []struct{
-	in struct{
+var mapTests = []struct {
+	in struct {
 		key, val string
 	}
 	out map[string]string
 }{
-	{struct{key, val string}{"a", ""}, map[string]string{"a": ""}},
+	{struct{ key, val string }{"a", ""}, map[string]string{"a": ""}},
 	// {[]string{"a"}, map[string]string{"a": ""}},
 }
 

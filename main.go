@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	config *Config = &Config{} // {Name: ".dot"}
+	config         *Config = &Config{} // {Name: ".dot"}
 	configFileUsed string
 )
 

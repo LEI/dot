@@ -121,7 +121,7 @@ var (
 
 	source, target string
 
-	parser         = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
+	parser = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
 )
 
 func init() {
