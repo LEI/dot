@@ -27,19 +27,19 @@ var (
 type Task interface {
 	String() string
 	// Register(interface{}) error
-	Install() error
-	Remove() error
-	Do(string) error
+	Install() (string, error)
+	Remove() (string, error)
+	Do(string) (string, error)
 }
 
-func do(t Task, a string) (err error) {
+func do(t Task, a string) (str string, err error) {
 	switch a {
 	case "Install":
-		err = t.Install()
+		str, err = t.Install()
 	case "Remove":
-		err = t.Remove()
+		str, err = t.Remove()
 	default: // Unhandled action
-		return fmt.Errorf("unknown task function: %s", a)
+		err = fmt.Errorf("unknown task function: %s", a)
 	}
 	return
 }

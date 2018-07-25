@@ -14,44 +14,42 @@ type LineTask struct {
 }
 
 // Do ...
-func (t *LineTask) Do(a string) error {
+func (t *LineTask) Do(a string) (string, error) {
 	return do(t, a)
 }
 
 // Install line
-func (t *LineTask) Install() error {
+func (t *LineTask) Install() (string, error) {
 	if err := createBaseDir(t.File); err != nil && err != ErrDirShouldExist {
-		return err
+		return "", err
 	}
 	changed, err := LineInFile(t.File, t.Line)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
 		prefix = "# "
 	}
-	fmt.Printf("%secho '%s' >> %s\n", prefix, t.Line, t.File)
-	return nil
+	return fmt.Sprintf("%secho '%s' >> %s", prefix, t.Line, t.File), nil
 }
 
 // Remove line
-func (t *LineTask) Remove() error {
+func (t *LineTask) Remove() (string, error) {
 	changed, err := LineOutFile(t.File, t.Line)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
 		prefix = "# "
 	}
-	fmt.Printf("%ssed -i '#^%s$#d' %s\n", prefix, t.Line, t.File)
 	if RemoveEmptyDirs {
 		if err := removeBaseDir(t.File); err != nil {
-			return err
+			return "", err
 		}
 	}
-	return nil
+	return fmt.Sprintf("%ssed -i '#^%s$#d' %s", prefix, t.Line, t.File), nil
 }
 
 // LineInFile task

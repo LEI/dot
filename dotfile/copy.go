@@ -18,44 +18,42 @@ type CopyTask struct {
 }
 
 // Do ...
-func (t *CopyTask) Do(a string) error {
+func (t *CopyTask) Do(a string) (string, error) {
 	return do(t, a)
 }
 
 // Install copy
-func (t *CopyTask) Install() error {
+func (t *CopyTask) Install() (string, error) {
 	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
-		return err
+		return "", err
 	}
 	changed, err := Copy(t.Source, t.Target)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
 		prefix = "# "
 	}
-	fmt.Printf("%scp %s %s\n", prefix, t.Source, t.Target)
-	return nil
+	return fmt.Sprintf("%scp %s %s", prefix, t.Source, t.Target), nil
 }
 
 // Remove copy
-func (t *CopyTask) Remove() error {
+func (t *CopyTask) Remove() (string, error) {
 	changed, err := Uncopy(t.Source, t.Target)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
 		prefix = "# "
 	}
-	fmt.Printf("%srm %s\n", prefix, t.Target)
 	if RemoveEmptyDirs {
 		if err := removeBaseDir(t.Target); err != nil {
-			return err
+			return "", err
 		}
 	}
-	return nil
+	return fmt.Sprintf("%srm %s", prefix, t.Target), nil
 }
 
 // Copy task

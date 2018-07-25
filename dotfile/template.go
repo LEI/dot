@@ -48,25 +48,25 @@ type TemplateTask struct {
 }
 
 // Do ...
-func (t *TemplateTask) Do(a string) error {
+func (t *TemplateTask) Do(a string) (string, error) {
 	return do(t, a)
 }
 
 // Install template
-func (t *TemplateTask) Install() error {
+func (t *TemplateTask) Install() (string, error) {
 	// if utils.Exist(dst) {
-	// 	return nil
+	// 	return "", nil
 	// }
 	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
-		return err
+		return "", err
 	}
 	data, err := t.Data()
 	if err != nil {
-		return err
+		return "", err
 	}
 	changed, err := Template(t.Source, t.Target, data)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
@@ -85,19 +85,18 @@ func (t *TemplateTask) Install() error {
 
 	// TODO? github.com/tsg/gotpl with option missingkey=zero
 	// fmt.Printf("%sgotpl %s <<'EOF' | tee %s\n%s\nEOF\n", prefix, t.Source, t.Target, strings.Join(vars, "\n"))
-	fmt.Printf("%stpl %s -> %s\n", prefix, t.Source, t.Target)
-	return nil
+	return fmt.Sprintf("%stpl %s -> %s", prefix, t.Source, t.Target), nil
 }
 
 // Remove template
-func (t *TemplateTask) Remove() error {
+func (t *TemplateTask) Remove() (string, error) {
 	data, err := t.Data()
 	if err != nil {
-		return err
+		return "", err
 	}
 	changed, err := Untemplate(t.Source, t.Target, data)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
@@ -106,13 +105,12 @@ func (t *TemplateTask) Remove() error {
 	/*for k, v := range t.Env { // + dotEnv
 		fmt.Printf("%s=\"%s\"\n", k, v)
 	}*/
-	fmt.Printf("%srm %s\n", prefix, t.Target)
 	if RemoveEmptyDirs {
 		if err := removeBaseDir(t.Target); err != nil {
-			return err
+			return "", err
 		}
 	}
-	return nil
+	return fmt.Sprintf("%srm %s", prefix, t.Target), nil
 }
 
 // Data ...

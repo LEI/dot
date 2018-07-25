@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/imdario/mergo"
 	// "github.com/jessevdk/go-flags"
 
 	"github.com/LEI/dot/dotfile"
@@ -173,9 +174,21 @@ func execute(options *DotCmd) error {
 			// }
 		}
 	}
-	// Install, remove...
-	if err := config.Do(Action, RunOnly); err != nil {
-		return err
+	// // Install, remove...
+	// if err := config.Do(Action, RunOnly); err != nil {
+	// 	return err
+	// }
+	for _, r := range config.Roles {
+		// Skip disabled roles
+		if !r.IsEnabled() {
+			continue
+		}
+		// if err := r.Prepare(); err != nil {
+		// 	return err
+		// }
+		if err := do(r, Action); err != nil {
+			return err
+		}
 	}
 	// switch Action {
 	// case "remove":
@@ -184,4 +197,155 @@ func execute(options *DotCmd) error {
 	// 	}
 	// }
 	return nil
+}
+
+func do(r *Role, a string) error {
+	if shouldRunTask("list") {
+		// Just print the role fields
+		fmt.Printf("# Role %+v\n", r.Print(Verbose > 0))
+		return nil
+	}
+	fmt.Printf("# Role: %+v\n", r.Name)
+	// originalEnv := dotfile.GetEnv() // Saved in dotfile.OriginalEnv
+	if r.Env != nil {
+		for k, v := range r.Env {
+			k = strings.ToTitle(k)
+			// Set role environment
+			if err := dotfile.SetEnv(k, v); err != nil {
+				// fmt.Fprintf(os.Stderr, err)
+				return err
+			}
+		}
+	}
+	// Pre-install/remove hook
+	a = strings.Title(a)
+	v := r.GetField(a)
+	if !v.IsValid() {
+		return fmt.Errorf("could not get field %s: %s / %s", a, v, a)
+	}
+	before := v.Interface().([]string)
+	if len(before) > 0 && shouldRunTask("exec") {
+		for _, c := range before {
+			task := &dotfile.ExecTask{
+				Cmd: c,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	// System packages
+	if r.Pkg != nil && Options.Packages && shouldRunTask("package") {
+		for _, v := range r.Pkg {
+			if v.OS != nil && len(v.OS) > 0 && !dotfile.HasOSType(v.OS.Value()...) {
+				continue
+			}
+			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(a) {
+				continue
+			}
+			task := &dotfile.PkgTask{
+				Name: v.Name,
+				Sudo: Options.Sudo,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	// NOOP: Copies
+	if r.Copies != nil && shouldRunTask("copy") {
+		for s, t := range r.Copies {
+			task := &dotfile.CopyTask{
+				Source: s,
+				Target: t,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	// Line in file
+	if r.Lines != nil && shouldRunTask("line") {
+		for s, t := range r.Lines {
+			task := &dotfile.LineTask{
+				File: s,
+				Line: t,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	// Symlink files
+	if r.Links != nil && shouldRunTask("link") {
+		for s, t := range r.Links {
+			task := &dotfile.LinkTask{
+				Source: s,
+				Target: t,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	// Templates
+	if r.Templates != nil && shouldRunTask("template") {
+		for _, t := range r.Templates {
+			env := r.Env // map[string]string{}
+			if err := mergo.Merge(&env, t.Env); err != nil {
+				return err
+			}
+			vars := r.Vars // map[string]interface{}{}
+			if err := mergo.Merge(&vars, t.Vars); err != nil {
+				return err
+			}
+			task := &dotfile.TemplateTask{
+				Source: t.Source,
+				Target: t.Target,
+				Env:    env,
+				Vars:   vars,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	// Restore original environment
+	if r.Env != nil {
+		if err := dotfile.RestoreEnv(dotfile.OriginalEnv); err != nil {
+			return nil
+		}
+	}
+	// Post-install/remove hook
+	after := r.GetField("Post" + a).Interface().([]string)
+	if len(after) > 0 && shouldRunTask("exec") {
+		for _, c := range after {
+			task := &dotfile.ExecTask{
+				Cmd: c,
+			}
+			str, err := task.Do(a)
+			if err != nil {
+				return err
+			}
+			fmt.Println(str)
+		}
+	}
+	return nil
+}
+
+// Check if a given task name should be run
+func shouldRunTask(s string) bool {
+	return dotfile.Contains(RunOnly, s)
 }

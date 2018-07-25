@@ -23,44 +23,42 @@ type LinkTask struct {
 }
 
 // Do ...
-func (t *LinkTask) Do(a string) error {
+func (t *LinkTask) Do(a string) (string, error) {
 	return do(t, a)
 }
 
 // Install link
-func (t *LinkTask) Install() error {
+func (t *LinkTask) Install() (string, error) {
 	if err := createBaseDir(t.Target); err != nil && err != ErrDirShouldExist {
-		return err
+		return "", err
 	}
 	changed, err := Link(t.Source, t.Target)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
 		prefix = "# "
 	}
-	fmt.Printf("%sln -s %s %s\n", prefix, t.Source, t.Target)
-	return nil
+	return fmt.Sprintf("%sln -s %s %s", prefix, t.Source, t.Target), nil
 }
 
 // Remove link
-func (t *LinkTask) Remove() error {
+func (t *LinkTask) Remove() (string, error) {
 	changed, err := Unlink(t.Source, t.Target)
 	if err != nil {
-		return err
+		return "", err
 	}
 	prefix := ""
 	if !changed {
 		prefix = "# "
 	}
-	fmt.Printf("%srm %s\n", prefix, t.Target)
 	if RemoveEmptyDirs {
 		if err := removeBaseDir(t.Target); err != nil {
-			return err
+			return "", err
 		}
-	}
-	return nil
+	}	
+	return fmt.Sprintf("%srm %s", prefix, t.Target), nil
 }
 
 // IsSymlink check

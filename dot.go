@@ -181,6 +181,9 @@ func init() {
 			return fmt.Errorf("# Unhandled command (%+v): %+v", reflect.TypeOf(cmd).Elem(), cmd)
 		}
 		// return fmt.Errorf("execute %+v: %+v\n %+v", reflect.TypeOf(cmd).Elem(), RunOnly, cmd)
+		if len(RunOnly) == 0 {
+			RunOnly = defaultTasks
+		}
 		return cmd.Execute(args)
 	}
 }

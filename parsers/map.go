@@ -6,48 +6,15 @@ import (
 )
 
 // Map ...
-type Map map[string]string // *MapItem // map[interface{}]interface{}
-
-// // MapItem ...
-// type MapItem struct {
-// 	Name string
-// 	Item
-// }
-
-// func (i *MapItem) String() string {
-// 	return fmt.Sprintf("MapItem{%+v}", i.Name)
-// }
-
-// Len ...
-// func (m *Map) Len() int {
-// 	return len(*m)
-// }
+type Map map[string]string // map[interface{}]interface{}
 
 // Add ...
 func (m *Map) Add(key, val interface{}) error {
 	k := key.(string)
 	v := val.(string)
-	// s, ok := val.(string)
-	// var v *MapItem
-	// if ok {
-	// 	v = &MapItem{Name: s}
-	// } else {
-	// 	v = val.(*MapItem)
-	// 	// TODO log.Fatal
-	// }
 	(*m)[k] = v
 	return nil
 }
-
-// // Merge ...
-// func (m *Map) Merge(in map[string]string) *Map {
-// 	(*m) = *(&Map{})
-// 	for k, v := range in {
-// 		// fmt.Println("MERGE k", k, "v", v)
-// 		(*m)[k] = &MapItem{v, nil}
-// 	}
-// 	return m
-// }
 
 // UnmarshalYAML ...
 func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -82,7 +49,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		// 		if t.Kind() == reflect.Map {
 		// 			T = reflect.MapOf(t.Key(), t.Elem())
 		// 		}
-		// 		return fmt.Errorf("unable to unmarshal %s into MapItem: %+v", T, w)
+		// 		return fmt.Errorf("unable to unmarshal %s into Map element: %+v", T, w)
 		// 	}
 		// }
 	case interface{}:
@@ -107,7 +74,7 @@ func (m *Map) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if t.Kind() == reflect.Map {
 				T = reflect.MapOf(t.Key(), t.Elem())
 			}
-			return fmt.Errorf("unable to unmarshal %s into MapItem: %+v", T, v)
+			return fmt.Errorf("unable to unmarshal %s into Map element: %+v", T, v)
 		}
 	default:
 		t := reflect.TypeOf(val)

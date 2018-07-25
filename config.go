@@ -119,23 +119,6 @@ func (c *Config) RequireRole(role *Role) error {
 	return nil
 }
 
-// Do ...
-func (c *Config) Do(a string, run []string) error {
-	for _, r := range c.Roles {
-		// Skip disabled roles
-		if !r.IsEnabled() {
-			continue
-		}
-		// if err := r.Prepare(); err != nil {
-		// 	return err
-		// }
-		if err := r.Do(a, run); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // FindConfig ...
 func FindConfig(name string) (string, error) {
 	if name == "" {

@@ -33,16 +33,24 @@ func has(p string) bool {
 }
 
 // PacInstall ...
-func PacInstall(args ...string) error {
-	return pacDo("install", args...)
+func PacInstall(args ...string) (string, error) {
+	bin, arg := pac("install", args...)
+	if bin == "" {
+		return "", nil
+	}
+	return fmt.Sprintf("%s %s", bin, arg), execute(bin, arg...)
 }
 
 // PacRemove ...
-func PacRemove(args ...string) error {
-	return pacDo("remove", args...)
+func PacRemove(args ...string) (string, error) {
+	bin, arg := pac("remove", args...)
+	if bin == "" {
+		return "", nil
+	}
+	return fmt.Sprintf("%s %s", bin, arg), execute(bin, arg...)
 }
 
-func pacDo(a string, args ...string) error {
+func pac(a string, args ...string) (string, []string) {
 	// Init
 	if has(PACMAN) {
 		// Arch Linux
@@ -53,25 +61,25 @@ func pacDo(a string, args ...string) error {
 		downloadFromURL(PACAPTURL, PACAPT, 0755)
 		// execute("sudo", "chmod", "+x", PACAPT)
 	}
-	pacArgs := []string{}
+	pa := []string{}
 	switch strings.ToLower(a) {
 	case "install":
-		pacArgs = append(pacArgs, "-S")
+		pa = append(pa, "-S")
 	// case "remove":
-	// 	pacArgs = append(pacArgs, "-R")
+	// 	pa = append(pa, "-R")
 	default:
-		fmt.Println("abort pacDo")
-		return nil
+		fmt.Println("abort pac")
+		return "", args
 	}
 	// if HasOSType("darwin") {
-	pacArgs = append(pacArgs, "--noconfirm")
+	pa = append(pa, "--noconfirm")
 	// }
-	pacArgs = append(pacArgs, args...)
+	pa = append(pa, args...)
 	if sudo {
-		pacArgs = append([]string{pacBin}, pacArgs...)
-		return execute("sudo", pacArgs...)
+		pa = append([]string{pacBin}, pa...)
+		return "sudo", pa // execute("sudo", pa...)
 	}
-	return execute(pacBin, pacArgs...)
+	return pacBin, pa // execute(pacBin, pa...)
 }
 
 func downloadFromURL(url, dst string, perm os.FileMode) {

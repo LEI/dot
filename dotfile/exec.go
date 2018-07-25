@@ -22,18 +22,18 @@ type ExecTask struct {
 }
 
 // Do ...
-func (t *ExecTask) Do(a string) error {
+func (t *ExecTask) Do(a string) (string, error) {
 	return do(t, a)
 }
 
 // Install copy
-func (t *ExecTask) Install() error {
-	return execute(Shell, "-c", t.Cmd)
+func (t *ExecTask) Install() (string, error) {
+	return t.Cmd, execute(Shell, "-c", t.Cmd)
 }
 
 // Remove copy
-func (t *ExecTask) Remove() error {
-	return execute(Shell, "-c", t.Cmd)
+func (t *ExecTask) Remove() (string, error) {
+	return t.Cmd, execute(Shell, "-c", t.Cmd)
 }
 
 var execWarned bool
@@ -43,7 +43,7 @@ func execute(name string, args ...string) error {
 		fmt.Println("DRY-RUN, unexpected behavior may occur.")
 		execWarned = true
 	}
-	fmt.Printf("%s %s\n", name, strings.Join(args[:], " "))
+	// fmt.Printf("%s %s\n", name, strings.Join(args[:], " "))
 	if DryRun {
 		return nil
 	}

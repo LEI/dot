@@ -6,22 +6,6 @@ import (
 	"reflect"
 )
 
-// // Item ...
-// type Item interface {
-// 	// New (string) *Item
-// 	String() string
-// }
-
-// // SliceItem ...
-// type SliceItem struct {
-// 	Name string
-// 	Item
-// }
-
-// func (i *SliceItem) String() string {
-// 	return fmt.Sprintf("SliceItem{%+v}", i.Name)
-// }
-
 // Slice ...
 type Slice []string
 
@@ -47,9 +31,9 @@ func NewSlice(i interface{}) (*Slice, error) {
 				// if t.Kind() == reflect.Map {
 				// 	T = reflect.MapOf(t.Key(), t.Elem())
 				// }
-				return s, fmt.Errorf("unable to unmarshal %s into SliceItem: %+v", t, v)
+				return s, fmt.Errorf("unable to unmarshal %s into Slice element: %+v", t, v)
 			} else {
-				return s, fmt.Errorf("unable to assert SliceItem: %+v", v)
+				return s, fmt.Errorf("unable to assert Slice element: %+v", v)
 			}
 		}
 	} else {
@@ -115,6 +99,12 @@ func (s *Slice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&i); err != nil {
 		return err
 	}
+	fmt.Println("NewSlice UnmarshalYAML", i)
+	s, err := NewSlice(i)
+	if err != nil {
+		return err
+	}
+	/*
 	switch val := i.(type) {
 	case []string:
 		// 	*s = append(*s, &item)
@@ -132,5 +122,6 @@ func (s *Slice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 		return fmt.Errorf("unable to unmarshal %s into struct: %+v", T, val)
 	}
+	*/
 	return nil
 }
