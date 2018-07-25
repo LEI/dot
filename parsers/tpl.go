@@ -24,28 +24,11 @@ type Tpl struct {
 // Templates ...
 type Templates []*Tpl
 
-// func (p *Templates) String() string {
-// 	s := ""
-// 	for _, v := range *p {
-// 		s+= fmt.Sprintf("%+v", v)
-// 	}
-// 	return s
-// }
-
-// Append ...
-func (t *Templates) Append(tpl *Tpl) *Templates {
-	if tpl.Target != "" && tpl.Ext != "" && strings.HasSuffix(tpl.Target, "."+tpl.Ext) {
-		tpl.Target = strings.TrimSuffix(tpl.Target, "."+tpl.Ext)
-	}
-	*t = append(*t, tpl)
-	return t
-}
-
-// Add ...
-func (t *Templates) Add(i interface{}) error {
+// NewTpl ...
+func NewTpl(i interface{}) (*Tpl, error) {
 	tpl := &Tpl{}
 	if i == nil {
-		return fmt.Errorf("trying to add nil to tmpls: %+v", t)
+		return tpl, fmt.Errorf("trying to add nil to tpl: %+v", i)
 	}
 	if val, ok := i.(string); ok {
 		tpl.Source = val
@@ -55,7 +38,7 @@ func (t *Templates) Add(i interface{}) error {
 		// Get source
 		src, ok := val["source"].(string)
 		if !ok {
-			return fmt.Errorf("missing tpl source: %+v", val)
+			return tpl, fmt.Errorf("missing tpl source: %+v", val)
 		}
 		tpl.Source = src
 		dst, ok := val["target"].(string)
@@ -82,7 +65,7 @@ func (t *Templates) Add(i interface{}) error {
 			// tpl.IncludeVars = file // os.ExpandEnv(file)
 			inclVars, err := parseTemplate(file)
 			if err != nil {
-				return err
+				return tpl, err
 			}
 			for k, v := range inclVars {
 				// if w, ok := tpl.Vars[k]; ok { return fmt.Errorf... }
@@ -103,7 +86,33 @@ func (t *Templates) Add(i interface{}) error {
 		// } else if val, ok := i.(interface{}); ok {
 		// 	fmt.Println("II", val, i)
 	} else {
-		return fmt.Errorf("unable to assert Tpl: %+v", i)
+		return tpl, fmt.Errorf("unable to assert Tpl: %+v", i)
+	}
+	return tpl, nil
+}
+
+// func (p *Templates) String() string {
+// 	s := ""
+// 	for _, v := range *p {
+// 		s+= fmt.Sprintf("%+v", v)
+// 	}
+// 	return s
+// }
+
+// Append ...
+func (t *Templates) Append(tpl *Tpl) *Templates {
+	if tpl.Target != "" && tpl.Ext != "" && strings.HasSuffix(tpl.Target, "."+tpl.Ext) {
+		tpl.Target = strings.TrimSuffix(tpl.Target, "."+tpl.Ext)
+	}
+	*t = append(*t, tpl)
+	return t
+}
+
+// Add ...
+func (t *Templates) Add(i interface{}) error {
+	tpl, err := NewTpl(i)
+	if err != nil {
+		return err
 	}
 	*t = append(*t, tpl)
 	return nil

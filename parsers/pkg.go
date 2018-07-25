@@ -16,14 +16,11 @@ type Pkg struct {
 // 	return fmt.Sprintf("%s %s%+v", p.Name, p.Action, p.OS)
 // }
 
-// Packages ...
-type Packages []*Pkg
-
-// Add ...
-func (p *Packages) Add(i interface{}) error {
+// NewPkg ...
+func NewPkg(i interface{}) (*Pkg, error) {
 	pkg := &Pkg{}
 	if i == nil {
-		return fmt.Errorf("trying to add nil to pkgs: %+v", p)
+		return pkg, fmt.Errorf("trying to add nil pkg: %+v", i)
 	}
 	if val, ok := i.(string); ok {
 		pkg.Name = val
@@ -33,7 +30,7 @@ func (p *Packages) Add(i interface{}) error {
 		// Get name
 		name, ok := val["name"].(string)
 		if !ok {
-			return fmt.Errorf("missing pkg name: %+v", val)
+			return pkg, fmt.Errorf("missing pkg name: %+v", val)
 		}
 		pkg.Name = name
 		pkg.OS = *NewSlice(val["os"])
@@ -56,7 +53,19 @@ func (p *Packages) Add(i interface{}) error {
 		// } else if val, ok := i.(interface{}); ok {
 		// 	fmt.Println("II", val, i)
 	} else {
-		return fmt.Errorf("unable to assert Pkg: %+v", i)
+		return pkg, fmt.Errorf("unable to assert Pkg: %+v", i)
+	}
+	return pkg, nil
+}
+
+// Packages ...
+type Packages []*Pkg
+
+// Add ...
+func (p *Packages) Add(i interface{}) error {
+	pkg, err := NewPkg(i)
+	if err != nil {
+		return err
 	}
 	*p = append(*p, pkg)
 	return nil
