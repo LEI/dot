@@ -1,4 +1,4 @@
-package cmd
+package main
 
 // TODO: url parsing & support hg?
 // https://github.com/sourcegraph/go-vcs

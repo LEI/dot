@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -18,18 +18,8 @@ type Config struct {
 	IgnoreDeps bool
 }
 
-var config *Config
-
 // ErrSkipDeps ...
 // var ErrSkipDeps = fmt.Errorf("skip dependencies")
-
-// NewConfig ...
-func NewConfig() *Config {
-	if config == nil {
-		config = &Config{}
-	}
-	return config
-}
 
 // Read ...
 func (c *Config) Read(s string) error {

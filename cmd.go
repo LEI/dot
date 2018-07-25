@@ -1,7 +1,4 @@
-/*
-Package cmd flags
-*/
-package cmd
+package main
 
 import (
 	// "fmt"

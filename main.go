@@ -8,22 +8,20 @@ import (
 
 	// "github.com/jessevdk/go-flags"
 
-	"github.com/LEI/dot/cmd"
 	"github.com/LEI/dot/dotfile"
 )
 
 var (
-	config = cmd.NewConfig()
-	// *cmd.Config = &cmd.Config{} // {Name: ".dot"}
+	config *Config = &Config{} // {Name: ".dot"}
 	configFileUsed string
 )
 
 func main() {
-	// cmd.Options.Source = "" // .
-	// cmd.Options.Target = "$HOME" // os.Getenv("HOME")
-	cmd.Options.Config = func(name string) error {
+	// Options.Source = "" // .
+	// Options.Target = "$HOME" // os.Getenv("HOME")
+	Options.Config = func(name string) error {
 		//fmt.Println("Config flag:", name)
-		cfgPath, err := cmd.FindConfig(name)
+		cfgPath, err := FindConfig(name)
 		if err != nil {
 			return err
 		}
@@ -34,7 +32,7 @@ func main() {
 		_, s := filepath.Split(cfgPath)
 
 		// TODO allow alternative role config names
-		cmd.ConfigName = s
+		ConfigName = s
 
 		if err := config.Read(cfgPath); err != nil {
 			return err
@@ -42,14 +40,14 @@ func main() {
 		// fmt.Printf("CONFIG: %+v\n", config)
 		configFileUsed = cfgPath
 		// configFile != "" &&
-		// if configFile != cmd.ConfigName {
+		// if configFile != ConfigName {
 		// 	configFileUsed = configFile
 		// }
 		return nil
 	}
 
 	// Parse arguments
-	remaining, err := cmd.Parse()
+	remaining, err := Parse()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Parse error: %s\n", err)
 		os.Exit(1)
@@ -59,21 +57,21 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Remaining arguments: %+v\n", remaining)
 		os.Exit(1)
 	}
-	if cmd.Options.Version {
+	if Options.Version {
 		fmt.Println("v0")
 		os.Exit(0)
 	}
-	// if cmd.Verbose > 0 {
-	// 	fmt.Printf("Verbosity: %v\n", cmd.Verbose)
+	// if Verbose > 0 {
+	// 	fmt.Printf("Verbosity: %v\n", Verbose)
 	// }
 	// fmt.Printf("Config: %+v\n", config)
 	// fmt.Printf("Config roles: %+v\n", config.Roles)
-	// fmt.Printf("Options: %+v\n", cmd.Options)
-	// fmt.Printf("Options role: %+v\n", cmd.GetParser().Find("install").FindOptionByLongName("roles"))
-	if configFileUsed != "" && cmd.Verbose > 0 {
+	// fmt.Printf("Options: %+v\n", Options)
+	// fmt.Printf("Options role: %+v\n", GetParser().Find("install").FindOptionByLongName("roles"))
+	if configFileUsed != "" && Verbose > 0 {
 		fmt.Printf("# Using configuration file: %s\n", configFileUsed)
 	}
-	if err := execute(&cmd.Options); err != nil {
+	if err := execute(&Options); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -86,8 +84,8 @@ func init() {
 	}
 }
 
-func execute(options *cmd.DotCmd) error {
-	// listOnly := dotfile.Contains(cmd.RunOnly, "list")
+func execute(options *DotCmd) error {
+	// listOnly := dotfile.Contains(RunOnly, "list")
 	// fmt.Println(len(config.Roles), "ROLES")
 	// Initialize role config
 	// enabledCount := 0
@@ -118,7 +116,7 @@ func execute(options *cmd.DotCmd) error {
 	// Sync roles
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
-		go func(r *cmd.Role) {
+		go func(r *Role) {
 			if !r.IsEnabled() {
 				errs <- nil
 				return
@@ -127,23 +125,23 @@ func execute(options *cmd.DotCmd) error {
 				errs <- fmt.Errorf("# [%s] init error: %s", r.Name, err)
 				return
 			}
-			if cmd.Verbose > 0 {
+			if Verbose > 0 {
 				fmt.Printf("# [%s] Syncing %s %s\n", r.Name, r.Path, r.URL)
 			}
 			if err := r.Sync(); err != nil {
-				if err == cmd.ErrDirtyRepo {
+				if err == ErrDirtyRepo {
 					errs <- fmt.Errorf("# [%s] Uncommitted changes in %s, use --force to continue", r.Name, r.Path)
 					return
 				}
 				errs <- fmt.Errorf("# [%s] sync error: %s", r.Name, err)
 				return
 			}
-			configFile, err := r.ReadConfig(cmd.ConfigName)
+			configFile, err := r.ReadConfig(ConfigName)
 			if err != nil {
 				errs <- err
 				return
 			}
-			if configFile != "" && cmd.Verbose > 1 {
+			if configFile != "" && Verbose > 1 {
 				fmt.Printf("# [%s] Using role configuration file: %s\n", r.Name, configFile)
 			}
 			if err := r.Prepare(); err != nil {
@@ -163,26 +161,27 @@ func execute(options *cmd.DotCmd) error {
 	// 	return fmt.Errorf("# No roles to execute in: %s", config.Roles)
 	// }
 	// TODO: sync missing roles enabled by dependencies
-	switch cmd.Action {
+	switch Action {
 	case "install":
 		// Resolve dependencies
 		if err := config.Require(); err != nil {
 			return err
 			// switch err {
-			// case cmd.ErrSkipDeps:
+			// case ErrSkipDeps:
 			// default:
 			// 	return err
 			// }
 		}
 	}
 	// Install, remove...
-	if err := config.Do(cmd.Action, cmd.RunOnly); err != nil {
+	if err := config.Do(Action, RunOnly); err != nil {
 		return err
 	}
-	switch cmd.Action {
-	case "remove":
-		if err := config.ClearCache(); err != nil {
-			return err
-		}
-	}
+	// switch Action {
+	// case "remove":
+	// 	if err := config.ClearCache(); err != nil {
+	// 		return err
+	// 	}
+	// }
+	return nil
 }

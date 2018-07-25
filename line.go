@@ -1,18 +1,18 @@
-package cmd
+package main
 
 import (
 	"fmt"
 )
 
-// CopyCmd ...
-type CopyCmd struct {
+// LineCmd ...
+type LineCmd struct {
 	BaseRoleCmd
 }
 
 // Execute ...
-func (cmd *CopyCmd) Execute(args []string) error {
+func (cmd *LineCmd) Execute(args []string) error {
 	if Verbose > 2 {
-		fmt.Println("# CopyCmd",
+		fmt.Println("# LineCmd",
 			cmd.Role.Name,
 			cmd.Role.Args,
 			args)
@@ -26,10 +26,14 @@ func (cmd *CopyCmd) Execute(args []string) error {
 		return err
 	}
 	for _, p := range cmd.Role.Args {
-		err := role.RegisterCopy(string(p))
+		err := role.RegisterTask("Line", string(p))
 		if err != nil {
 			return err
 		}
+		// err := role.RegisterLine(string(p))
+		// if err != nil {
+		// 	return err
+		// }
 	}
 	return nil
 }

@@ -1,18 +1,18 @@
-package cmd
+package main
 
 import (
 	"fmt"
 )
 
-// TemplateCmd ...
-type TemplateCmd struct {
+// LinkCmd ...
+type LinkCmd struct {
 	BaseRoleCmd
 }
 
 // Execute ...
-func (cmd *TemplateCmd) Execute(args []string) error {
+func (cmd *LinkCmd) Execute(args []string) error {
 	if Verbose > 2 {
-		fmt.Println("# TemplateCmd",
+		fmt.Println("# LinkCmd",
 			cmd.Role.Name,
 			cmd.Role.Args,
 			args)
@@ -26,7 +26,11 @@ func (cmd *TemplateCmd) Execute(args []string) error {
 		return err
 	}
 	for _, p := range cmd.Role.Args {
-		err := role.RegisterTemplate(string(p))
+		// err := role.RegisterTask("Link", string(p))
+		// if err != nil {
+		// 	return err
+		// }
+		err := role.RegisterLink(string(p))
 		if err != nil {
 			return err
 		}
