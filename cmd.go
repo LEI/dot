@@ -46,13 +46,3 @@ type BaseRoleCmd struct {
 
 	Executable
 }
-
-var (
-	source, target string
-	parser         = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
-)
-
-// GetParser ...
-func GetParser() *flags.Parser {
-	return parser
-}

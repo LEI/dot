@@ -118,6 +118,10 @@ var (
 
 	// Verbose level (verbosity)
 	Verbose int
+
+	source, target string
+
+	parser         = flags.NewParser(&Options, flags.HelpFlag|flags.PassDoubleDash)
 )
 
 func init() {
