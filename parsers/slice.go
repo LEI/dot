@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"reflect"
 )
 
@@ -26,10 +26,10 @@ import (
 type Slice []string
 
 // NewSlice ...
-func NewSlice(i interface{}) *Slice {
+func NewSlice(i interface{}) (*Slice, error) {
 	s := &Slice{}
 	if i == nil {
-		return s
+		return s, nil
 	}
 	if val, ok := i.(string); ok {
 		*s = append(*s, val)
@@ -47,15 +47,13 @@ func NewSlice(i interface{}) *Slice {
 				// if t.Kind() == reflect.Map {
 				// 	T = reflect.MapOf(t.Key(), t.Elem())
 				// }
-				fmt.Printf("Unable to unmarshal %s into SliceItem: %+v\n", t, v)
+				return s, fmt.Errorf("unable to unmarshal %s into SliceItem: %+v", t, v)
 			} else {
-				fmt.Printf("Unable to assert SliceItem: %+v\n", v)
-				os.Exit(1)
+				return s, fmt.Errorf("unable to assert SliceItem: %+v", v)
 			}
 		}
 	} else {
-		fmt.Printf("Unable to assert Slice: %+v\n", i)
-		os.Exit(1)
+		return s, fmt.Errorf("unable to assert Slice: %+v", i)
 	}
 	// switch val := i.(type) {
 	// case nil:
@@ -96,7 +94,7 @@ func NewSlice(i interface{}) *Slice {
 	// 	fmt.Printf("Unable to unmarshal ???: %+v\n", val)
 	// 	os.Exit(1)
 	// }
-	return s
+	return s, nil
 }
 
 // Value return a new iterator

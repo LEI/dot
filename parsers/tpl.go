@@ -49,7 +49,7 @@ func NewTpl(i interface{}) (*Tpl, error) {
 			tpl.Ext = ext
 		}
 		if env, ok := val["env"].(map[string]string); ok {
-			// tpl.Env = NewSlice(env.(*Slice))
+			// tpl.Env, err := NewSlice(env.(*Slice))
 			tpl.Env = env
 		} else {
 			tpl.Env = make(map[string]string, 0)
@@ -77,7 +77,7 @@ func NewTpl(i interface{}) (*Tpl, error) {
 		// } else if val, ok := i.([]string); ok {
 		// 	fmt.Println("MS", val)
 		// } else if val, ok := i.([]interface{}); ok {
-		// 	// tpl.OS = *NewSlice(val["os"])
+		// 	// tpl.OS, err := *NewSlice(val["os"])
 		// 	fmt.Println("IS", val)
 		// } else if val, ok := i.(map[string]string); ok {
 		// 	fmt.Println("MSS", val, i)

@@ -28,16 +28,20 @@ func NewPkg(i interface{}) (*Pkg, error) {
 		*pkg = val
 	} else if val, ok := i.(map[interface{}]interface{}); ok {
 		// Get name
-		name, ok := val["name"].(string)
+		pkgName, ok := val["name"].(string)
 		if !ok {
 			return pkg, fmt.Errorf("missing pkg name: %+v", val)
 		}
-		pkg.Name = name
-		pkg.OS = *NewSlice(val["os"])
+		pkg.Name = pkgName
+		pkgOS, err := NewSlice(val["os"])
+		if err != nil {
+			return pkg, err
+		}
+		pkg.OS = *pkgOS
 		// pkg.Action = NewSlice(val["action"])
-		action, ok := val["action"].(string)
+		pkgAction, ok := val["action"].(string)
 		if ok {
-			pkg.Action = action
+			pkg.Action = pkgAction
 		}
 		// } else if val, ok := i.(*Pkg); ok {
 		// 	pkg = val

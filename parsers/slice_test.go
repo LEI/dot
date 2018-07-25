@@ -15,7 +15,10 @@ var sliceTests = []struct{
 
 func TestSlice(t *testing.T) {
 	for _, tt := range sliceTests {
-		slice := NewSlice(tt.in)
+		slice, err := NewSlice(tt.in)
+		if err != nil {
+			t.Error(err)
+		}
 		if !reflect.DeepEqual(slice.Value(), tt.out) {
 			t.Errorf("in: %+v out: %+v expected: %+v", tt.in, slice.Value(), tt.out)
 		}
