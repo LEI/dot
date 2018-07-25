@@ -109,7 +109,7 @@ func Copy(src, dst string) (bool, error) {
 	}
 	c := string(b)
 	if err := dotCache.Put(dst, c); err != nil {
-		return false, err
+		return true, err
 	}
 	return true, nil
 }

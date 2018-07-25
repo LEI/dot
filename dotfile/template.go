@@ -191,7 +191,7 @@ func Template(src, dst string, data map[string]interface{}) (bool, error) {
 		return false, err
 	}
 	if err := dotCache.Put(dst, content); err != nil {
-		return false, err
+		return true, err
 	}
 	return true, nil
 }

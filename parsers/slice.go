@@ -105,23 +105,23 @@ func (s *Slice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	/*
-	switch val := i.(type) {
-	case []string:
-		// 	*s = append(*s, &item)
-		for _, v := range val {
-			// item := Item(v)
-			fmt.Println("=", v)
-			// *s = append(*s, &item)
+		switch val := i.(type) {
+		case []string:
+			// 	*s = append(*s, &item)
+			for _, v := range val {
+				// item := Item(v)
+				fmt.Println("=", v)
+				// *s = append(*s, &item)
+			}
+		// case map[string]interface{}:
+		default:
+			t := reflect.TypeOf(val)
+			T := t.Elem()
+			if t.Kind() == reflect.Map {
+				T = reflect.MapOf(t.Key(), t.Elem())
+			}
+			return fmt.Errorf("unable to unmarshal %s into struct: %+v", T, val)
 		}
-	// case map[string]interface{}:
-	default:
-		t := reflect.TypeOf(val)
-		T := t.Elem()
-		if t.Kind() == reflect.Map {
-			T = reflect.MapOf(t.Key(), t.Elem())
-		}
-		return fmt.Errorf("unable to unmarshal %s into struct: %+v", T, val)
-	}
 	*/
 	return nil
 }

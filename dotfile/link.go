@@ -57,7 +57,7 @@ func (t *LinkTask) Remove() (string, error) {
 		if err := removeBaseDir(t.Target); err != nil {
 			return "", err
 		}
-	}	
+	}
 	return fmt.Sprintf("%srm %s", prefix, t.Target), nil
 }
 
@@ -156,6 +156,9 @@ func Link(src, dst string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// if err := dotCache.Put(dst, content); err != nil {
+	// 	return true, err
+	// }
 	return true, nil
 }
 
