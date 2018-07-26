@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	config         *Config = &Config{} // {Name: ".dot"}
+	config         = &Config{} // {Name: ".dot"}
 	configFileUsed string
 )
 
@@ -332,8 +332,8 @@ func do(r *Role, a string) error {
 		}
 	}
 	switch Action {
-	case "list":
-		fmt.Printf("========= %+v\n", r)
+	// case "list":
+	// 	fmt.Printf("========= %+v\n", r)
 	case "install", "remove":
 		// Post-install/remove hook
 		v := r.GetField("Post" + act)
