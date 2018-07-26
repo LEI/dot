@@ -130,9 +130,9 @@ func SetEnv(k, v string) error {
 	if err != nil {
 		return err
 	}
-	// if Verbose > 0 {
-	fmt.Printf("%s=%s\n", k, v)
-	// }
+	if Verbose > 0 {
+		fmt.Printf("%s=%s\n", k, v)
+	}
 	return os.Setenv(k, v)
 }
 

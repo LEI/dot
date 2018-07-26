@@ -47,9 +47,23 @@ type TemplateTask struct {
 	Task
 }
 
+// Status template
+func (t *TemplateTask) Status() bool {
+	return true
+}
+
 // Do ...
 func (t *TemplateTask) Do(a string) (string, error) {
 	return do(t, a)
+}
+
+// List template
+func (t *TemplateTask) List() (string, error) {
+	// t.Source = strings.TrimPrefix(t.Source, r.Path+"/")
+	// t.Target = strings.TrimPrefix(t.Target, target+"/")
+	str := fmt.Sprintf("Template: %s +> %s (%d ENV, %d VARS)", t.Source, t.Target, len(t.Env), len(t.Vars))
+	// Verbose > 1 str += fmt.Sprintf("Template: %s +> %s\nENV:%+v\nVARS: %+v", t.Source, t.Target, t.Env, t.Vars)
+	return str, nil
 }
 
 // Install template

@@ -27,6 +27,8 @@ var (
 type Task interface {
 	String() string
 	// Register(interface{}) error
+	Status() bool
+	List() (string, error)
 	Install() (string, error)
 	Remove() (string, error)
 	Do(string) (string, error)
@@ -34,6 +36,8 @@ type Task interface {
 
 func do(t Task, a string) (str string, err error) {
 	switch a {
+	case "List":
+		str, err = t.List()
 	case "Install":
 		str, err = t.Install()
 	case "Remove":

@@ -26,7 +26,7 @@ type BaseCmd struct {
 type BaseTaskCmd struct {
 	BaseCmd
 
-	List     ListCmd     `command:"list" alias:"ls" description:"List files"`
+	// List     ListCmd     `command:"list" alias:"ls" description:"List files"`
 	Copy     CopyCmd     `command:"copy" alias:"cp" description:"Copy files"`
 	Line     LineCmd     `command:"line-in-file" alias:"line" description:"Line in file"`
 	Link     LinkCmd     `command:"link" alias:"ln" description:"Symlink files"`

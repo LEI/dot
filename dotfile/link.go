@@ -22,9 +22,20 @@ type LinkTask struct {
 	Task
 }
 
+// Status link
+func (t *LinkTask) Status() bool {
+	return true
+}
+
 // Do ...
 func (t *LinkTask) Do(a string) (string, error) {
 	return do(t, a)
+}
+
+// List link
+func (t *LinkTask) List() (string, error) {
+	str := fmt.Sprintf("Link: %s -> %s", t.Source, t.Target)
+	return str, nil
 }
 
 // Install link
@@ -116,38 +127,32 @@ func Link(src, dst string) (bool, error) {
 		if real == src && err == ErrLinkExist {
 			return false, nil
 		}
-		fmt.Fprintf(os.Stderr, "# %s is a file? at least not a link to %s\n", dst, src)
-		return false, err
+		q := fmt.Sprintf("Replace %s with a link to %s", dst, src)
+		if !AskConfirmation(q) {
+			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing link: %s", src, dst)
+			return false, nil
+		}
+		// TODO remove?
+		// fmt.Fprintf(os.Stderr, "# %s is a file? at least not a link to %s\n", dst, src)
+		// return false, err
 	}
 	if real == src { // Symlink already exists
 		return false, nil
-	}
-	if real != "" {
-		// return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
-		q := fmt.Sprintf("Replace %s link to %s with %s", dst, real, src)
-		if !AskConfirmation(q) {
-			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target exists: %s", src, dst)
-			return false, nil
-		}
-		// if err := Backup(dst); err != nil {
-		// 	return false, err
-		// }
-	}
-	if err != nil && os.IsExist(err) {
-		return false, err
 	}
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
 		return false, err
 	}
-	// fmt.Println("SRC:", src)
-	// fmt.Println("REAL:", real)
-	// fmt.Println("ERR:", err)
-	// fmt.Println("FI:", fi)
-	if fi != nil {
-		fmt.Fprintf(os.Stderr, "# %s is already a file\n", dst)
-		// os.Exit(1)
-		return false, ErrFileExist // fmt.Errorf("%s already exists, could not link %s", dst, src)
+	if fi != nil && real == "" {
+		// return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
+		q := fmt.Sprintf("Replace %s link to %s with %s", dst, real, src)
+		if !AskConfirmation(q) {
+			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing file: %s", src, dst)
+			return false, nil
+		}
+		// if err := Backup(dst); err != nil {
+		// 	return false, err
+		// }
 	}
 	if DryRun {
 		return true, nil
@@ -156,6 +161,7 @@ func Link(src, dst string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// TODO: cache[dst] = src?
 	// if err := dotCache.Put(dst, content); err != nil {
 	// 	return true, err
 	// }

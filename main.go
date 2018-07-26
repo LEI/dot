@@ -200,12 +200,13 @@ func execute(options *DotCmd) error {
 }
 
 func do(r *Role, a string) error {
-	if shouldRunTask("list") {
-		// Just print the role fields
-		fmt.Printf("# Role %+v\n", r.Print(Verbose > 0))
-		return nil
-	}
-	fmt.Printf("# Role: %+v\n", r.Name)
+	act := strings.Title(a)
+	// if shouldRunTask("list") {
+	// 	// Just print the role fields
+	// 	fmt.Printf("# LIST ROLE %+v\n", r.Print(Verbose > 0))
+	// 	// return nil
+	// }
+	fmt.Printf("# Role: %s\n", r.Name) // (%v)\n", r.Name, r.IsEnabled())
 	// originalEnv := dotfile.GetEnv() // Saved in dotfile.OriginalEnv
 	if r.Env != nil {
 		for k, v := range r.Env {
@@ -217,23 +218,25 @@ func do(r *Role, a string) error {
 			}
 		}
 	}
-	// Pre-install/remove hook
-	a = strings.Title(a)
-	v := r.GetField(a)
-	if !v.IsValid() {
-		return fmt.Errorf("could not get field %s: %s / %s", a, v, a)
-	}
-	before := v.Interface().([]string)
-	if len(before) > 0 && shouldRunTask("exec") {
-		for _, c := range before {
-			task := &dotfile.ExecTask{
-				Cmd: c,
+	switch Action {
+	case "install", "remove":
+		// Pre-install/remove hook
+		v := r.GetField(act)
+		if !v.IsValid() {
+			return fmt.Errorf("could not get field %s: %s", act, v)
+		}
+		before := v.Interface().([]string)
+		if len(before) > 0 && shouldRunTask("exec") {
+			for _, c := range before {
+				task := &dotfile.ExecTask{
+					Cmd: c,
+				}
+				str, err := task.Do(act)
+				if err != nil {
+					return err
+				}
+				fmt.Println(str)
 			}
-			str, err := task.Do(a)
-			if err != nil {
-				return err
-			}
-			fmt.Println(str)
 		}
 	}
 	// System packages
@@ -242,14 +245,14 @@ func do(r *Role, a string) error {
 			if v.OS != nil && len(v.OS) > 0 && !dotfile.HasOSType(v.OS.Value()...) {
 				continue
 			}
-			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(a) {
+			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(act) {
 				continue
 			}
 			task := &dotfile.PkgTask{
 				Name: v.Name,
 				Sudo: Options.Sudo,
 			}
-			str, err := task.Do(a)
+			str, err := task.Do(act)
 			if err != nil {
 				return err
 			}
@@ -263,7 +266,7 @@ func do(r *Role, a string) error {
 				Source: s,
 				Target: t,
 			}
-			str, err := task.Do(a)
+			str, err := task.Do(act)
 			if err != nil {
 				return err
 			}
@@ -277,7 +280,7 @@ func do(r *Role, a string) error {
 				File: s,
 				Line: t,
 			}
-			str, err := task.Do(a)
+			str, err := task.Do(act)
 			if err != nil {
 				return err
 			}
@@ -291,7 +294,7 @@ func do(r *Role, a string) error {
 				Source: s,
 				Target: t,
 			}
-			str, err := task.Do(a)
+			str, err := task.Do(act)
 			if err != nil {
 				return err
 			}
@@ -315,7 +318,7 @@ func do(r *Role, a string) error {
 				Env:    env,
 				Vars:   vars,
 			}
-			str, err := task.Do(a)
+			str, err := task.Do(act)
 			if err != nil {
 				return err
 			}
@@ -328,18 +331,27 @@ func do(r *Role, a string) error {
 			return nil
 		}
 	}
-	// Post-install/remove hook
-	after := r.GetField("Post" + a).Interface().([]string)
-	if len(after) > 0 && shouldRunTask("exec") {
-		for _, c := range after {
-			task := &dotfile.ExecTask{
-				Cmd: c,
+	switch Action {
+	case "list":
+		fmt.Printf("========= %+v\n", r)
+	case "install", "remove":
+		// Post-install/remove hook
+		v := r.GetField("Post" + act)
+		if !v.IsValid() {
+			return fmt.Errorf("could not get field %s: %s", act, v)
+		}
+		after := r.GetField("Post" + act).Interface().([]string)
+		if len(after) > 0 && shouldRunTask("exec") {
+			for _, c := range after {
+				task := &dotfile.ExecTask{
+					Cmd: c,
+				}
+				str, err := task.Do(act)
+				if err != nil {
+					return err
+				}
+				fmt.Println(str)
 			}
-			str, err := task.Do(a)
-			if err != nil {
-				return err
-			}
-			fmt.Println(str)
 		}
 	}
 	return nil

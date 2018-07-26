@@ -17,9 +17,20 @@ type CopyTask struct {
 	Task
 }
 
-// Do ...
+// Status copy
+func (t *CopyTask) Status() bool {
+	return true
+}
+
+// Do copy
 func (t *CopyTask) Do(a string) (string, error) {
 	return do(t, a)
+}
+
+// List copy
+func (t *CopyTask) List() (string, error) {
+	str := fmt.Sprintf("Copy: %s => %s", t.Source, t.Target)
+	return str, nil
 }
 
 // Install copy

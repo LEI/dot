@@ -16,7 +16,7 @@ import (
 type DotCmd struct {
 	BaseCmd
 
-	List    ListCmd    `command:"list" alias:"ls" description:"List"`
+	List    ListCmd    `command:"list" subcommands-optional:"true" alias:"ls" description:"List"`
 	Install InstallCmd `command:"install" subcommands-optional:"true" alias:"i" description:"Install"`
 	Remove  RemoveCmd  `command:"remove" subcommands-optional:"true" alias:"rm" description:"Remove"`
 
@@ -150,11 +150,11 @@ func init() {
 			cmd = &ListCmd{}
 			// Options.Force = true
 			// Options.NoSync = true
-			RunOnly = append(RunOnly, "list")
+			//RunOnly = append(RunOnly, "list")
 		case *DotCmd:
-			RunOnly = append(RunOnly, "list")
+			//RunOnly = append(RunOnly, "list")
 		case *ListCmd:
-			RunOnly = append(RunOnly, "list")
+			//RunOnly = append(RunOnly, "list")
 		// case nil:
 		// 	cmd = &DotCmd{}
 		// 	// cmd = &InstallCmd{}

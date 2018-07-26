@@ -21,9 +21,20 @@ type ExecTask struct {
 	Task
 }
 
-// Do ...
+// Status exec
+func (t *ExecTask) Status() bool {
+	return true
+}
+
+// Do exec
 func (t *ExecTask) Do(a string) (string, error) {
 	return do(t, a)
+}
+
+// List exec
+func (t *ExecTask) List() (string, error) {
+	str := fmt.Sprintf("Exec: %s", t.Cmd)
+	return str, nil
 }
 
 // Install copy

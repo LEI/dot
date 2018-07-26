@@ -13,9 +13,20 @@ type LineTask struct {
 	Task
 }
 
-// Do ...
+// Status line
+func (t *LineTask) Status() bool {
+	return true
+}
+
+// Do line
 func (t *LineTask) Do(a string) (string, error) {
 	return do(t, a)
+}
+
+// List line
+func (t *LineTask) List() (string, error) {
+	str := fmt.Sprintf("Line: %s >> %s", t.File, t.Line)
+	return str, nil
 }
 
 // Install line

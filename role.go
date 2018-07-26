@@ -120,109 +120,16 @@ func NewRole(name string) *Role {
 	}
 }
 
-func (r *Role) String() string {
-	// if Verbose > 2 {
-	// 	return r.Print()
-	// }
-	return fmt.Sprintf("%s", r.Name)
-}
+// func (r *Role) String() string {
+// 	return fmt.Sprintf("%s", r.Name)
+// }
 
-// Print ...
-func (r *Role) Print(v bool) string {
-	s := fmt.Sprintf("[%s:%s](%s)", r.Name, r.Path, r.URL)
-	if v {
-		s += r.PrintRoles()
-	}
-	return s
-}
-
-// PrintRoles ...
-func (r *Role) PrintRoles() (s string) {
-	ind := "  "
-	pre := "\n" + ind
-	if r.OS != nil && len(r.OS) > 0 {
-		s += fmt.Sprintf("%sOS: %s", pre, r.OS)
-	}
-	if !r.Enabled {
-		s += fmt.Sprintf("%sDISABLED", pre)
-	}
-	switch true {
-	case len(r.Install) > 0:
-		fallthrough
-	case len(r.PostInstall) > 0:
-		fallthrough
-	case len(r.Remove) > 0:
-		fallthrough
-	case len(r.PostRemove) > 0:
-		s += fmt.Sprintf("%sHas exec: %s", pre, "yes")
-	}
-	// Role environment
-	if r.Env != nil && len(r.Env) > 0 {
-		s += fmt.Sprintf("%sEnv: %+v", pre, r.Env)
-	}
-	// Common variables
-	if r.Vars != nil && len(r.Vars) > 0 {
-		if Verbose > 1 {
-			s += fmt.Sprintf("%sVars: %+v", pre, r.Vars)
-		} else {
-			s += fmt.Sprintf("%s%d vars", pre, len(r.Vars))
-		}
-	}
+// PrintDeps ...
+func (r *Role) PrintDeps() (s string) {
 	if r.Deps != nil && len(r.Deps) > 0 {
-		s += fmt.Sprintf("%sDeps: %d", pre, len(r.Deps))
+		s += fmt.Sprintf("Deps: %d", len(r.Deps))
 		for _, v := range r.Deps {
-			s += fmt.Sprintf("%s%+v", pre+ind, v)
-		}
-	}
-	if r.Pkg != nil && len(r.Pkg) > 0 {
-		s += fmt.Sprintf("%sPkg: %d", pre, len(r.Pkg))
-		for _, v := range r.Pkg {
-			s += fmt.Sprintf("%s%s", pre+ind, v.Name)
-			if v.Action != "" {
-				s += fmt.Sprintf(" (%s only)", v.Action)
-			}
-			if v.OS != nil && len(v.OS) > 0 {
-				s += fmt.Sprintf(" [OS:")
-				for _, o := range v.OS.Value() {
-					s += fmt.Sprintf("%s", o)
-				}
-				s += fmt.Sprintf("]")
-			}
-		}
-	}
-	if r.Copies != nil && len(r.Copies) > 0 {
-		s += fmt.Sprintf("%sCopy: %d", pre, len(r.Copies))
-		for k, v := range r.Copies {
-			k = strings.TrimPrefix(k, r.Path+"/")
-			v = strings.TrimPrefix(v, target+"/")
-			s += fmt.Sprintf("%s%s => %s", pre+ind, k, v)
-		}
-	}
-	if r.Lines != nil && len(r.Lines) > 0 {
-		s += fmt.Sprintf("%sLine: %d", pre, len(r.Lines))
-		for k, v := range r.Lines {
-			k = strings.TrimPrefix(k, r.Path+"/")
-			s += fmt.Sprintf("%s%s >> %s", pre+ind, k, v)
-		}
-	}
-	if r.Links != nil && len(r.Links) > 0 {
-		s += fmt.Sprintf("%sLink: %d", pre, len(r.Links))
-		for k, v := range r.Links {
-			k = strings.TrimPrefix(k, r.Path+"/")
-			v = strings.TrimPrefix(v, target+"/")
-			s += fmt.Sprintf("%s%s -> %s", pre+ind, k, v)
-		}
-	}
-	if r.Templates != nil && len(r.Templates) > 0 {
-		s += fmt.Sprintf("%sTemplate: %d", pre, len(r.Templates))
-		for _, v := range r.Templates {
-			v.Source = strings.TrimPrefix(v.Source, r.Path+"/")
-			v.Target = strings.TrimPrefix(v.Target, target+"/")
-			if Verbose > 1 {
-				s += fmt.Sprintf("%s%s +> %s\nENV:%+v\nVARS: %+v", pre+ind, v.Source, v.Target, v.Env, v.Vars)
-			} else {
-				s += fmt.Sprintf("%s%s +> %s\nENV:%+v\n%d VARS", pre+ind, v.Source, v.Target, v.Env, len(v.Vars))
-			}
+			s += fmt.Sprintf("  %+v", v)
 		}
 	}
 	return s
@@ -325,6 +232,18 @@ func (r *Role) Init() error {
 	if r.Path == "" {
 		r.Path = filepath.Join(target, Options.RoleDir, r.Name)
 	}
+	// if r.Install == nil {
+	// 	r.Install = make([]string, 0)
+	// }
+	// if r.PostInstall == nil {
+	// 	r.PostInstall = make([]string, 0)
+	// }
+	// if r.Remove == nil {
+	// 	r.Remove = make([]string, 0)
+	// }
+	// if r.PostRemove == nil {
+	// 	r.PostRemove = make([]string, 0)
+	// }
 	// r.URL = ParseURL(r.URL)
 	return nil
 }
