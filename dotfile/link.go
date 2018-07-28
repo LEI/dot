@@ -127,9 +127,9 @@ func Link(src, dst string) (bool, error) {
 		if real == src && err == ErrLinkExist {
 			return false, nil
 		}
-		q := fmt.Sprintf("Replace %s with a link to %s", dst, src)
+		q := fmt.Sprintf("Replace %s link to %s with a link to %s", dst, real, src)
 		if !AskConfirmation(q) {
-			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing link: %s", src, dst)
+			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing link: %s\n", src, dst)
 			return false, nil
 		}
 		// TODO remove?
@@ -145,9 +145,12 @@ func Link(src, dst string) (bool, error) {
 	}
 	if fi != nil && real == "" {
 		// return false, ErrLinkExist // fmt.Errorf("%s is a link to %s, not to %s", dst, real, src)
-		q := fmt.Sprintf("Replace %s link to %s with %s", dst, real, src)
+		// if err := printDiff(dst, content); err != nil {
+		// 	return false, err
+		// }
+		q := fmt.Sprintf("Replace %s with %s", dst, src)
 		if !AskConfirmation(q) {
-			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing file: %s", src, dst)
+			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing file: %s\n", src, dst)
 			return false, nil
 		}
 		// if err := Backup(dst); err != nil {

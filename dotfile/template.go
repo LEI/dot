@@ -320,7 +320,7 @@ func tplOverwrite(src, dst, content string) (bool, error) {
 	if !AskConfirmation(q) {
 		// diff := src // TODO diff?
 		// return content, false, fmt.Errorf("# /!\\ Template content mismatch: %s\n%s", dst, diff)
-		fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s", src, dst)
+		fmt.Fprintf(os.Stderr, "Skipping template %s because its target exists: %s\n", src, dst)
 		return false, nil
 	}
 	// if DryRun {

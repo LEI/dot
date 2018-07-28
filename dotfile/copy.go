@@ -172,7 +172,7 @@ func checkCopy(src, dst string) (bool, error) {
 	if !ok {
 		q := fmt.Sprintf("Overwrite existing copy target: %s", dst)
 		if !AskConfirmation(q) {
-			fmt.Fprintf(os.Stderr, "Skipping copy %s because its target exists: %s", src, dst)
+			fmt.Fprintf(os.Stderr, "Skipping copy %s because its target exists: %s\n", src, dst)
 			return false, nil
 		}
 		if err := Backup(dst); err != nil {

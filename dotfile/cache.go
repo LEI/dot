@@ -87,16 +87,16 @@ func (c *Cache) Init() *Cache {
 	}
 	_, err := CreateDir(CacheDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create directory: %s", CacheDir)
+		fmt.Fprintf(os.Stderr, "Unable to create directory: %s\n", CacheDir)
 		os.Exit(1)
 	}
 	if ClearCache {
 		if err := c.Clear(); err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s", CacheDir)
+			fmt.Fprintf(os.Stderr, "Unable to clear cache: %s\n", CacheDir)
 			os.Exit(1)
 		}
 	} else if _, err := c.Read(); err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read cache: %s", CacheDir)
+		fmt.Fprintf(os.Stderr, "Unable to read cache: %s\n", CacheDir)
 		os.Exit(1)
 	}
 	return c
