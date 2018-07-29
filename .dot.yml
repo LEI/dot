@@ -53,3 +53,5 @@ roles:
     url: "https://github.com/LEI/dot-micro"
     os: ["darwin"]
 
+  - name: htop
+    url: "https://github.com/LEI/dot-htop"
