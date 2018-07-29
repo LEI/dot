@@ -308,7 +308,9 @@ func (r *Role) ReadConfig(name string) (string, error) {
 	if r.Path == "" || name == "" {
 		return "", nil
 	}
-	cfgPath := filepath.Join(r.Path, name) // !filepath.IsAbs(name)
+	// if !filepath.IsAbs(name) {
+	cfgPath := filepath.Join(r.Path, name)
+	// }
 	if !utils.Exist(cfgPath) {
 		fmt.Printf("No role config file found: %s\n", cfgPath)
 		return "", nil
@@ -488,6 +490,7 @@ func (r *Role) PreparePaths(p *parsers.Map) error {
 						continue GLOB
 					}
 				}
+				// fmt.Println("PREPARE GLOB", s, "/", dst)
 				t, err := prepareTarget(s, dst)
 				if err != nil {
 					return err
@@ -495,6 +498,7 @@ func (r *Role) PreparePaths(p *parsers.Map) error {
 				paths.Add(s, t) // paths[s] = t
 			}
 		} else {
+			// fmt.Println("PREPARE", src, "/", dst)
 			t, err := prepareTarget(src, dst)
 			if err != nil {
 				return err
