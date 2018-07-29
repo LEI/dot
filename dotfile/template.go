@@ -36,7 +36,7 @@ var (
 			return ""
 		},
 		"expand": os.ExpandEnv,
-		"escape": func (s interface{}) interface{} {
+		"escape": func(s interface{}) interface{} {
 			str, ok := s.(string)
 			if !ok {
 				return s

@@ -35,7 +35,7 @@ func (t *PkgTask) Install() (string, error) {
 	sudo = t.Sudo
 	args := strings.Split(t.Name, " ")
 	for _, a := range t.Opts {
-		args = append(args, "--" + a)
+		args = append(args, "--"+a)
 	}
 	return PacInstall(args...)
 }

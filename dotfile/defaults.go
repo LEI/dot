@@ -26,12 +26,12 @@ type Default struct {
 
 // Def ...
 type Def struct {
-	App string
+	App    string
 	Domain string
-	Name string
-	Type string
-	Value interface{}
-	Sudo bool
+	Name   string
+	Type   string
+	Value  interface{}
+	Sudo   bool
 }
 
 // Read ...
