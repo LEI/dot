@@ -123,21 +123,25 @@ func Link(src, dst string) (bool, error) {
 	// 	}
 	// }
 	if err != nil && os.IsExist(err) {
+		return false, err
+	}
+	if real == src {
+		return false, nil
+	} else if real != "" {
+
+		// if err == ErrLinkExist {}
 		// ErrFileExist
-		if real == src && err == ErrLinkExist {
-			return false, nil
-		}
 		q := fmt.Sprintf("Replace %s link to %s with a link to %s", dst, real, src)
 		if !AskConfirmation(q) {
 			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing link: %s\n", src, dst)
 			return false, nil
 		}
-		// TODO remove?
-		// fmt.Fprintf(os.Stderr, "# %s is a file? at least not a link to %s\n", dst, src)
-		// return false, err
-	}
-	if real == src { // Symlink already exists
-		return false, nil
+		if err := Backup(dst); err != nil {
+			return false, err
+		}
+		if err := os.Remove(dst); err != nil {
+			return false, err
+		}
 	}
 	fi, err := os.Stat(dst)
 	if err != nil && os.IsExist(err) {
