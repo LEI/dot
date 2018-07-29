@@ -34,6 +34,7 @@ var (
 			}
 			return ""
 		},
+		"expand": os.ExpandEnv,
 	}
 )
 
@@ -62,7 +63,9 @@ func (t *TemplateTask) List() (string, error) {
 	// t.Source = strings.TrimPrefix(t.Source, r.Path+"/")
 	// t.Target = strings.TrimPrefix(t.Target, target+"/")
 	str := fmt.Sprintf("Template: %s +> %s (%d ENV, %d VARS)", t.Source, t.Target, len(t.Env), len(t.Vars))
-	// Verbose > 1 str += fmt.Sprintf("Template: %s +> %s\nENV:%+v\nVARS: %+v", t.Source, t.Target, t.Env, t.Vars)
+	if Verbose > 1 {
+		str += fmt.Sprintf("\nENV:%+v\nVARS: %+v", t.Env, t.Vars)
+	}
 	return str, nil
 }
 
@@ -137,15 +140,17 @@ func (t *TemplateTask) Data() (map[string]interface{}, error) {
 	}
 	// Specific role environment
 	for k, v := range t.Env {
-		k = strings.ToTitle(k)
+		// k = strings.ToTitle(k)
 		v, err := TemplateEnv(k, v)
 		if err != nil {
 			return data, err
 		}
+		// fmt.Println("$ ENV", k, "=", v)
 		data[k] = v
 	}
 	// Extra variables (not string only)
 	for k, v := range t.Vars {
+		// fmt.Println("$ VAR", k, "=", v)
 		data[k] = v
 	}
 	return data, nil

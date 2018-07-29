@@ -47,7 +47,7 @@ var (
 	homeDir string
 
 	baseEnv = map[string]string{
-		"OS": OS,
+		"os": OS,
 	}
 )
 

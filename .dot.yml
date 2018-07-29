@@ -9,7 +9,7 @@ roles:
 
   - name: git
     url: "https://github.com/LEI/dot-git"
-    # dependencies: ["gpg"]
+    dependencies: ["gpg"]
 
   - name: vim
     url: "https://github.com/LEI/dot-vim"
@@ -25,7 +25,7 @@ roles:
 
   - name: osx
     url: "https://github.com/LEI/dot-osx"
-    os: ["darwin16"] # Sierra
+    os: ["darwin"]
 
   - name: hammerspoon
     url: "https://github.com/LEI/dot-hammerspoon"
