@@ -8,6 +8,7 @@ import (
 // PkgTask struct
 type PkgTask struct {
 	Name string
+	Opts []string
 	Sudo bool
 	Task
 }
@@ -33,6 +34,9 @@ func (t *PkgTask) List() (string, error) {
 func (t *PkgTask) Install() (string, error) {
 	sudo = t.Sudo
 	args := strings.Split(t.Name, " ")
+	for _, a := range t.Opts {
+		args = append(args, "--" + a)
+	}
 	return PacInstall(args...)
 }
 

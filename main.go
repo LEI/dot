@@ -249,8 +249,13 @@ func do(r *Role, a string) error {
 			if v.Action != "" && strings.ToLower(v.Action) != strings.ToLower(act) {
 				continue
 			}
+			// args := []string{}
+			// for _, a := range v.Args {
+			// 	args = append(args, a)
+			// }
 			task := &dotfile.PkgTask{
 				Name: v.Name,
+				Opts: v.Args,
 				Sudo: Options.Sudo,
 			}
 			str, err := task.Do(act)
