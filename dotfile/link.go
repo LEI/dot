@@ -153,9 +153,12 @@ func Link(src, dst string) (bool, error) {
 			fmt.Fprintf(os.Stderr, "Skipping symlink %s because its target is an existing file: %s\n", src, dst)
 			return false, nil
 		}
-		// if err := Backup(dst); err != nil {
-		// 	return false, err
-		// }
+		if err := Backup(dst); err != nil {
+			return false, err
+		}
+		if err := os.Remove(dst); err != nil {
+			return false, err
+		}
 	}
 	if DryRun {
 		return true, nil
