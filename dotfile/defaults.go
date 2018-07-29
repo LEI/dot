@@ -26,6 +26,7 @@ type Default struct {
 
 // Def ...
 type Def struct {
+	App string
 	Domain string
 	Name string
 	Type string
@@ -50,11 +51,12 @@ func (d *Defaults) Read(s string) error {
 
 // Parse ...
 func (d *Defaults) Parse() error {
-	for _, a := range d.Defaults {
-		tpl := a.Template
-		fmt.Printf("Defaults: %s\n (%d)\n", tpl, len(a.Commands))
-		for _, b := range a.Commands {
+	for _, D := range d.Defaults {
+		tpl := D.Template
+		fmt.Printf("Defaults: %s\n (%d)\n", tpl, len(D.Commands))
+		for a, b := range D.Commands {
 			for name, def := range b {
+				def.App = a
 				def.Name = name
 				// s := fmt.Sprintf("%s %s %s %s\n", def.Domain, def.Name, def.Type, def.Value)
 				str, err := TemplateData(def.Name, tpl, def)
