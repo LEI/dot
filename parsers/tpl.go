@@ -158,6 +158,9 @@ func parseTemplate(file string) (vars map[string]interface{}, err error) {
 	}
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return vars, nil
+		}
 		return vars, err
 	}
 	if err := yaml.Unmarshal(bytes, &vars); err != nil {
