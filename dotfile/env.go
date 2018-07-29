@@ -2,7 +2,6 @@ package dotfile
 
 import (
 	// "bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,7 +10,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"text/template"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -108,20 +106,7 @@ func RestoreEnv(env map[string]string) error {
 
 // TemplateEnv ...
 func TemplateEnv(k, v string) (string, error) {
-	if v == "" {
-		return v, nil
-	}
-	tmpl, err := template.New(k).Option("missingkey=zero").Funcs(tplFuncMap).Parse(v)
-	if err != nil {
-		return v, err
-	}
-	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, GetEnv())
-	if err != nil {
-		return v, err
-	}
-	v = buf.String()
-	return v, nil
+	return TemplateData(k, v, GetEnv())
 }
 
 // SetEnv ...

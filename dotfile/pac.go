@@ -38,7 +38,12 @@ func PacInstall(args ...string) (string, error) {
 	if bin == "" {
 		return "", nil
 	}
-	return fmt.Sprintf("%s %s", bin, arg), execute(bin, arg...)
+	str, err := fmt.Sprintf("%s %s", bin, arg), execute(bin, arg...)
+	if err != nil {
+		// pacapt -Syu
+		return str, err
+	}
+	return str, nil
 }
 
 // PacRemove ...
@@ -68,7 +73,7 @@ func pac(a string, args ...string) (string, []string) {
 	// case "remove":
 	// 	pa = append(pa, "-R")
 	default:
-		fmt.Println("abort pac")
+		fmt.Println("abort pac", a)
 		return "", args
 	}
 	// if HasOSType("darwin") {

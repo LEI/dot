@@ -10,6 +10,7 @@ import (
 	// "github.com/jessevdk/go-flags"
 
 	"github.com/LEI/dot/dotfile"
+	"github.com/LEI/dot/utils"
 )
 
 var (
@@ -351,6 +352,19 @@ func do(r *Role, a string) error {
 					return err
 				}
 				fmt.Println(str)
+			}
+		}
+		defaultsFile := filepath.Join(r.Path, "defaults.yml")
+		if utils.Exist(defaultsFile) {
+			defaults := &dotfile.Defaults{}
+			if err := defaults.Read(defaultsFile); err != nil {
+				return err
+			}
+			if err := defaults.Parse(); err != nil {
+				return err
+			}
+			if err := defaults.Exec(); err != nil {
+				return err
 			}
 		}
 	}

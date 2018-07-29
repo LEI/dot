@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -35,6 +36,16 @@ var (
 			return ""
 		},
 		"expand": os.ExpandEnv,
+		"escape": func (s interface{}) interface{} {
+			str, ok := s.(string)
+			if !ok {
+				return s
+			}
+			if !strings.Contains(str, " ") && !strings.Contains(str, "\"") {
+				return str
+			}
+			return strconv.Quote(str)
+		},
 	}
 )
 
@@ -154,6 +165,24 @@ func (t *TemplateTask) Data() (map[string]interface{}, error) {
 		data[k] = v
 	}
 	return data, nil
+}
+
+// TemplateData ...
+func TemplateData(k, v string, data interface{}) (string, error) {
+	if v == "" {
+		return v, nil
+	}
+	tmpl, err := template.New(k).Option("missingkey=zero").Funcs(tplFuncMap).Parse(v)
+	if err != nil {
+		return v, err
+	}
+	buf := &bytes.Buffer{}
+	err = tmpl.Execute(buf, data)
+	if err != nil {
+		return v, err
+	}
+	v = buf.String()
+	return v, nil
 }
 
 // Template task

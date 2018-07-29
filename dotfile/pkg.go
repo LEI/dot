@@ -2,6 +2,7 @@ package dotfile
 
 import (
 	"fmt"
+	"strings"
 )
 
 // PkgTask struct
@@ -31,11 +32,13 @@ func (t *PkgTask) List() (string, error) {
 // Install package
 func (t *PkgTask) Install() (string, error) {
 	sudo = t.Sudo
-	return PacInstall(t.Name)
+	args := strings.Split(t.Name, " ")
+	return PacInstall(args...)
 }
 
 // Remove package
 func (t *PkgTask) Remove() (string, error) {
 	sudo = t.Sudo
-	return PacInstall(t.Name)
+	args := strings.Split(t.Name, " ")
+	return PacRemove(args...)
 }
