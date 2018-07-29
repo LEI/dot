@@ -33,12 +33,12 @@ func has(p string) bool {
 }
 
 // PacInstall ...
-func PacInstall(args ...string) (string, error) {
-	bin, arg := pac("install", args...)
+func PacInstall(slice ...string) (string, error) {
+	bin, args := pac("install", slice...)
 	if bin == "" {
 		return "", nil
 	}
-	str, err := fmt.Sprintf("%s %s", bin, arg), execute(bin, arg...)
+	str, err := fmt.Sprintf("%s %s", bin, args), execute(bin, args...)
 	if err != nil {
 		// pacapt -Syu
 		return str, err
@@ -47,12 +47,12 @@ func PacInstall(args ...string) (string, error) {
 }
 
 // PacRemove ...
-func PacRemove(args ...string) (string, error) {
-	bin, arg := pac("remove", args...)
+func PacRemove(slice ...string) (string, error) {
+	bin, args := pac("remove", slice...)
 	if bin == "" {
 		return "", nil
 	}
-	return fmt.Sprintf("%s %s", bin, arg), execute(bin, arg...)
+	return fmt.Sprintf("%s %s", bin, args), execute(bin, args...)
 }
 
 func pac(a string, args ...string) (string, []string) {
@@ -76,9 +76,9 @@ func pac(a string, args ...string) (string, []string) {
 		fmt.Println("abort pac", a)
 		return "", args
 	}
-	// if HasOSType("darwin") {
-	pa = append(pa, "--noconfirm")
-	// }
+	if !HasOSType("darwin") {
+		pa = append(pa, "--noconfirm")
+	}
 	pa = append(pa, args...)
 	if sudo {
 		pa = append([]string{pacBin}, pa...)

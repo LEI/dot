@@ -378,7 +378,9 @@ func (r *Role) PrepareLines(l *map[string]string) error {
 	lines := make(map[string]string, 0)
 	for file, line := range *l {
 		// Prepend role directory to source path
-		file = filepath.Join(target, file)
+		if !filepath.IsAbs(file) {
+			file = filepath.Join(target, file)
+		}
 		file = dotfile.ExpandEnv(file)
 		lines[file] = line
 	}
@@ -402,7 +404,9 @@ func (r *Role) PrepareTemplates(t *parsers.Templates) error {
 		v.Source = os.ExpandEnv(v.Source)
 		v.Target = os.ExpandEnv(v.Target)
 		// Prepend role directory to source path
-		v.Source = filepath.Join(r.Path, v.Source)
+		if !filepath.IsAbs(v.Source) {
+			v.Source = filepath.Join(r.Path, v.Source)
+		}
 		// Check frob globs
 		if strings.Contains(v.Source, "*") {
 			// fmt.Println("*", v.Source, v.Target)
@@ -460,7 +464,9 @@ func (r *Role) PreparePaths(p *parsers.Map) error {
 		src = os.ExpandEnv(src)
 		dst = os.ExpandEnv(dst)
 		// Prepend role directory to source path
-		src = filepath.Join(r.Path, src)
+		if !filepath.IsAbs(src) {
+			src = filepath.Join(r.Path, src)
+		}
 		// Check frob globs
 		if strings.Contains(src, "*") {
 			// fmt.Println("*", src, dst)
@@ -507,11 +513,13 @@ func prepareTarget(src, dst string) (string, error) {
 	if f == "" {
 		return "", fmt.Errorf("error (no source file name) while parsing: %s / %s", src, dst)
 	}
-	baseDir := filepath.Join(target, dst)
+	if !filepath.IsAbs(dst) {
+		dst = filepath.Join(target, dst)
+	}
 	// if _, err := dotfile.CreateDir(baseDir); err != nil {
 	// 	return baseDir, err
 	// }
-	t := filepath.Join(baseDir, f)
+	t := filepath.Join(dst, f)
 	return t, nil
 }
 

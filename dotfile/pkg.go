@@ -25,7 +25,7 @@ func (t *PkgTask) Do(a string) (string, error) {
 
 // List package
 func (t *PkgTask) List() (string, error) {
-	str := fmt.Sprintf("Pkg: %s", t.Name)
+	str := fmt.Sprintf("Pkg: %s %+v", t.Name, t.Opts)
 	// t.Sudo
 	return str, nil
 }

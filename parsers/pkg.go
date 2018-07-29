@@ -8,7 +8,7 @@ import (
 // Pkg ...
 type Pkg struct {
 	Name   string
-	Args   []string
+	Args   Slice
 	OS     Slice
 	Action string // install, remove
 }
@@ -34,10 +34,11 @@ func NewPkg(i interface{}) (*Pkg, error) {
 			return pkg, fmt.Errorf("missing pkg name: %+v", val)
 		}
 		pkg.Name = pkgName
-		pkgArgs, ok := val["args"].([]string)
-		if ok {
-			pkg.Args = pkgArgs
+		pkgArgs, err := NewSlice(val["args"])
+		if err != nil {
+			return pkg, err
 		}
+		pkg.Args = *pkgArgs
 		pkgOS, err := NewSlice(val["os"])
 		if err != nil {
 			return pkg, err
