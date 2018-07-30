@@ -31,6 +31,6 @@ WORKDIR /home/$USER
 COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
 
-RUN dot install --packages --sudo
+#RUN dot install --packages --sudo
 
 ENTRYPOINT ["/bin/bash"]

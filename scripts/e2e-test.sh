@@ -19,18 +19,17 @@ tail_bashrc="$(tail -n1 ~/.bashrc)"
 # Travis CI fix: sudo chmod +x /usr/local/bin/pacapt
 run dot list
 
-args=()
-# Check if not root user
-if [[ "$(id -u)" -ne 0 ]]; then
-  args+=("--sudo")
+dot_args=()
+if [[ "$(uname -s)" != "Darwin" ]] && [[ "$(id -u)" -ne 0 ]]; then
+  dot_args+=("--sudo")
 fi
-yes | run dot install --packages "${args[@]}" # --verbose
+yes | run dot install --packages "${dot_args[@]}" # --verbose
 
 run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
 for f in "$HOME"/.gitconfig; do run test -f "$f"; done
-for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -s "$d"; done
+for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -d "$d"; done
 [[ "$(tail -n1 ~/.bashrc)" != "$tail_bashrc" ]] || exit 1
-yes | run dot remove # --packages
+yes | run dot remove # "${dot_args[@]}"
 # yes | run dot rm --https --empty;
 [[ "$(tail -n1 ~/.bashrc)" == "$tail_bashrc" ]] || exit 1
 # touch ~/{.bashrc,.vim/init.vim}
