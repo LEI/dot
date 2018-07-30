@@ -14,6 +14,14 @@ if ! hash goreleaser 2> /dev/null; then
   )
 fi
 
-goreleaser --rm-dist --snapshot
+echo "PATH: $PATH"
+
+echo "GOPATH: $GOPATH"
+
+ls -la $GOTPATH
+
+which goreleaser
+
+goreleaser --rm-dist "$@"
 
 ls -la dist
