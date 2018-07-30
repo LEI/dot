@@ -153,13 +153,14 @@ func Matches(in []string, list []string) bool {
 			}
 			if negated && matched {
 				return false
-			} else if matched {
+			}
+			if matched {
 				return true
 			}
 		}
-		// if negated {
-		// 	return true
-		// }
+		if negated {
+			return true
+		}
 	}
 	return false
 }
