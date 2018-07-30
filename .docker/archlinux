@@ -1,0 +1,30 @@
+# vi: ft=Dockerfile
+FROM base/archlinux
+
+ENV OS linux
+ENV ARCH amd64
+ENV USER docker
+
+RUN pacman -Syu --needed --noconfirm --noprogressbar --quiet \
+base-devel \
+ca-certificates \
+git \
+sudo
+
+ADD ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+
+RUN useradd --create-home --shell /bin/bash $USER
+RUN echo "$USER:$USER" | chpasswd
+RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
+RUN groupadd sudo && usermod -aG sudo $USER # RUN gpasswd -a $USER sudo
+
+USER $USER
+
+WORKDIR /home/$USER
+
+ADD ./scripts scripts
+ADD ./.dot.yml .dot.yml
+
+RUN dot install --packages --sudo
+
+ENTRYPOINT ["/bin/bash"]

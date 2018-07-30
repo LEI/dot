@@ -38,7 +38,7 @@ func PacInstall(slice ...string) (string, error) {
 	if bin == "" {
 		return "", nil
 	}
-	str, err := fmt.Sprintf("%s %s", bin, args), execute(bin, args...)
+	str, err := fmt.Sprintf("%s %s", bin, strings.Join(args, " ")), execute(bin, args...)
 	if err != nil {
 		// pacapt -Syu
 		return str, err
@@ -76,10 +76,18 @@ func pac(a string, args ...string) (string, []string) {
 		fmt.Println("abort pac", a)
 		return "", args
 	}
+	// pacman
+	if HasOSType("archlinux") {
+		pa = append(pa, "--needed", "--noprogressbar")
+	}
+	// pacman, apt...
 	if !HasOSType("darwin") {
 		pa = append(pa, "--noconfirm")
 	}
 	pa = append(pa, args...)
+	if Verbose == 0 {
+		pa = append(pa, "--quiet")
+	}
 	if sudo {
 		pa = append([]string{pacBin}, pa...)
 		return "sudo", pa // execute("sudo", pa...)

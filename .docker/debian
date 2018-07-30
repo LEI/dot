@@ -1,0 +1,32 @@
+# vi: ft=Dockerfile
+FROM debian
+
+ENV OS linux
+ENV ARCH amd64
+ENV USER docker
+
+RUN apt-get update -qq -y && \
+apt-get install -qq --no-install-suggests --no-install-recommends -y \
+apt-utils \
+ca-certificates \
+git \
+sudo
+
+ADD ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+
+RUN useradd --create-home --shell /bin/bash $USER
+RUN echo "$USER:$USER" | chpasswd
+RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
+RUN adduser $USER sudo && adduser $USER staff
+
+USER $USER
+
+WORKDIR /home/$USER
+
+ADD ./scripts scripts
+ADD ./.dot.yml .dot.yml
+
+RUN sudo chmod -R 775 /usr/local
+RUN dot install --packages --sudo
+
+ENTRYPOINT ["/bin/bash"]

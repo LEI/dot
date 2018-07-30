@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -51,7 +52,9 @@ var (
 
 func init() {
 	usr, _ := user.Current()
-	homeDir = usr.HomeDir
+	if usr != nil {
+		homeDir = usr.HomeDir
+	}
 	if homeDir == "" {
 		homeDir = os.Getenv("HOME")
 	}
@@ -132,7 +135,33 @@ func ExpandEnv(s string, envs ...map[string]string) string {
 
 // HasOSType ...
 func HasOSType(s ...string) bool {
-	return Intersects(s, osTypes)
+	return Matches(s, osTypes)
+}
+
+// Matches ...
+func Matches(in []string, list []string) bool {
+	for _, pattern := range in {
+		negated := pattern[0] == '!'
+		if negated {
+			pattern = pattern[1:]
+		}
+		for _, str := range list {
+			matched, err := regexp.MatchString(pattern, str)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %s\n", pattern, err)
+				os.Exit(1)
+			}
+			if negated && matched {
+				return false
+			} else if matched {
+				return true
+			}
+		}
+		// if negated {
+		// 	return true
+		// }
+	}
+	return false
 }
 
 // Contains check if a slice contains a given string

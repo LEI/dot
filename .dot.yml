@@ -23,6 +23,10 @@ roles:
     url: "https://github.com/LEI/dot-termux"
     os: ["android"]
 
+  - name: arch
+    url: "https://github.com/LEI/dot-arch"
+    os: ["archlinux"]
+
   - name: osx
     url: "https://github.com/LEI/dot-osx"
     os: ["darwin"]
@@ -34,6 +38,7 @@ roles:
   - name: i3
     url: "https://github.com/LEI/dot-i3"
     os: ["arch"]
+    dependencies: ["arch"]
 
   - name: rxvt
     url: "https://github.com/LEI/dot-rxvt"

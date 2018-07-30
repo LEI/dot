@@ -2,26 +2,46 @@ version: "2"
 
 services:
 
-  dotimg:
+  base:
     build: .
+      context: .
+      # dockerfile: .docker/debian
+      dockerfile: .docker/archlinux
     image: lei/dot
     container_name: dot
     # entrypoint: /bin/bash
     environment:
       GIT_AUTHOR_NAME: Docker
       GIT_AUTHOR_EMAIL: do@ck.er
-    command: |
-      -l -c '
-      source $$DOT/scripts/functions.sh
-      run dot install --packages --verbose;
-      # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +Install +qall; exit";
-      exec bash -l;'
+    # entrypoint: /bin/bash
+    # command: -l -c '$$DOT/scripts/entrypoint.sh'
+    command: -l # -c 'exec bash -l'
+    # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +Install +qall; exit";
     # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
     image: lei/dot
     depends_on:
-      - dotimg
+      - base
     container_name: dot_test
-    # entrypoint: /bin/bash
-    command: -l -c '$$DOT/scripts/e2e-test.sh'
+    command: -l -c './scripts/e2e-test.sh'
+
+  test_debian:
+    build: .
+      context: .
+      dockerfile: .docker/debian
+    # image: lei/dot_debian
+    depends_on:
+      - base
+    container_name: dot_debian
+    command: -l -c './scripts/e2e-test.sh'
+
+  test_archlinux:
+    build: .
+      context: .
+      dockerfile: .docker/archlinux
+    # image: lei/dot_archlinux
+    depends_on:
+      - base
+    container_name: dot_debian
+    command: -l -c './scripts/e2e-test.sh'

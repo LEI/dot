@@ -1,0 +1,19 @@
+# vi: ft=Dockerfile
+FROM scratch
+
+# RUN apt-get update -qq -y && \
+# apt-get install -qq --no-install-suggests --no-install-recommends -y \
+# ca-certificates \
+# git
+
+ENV OS linux
+ENV ARCH amd64
+ADD ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+
+# $HOME
+WORKDIR /root
+
+ADD ./scripts /root/scripts
+ADD ./.dot.yml /root/.dot.yml
+
+ENTRYPOINT ["/bin/bash"]
