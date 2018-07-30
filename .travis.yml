@@ -27,7 +27,7 @@ install:
 jobs:
   include:
 
-    - stage: test
+    - stage: build
       script: scripts/test.sh
 
     - stage: build
@@ -36,7 +36,7 @@ jobs:
       script: docker-compose run test
       # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
 
-    - stage: build
+    - stage: test
       # install: false
       before_script: docker-compose build test_os
       script: docker-compose run test_os

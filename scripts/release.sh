@@ -3,7 +3,7 @@
 set -e
 
 if ! hash dep 2> /dev/null; then
-  curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 fi
 
 # Install dependencies
