@@ -7,20 +7,14 @@ if ! hash dep 2> /dev/null; then
 fi
 
 if ! hash goreleaser 2> /dev/null; then
-  go get -d github.com/goreleaser/goreleaser && (
-    cd "$GOPATH/src/github.com/goreleaser/goreleaser"
+  REPO_GORELEASER=github.com/goreleaser/goreleaser
+  go get -d "$REPO_GORELEASER" && (
+    cd "$GOPATH/src/$REPO_GORELEASER"
     dep ensure -vendor-only
     make setup build
+    go install "$REPO_GORELEASER"
   )
 fi
-
-echo "PATH: $PATH"
-
-echo "GOPATH: $GOPATH"
-
-ls -la $GOTPATH
-
-which goreleaser
 
 goreleaser --rm-dist "$@"
 
