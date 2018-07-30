@@ -21,7 +21,7 @@ COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 RUN useradd --create-home --shell /bin/bash $USER
 RUN echo "$USER:$USER" | chpasswd
-RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sudo
 RUN groupadd sudo && usermod -aG sudo $USER # RUN gpasswd -a $USER sudo
 
 USER $USER

@@ -51,9 +51,15 @@ jobs:
       script: docker-compose run test_os
       env: OS=debian
 
-    # - stage: test
-    #   env: OS=darwin
-    #   os: osx
+    - stage: test
+      install: scripts/release.sh --snapshot
+      before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
+      script:
+        - ls -la ~
+        - ls -la
+        - dot list
+      env: OS=darwin
+      os: osx
 
     - stage: deploy
       addons:
