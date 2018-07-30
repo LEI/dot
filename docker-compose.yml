@@ -23,32 +23,12 @@ services:
     container_name: dot_test
     command: -l -c './scripts/e2e-test.sh'
 
-  test_debian:
+  test_os:
     build:
       context: .
-      dockerfile: .docker/debian
-    # image: lei/dot_debian
+      dockerfile: .docker/$OS
+    # image: lei/dot_$OS
     # depends_on:
     #   - base
-    container_name: dot_debian
-    command: -l -c './scripts/e2e-test.sh'
-
-  test_archlinux:
-    build:
-      context: .
-      dockerfile: .docker/archlinux
-    # image: lei/dot_archlinux
-    # depends_on:
-    #   - base
-    container_name: dot_archlinux
-    command: -l -c './scripts/e2e-test.sh'
-
-  test_scratch:
-    build:
-      context: .
-      dockerfile: .docker/scratch
-    # image: lei/dot_scratch
-    # depends_on:
-    #   - base
-    container_name: dot_scratch
+    container_name: dot_$OS
     command: -l -c './scripts/e2e-test.sh'

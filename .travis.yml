@@ -38,13 +38,12 @@ jobs:
 
     - stage: build
       # install: false
-      before_script: docker-compose build test_archlinux
-      script: docker-compose run test_archlinux
-
-    - stage: build
-      # install: false
-      before_script: docker-compose build test_debian
-      script: docker-compose run test_debian
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
+      env:
+        - OS=archlinux
+        - OS=centos
+        - OS=debian
 
     - stage: deploy
       addons:

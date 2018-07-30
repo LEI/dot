@@ -1,16 +1,14 @@
 # vi: ft=Dockerfile
-FROM scratch
-
-# RUN apt-get update -qq -y && \
-# apt-get install -qq --no-install-suggests --no-install-recommends -y \
-# ca-certificates \
-# git
+FROM centos
 
 ENV OS linux
 ENV ARCH amd64
 ENV USER docker
 
-# RUN install...
+RUN yum update --assumeyes && \
+yum install --assumeyes --quiet \
+ca-certificates \
+git
 
 # RUN locale-gen
 
