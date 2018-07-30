@@ -26,35 +26,36 @@ install:
 jobs:
   include:
 
-    - stage: build
-      install: true
-      before_script: docker-compose build test
-      script: docker-compose run test
-      # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
+    # - stage: build
+    #   install: true
+    #   before_script: docker-compose build test
+    #   script: docker-compose run test
+    #   # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
 
-    - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=archlinux
+    # - stage: test
+    #   install: scripts/release.sh --snapshot
+    #   before_script: docker-compose build test_os
+    #   script: docker-compose run test_os
+    #   env: OS=archlinux
 
-    - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=centos
+    # - stage: test
+    #   install: scripts/release.sh --snapshot
+    #   before_script: docker-compose build test_os
+    #   script: docker-compose run test_os
+    #   env: OS=centos
 
-    - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=debian
+    # - stage: test
+    #   install: scripts/release.sh --snapshot
+    #   before_script: docker-compose build test_os
+    #   script: docker-compose run test_os
+    #   env: OS=debian
 
     - stage: test
       install:
         - ls -la ~
         - ls -la
-        - echo $$GOPATH
+        - echo $GOPATH
+        - which go
         - scripts/release.sh --snapshot
       before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
       script:
