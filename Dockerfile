@@ -4,7 +4,7 @@ RUN apt-get update -qq -y && \
 apt-get install -qq --no-install-suggests --no-install-recommends -y \
 ca-certificates \
 curl \
-git-core \
+git \
 locales # vim tmux
 # && rm -rf /var/lib/apt/lists/*
 

@@ -33,12 +33,8 @@ WORKDIR /home/$USER
 
 ADD ./scripts scripts
 ADD ./.dot.yml .dot.yml
-#RUN sudo chown -R docker:docker .dot.yml
 
 RUN dot install --packages --sudo
-# FIX /usr/local/bin/pacapt
-# RUN sudo chmod -R 775 /usr/local
-#RUN sudo chown -R docker:docker /usr/local/bin/pacapt
 
 # Restore interactive
 #ENV DEBIAN_FRONTEND newt
