@@ -15,8 +15,8 @@ services:
 #     - $GOPATH/pkg
 
 stages:
-  - test
   - build
+  - test
   - deploy
   # - name: deploy
   #   # if: branch = master
@@ -30,11 +30,11 @@ jobs:
     - stage: build
       script: scripts/test.sh
 
-    # - stage: build
-    #   install: true
-    #   before_script: docker-compose build test
-    #   script: docker-compose run test
-    #   # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
+    - stage: build
+      install: true
+      before_script: docker-compose build test
+      script: docker-compose run test
+      # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
 
     - stage: test
       # install: false
