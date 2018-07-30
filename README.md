@@ -41,8 +41,7 @@ Download a [release](https://github.com/LEI/dot/releases) or install manually:
 
 ## TODO
 
-- [ ] Copy role
-- [ ] Block in file
+- [ ] Copy role, Block in file
 - [ ] Advanced conditions e.g. `os: ["!darwin"]`
 - [ ] Ansible `with_items` equivalent for templates
 - [ ] Chooser (overwrite, backup, remove) instead of (y/n) confirmation, plus prompt for missing variables
