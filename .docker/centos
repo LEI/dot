@@ -30,10 +30,6 @@ make install # sudo
 
 # RUN locale-gen
 
-# Pre-install pacapt
-ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
-RUN chmod 755 /usr/local/bin/pacapt
-
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 RUN useradd --create-home --shell /bin/bash $USER
@@ -48,6 +44,10 @@ WORKDIR /home/$USER
 
 COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
+
+# Pre-install pacapt
+ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
+RUN chmod 755 /usr/local/bin/pacapt
 
 #RUN dot install --packages --sudo
 

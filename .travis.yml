@@ -51,11 +51,13 @@ jobs:
       env: OS=debian
 
     - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
-      script:
+      install:
         - ls -la ~
         - ls -la
+        - echo $$GOPATH
+        - scripts/release.sh --snapshot
+      before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
+      script:
         - dot list
       env: OS=darwin
       os: osx
