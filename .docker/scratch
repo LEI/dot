@@ -8,12 +8,27 @@ FROM scratch
 
 ENV OS linux
 ENV ARCH amd64
-ADD ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+ENV USER docker
+
+# RUN install...
+
+# RUN locale-gen
+
+COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+
+RUN useradd --create-home --shell /bin/bash $USER
+RUN echo "$USER:$USER" | chpasswd
+RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
+# RUN adduser $USER sudo && adduser $USER staff
+
+USER $USER
 
 # $HOME
-WORKDIR /root
+WORKDIR /home/$USER
 
-ADD ./scripts /root/scripts
-ADD ./.dot.yml /root/.dot.yml
+COPY ./scripts /root/scripts
+COPY ./.dot.yml /root/.dot.yml
+
+RUN dot install --packages --sudo
 
 ENTRYPOINT ["/bin/bash"]

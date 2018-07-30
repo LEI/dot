@@ -32,7 +32,7 @@ RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 # github.com/imdario/mergo \
 # github.com/jessevdk/go-flags
 
-ADD . $DOT
+COPY . $DOT
 
 # RUN go vet
 # RUN go build

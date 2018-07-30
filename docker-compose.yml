@@ -40,5 +40,15 @@ services:
     # image: lei/dot_archlinux
     # depends_on:
     #   - base
-    container_name: dot_debian
+    container_name: dot_archlinux
+    command: -l -c './scripts/e2e-test.sh'
+
+  test_scratch:
+    build:
+      context: .
+      dockerfile: .docker/scratch
+    # image: lei/dot_scratch
+    # depends_on:
+    #   - base
+    container_name: dot_scratch
     command: -l -c './scripts/e2e-test.sh'
