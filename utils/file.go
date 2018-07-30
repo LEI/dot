@@ -32,7 +32,11 @@ func Exist(s string) bool {
 // IsFile ...
 func IsFile(s string) bool {
 	fi, err := os.Stat(s)
-	return !os.IsNotExist(err) && !fi.IsDir()
+	if err != nil && os.IsExist(err) {
+		return false
+	}
+	// !os.IsNotExist(err) &&
+	return fi != nil && !fi.IsDir()
 }
 
 // func writeFile(fileName string, data []byte) error {
@@ -43,7 +47,7 @@ func IsFile(s string) bool {
 // // SameContent ...
 // func SameContent(src, dst string) (bool, error) {
 // 	b, err := ioutil.ReadFile(src)
-// 	if err != nil { // && os.IsNotExist(err) {
+// 	if err != nil { // && os.IsNotExist(err)
 // 		return false, err
 // 	}
 // 	_, ok, err := CompareFileContent(dst, string(b))

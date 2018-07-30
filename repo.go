@@ -67,12 +67,17 @@ func (r *Repo) checkRepo() error {
 	if !isGitDir(r.Path) {
 		return ErrNoGitDir
 	}
-	args := []string{"-C", r.Path, "diff-index", "--quiet", "HEAD"}
-	_, stderr, status := dotfile.ExecCommand("git", args...)
+	// args := []string{"-C", r.Path, "diff-index", "--quiet", "HEAD"}
+	args := []string{"-C", r.Path, "status", "--porcelain"}
+	stdout, stderr, status := dotfile.ExecCommand("git", args...)
 	if status == 1 {
-		return ErrDirtyRepo
+		// if git diff-index -q HEAD -> ErrDirtyRepo
+		return ErrNoGitDir
 	} else if status != 0 {
-		return fmt.Errorf("check repo unknown error: %s", stderr)
+		return fmt.Errorf("check repo unknown error (status %d): %s", status, stderr)
+	}
+	if stdout != "" && len(strings.Split(stdout, "\n")) > 0 {
+		return ErrDirtyRepo
 	}
 	// c := exec.Command("git", args...)
 	// err := c.Run()

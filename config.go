@@ -138,6 +138,7 @@ func FindConfig(name string) (string, error) {
 	}
 	// fmt.Println("Config: searching in", paths)
 	for _, p := range paths {
+		//fmt.Println("# Config path", p, "->", utils.IsFile(p))
 		if utils.IsFile(p) {
 			// fmt.Println("Config: found config", p)
 			return p, nil

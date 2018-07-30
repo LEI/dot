@@ -38,12 +38,14 @@ func PacInstall(slice ...string) (string, error) {
 	if bin == "" {
 		return "", nil
 	}
-	str, err := fmt.Sprintf("%s %s", bin, strings.Join(args, " ")), execute(bin, args...)
-	if err != nil {
-		// pacapt -Syu
-		return str, err
-	}
-	return str, nil
+	str := fmt.Sprintf("%s %s", bin, strings.Join(args, " "))
+	return str, execute(bin, args...)
+	// str, err := str, execute(bin, args...)
+	// if err != nil {
+	// 	// pacapt -Syu
+	// 	return str, err
+	// }
+	// return str, nil
 }
 
 // PacRemove ...

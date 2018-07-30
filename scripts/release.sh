@@ -17,5 +17,3 @@ if ! hash goreleaser 2> /dev/null; then
 fi
 
 goreleaser --rm-dist "$@"
-
-ls -la dist

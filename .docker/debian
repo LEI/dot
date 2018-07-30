@@ -4,13 +4,21 @@ FROM debian
 ENV OS linux
 ENV ARCH amd64
 ENV USER docker
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update -qq -y && \
 apt-get install -qq --no-install-suggests --no-install-recommends -y \
 apt-utils \
 ca-certificates \
 git \
+locales \
 sudo
+
+RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
+locale-gen
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
 
 ADD ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
@@ -25,8 +33,14 @@ WORKDIR /home/$USER
 
 ADD ./scripts scripts
 ADD ./.dot.yml .dot.yml
+#RUN sudo chown -R docker:docker .dot.yml
 
-RUN sudo chmod -R 775 /usr/local
 RUN dot install --packages --sudo
+# FIX /usr/local/bin/pacapt
+# RUN sudo chmod -R 775 /usr/local
+#RUN sudo chown -R docker:docker /usr/local/bin/pacapt
+
+# Restore interactive
+#ENV DEBIAN_FRONTEND newt
 
 ENTRYPOINT ["/bin/bash"]

@@ -40,3 +40,5 @@ ADD . $DOT
 # RUN go get github.com/LEI/dot && \
 RUN dep ensure
 RUN go install
+
+# scripts/realease.sh (goreleaser)

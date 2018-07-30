@@ -5,7 +5,9 @@ set -e
 DIR="${BASH_SOURCE%/*}"
 source "$DIR/functions.sh"
 
-ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
+if [[ -n "$DOT" ]] && [[ ! -f "$HOME/.dot.yml" ]]; then
+  ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
+fi
 
 # run dot sync -u "https://github.com/LEI/dot-git" -s ~/.dot/git
 # run dot install link -u "https://github.com/LEI/dot-git" -s ~/.dot/git ".gitconfig" ".gitignore"
@@ -16,7 +18,14 @@ ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
 tail_bashrc="$(tail -n1 ~/.bashrc)"
 # Travis CI fix: sudo chmod +x /usr/local/bin/pacapt
 run dot list
-yes | run dot install --packages # --verbose
+
+args=()
+# Check if not root user
+if [[ "$(id -u)" -ne 0 ]]; then
+  args+=("--sudo")
+fi
+yes | run dot install --packages "${args[@]}" # --verbose
+
 run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
 for f in "$HOME"/.gitconfig; do run test -f "$f"; done
 for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -s "$d"; done

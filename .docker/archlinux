@@ -11,6 +11,13 @@ ca-certificates \
 git \
 sudo
 
+RUN sed -i -e 's/#en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
+locale-gen
+RUN cat /etc/locale.gen | grep -v '^#'
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
+
 ADD ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 RUN useradd --create-home --shell /bin/bash $USER
