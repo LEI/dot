@@ -52,10 +52,9 @@ jobs:
 
     - stage: test
       install:
-        - ls -la ~
-        - ls -la
-        - echo $GOPATH
-        - which go
+        - echo $PATH
+        # - PATH="$PATH:$GOPATH/bin"
+        - mkdir $GOPATH
         - scripts/release.sh --snapshot
       before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
       script:
