@@ -22,13 +22,11 @@ stages:
   #   # if: branch = master
 
 install:
+  - scripts/test.sh
   - scripts/release.sh --snapshot
 
 jobs:
   include:
-
-    - stage: build
-      script: scripts/test.sh
 
     - stage: build
       install: true
@@ -37,13 +35,19 @@ jobs:
       # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
 
     - stage: test
-      # install: false
       before_script: docker-compose build test_os
       script: docker-compose run test_os
-      env:
-        - OS=archlinux
-        - OS=centos
-        - OS=debian
+      env: OS=archlinux
+
+    - stage: test
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
+      env: OS=centos
+
+    - stage: test
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
+      env: OS=debian
 
     - stage: deploy
       addons:
