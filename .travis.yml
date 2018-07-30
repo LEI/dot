@@ -4,7 +4,6 @@ language: go
 
 os:
   - linux
-  # - osx # brew install docker-compose
 
 services:
   - docker
@@ -60,6 +59,7 @@ jobs:
         - dot list
       env: OS=darwin
       os: osx
+      language: go
 
     - stage: deploy
       addons:

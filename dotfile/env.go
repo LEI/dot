@@ -3,6 +3,7 @@ package dotfile
 import (
 	// "bufio"
 	"fmt"
+	// "io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -59,8 +60,10 @@ func init() {
 		homeDir = os.Getenv("HOME")
 	}
 	// fmt.Println("HOME", homeDir)
+
 	osTypes = GetOSTypes()
 	// fmt.Printf("OS types:\n%+v\n", strings.Join(osTypes[:], "\n"))
+
 	OriginalEnv = GetEnv()
 	// fmt.Printf("Original env: %+v\n", OriginalEnv)
 }
@@ -207,7 +210,9 @@ func GetOSTypes() []string {
 		types = append(types, name)
 	}
 	if r.IDLike != "" {
-		types = append(types, r.IDLike)
+		for _, id := range strings.Split(r.IDLike, " ") {
+			types = append(types, id)
+		}
 	}
 	if r.DistribCodename != "" {
 		types = append(types, r.DistribCodename)
@@ -242,7 +247,13 @@ func isNum(v string) bool {
 // DISTRIB_RELEASE=14.04
 // DISTRIB_CODENAME=trusty
 // DISTRIB_DESCRIPTION="Ubuntu 14.04.5 LTS"
-//
+
+// NAME="CentOS Linux"
+// VERSION="7 (Core)"
+// ID="centos"
+// ID_LIKE="rhel fedora"
+// VERSION_ID="7"
+// PRETTY_NAME="CentOS Linux 7 (Core)"
 
 // Read release files as INI
 func parseReleases() Release {
@@ -258,15 +269,36 @@ func parseReleases() Release {
 		// ini.ParseAsDefaults = true
 		err := ini.ParseFile(p)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s(ini): %s\n", p, err)
-			os.Exit(1)
+			// b, err := ioutil.ReadFile(p)
+			// if err != nil {
+			// 	fmt.Fprintf(os.Stderr, "Error while reading file %s: %s\n", p, err)
+			// 	return release
+			// }
+			// str := string(b)
+			// if str == "" {
+			// 	fmt.Fprintf(os.Stderr, "Empty release file: %s\n", p)
+			// 	return release
+			// }
+			// lines := strings.Split(str, "\n")
+			// if len(lines) != 2 || lines[0] == "" {
+			// 	fmt.Fprintf(os.Stderr, "Unexpected release file %s:---\n%s\n---\n", p, str)
+			// 	return release
+			// }
+			// if release.PrettyName == "" {
+			// 	release.PrettyName = lines[0]
+			// }
+			// if release.ID == "" {
+			// 	release.ID = strings.Split(lines[0], " ")[0]
+			// }
+			continue
 		}
 		if Verbose > 1 {
 			fmt.Printf("%s:\n%+v\n", p, release)
 		}
-		if Verbose > 2 {
+		// if Verbose > 2 {
+			fmt.Println(p)
 			execute("cat", p)
-		}
+		// }
 	}
 	return release
 }

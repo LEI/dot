@@ -8,7 +8,8 @@ ENV USER docker
 RUN yum update --assumeyes && \
 yum install --assumeyes --quiet \
 ca-certificates \
-git
+git \
+sudo
 
 # RUN locale-gen
 
@@ -16,7 +17,7 @@ COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 RUN useradd --create-home --shell /bin/bash $USER
 RUN echo "$USER:$USER" | chpasswd
-RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
 # RUN adduser $USER sudo && adduser $USER staff
 
 USER $USER
@@ -24,8 +25,8 @@ USER $USER
 # $HOME
 WORKDIR /home/$USER
 
-COPY ./scripts /root/scripts
-COPY ./.dot.yml /root/.dot.yml
+COPY ./scripts scripts
+COPY ./.dot.yml .dot.yml
 
 RUN dot install --packages --sudo
 
