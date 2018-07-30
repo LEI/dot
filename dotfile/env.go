@@ -295,10 +295,10 @@ func parseReleases() Release {
 		if Verbose > 1 {
 			fmt.Printf("%s:\n%+v\n", p, release)
 		}
-		// if Verbose > 2 {
+		if Verbose > 2 {
 			fmt.Println(p)
 			execute("cat", p)
-		// }
+		}
 	}
 	return release
 }

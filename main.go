@@ -236,7 +236,9 @@ func do(r *Role, a string) error {
 				if err != nil {
 					return err
 				}
-				fmt.Println(str)
+				if str != "" {
+					fmt.Println(str)
+				}
 			}
 		}
 	}
@@ -262,7 +264,9 @@ func do(r *Role, a string) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println(str)
+			if str != "" {
+				fmt.Println(str)
+			}
 		}
 	}
 	// NOOP: Copies
@@ -276,7 +280,9 @@ func do(r *Role, a string) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println(str)
+			if str != "" {
+				fmt.Println(str)
+			}
 		}
 	}
 	// Line in file
@@ -290,7 +296,9 @@ func do(r *Role, a string) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println(str)
+			if str != "" {
+				fmt.Println(str)
+			}
 		}
 	}
 	// Symlink files
@@ -304,7 +312,9 @@ func do(r *Role, a string) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println(str)
+			if str != "" {
+				fmt.Println(str)
+			}
 		}
 	}
 	// Templates
@@ -328,7 +338,9 @@ func do(r *Role, a string) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println(str)
+			if str != "" {
+				fmt.Println(str)
+			}
 		}
 	}
 	// Restore original environment
@@ -356,7 +368,9 @@ func do(r *Role, a string) error {
 				if err != nil {
 					return err
 				}
-				fmt.Println(str)
+				if str != "" {
+					fmt.Println(str)
+				}
 			}
 		}
 		defaultsFile := filepath.Join(r.Path, "defaults.yml")

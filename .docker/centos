@@ -5,20 +5,41 @@ ENV OS linux
 ENV ARCH amd64
 ENV USER docker
 
-RUN yum update --assumeyes && \
+# RUN printf "errorlevel=0\nrpmverbosity=critical\n" >> /etc/yum.conf
+
+# yum groupinstall --assumeyes --quiet "Development Tools" && \
+# yum install --assumeyes --quiet \
+# gettext-devel openssl-devel perl-CPAN perl-devel zlib-devel \
+# ca-certificates \
+RUN yum update --assumeyes --quiet && \
 yum install --assumeyes --quiet \
-ca-certificates \
-git \
+curl-devel expat-devel gettext-devel openssl-devel zlib-devel \
+gcc perl-ExtUtils-MakeMaker \
+autoconf make \
 sudo
+# epel-release
+
+# Install latest git instead of 1.8
+ENV GIT_VERSION 2.18.0
+ADD https://github.com/git/git/archive/v$GIT_VERSION.tar.gz git.tar.gz
+RUN tar -zxf git.tar.gz && \
+cd git-$GIT_VERSION && \
+make configure && \
+./configure --prefix=/usr/local && \
+make install # sudo
 
 # RUN locale-gen
+
+# Pre-install pacapt
+ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
+RUN chmod 755 /usr/local/bin/pacapt
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 RUN useradd --create-home --shell /bin/bash $USER
 RUN echo "$USER:$USER" | chpasswd
 RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
-# RUN adduser $USER sudo && adduser $USER staff
+RUN groupadd sudo && usermod -aG sudo $USER
 
 USER $USER
 
@@ -28,6 +49,6 @@ WORKDIR /home/$USER
 COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
 
-RUN dot install --packages --sudo
+#RUN dot install --packages --sudo
 
 ENTRYPOINT ["/bin/bash"]

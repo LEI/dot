@@ -25,7 +25,7 @@ roles:
 
   - name: arch
     url: "https://github.com/LEI/dot-arch"
-    os: ["archlinux"]
+    os: ["arch"]
 
   - name: osx
     url: "https://github.com/LEI/dot-osx"

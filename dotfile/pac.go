@@ -20,7 +20,6 @@ const (
 )
 
 var (
-	pacBin string
 	sudo   bool
 )
 
@@ -33,14 +32,28 @@ func has(p string) bool {
 }
 
 // PacInstall ...
-func PacInstall(slice ...string) (string, error) {
-	bin, args := pac("install", slice...)
+func PacInstall(args ...string) (string, error) {
+	// pacBin := pacBin()
+	// stdout, _, status := ExecCommand(pacBin, append([]string{"-Qs"}, args...)...)
+	// if status == 0 && len(stdout) > 0 {
+	// 	fmt.Println("Error: Nothing to do")
+	// }
+	bin, opts := pac("install", args...)
 	if bin == "" {
 		return "", nil
 	}
-	str := fmt.Sprintf("%s %s", bin, strings.Join(args, " "))
-	return str, execute(bin, args...)
-	// str, err := str, execute(bin, args...)
+	fmt.Printf("%s %s\n", bin, strings.Join(opts, " "))
+	stdout, stderr, status := ExecCommand(bin, opts...)
+	// Quickfix centos yum
+	if status == 1 && stderr == "Error: Nothing to do\n" {
+		return stdout, nil
+	}
+	if status != 0 {
+		return stdout, fmt.Errorf(stderr)
+	}
+	return stdout, nil
+	// return "", execute(bin, opts...)
+	// str, err := str, execute(bin, opts...)
 	// if err != nil {
 	// 	// pacapt -Syu
 	// 	return str, err
@@ -49,16 +62,16 @@ func PacInstall(slice ...string) (string, error) {
 }
 
 // PacRemove ...
-func PacRemove(slice ...string) (string, error) {
-	bin, args := pac("remove", slice...)
+func PacRemove(args ...string) (string, error) {
+	bin, opts := pac("remove", args...)
 	if bin == "" {
 		return "", nil
 	}
-	return fmt.Sprintf("%s %s", bin, args), execute(bin, args...)
+	fmt.Printf("%s %s\n", bin, strings.Join(opts, " "))
+	return "", nil // TODO execute(bin, opts...)
 }
 
-func pac(a string, args ...string) (string, []string) {
-	// Init
+func pacBin() (pacBin string) {
 	if has(PACMAN) {
 		// Arch Linux
 		pacBin = PACMAN
@@ -68,6 +81,11 @@ func pac(a string, args ...string) (string, []string) {
 		downloadFromURL(PACAPTURL, PACAPT, 0755)
 		// execute("sudo", "chmod", "+x", PACAPT)
 	}
+	return
+}
+
+func pac(a string, args ...string) (string, []string) {
+	pacBin := pacBin()
 	pa := []string{}
 	switch strings.ToLower(a) {
 	case "install":
