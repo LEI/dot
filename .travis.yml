@@ -28,17 +28,16 @@ jobs:
     - stage: build
       install: true
       before_script:
-        # - docker-compose build
-        - go get -d github.com/goreleaser/goreleaser
-        - cd $GOPATH/src/github.com/goreleaser/goreleaser
-        - dep ensure -vendor-only
-        - make setup build
+        - docker-compose build
       script:
-        - ls -la
-        # - docker-compose run test
+        - docker-compose run test
+      # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
+    - stage: test
+      before_script:
+        - scripts/build.sh
+      script:
         - docker-compose run test_archlinux
         - docker-compose run test_debian
-      # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
     - stage: deploy
       addons:
         apt:

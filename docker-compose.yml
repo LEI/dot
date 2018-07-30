@@ -4,9 +4,6 @@ services:
 
   base:
     build: .
-      context: .
-      # dockerfile: .docker/debian
-      dockerfile: .docker/archlinux
     image: lei/dot
     container_name: dot
     # entrypoint: /bin/bash
@@ -27,21 +24,21 @@ services:
     command: -l -c './scripts/e2e-test.sh'
 
   test_debian:
-    build: .
+    build:
       context: .
       dockerfile: .docker/debian
     # image: lei/dot_debian
-    depends_on:
-      - base
+    # depends_on:
+    #   - base
     container_name: dot_debian
     command: -l -c './scripts/e2e-test.sh'
 
   test_archlinux:
-    build: .
+    build:
       context: .
       dockerfile: .docker/archlinux
     # image: lei/dot_archlinux
-    depends_on:
-      - base
+    # depends_on:
+    #   - base
     container_name: dot_debian
     command: -l -c './scripts/e2e-test.sh'
