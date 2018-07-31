@@ -52,6 +52,7 @@ jobs:
 
     - stage: test
       install:
+        - brew install gnu-sed
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
         - scripts/release.sh --snapshot
       before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
