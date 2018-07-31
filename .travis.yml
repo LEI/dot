@@ -52,8 +52,9 @@ jobs:
 
     - stage: test
       install:
+        - brew --version
         - cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update
-        - brew version # 1.7.1
+        - brew --version # 1.7.1
         - brew install gnu-sed --with-default-names
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
         - scripts/release.sh --snapshot
