@@ -53,7 +53,6 @@ var (
 			},
 			OS: map[string][]string{
 				"archlinux": {"--needed", "--noprogressbar"},
-				// "!debian,!darwin": {"--noconfirm"},
 				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
 			},
 			If: map[string][]string{
@@ -66,7 +65,7 @@ var (
 		},
 		"pacman": {
 			Bin:  PACMAN,
-			Opts: []string{"--needed", "--noprogressbar"},
+			Opts: []string{"--noconfirm", "--needed", "--noprogressbar"},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
@@ -106,9 +105,9 @@ func (t *PkgTask) List() (string, error) {
 // Install package
 func (t *PkgTask) Install() (string, error) {
 	args := strings.Split(t.Name, " ")
-	// for _, a := range t.Opts {
-	// 	args = append(args, "--"+a)
-	// }
+	for _, a := range t.Opts {
+		args = append(args, a) // "--"+
+	}
 	return t.Exec("install", args...) // PacInstall(args...)
 }
 
@@ -153,17 +152,19 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 		pt.init = true
 	}
-	// General options
+	// General manager options
 	opts := pt.Opts
-	// if len(pt.Opts) > 0 {
-	// 	args = append(args, pt.Opts...)
-	// }
 	// Action (install, remove)
 	action, ok := pt.Acts[strings.ToLower(a)]
 	if !ok {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
-	args = append(opts, append([]string{action}, args...)...)
+	opts = append(opts, action)
+	// Packages and options
+	opts = append(opts, args...)
+
+	args = opts
+
 	// Platform specific options
 	for o, opts := range pt.OS {
 		patterns := strings.Split(o, ",")
@@ -194,6 +195,9 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		bin = "sudo"
 	}
 	fmt.Printf("%s %s\n", bin, strings.Join(args, " "))
+	if DryRun {
+		return "", nil
+	}
 	stdout, stderr, status := ExecCommand(bin, args...)
 	// Quickfix centos yum
 	if status == 1 && stderr == "Error: Nothing to do\n" {

@@ -39,12 +39,12 @@ func NewPkg(i interface{}) (*Pkg, error) {
 		if err != nil {
 			return pkg, err
 		}
+		pkg.Args = *pkgArgs
 		pkgType, ok := val["type"].(string)
 		if err != nil {
 			return pkg, err
 		}
 		pkg.Type = pkgType
-		pkg.Args = *pkgArgs
 		pkgOS, err := NewSlice(val["os"])
 		if err != nil {
 			return pkg, err

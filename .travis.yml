@@ -53,6 +53,8 @@ jobs:
     - stage: test
       install:
         # - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
+        - HOMEBREW_NO_EMOJI=1
+        - HOMEBREW_NO_ANALYTICS=1
         - brew upgrade --quiet || true
         - brew install --quiet gnu-sed --with-default-names
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
