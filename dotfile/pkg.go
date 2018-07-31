@@ -52,6 +52,7 @@ var (
 				"archlinux": {"--needed", "--noprogressbar"},
 				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
 			},
+			// https://golang.org/pkg/text/template/#hdr-Functions
 			If: map[string][]string{
 				"{{eq .Verbose 0}}": {"--quiet"},
 				// "{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},

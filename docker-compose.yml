@@ -15,7 +15,7 @@ services:
       GIT_AUTHOR_EMAIL: do@ck.er
 
   test:
-    # image: lei/dot_test
+    image: lei/dot # _test
     container_name: dot_test
     depends_on:
       - build
