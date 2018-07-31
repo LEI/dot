@@ -48,6 +48,7 @@ var (
 				"install": "-S",
 				"remove":  "-R",
 			},
+			// Opts: []string{"--"},
 			OS: map[string][]string{
 				"archlinux": {"--needed", "--noprogressbar"},
 				"!darwin":   {"--noconfirm"},
@@ -151,11 +152,6 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
 	args = append([]string{action}, args...)
-	if len(pt.Opts) > 0 {
-		for _, opt := range pt.Opts {
-			args = append([]string{opt}, args...)
-		}
-	}
 	for pattern, opts := range pt.OS {
 		if HasOSType(pattern) {
 			args = append(args, opts...)
@@ -173,6 +169,12 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 		if str == "true" {
 			args = append(args, opts...)
+		}
+	}
+	// Last argument
+	if len(pt.Opts) > 0 {
+		for _, opt := range pt.Opts {
+			args = append([]string{opt}, args...)
 		}
 	}
 	if t.Sudo {
