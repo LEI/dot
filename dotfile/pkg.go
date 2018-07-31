@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"text/template"
 )
 
 // PkgTask struct
@@ -21,12 +22,12 @@ type PkgTask struct {
 // PkgType ...
 type PkgType struct {
 	Bin  string // Package manager binary path
-	Opts []string // General manager options
-	Acts map[string]string // Action map
+	Opts []string // General pkg manager options
+	Acts map[string]string // Command actions map
 	OS   map[string][]string // Platform options
 	If   map[string][]string // Conditional opts
 	Init func() error // Install or prepare bin
-	init bool
+	done bool
 }
 
 const (
@@ -40,18 +41,20 @@ var (
 
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
-			Bin: pacaptBin, // FIXME PATH "pacapt",
-			Opts: []string{"--noconfirm"},
+			Bin: "pacapt",
+			// Opts: []string{"--noconfirm"},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
 			},
 			OS: map[string][]string{
+				// "alpine": {"--no-cache"},
+				"!alpine": {"--noconfirm"},
 				"archlinux": {"--needed", "--noprogressbar"},
 				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
 			},
 			If: map[string][]string{
-				"eq .Verbose 0": {"--quiet"},
+				"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},
 			},
 			Init: func() error {
 				return downloadFromURL(pacaptURL, pacaptBin, 0755)
@@ -66,7 +69,7 @@ var (
 				"remove":  "-R",
 			},
 			If: map[string][]string{
-				"eq .Verbose 0": {"--quiet"},
+				"{{eq .Verbose 0}}": {"--quiet"},
 			},
 		},
 		"cask": {
@@ -141,49 +144,47 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	if bin == "" {
 		return "", fmt.Errorf("missing pkg bin: %+v", t)
 	}
-	if !pt.init && pt.Init != nil {
+	if !pt.done && pt.Init != nil {
 		if err := pt.Init(); err != nil {
 			return "", err
 		}
-		pt.init = true
+		pt.done = true
 	}
-	// General manager options
-	opts := pt.Opts
-	// Action (install, remove)
+	// Prepend manager action
 	action, ok := pt.Acts[strings.ToLower(a)]
 	if !ok {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
-	opts = append(opts, action)
-	// Packages and options
-	opts = append(opts, args...)
-
-	args = opts
-
+	args = append([]string{action}, args...)
 	// Platform specific options
 	for o, opts := range pt.OS {
 		patterns := strings.Split(o, ",")
 		for _, p := range patterns {
 			if HasOSType(p) {
-				args = append(args, opts...)
+				args = append(opts, args...)
 			}
 		}
 	}
 	// Conditional options
-	pkgTplMap := map[string]interface{}{
+	pkgVarsMap := map[string]interface{}{
 		"DryRun":  DryRun,
 		"Verbose": Verbose,
 		"OS":      OS,
 	}
-	for cond, opts := range pt.If {
-		str, err := TemplateData(args[0], "{{"+cond+"}}", pkgTplMap)
+	pkgFuncMap := template.FuncMap{
+		"hasOS": HasOSType,
+	}
+	for tpl, opts := range pt.If {
+		str, err := TemplateData(pt.Bin, tpl, pkgVarsMap, pkgFuncMap)
 		if err != nil {
 			return "", err
 		}
 		if str == "true" {
-			args = append(args, opts...)
+			args = append(opts, args...)
 		}
 	}
+	// General manager options
+	args = append(pt.Opts, args...)
 	// Switch binary for sudo
 	if t.Sudo {
 		args = append([]string{bin}, args...)

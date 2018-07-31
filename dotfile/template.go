@@ -168,11 +168,16 @@ func (t *TemplateTask) Data() (map[string]interface{}, error) {
 }
 
 // TemplateData ...
-func TemplateData(k, v string, data interface{}) (string, error) {
+func TemplateData(k, v string, data interface{}, funcMaps ...template.FuncMap) (string, error) {
 	if v == "" {
 		return v, nil
 	}
-	tmpl, err := template.New(k).Option("missingkey=zero").Funcs(tplFuncMap).Parse(v)
+	tmpl := template.New(k).Option("missingkey=zero")
+	tmpl.Funcs(tplFuncMap)
+	for _, funcMap := range funcMaps {
+		tmpl.Funcs(funcMap)
+	}
+	tmpl, err := tmpl.Parse(v)
 	if err != nil {
 		return v, err
 	}

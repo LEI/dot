@@ -28,6 +28,10 @@ RUN echo "$USER:$USER" | chpasswd
 RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
 RUN groupadd sudo && adduser $USER sudo
 
+# Pre-install pacapt
+ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
+RUN sudo chmod 755 /usr/local/bin/pacapt
+
 USER $USER
 
 WORKDIR /home/$USER
@@ -35,7 +39,8 @@ WORKDIR /home/$USER
 COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
 
-RUN touch /home/$USER/.bashrc
+# RUN touch /home/$USER/.bashrc
+RUN touch /$HOME/.bashrc
 
 #RUN dot install --packages --sudo
 

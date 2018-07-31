@@ -26,9 +26,7 @@ RUN tar -zxf git.tar.gz && \
 cd git-$GIT_VERSION && \
 make configure && \
 ./configure --prefix=/usr/local && \
-make install # sudo
-
-# RUN locale-gen
+sudo make install
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
@@ -37,17 +35,19 @@ RUN echo "$USER:$USER" | chpasswd
 RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
 RUN groupadd sudo && usermod -aG sudo $USER
 
-USER $USER
-
-# $HOME
-WORKDIR /home/$USER
-
-COPY ./scripts scripts
-COPY ./.dot.yml .dot.yml
+# Add /usr/local/bin to PATH while sudoing
+RUN sed -i -e 's#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
 
 # Pre-install pacapt
 ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
 RUN sudo chmod 755 /usr/local/bin/pacapt
+
+USER $USER
+
+WORKDIR /home/$USER
+
+COPY ./scripts scripts
+COPY ./.dot.yml .dot.yml
 
 #RUN dot install --packages --sudo
 
