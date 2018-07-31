@@ -2,25 +2,23 @@ version: "2"
 
 services:
 
-  base:
-    build: .
+  build:
+    build: # . # Dockerfile
+      context: .
+      dockerfile: .docker/alpine
     image: lei/dot
     container_name: dot
     # entrypoint: /bin/bash
+    command: -l # -c 'exec bash -l'
     environment:
       GIT_AUTHOR_NAME: Docker
       GIT_AUTHOR_EMAIL: do@ck.er
-    # entrypoint: /bin/bash
-    # command: -l -c '$$DOT/scripts/entrypoint.sh'
-    command: -l # -c 'exec bash -l'
-    # run tmux -2 -u new-session -n test "vim -E -s -u $$HOME/.vimrc +Install +qall; exit";
-    # command: -l -c 'dot -p tmux=LEI/dot-tmux -p vim=LEI/dot-vim; tmux new-session "vim +PlugInstall +qall; exit"; bash -l'
 
   test:
-    image: lei/dot
-    depends_on:
-      - base
+    # image: lei/dot_test
     container_name: dot_test
+    depends_on:
+      - build
     command: -l -c './scripts/e2e-test.sh'
 
   test_os:
@@ -28,7 +26,5 @@ services:
       context: .
       dockerfile: .docker/$OS
     # image: lei/dot_$OS
-    # depends_on:
-    #   - base
     container_name: dot_$OS
     command: -l -c './scripts/e2e-test.sh'

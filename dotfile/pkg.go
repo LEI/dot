@@ -42,19 +42,19 @@ var (
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
 			Bin: "pacapt",
-			// Opts: []string{"--noconfirm"},
+			Opts: []string{"--noconfirm"},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
 			},
 			OS: map[string][]string{
-				// "alpine": {"--no-cache"},
-				"!alpine": {"--noconfirm"},
+				"alpine": {"--no-cache"},
 				"archlinux": {"--needed", "--noprogressbar"},
 				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
 			},
 			If: map[string][]string{
-				"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},
+				"{{eq .Verbose 0}}": {"--quiet"},
+				// "{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},
 			},
 			Init: func() error {
 				return downloadFromURL(pacaptURL, pacaptBin, 0755)
@@ -150,18 +150,19 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 		pt.done = true
 	}
-	// Prepend manager action
 	action, ok := pt.Acts[strings.ToLower(a)]
 	if !ok {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
-	args = append([]string{action}, args...)
+	pacArgs := []string{action}
+	// General manager options
+	pacArgs = append(pacArgs, pt.Opts...)
 	// Platform specific options
-	for o, opts := range pt.OS {
-		patterns := strings.Split(o, ",")
+	for p, opt := range pt.OS {
+		patterns := strings.Split(p, ",")
 		for _, p := range patterns {
 			if HasOSType(p) {
-				args = append(opts, args...)
+				pacArgs = append(pacArgs, opt...)
 			}
 		}
 	}
@@ -174,27 +175,27 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	pkgFuncMap := template.FuncMap{
 		"hasOS": HasOSType,
 	}
-	for tpl, opts := range pt.If {
+	for tpl, opt := range pt.If {
 		str, err := TemplateData(pt.Bin, tpl, pkgVarsMap, pkgFuncMap)
 		if err != nil {
 			return "", err
 		}
 		if str == "true" {
-			args = append(opts, args...)
+			pacArgs = append(pacArgs, opt...)
 		}
 	}
-	// General manager options
-	args = append(pt.Opts, args...)
+	// Finally insert ackage names and extra options
+	pacArgs = append(pacArgs, args...)
 	// Switch binary for sudo
 	if t.Sudo {
-		args = append([]string{bin}, args...)
+		pacArgs = append([]string{bin}, pacArgs...)
 		bin = "sudo"
 	}
-	fmt.Printf("%s %s\n", bin, strings.Join(args, " "))
+	fmt.Printf("%s %s\n", bin, strings.Join(pacArgs, " "))
 	if DryRun {
 		return "", nil
 	}
-	stdout, stderr, status := ExecCommand(bin, args...)
+	stdout, stderr, status := ExecCommand(bin, pacArgs...)
 	// Quickfix centos yum
 	if status == 1 && stderr == "Error: Nothing to do\n" {
 		return stdout, nil

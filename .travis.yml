@@ -36,6 +36,12 @@ jobs:
       install: scripts/release.sh --snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
+      env: OS=alpine
+
+    - stage: test
+      install: scripts/release.sh --snapshot
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
       env: OS=archlinux
 
     - stage: test
