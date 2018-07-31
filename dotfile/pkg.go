@@ -48,15 +48,15 @@ var (
 				"install": "-S",
 				"remove":  "-R",
 			},
-			// Opts: []string{"--"},
+			Opts: []string{"--noconfirm"},
 			OS: map[string][]string{
 				"archlinux": {"--needed", "--noprogressbar"},
-				"!debian,!darwin":   {"--noconfirm"},
-				"debian": {"-qq", "--assume-yes", "--no-install-suggests", "--no-install-recommends"},
+				// "!debian,!darwin": {"--noconfirm"},
+				"debian": {"--assume-yes", "--no-install-suggests", "--no-install-recommends"},
 			},
-			// If: map[string][]string{
-			// 	"eq .Verbose 0": {"--quiet"},
-			// },
+			If: map[string][]string{
+				"eq .Verbose 0": {"--quiet"},
+			},
 			Init: func() error {
 				return downloadFromURL(PACAPTURL, PACAPT, 0755)
 				// execute("sudo", "chmod", "+x", PACAPT)
