@@ -52,7 +52,8 @@ jobs:
 
     - stage: test
       install:
-        - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
+        # - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
+        - brew upgrade
         - brew install gnu-sed --with-default-names
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
         - scripts/release.sh --snapshot
