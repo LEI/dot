@@ -53,7 +53,7 @@ func (d *Defaults) Read(s string) error {
 func (d *Defaults) Parse() error {
 	for _, D := range d.Defaults {
 		tpl := D.Template
-		fmt.Printf("Defaults: %s\n (%d)\n", tpl, len(D.Commands))
+		// fmt.Printf("Defaults: %s\n (%d)\n", tpl, len(D.Commands))
 		for a, b := range D.Commands {
 			for name, def := range b {
 				def.App = a
@@ -77,7 +77,7 @@ func (d *Defaults) Parse() error {
 // Exec ...
 func (d *Defaults) Exec() error {
 	for _, s := range d.Commands {
-		fmt.Println("$", s)
+		fmt.Printf("%s\n", s)
 		if err := execute(Shell, "-c", s); err != nil {
 			return err
 		}

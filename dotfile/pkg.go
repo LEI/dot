@@ -20,21 +20,23 @@ type PkgTask struct {
 
 // PkgType ...
 type PkgType struct {
-	Bin  string
-	Opts []string
-	Acts map[string]string
-	OS   map[string][]string
-	If   map[string][]string
-	Init func() error
+	Bin  string // Package manager binary path
+	Opts []string // General manager options
+	Acts map[string]string // Action map
+	OS   map[string][]string // Platform options
+	If   map[string][]string // Conditional opts
+	Init func() error // Install or prepare bin
 	init bool
 }
 
 const (
 	// PACAPTURL pacapt download URL
 	PACAPTURL = "https://github.com/icy/pacapt/raw/ng/pacapt"
-	// PACAPT pacapt bin
+
+	// PACAPT bin
 	PACAPT = "/usr/local/bin/pacapt"
-	// PACMAN pacman bin
+
+	// PACMAN bin
 	PACMAN = "pacman"
 )
 
@@ -151,7 +153,7 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 		pt.init = true
 	}
-	// Manager options
+	// General options
 	opts := pt.Opts
 	// if len(pt.Opts) > 0 {
 	// 	args = append(args, pt.Opts...)
