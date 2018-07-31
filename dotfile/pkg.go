@@ -20,11 +20,11 @@ type PkgTask struct {
 
 // PkgType ...
 type PkgType struct {
-	Bin string
+	Bin  string
 	Opts []string
 	Acts map[string]string
-	OS map[string][]string
-	If map[string][]string
+	OS   map[string][]string
+	If   map[string][]string
 	Init func() error
 	init bool
 }
@@ -39,21 +39,21 @@ const (
 )
 
 var (
-	sudo   bool
+	sudo bool
 
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
 			Bin: PACAPT,
 			Acts: map[string]string{
 				"install": "-S",
-				"remove": "-R",
+				"remove":  "-R",
 			},
 			OS: map[string][]string{
-				"archlinux": []string{"--needed", "--noprogressbar"},
-				"!darwin": []string{"--noconfirm"},
+				"archlinux": {"--needed", "--noprogressbar"},
+				"!darwin":   {"--noconfirm"},
 			},
 			If: map[string][]string{
-				"eq .Verbose 0": []string{"--quiet"},
+				"eq .Verbose 0": {"--quiet"},
 			},
 			Init: func() error {
 				return downloadFromURL(PACAPTURL, PACAPT, 0755)
@@ -61,19 +61,19 @@ var (
 			},
 		},
 		"pacman": {
-			Bin: PACMAN,
+			Bin:  PACMAN,
 			Opts: []string{"--needed", "--noprogressbar", "--quiet"},
 			Acts: map[string]string{
 				"install": "-S",
-				"remove": "-R",
+				"remove":  "-R",
 			},
 		},
 		"cask": {
-			Bin: "brew",
+			Bin:  "brew",
 			Opts: []string{"cask"},
 			Acts: map[string]string{
 				"install": "install",
-				"remove": "uninstall",
+				"remove":  "uninstall",
 			},
 		},
 	}
@@ -162,9 +162,9 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 	}
 	pkgTplMap := map[string]interface{}{
-		"DryRun": DryRun,
+		"DryRun":  DryRun,
 		"Verbose": Verbose,
-		"OS": OS,
+		"OS":      OS,
 	}
 	for cond, opts := range pt.If {
 		str, err := TemplateData(args[0], "{{"+cond+"}}", pkgTplMap)
