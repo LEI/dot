@@ -26,34 +26,35 @@ install:
 jobs:
   include:
 
-    - stage: build
-      install: true
-      before_script: docker-compose build test
-      script: docker-compose run test
-      # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
+    # - stage: build
+    #   install: true
+    #   before_script: docker-compose build test
+    #   script: docker-compose run test
+    #   # "for t in tests/docker-compose.*.yml; do docker-compose -f docker-compose.yml -f $t run test; done"
 
-    - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=archlinux
+    # - stage: test
+    #   install: scripts/release.sh --snapshot
+    #   before_script: docker-compose build test_os
+    #   script: docker-compose run test_os
+    #   env: OS=archlinux
 
-    - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=centos
+    # - stage: test
+    #   install: scripts/release.sh --snapshot
+    #   before_script: docker-compose build test_os
+    #   script: docker-compose run test_os
+    #   env: OS=centos
 
-    - stage: test
-      install: scripts/release.sh --snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=debian
+    # - stage: test
+    #   install: scripts/release.sh --snapshot
+    #   before_script: docker-compose build test_os
+    #   script: docker-compose run test_os
+    #   env: OS=debian
 
     - stage: test
       install:
-        - brew install gnu-sed
+        - brew install gnu-sed --with-default-names
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
+        - which sed
         - scripts/release.sh --snapshot
       before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
       script: scripts/e2e-test.sh
