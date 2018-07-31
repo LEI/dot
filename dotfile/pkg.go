@@ -51,11 +51,12 @@ var (
 			// Opts: []string{"--"},
 			OS: map[string][]string{
 				"archlinux": {"--needed", "--noprogressbar"},
-				"!darwin":   {"--noconfirm"},
+				"!debian,!darwin":   {"--noconfirm"},
+				"debian": {"-qq", "--assume-yes", "--no-install-suggests", "--no-install-recommends"},
 			},
-			If: map[string][]string{
-				"eq .Verbose 0": {"--quiet"},
-			},
+			// If: map[string][]string{
+			// 	"eq .Verbose 0": {"--quiet"},
+			// },
 			Init: func() error {
 				return downloadFromURL(PACAPTURL, PACAPT, 0755)
 				// execute("sudo", "chmod", "+x", PACAPT)
@@ -100,9 +101,9 @@ func (t *PkgTask) List() (string, error) {
 // Install package
 func (t *PkgTask) Install() (string, error) {
 	args := strings.Split(t.Name, " ")
-	for _, a := range t.Opts {
-		args = append(args, "--"+a)
-	}
+	// for _, a := range t.Opts {
+	// 	args = append(args, "--"+a)
+	// }
 	return t.Exec("install", args...) // PacInstall(args...)
 }
 
@@ -152,11 +153,20 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
 	args = append([]string{action}, args...)
-	for pattern, opts := range pt.OS {
-		if HasOSType(pattern) {
-			args = append(args, opts...)
+	// Base options
+	if len(pt.Opts) > 0 {
+		args = append(args, pt.Opts...)
+	}
+	// Platform specific options
+	for o, opts := range pt.OS {
+		patterns := strings.Split(o, ",")
+		for _, p := range patterns {
+			if HasOSType(p) {
+				args = append(args, opts...)
+			}
 		}
 	}
+	// Conditional options
 	pkgTplMap := map[string]interface{}{
 		"DryRun":  DryRun,
 		"Verbose": Verbose,
@@ -171,12 +181,7 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 			args = append(args, opts...)
 		}
 	}
-	// Last argument
-	if len(pt.Opts) > 0 {
-		for _, opt := range pt.Opts {
-			args = append([]string{opt}, args...)
-		}
-	}
+	// Switch binary for sudo
 	if t.Sudo {
 		args = append([]string{bin}, args...)
 		bin = "sudo"
