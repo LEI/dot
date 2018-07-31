@@ -44,15 +44,15 @@ var (
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
 			Bin: PACAPT,
+			Opts: []string{"--noconfirm"},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
 			},
-			Opts: []string{"--noconfirm"},
 			OS: map[string][]string{
 				"archlinux": {"--needed", "--noprogressbar"},
 				// "!debian,!darwin": {"--noconfirm"},
-				"debian": {"--assume-yes", "--no-install-suggests", "--no-install-recommends"},
+				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
 			},
 			If: map[string][]string{
 				"eq .Verbose 0": {"--quiet"},
@@ -64,10 +64,13 @@ var (
 		},
 		"pacman": {
 			Bin:  PACMAN,
-			Opts: []string{"--needed", "--noprogressbar", "--quiet"},
+			Opts: []string{"--needed", "--noprogressbar"},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
+			},
+			If: map[string][]string{
+				"eq .Verbose 0": {"--quiet"},
 			},
 		},
 		"cask": {
@@ -148,15 +151,17 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 		pt.init = true
 	}
+	// Manager options
+	opts := pt.Opts
+	// if len(pt.Opts) > 0 {
+	// 	args = append(args, pt.Opts...)
+	// }
+	// Action (install, remove)
 	action, ok := pt.Acts[strings.ToLower(a)]
 	if !ok {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
-	args = append([]string{action}, args...)
-	// Base options
-	if len(pt.Opts) > 0 {
-		args = append(args, pt.Opts...)
-	}
+	args = append(opts, append([]string{action}, args...)...)
 	// Platform specific options
 	for o, opts := range pt.OS {
 		patterns := strings.Split(o, ",")
