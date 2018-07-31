@@ -258,6 +258,7 @@ func do(r *Role, a string) error {
 			task := &dotfile.PkgTask{
 				Name: v.Name,
 				Opts: v.Args,
+				Type: v.Type,
 				Sudo: Options.Sudo,
 			}
 			str, err := task.Do(act)

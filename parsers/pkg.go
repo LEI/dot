@@ -11,6 +11,7 @@ type Pkg struct {
 	Args   Slice
 	OS     Slice
 	Action string // install, remove
+	Type   string // package manager
 }
 
 // func (p *Pkg) String() string {
@@ -38,6 +39,11 @@ func NewPkg(i interface{}) (*Pkg, error) {
 		if err != nil {
 			return pkg, err
 		}
+		pkgType, ok := val["type"].(string)
+		if err != nil {
+			return pkg, err
+		}
+		pkg.Type = pkgType
 		pkg.Args = *pkgArgs
 		pkgOS, err := NewSlice(val["os"])
 		if err != nil {
