@@ -52,12 +52,10 @@ jobs:
 
     - stage: test
       install:
-        # - cd "$(brew --repo)" && git fetch && git reset --hard origin/master &&
-        # 1.7.1
-        - brew update
+        - cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update
+        - brew version # 1.7.1
         - brew install gnu-sed --with-default-names
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
-        - which sed
         - scripts/release.sh --snapshot
       before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
       script: scripts/e2e-test.sh
