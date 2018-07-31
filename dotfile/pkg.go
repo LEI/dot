@@ -30,14 +30,9 @@ type PkgType struct {
 }
 
 const (
-	// PACAPTURL pacapt download URL
-	PACAPTURL = "https://github.com/icy/pacapt/raw/ng/pacapt"
+	pacaptURL = "https://github.com/icy/pacapt/raw/ng/pacapt"
 
-	// PACAPT bin
-	PACAPT = "/usr/local/bin/pacapt"
-
-	// PACMAN bin
-	PACMAN = "pacman"
+	pacaptBin = "/usr/local/bin/pacapt"
 )
 
 var (
@@ -45,7 +40,7 @@ var (
 
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
-			Bin: PACAPT,
+			Bin: "pacapt",
 			Opts: []string{"--noconfirm"},
 			Acts: map[string]string{
 				"install": "-S",
@@ -59,12 +54,12 @@ var (
 				"eq .Verbose 0": {"--quiet"},
 			},
 			Init: func() error {
-				return downloadFromURL(PACAPTURL, PACAPT, 0755)
-				// execute("sudo", "chmod", "+x", PACAPT)
+				return downloadFromURL(pacaptURL, pacaptBin, 0755)
+				// execute("sudo", "chmod", "+x", pacaptBin)
 			},
 		},
 		"pacman": {
-			Bin:  PACMAN,
+			Bin:  "pacman",
 			Opts: []string{"--noconfirm", "--needed", "--noprogressbar"},
 			Acts: map[string]string{
 				"install": "-S",
@@ -135,7 +130,7 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	// default:
 	// 	t.Type = "pacapt"
 	// }
-	if t.Type == "pacapt" && has(PACMAN) {
+	if t.Type == "pacapt" && has("pacman") {
 		t.Type = "pacman"
 	}
 	pt, ok := pkgTypes[t.Type]
