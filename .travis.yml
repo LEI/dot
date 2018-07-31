@@ -55,8 +55,7 @@ jobs:
         - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
         - scripts/release.sh --snapshot
       before_script: cp dist/darwin_amd64/dot /usr/local/bin/dot
-      script:
-        - dot list
+      script: scripts/e2e-test.sh
       env: OS=darwin
       os: osx
       language: go
