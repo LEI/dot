@@ -40,7 +40,7 @@ var (
 
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
-			Bin: "pacapt",
+			Bin: pacaptBin, // FIXME PATH "pacapt",
 			Opts: []string{"--noconfirm"},
 			Acts: map[string]string{
 				"install": "-S",

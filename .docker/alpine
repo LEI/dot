@@ -1,0 +1,42 @@
+# vi: ft=Dockerfile
+FROM alpine
+
+ENV OS linux
+ENV ARCH amd64
+ENV USER docker
+
+#RUN echo "ipv6" >> /etc/modules
+RUN apk add --update --no-cache \
+bash \
+curl \
+git \
+shadow \
+sudo
+# ca-certificates \
+# locales \
+
+# RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
+# locale-gen
+# ENV LANG en_GB.UTF-8
+# ENV LANGUAGE en_GB:en
+# ENV LC_ALL en_GB.UTF-8
+
+COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+
+RUN useradd --create-home --shell /bin/bash $USER
+RUN echo "$USER:$USER" | chpasswd
+RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
+RUN groupadd sudo && adduser $USER sudo
+
+USER $USER
+
+WORKDIR /home/$USER
+
+COPY ./scripts scripts
+COPY ./.dot.yml .dot.yml
+
+RUN touch /home/$USER/.bashrc
+
+#RUN dot install --packages --sudo
+
+ENTRYPOINT ["/bin/bash"]
