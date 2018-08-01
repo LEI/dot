@@ -149,7 +149,7 @@ func (r *Repo) Clone() error {
 }
 
 func networkReachable() bool {
-	timeout := time.Duration(1 * time.Second)
+	timeout := time.Duration(3 * time.Second)
 	_, err := net.DialTimeout("tcp", "github.com:443", timeout)
 	// fmt.Println(err)
 	return err == nil

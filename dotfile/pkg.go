@@ -21,7 +21,7 @@ const (
 var (
 	sudo bool
 
-	pkgCommands = map[string]*PkgCmd{
+	pkgCommands = map[string]PkgCmd{
 		"pacapt": {
 			Bin: "pacapt",
 			// Opts: []string{"--noconfirm"},
@@ -230,19 +230,19 @@ type PkgOpt struct {
 func NewPkgCmd(t string, args ...string) (*PkgCmd, error) {
 	cmd, ok := pkgCommands[t]
 	if !ok {
-		return cmd, fmt.Errorf("unknown pkg type: %s", t)
+		return &cmd, fmt.Errorf("unknown pkg type: %s", t)
 	}
 	bin := cmd.Bin
 	if bin == "" {
-		return cmd, fmt.Errorf("missing pkg bin: %+v", t)
+		return &cmd, fmt.Errorf("missing pkg bin: %+v", t)
 	}
 	if !cmd.done && cmd.Init != nil {
 		if err := cmd.Init(); err != nil {
-			return cmd, err
+			return &cmd, err
 		}
 		cmd.done = true
 	}
-	return cmd, nil
+	return &cmd, nil
 }
 
 // PkgTask struct
@@ -317,24 +317,23 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	}
 	// Switch binary for sudo
 	if t.Sudo {
-		// cmd.Prepend...
 		cmdArgs = append([]string{cmd.Bin}, cmdArgs...)
 		cmd.Bin = "sudo"
 	}
 	fmt.Printf("%s %s\n", cmd.Bin, strings.Join(cmdArgs, " "))
-	os.Exit(1)
 	if DryRun {
 		return "", nil
 	}
 	stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
+	str := strings.TrimRight(stdout, "\n")
 	// Quickfix centos yum
 	if status == 1 && stderr == "Error: Nothing to do\n" {
-		return stdout, nil
+		return str, nil
 	}
 	if status != 0 {
-		return stdout, fmt.Errorf(stderr)
+		return str, fmt.Errorf(stderr)
 	}
-	return stdout, nil
+	return str, nil
 }
 
 func has(p string) bool {
