@@ -3,9 +3,9 @@ version: "2"
 services:
 
   build:
-    build: # . # Dockerfile
-      context: .
-      dockerfile: .docker/alpine
+    build: . # Dockerfile
+    #   context: .
+    #   dockerfile: .docker/alpine
     image: lei/dot
     container_name: dot
     # entrypoint: /bin/bash
