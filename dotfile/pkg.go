@@ -27,7 +27,7 @@ var (
 			// Opts: []string{"--noconfirm"},
 			Opts: []*PkgOpt{
 				// FIXME prepend "alpine": {"--no-cache"},
-				&PkgOpt{
+				{
 					Args: "--noconfirm",
 				},
 			},
@@ -36,17 +36,17 @@ var (
 				"remove":  "-R",
 			},
 			Args: []*PkgOpt{
-				&PkgOpt{
+				{
 					Args: []string{"--needed", "--noprogressbar"},
-					OS: []string{"archlinux"},
+					OS:   []string{"archlinux"},
 				},
-				&PkgOpt{
+				{
 					Args: []string{"--no-install-suggests", "--no-install-recommends", "--quiet"},
-					OS: []string{"debian"},
+					OS:   []string{"debian"},
 				},
-				&PkgOpt{
+				{
 					Args: []string{"--quiet"},
-					If: []string{"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}"},
+					If:   []string{"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}"},
 					// "{{eq .Verbose 0}}": {"--quiet"},
 				},
 			},
@@ -56,9 +56,9 @@ var (
 			},
 		},
 		"pacman": {
-			Bin:  "pacman",
+			Bin: "pacman",
 			Opts: []*PkgOpt{
-				&PkgOpt{
+				{
 					Args: []string{"--noconfirm", "--needed", "--noprogressbar"},
 				},
 			},
@@ -67,16 +67,16 @@ var (
 				"remove":  "-R",
 			},
 			Args: []*PkgOpt{
-				&PkgOpt{
+				{
 					Args: []string{"--quiet"},
-					If: []string{"{{eq .Verbose 0}}"},
+					If:   []string{"{{eq .Verbose 0}}"},
 				},
 			},
 		},
 		"cask": {
-			Bin:  "brew",
+			Bin: "brew",
 			Opts: []*PkgOpt{
-				&PkgOpt{
+				{
 					Args: []string{"cask"},
 				},
 			},
@@ -90,10 +90,10 @@ var (
 
 // PkgCmd ...
 type PkgCmd struct {
-	Bin  string // Package manager binary path
-	Opts []*PkgOpt // General pkg manager options
+	Bin  string            // Package manager binary path
+	Opts []*PkgOpt         // General pkg manager options
 	Acts map[string]string // Command actions map
-	Args []*PkgOpt // General pkg manager options
+	Args []*PkgOpt         // General pkg manager options
 	// OS   map[string][]string // Platform options
 	// If   map[string][]string // Conditional opts
 	Init func() error // Install or prepare bin
@@ -115,7 +115,7 @@ func (cmd *PkgCmd) Build(a string, slice ...string) ([]string, error) {
 		if err != nil {
 			return args, err
 		}
-		if len(add) > 0{
+		if len(add) > 0 {
 			args = append(args, add...)
 		}
 	}
@@ -136,7 +136,7 @@ func (cmd *PkgCmd) Build(a string, slice ...string) ([]string, error) {
 		if err != nil {
 			return args, err
 		}
-		if len(add) > 0{
+		if len(add) > 0 {
 			args = append(args, add...)
 		}
 	}
@@ -223,7 +223,7 @@ type PkgOpt struct {
 	Args interface{} // *parsers.Slice
 	OS   []string
 	// https://golang.org/pkg/text/template/#hdr-Functions
-	If   []string
+	If []string
 }
 
 // NewPkgCmd ...

@@ -3,7 +3,6 @@ package parsers
 import (
 	"reflect"
 	"testing"
-
 	// "github.com/LEI/dot/dotfile"
 )
 
