@@ -76,8 +76,9 @@ func (r *Repo) checkRepo() error {
 	} else if status != 0 {
 		return fmt.Errorf("check repo unknown error (status %d): %s", status, stderr)
 	}
-	if stdout != "" && len(strings.Split(stdout, "\n")) > 0 {
-		fmt.Println(stdout)
+	str := strings.TrimRight(stdout, "\n")
+	if str != "" { // stdout != "" && len(strings.Split(stdout, "\n")) > 0 {
+		fmt.Println(str)
 		return ErrDirtyRepo
 	}
 	// c := exec.Command("git", args...)

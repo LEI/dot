@@ -14,14 +14,9 @@ import (
 
 // Defaults ...
 type Defaults struct {
-	Defaults []*Default
-	Commands []string
-}
-
-// Default ...
-type Default struct {
 	Template string
-	Commands map[string]map[string]Def
+	Defaults map[string]map[string]Def // []*Default
+	Commands []string
 }
 
 // Def ...
@@ -51,24 +46,21 @@ func (d *Defaults) Read(s string) error {
 
 // Parse ...
 func (d *Defaults) Parse() error {
-	for _, D := range d.Defaults {
-		tpl := D.Template
-		// fmt.Printf("Defaults: %s\n (%d)\n", tpl, len(D.Commands))
-		for a, b := range D.Commands {
-			for name, def := range b {
-				def.App = a
-				def.Name = name
-				// s := fmt.Sprintf("%s %s %s %s\n", def.Domain, def.Name, def.Type, def.Value)
-				str, err := TemplateData(def.Name, tpl, def)
-				if err != nil {
-					return err
-				}
-				// fmt.Printf("[%s] %s\n", c, str)
-				if def.Sudo {
-					str = "sudo " + str
-				}
-				d.Commands = append(d.Commands, str)
+	for a, b := range d.Defaults {
+		// fmt.Printf("Defaults: %s\n (%d)\n", d.Template, len(D.Commands))
+		for name, def := range b {
+			def.App = a
+			def.Name = name
+			// s := fmt.Sprintf("%s %s %s %s\n", def.Domain, def.Name, def.Type, def.Value)
+			str, err := TemplateData(def.Name, d.Template, def)
+			if err != nil {
+				return err
 			}
+			// fmt.Printf("[%s] %s\n", c, str)
+			if def.Sudo {
+				str = "sudo " + str
+			}
+			d.Commands = append(d.Commands, str)
 		}
 	}
 	return nil
