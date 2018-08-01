@@ -16,9 +16,9 @@ services:
 
   test:
     image: lei/dot # _test
-    container_name: dot_test
     depends_on:
       - build
+    container_name: dot_test
     command: -l -c './scripts/e2e-test.sh'
 
   test_os:
