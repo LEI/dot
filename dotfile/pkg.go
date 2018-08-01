@@ -151,6 +151,7 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 		}
 		pt.done = true
 	}
+	pacArgs := []string{}
 	// General manager options
 	if len(pt.Opts) == 0 && !HasOSType("alpine") {
 		pt.Opts = append(pt.Opts, "--noconfirm")
@@ -160,7 +161,7 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("unknown pkg action: %s", a)
 	}
-	pacArgs := []string{action}
+	pacArgs = append(pacArgs, action)
 	// Insert package names and extra options
 	pacArgs = append(pacArgs, args...)
 	// Platform specific options
