@@ -46,3 +46,4 @@ Download a [release](https://github.com/LEI/dot/releases) or install manually:
 - [ ] Ansible `with_items` equivalent for templates
 - [ ] Chooser (overwrite, backup, remove) instead of (y/n) confirmation, plus prompt for missing variables
 - [ ] Handle links in cache and add ability to cleanup backups
+- [ ] Split pkg pac command and osx defaults

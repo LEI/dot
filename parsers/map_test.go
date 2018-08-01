@@ -3,6 +3,8 @@ package parsers
 import (
 	"reflect"
 	"testing"
+
+	// "github.com/LEI/dot/dotfile"
 )
 
 var mapTests = []struct {
@@ -24,3 +26,18 @@ func TestMap(t *testing.T) {
 		}
 	}
 }
+
+// func TestUnmarshalYAML(t *testing.T) {
+// 	in := `---
+// role:
+//   # os: ["*"]
+//   link:
+//     - "a:b"` // a: "b"
+// 	// out := &dotfile.Role{}
+// 	// role := &dotfile.Role{}
+// 	// _, err := role.ReadConfig(tmp)
+// 	paths := make(Map)
+// 	if err := dotfile.PreparePaths(paths); err != nil {
+// 		t.Errorf(err)
+// 	}
+// }
