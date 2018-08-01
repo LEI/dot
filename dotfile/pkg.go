@@ -48,14 +48,14 @@ var (
 				"remove":  "-R",
 			},
 			OS: map[string][]string{
-				"alpine": {"--no-cache"},
+				// FIXME prepend "alpine": {"--no-cache"},
 				"archlinux": {"--needed", "--noprogressbar"},
 				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
 			},
 			// https://golang.org/pkg/text/template/#hdr-Functions
 			If: map[string][]string{
-				"{{eq .Verbose 0}}": {"--quiet"},
-				// "{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},
+				// "{{eq .Verbose 0}}": {"--quiet"},
+				"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},
 			},
 			Init: func() error {
 				return downloadFromURL(pacaptURL, pacaptBin, 0755)
