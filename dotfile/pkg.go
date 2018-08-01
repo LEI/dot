@@ -8,27 +8,9 @@ import (
 	"os/exec"
 	"strings"
 	"text/template"
+
+	"github.com/LEI/dot/parsers"
 )
-
-// PkgTask struct
-type PkgTask struct {
-	Name string
-	Opts []string
-	Type string
-	Sudo bool
-	Task
-}
-
-// PkgType ...
-type PkgType struct {
-	Bin  string // Package manager binary path
-	Opts []string // General pkg manager options
-	Acts map[string]string // Command actions map
-	OS   map[string][]string // Platform options
-	If   map[string][]string // Conditional opts
-	Init func() error // Install or prepare bin
-	done bool
-}
 
 const (
 	pacaptURL = "https://github.com/icy/pacapt/raw/ng/pacapt"
@@ -39,23 +21,34 @@ const (
 var (
 	sudo bool
 
-	pkgTypes = map[string]*PkgType{
+	pkgCommands = map[string]*PkgCmd{
 		"pacapt": {
 			Bin: "pacapt",
 			// Opts: []string{"--noconfirm"},
+			Opts: []*PkgOpt{
+				// FIXME prepend "alpine": {"--no-cache"},
+				&PkgOpt{
+					Args: "--noconfirm",
+				},
+			},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
 			},
-			OS: map[string][]string{
-				// FIXME prepend "alpine": {"--no-cache"},
-				"archlinux": {"--needed", "--noprogressbar"},
-				"debian": {"--no-install-suggests", "--no-install-recommends", "--quiet"},
-			},
-			// https://golang.org/pkg/text/template/#hdr-Functions
-			If: map[string][]string{
-				// "{{eq .Verbose 0}}": {"--quiet"},
-				"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}": {"--quiet"},
+			Args: []*PkgOpt{
+				&PkgOpt{
+					Args: []string{"--needed", "--noprogressbar"},
+					OS: []string{"archlinux"},
+				},
+				&PkgOpt{
+					Args: []string{"--no-install-suggests", "--no-install-recommends", "--quiet"},
+					OS: []string{"debian"},
+				},
+				&PkgOpt{
+					Args: []string{"--quiet"},
+					If: []string{"{{and (eq .Verbose 0) (hasOS \"!alpine\")}}"},
+					// "{{eq .Verbose 0}}": {"--quiet"},
+				},
 			},
 			Init: func() error {
 				return downloadFromURL(pacaptURL, pacaptBin, 0755)
@@ -64,18 +57,29 @@ var (
 		},
 		"pacman": {
 			Bin:  "pacman",
-			Opts: []string{"--noconfirm", "--needed", "--noprogressbar"},
+			Opts: []*PkgOpt{
+				&PkgOpt{
+					Args: []string{"--noconfirm", "--needed", "--noprogressbar"},
+				},
+			},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
 			},
-			If: map[string][]string{
-				"{{eq .Verbose 0}}": {"--quiet"},
+			Args: []*PkgOpt{
+				&PkgOpt{
+					Args: []string{"--quiet"},
+					If: []string{"{{eq .Verbose 0}}"},
+				},
 			},
 		},
 		"cask": {
 			Bin:  "brew",
-			Opts: []string{"cask"},
+			Opts: []*PkgOpt{
+				&PkgOpt{
+					Args: []string{"cask"},
+				},
+			},
 			Acts: map[string]string{
 				"install": "install",
 				"remove":  "uninstall",
@@ -83,6 +87,172 @@ var (
 		},
 	}
 )
+
+// PkgCmd ...
+type PkgCmd struct {
+	Bin  string // Package manager binary path
+	Opts []*PkgOpt // General pkg manager options
+	Acts map[string]string // Command actions map
+	Args []*PkgOpt // General pkg manager options
+	// OS   map[string][]string // Platform options
+	// If   map[string][]string // Conditional opts
+	Init func() error // Install or prepare bin
+	done bool
+}
+
+// Build command arguments
+func (cmd *PkgCmd) Build(a string, slice ...string) ([]string, error) {
+	args := []string{}
+
+	// General manager options
+	if len(cmd.Opts) == 0 && !HasOSType("alpine") {
+		cmd.Opts = append(cmd.Opts, &PkgOpt{Args: []string{"--noconfirm"}})
+	}
+
+	// Before action
+	for _, a := range cmd.Opts {
+		add, err := cmd.Add(a)
+		if err != nil {
+			return args, err
+		}
+		if len(add) > 0{
+			args = append(args, add...)
+		}
+	}
+
+	// Package manager action
+	action, ok := cmd.Acts[strings.ToLower(a)]
+	if !ok {
+		return []string{}, fmt.Errorf("unknown pkg action: %s", a)
+	}
+	args = append(args, action)
+
+	// Insert package names and extra options
+	args = append(args, slice...)
+
+	// After action
+	for _, a := range cmd.Args {
+		add, err := cmd.Add(a)
+		if err != nil {
+			return args, err
+		}
+		if len(add) > 0{
+			args = append(args, add...)
+		}
+	}
+
+	// // Platform specific options
+	// for p, opt := range cmd.OS {
+	// 	patterns := strings.Split(p, ",")
+	// 	for _, p := range patterns {
+	// 		if HasOSType(p) {
+	// 			args = append(args, opt...)
+	// 		}
+	// 	}
+	// }
+	// // Conditional options
+	// pkgVarsMap := map[string]interface{}{
+	// 	"DryRun":  DryRun,
+	// 	"Verbose": Verbose,
+	// 	"OS":      OS,
+	// }
+	// pkgFuncMap := template.FuncMap{
+	// 	"hasOS": HasOSType,
+	// }
+	// for tpl, opt := range cmd.If {
+	// 	str, err := TemplateData(cmd.Bin, tpl, pkgVarsMap, pkgFuncMap)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// 	if str == "true" {
+	// 		args = append(args, opt...)
+	// 	}
+	// }
+	return args, nil
+}
+
+// Add ...
+func (cmd *PkgCmd) Add(opt *PkgOpt) ([]string, error) {
+	args := []string{}
+	// Check platform
+	if len(opt.OS) > 0 {
+		hasOS := false
+		for _, o := range opt.OS {
+			if HasOSType(o) {
+				hasOS = true
+				break
+			}
+		}
+		if !hasOS {
+			// continue
+			return args, nil
+		}
+	}
+	// Check condition template
+	pkgVarsMap := map[string]interface{}{
+		"DryRun":  DryRun,
+		"Verbose": Verbose,
+		"OS":      OS,
+	}
+	pkgFuncMap := template.FuncMap{
+		"hasOS": HasOSType,
+	}
+	for _, cond := range opt.If {
+		str, err := TemplateData(cmd.Bin, cond, pkgVarsMap, pkgFuncMap)
+		if err != nil {
+			return args, err
+		}
+		if str != "true" {
+			// continue
+			return args, nil
+		}
+	}
+	// for _, a := range *opt.Args {
+	// 	args = append(args, a)
+	// }
+	optArgs, err := parsers.NewSlice(opt.Args)
+	if err != nil {
+		return args, err
+	}
+	args = append(args, *optArgs...)
+	return args, err
+}
+
+// PkgOpt ...
+type PkgOpt struct {
+	Args interface{} // *parsers.Slice
+	OS   []string
+	// https://golang.org/pkg/text/template/#hdr-Functions
+	If   []string
+}
+
+// NewPkgCmd ...
+func NewPkgCmd(t string, args ...string) (*PkgCmd, error) {
+	cmd, ok := pkgCommands[t]
+	if !ok {
+		return cmd, fmt.Errorf("unknown pkg type: %s", t)
+	}
+	bin := cmd.Bin
+	if bin == "" {
+		return cmd, fmt.Errorf("missing pkg bin: %+v", t)
+	}
+	if !cmd.done && cmd.Init != nil {
+		if err := cmd.Init(); err != nil {
+			return cmd, err
+		}
+		cmd.done = true
+	}
+	return cmd, nil
+}
+
+// PkgTask struct
+type PkgTask struct {
+	Name string
+	Opts []string
+	Type string
+	Sudo bool
+	Task
+}
 
 // Status package
 func (t *PkgTask) Status() bool {
@@ -137,69 +307,26 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	if t.Type == "pacapt" && has("pacman") {
 		t.Type = "pacman"
 	}
-	pt, ok := pkgTypes[t.Type]
-	if !ok {
-		return "", fmt.Errorf("unknown pkg type: %s", t.Type)
+	cmd, err := NewPkgCmd(t.Type)
+	if err != nil {
+		return "", err
 	}
-	bin := pt.Bin
-	if bin == "" {
-		return "", fmt.Errorf("missing pkg bin: %+v", t)
-	}
-	if !pt.done && pt.Init != nil {
-		if err := pt.Init(); err != nil {
-			return "", err
-		}
-		pt.done = true
-	}
-	action, ok := pt.Acts[strings.ToLower(a)]
-	if !ok {
-		return "", fmt.Errorf("unknown pkg action: %s", a)
-	}
-	pacArgs := []string{action}
-	// General manager options
-	if len(pt.Opts) == 0 && !HasOSType("alpine") {
-		pt.Opts = append(pt.Opts, "--noconfirm")
-	}
-	pacArgs = append(pacArgs, pt.Opts...)
-	// Insert package names and extra options
-	pacArgs = append(pacArgs, args...)
-	// Platform specific options
-	for p, opt := range pt.OS {
-		patterns := strings.Split(p, ",")
-		for _, p := range patterns {
-			if HasOSType(p) {
-				pacArgs = append(pacArgs, opt...)
-			}
-		}
-	}
-	// Conditional options
-	pkgVarsMap := map[string]interface{}{
-		"DryRun":  DryRun,
-		"Verbose": Verbose,
-		"OS":      OS,
-	}
-	pkgFuncMap := template.FuncMap{
-		"hasOS": HasOSType,
-	}
-	for tpl, opt := range pt.If {
-		str, err := TemplateData(pt.Bin, tpl, pkgVarsMap, pkgFuncMap)
-		if err != nil {
-			return "", err
-		}
-		if str == "true" {
-			pacArgs = append(pacArgs, opt...)
-		}
+	cmdArgs, err := cmd.Build(a, args...)
+	if err != nil {
+		return "", err
 	}
 	// Switch binary for sudo
 	if t.Sudo {
-		pacArgs = append([]string{bin}, pacArgs...)
-		bin = "sudo"
+		// cmd.Prepend...
+		cmdArgs = append([]string{cmd.Bin}, cmdArgs...)
+		cmd.Bin = "sudo"
 	}
-	fmt.Printf("%s %s\n", bin, strings.Join(pacArgs, " "))
+	fmt.Printf("%s %s\n", cmd.Bin, strings.Join(cmdArgs, " "))
+	os.Exit(1)
 	if DryRun {
 		return "", nil
 	}
-	stdout, stderr, status := ExecCommand(bin, pacArgs...)
+	stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
 	// Quickfix centos yum
 	if status == 1 && stderr == "Error: Nothing to do\n" {
 		return stdout, nil
