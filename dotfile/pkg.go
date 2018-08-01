@@ -42,7 +42,7 @@ var (
 	pkgTypes = map[string]*PkgType{
 		"pacapt": {
 			Bin: "pacapt",
-			Opts: []string{"--noconfirm"},
+			// Opts: []string{"--noconfirm"},
 			Acts: map[string]string{
 				"install": "-S",
 				"remove":  "-R",
@@ -157,7 +157,12 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 	}
 	pacArgs := []string{action}
 	// General manager options
+	if len(pt.Opts) == 0 && !HasOSType("alpine") {
+		pt.Opts = append(pt.Opts, "--noconfirm")
+	}
 	pacArgs = append(pacArgs, pt.Opts...)
+	// Insert package names and extra options
+	pacArgs = append(pacArgs, args...)
 	// Platform specific options
 	for p, opt := range pt.OS {
 		patterns := strings.Split(p, ",")
@@ -185,8 +190,6 @@ func (t *PkgTask) Exec(a string, args ...string) (string, error) {
 			pacArgs = append(pacArgs, opt...)
 		}
 	}
-	// Finally insert ackage names and extra options
-	pacArgs = append(pacArgs, args...)
 	// Switch binary for sudo
 	if t.Sudo {
 		pacArgs = append([]string{bin}, pacArgs...)
