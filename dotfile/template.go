@@ -41,13 +41,17 @@ var (
 			if !ok {
 				return s
 			}
-			if !strings.Contains(str, " ") && !strings.Contains(str, "\"") {
-				return str
-			}
-			return strconv.Quote(str)
+			return shellEscape(str)
 		},
 	}
 )
+
+func shellEscape(s string) string {
+	if !strings.Contains(s, " ") && !strings.Contains(s, "\"") {
+		return s
+	}
+	return strconv.Quote(s)
+}
 
 // TemplateTask struct
 type TemplateTask struct {

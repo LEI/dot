@@ -6,10 +6,70 @@ import (
 	// "os"
 	// "os/exec"
 	// "path/filepath"
+	"text/template"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/LEI/dot/utils"
+)
+
+var (
+	extraFuncMap = template.FuncMap{
+		// macos `defaults write` value formatter
+		"toString": func(s interface{}) interface{} {
+			str := ""
+			switch t := s.(type) {
+			// case bool, int, int32, int64, float32, float64:
+			// 	str = fmt.Sprintf("%s", t)
+			case bool:
+				str = fmt.Sprintf("%v", t)
+			case int, int32:
+				str = fmt.Sprintf("%d", t)
+			case float32, float64:
+				str = fmt.Sprintf("%f", t)
+			case string:
+				str = shellEscape(t)
+			case []string: // -array, -array-add
+				for _, s := range t {
+					if len(str) > 0 {
+						str += " "
+					}
+					str += shellEscape(s)
+				}
+			case []interface{}:
+				for _, s := range t {
+					if len(str) > 0 {
+						str += " "
+					}
+					str += shellEscape(s.(string))
+				}
+			// case map[string]interface{}:
+			case map[interface{}]interface{}: // -dict, -dict-add
+				for key, val := range t {
+					if len(str) > 0 {
+						str += " "
+					}
+					str += key.(string)
+					switch v := val.(type) {
+					case bool:
+						str += fmt.Sprintf(" -bool %v", v)
+					case int, int32, int64:
+						str += fmt.Sprintf(" -int %d", v)
+					case float32, float64:
+						str += fmt.Sprintf(" -float %f", v)
+					case string:
+						str += fmt.Sprintf(" -string %s", shellEscape(v))
+					default:
+						fmt.Printf("unexpected default %s: %s\n", key, val)
+					}
+				}
+			// -data, -date...
+			default:
+				str = fmt.Sprintf("%+v", s)
+			}
+			return str
+		},
+	}
 )
 
 // Defaults ...
@@ -52,7 +112,7 @@ func (d *Defaults) Parse() error {
 			def.App = a
 			def.Name = name
 			// s := fmt.Sprintf("%s %s %s %s\n", def.Domain, def.Name, def.Type, def.Value)
-			str, err := TemplateData(def.Name, d.Template, def)
+			str, err := TemplateData(def.Name, d.Template, def, extraFuncMap)
 			if err != nil {
 				return err
 			}
