@@ -1,3 +1,4 @@
+# vi: ft=Dockerfile
 FROM golang
 
 RUN apt-get update -qq -y && \
@@ -26,11 +27,6 @@ RUN printf "%s\n" \
 
 ENTRYPOINT ["/bin/bash"]
 
-# Install go dep
-RUN curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
 COPY . $DOT
 
-# RUN go vet && go build && go clean
-RUN dep ensure && \
-go install
+RUN ./scripts/install.sh

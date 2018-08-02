@@ -2,15 +2,13 @@
 
 set -e
 
-if ! hash dep 2> /dev/null; then
-  curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-fi
+DIR="${BASH_SOURCE%/*}"
 
-# Install dependencies
-dep ensure
+source "$DIR/install.sh"
+
+# curl -sL https://git.io/goreleaser | bash --rm-dist "$@"
 
 if ! hash goreleaser 2> /dev/null; then
-  # curl -sL https://git.io/goreleaser | bash --rm-dist "$@"
   REPO_GORELEASER=github.com/goreleaser/goreleaser
   go get -d "$REPO_GORELEASER" && (
     cd "$GOPATH/src/$REPO_GORELEASER"

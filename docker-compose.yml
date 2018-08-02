@@ -5,7 +5,7 @@ services:
   build:
     build: . # Dockerfile
     #   context: .
-    #   dockerfile: .docker/alpine
+    #   dockerfile: docker/alpine
     image: lei/dot
     container_name: dot
     # entrypoint: /bin/bash
@@ -24,7 +24,7 @@ services:
   test_os:
     build:
       context: .
-      dockerfile: .docker/$OS
+      dockerfile: docker/$OS
     # image: lei/dot_$OS
     container_name: dot_$OS
     command: -l -c '/tmp/scripts/e2e-test.sh'

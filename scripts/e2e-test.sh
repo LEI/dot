@@ -3,6 +3,7 @@
 set -e
 
 DIR="${BASH_SOURCE%/*}"
+
 source "$DIR/functions.sh"
 
 if [[ -n "$DOT" ]] && [[ ! -f "$HOME/.dot.yml" ]]; then

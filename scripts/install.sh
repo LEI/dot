@@ -28,19 +28,31 @@ check_go() {
   fi
 }
 
+check_dep() {
+  if ! has dep; then
+    # Install go dep
+    curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  fi
+
+  # Install dependencies
+  dep ensure
+}
+
 check_dot() {
   if [ ! -d "$GOPATH/src/$DOT_REPO" ]; then
     # git clone https://$DOT_REPO.git
     # Use --recursive for .gitmodules
     go get "$DOT_REPO"
   fi
-  if ! has dot; then
-    go install "$DOT_REPO"
-  fi
+  # go vet && go build && go clean
+  # if ! has dot; then
+  go install "$DOT_REPO"
+  # fi
 }
 
 do_install() {
   check_go
+  check_dep
   check_dot
   #dot --dry-run --verbose
   echo "Done"
