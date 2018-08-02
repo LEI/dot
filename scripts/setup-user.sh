@@ -12,9 +12,6 @@ fi
 # echo "%$GROUP ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$GROUP
 # usermod -aG sudo $USER
 
-#shopt -s extglob
-chmod 0440 /etc/sudoers.d/*
-
 # Create user: --password '' --groups sudo,...
 useradd --create-home --shell /bin/bash --user-group "$@"
 # echo "$USER:$USER" | chpasswd
@@ -29,3 +26,5 @@ echo 'Defaults secure_path="<default value>:/usr/local/bin"' >> "/etc/sudoers.d/
 
 # Allow user to execute any command without password
 echo "$USER ALL=(ALL) NOPASSWD: ALL" >> "/etc/sudoers.d/$USER"
+
+chmod 0440 "/etc/sudoers.d/$USER"
