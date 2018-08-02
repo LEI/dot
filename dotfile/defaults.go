@@ -3,9 +3,10 @@ package dotfile
 import (
 	"fmt"
 	"io/ioutil"
-	// "os"
+	"os"
 	// "os/exec"
 	// "path/filepath"
+	"strings"
 	"text/template"
 
 	"gopkg.in/yaml.v2"
@@ -129,9 +130,27 @@ func (d *Defaults) Parse() error {
 // Exec ...
 func (d *Defaults) Exec() error {
 	for _, s := range d.Commands {
-		fmt.Printf("%s\n", s)
-		if err := execute(Shell, "-c", s); err != nil {
-			return err
+		fmt.Printf("%s\n", strings.TrimRight(s, "\n"))
+		// if err := execute(Shell, "-c", s); err != nil {
+		// 	return err
+		// }
+		stdout, stderr, status := ExecCommand(Shell, "-c", s)
+		if status != 0 {
+			if stderr == "" {
+				stderr = fmt.Sprintf(
+					"defaults failed for `%s`: %s (code %d)",
+					s,
+					stderr,
+					status)
+			}
+			return fmt.Errorf(stderr)
+		}
+		if stderr != "" {
+			fmt.Fprintf(os.Stderr, stderr)
+		}
+		str := strings.TrimRight(stdout, "\n")
+		if str != "" {
+			fmt.Println(str)
 		}
 	}
 	return nil
