@@ -33,7 +33,7 @@ sudo
 ENV GIT_VERSION 2.18.0
 # ADD https://github.com/git/git/archive/v$GIT_VERSION.tar.gz git.tar.gz
 RUN curl -sSL https://github.com/git/git/archive/v$GIT_VERSION.tar.gz \
-     -o git.tar.gz && \
+-o git.tar.gz && \
 tar -zxf git.tar.gz && \
 cd git-$GIT_VERSION && \
 make --quiet configure && \
@@ -43,7 +43,7 @@ sudo make --quiet install
 # Install libevent
 ENV LIBEVENT_VERSION 2.1.8
 RUN curl -sSL https://github.com/libevent/libevent/releases/download/release-$LIBEVENT_VERSION-stable/libevent-$LIBEVENT_VERSION-stable.tar.gz \
-    -o libevent.tar.gz && \
+-o libevent.tar.gz && \
 tar -xzf libevent.tar.gz && \
 cd libevent-$LIBEVENT_VERSION-stable && \
 ./configure --prefix=/usr/local --quiet && \
@@ -54,7 +54,7 @@ sudo make --quiet install
 ENV TMUX_VERSION 2.7
 # RUN git clone https://github.com/tmux/tmux.git && \
 RUN curl -sSL https://github.com/tmux/tmux/releases/download/$TMUX_VERSION/tmux-$TMUX_VERSION.tar.gz \
-    -o tmux.tar.gz && \
+-o tmux.tar.gz && \
 tar -zxf tmux.tar.gz && \
 cd tmux-$TMUX_VERSION && \
 LDFLAGS="-L/usr/local/lib -Wl,-rpath=/usr/local/lib" ./configure --prefix=/usr/local --quiet && \
@@ -70,12 +70,11 @@ COPY ./scripts /tmp/scripts
 # ENV LC_ALL en_GB.UTF-8
 
 RUN groupadd sudo
-RUN sed -i -e 's#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
 RUN /tmp/scripts/setup-user.sh --groups sudo --password '' $USER
 
 # Pre-install pacapt
 ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
-RUN sudo chmod 755 /usr/local/bin/pacapt
+RUN sudo chmod 0755 /usr/local/bin/pacapt
 
 USER $USER
 

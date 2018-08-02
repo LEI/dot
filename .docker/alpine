@@ -21,8 +21,10 @@ COPY ./scripts /tmp/scripts
 RUN /tmp/scripts/setup-user.sh $USER --password ''
 
 # Pre-install pacapt
-ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
-RUN sudo chmod 755 /usr/local/bin/pacapt
+# ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
+RUN curl -sSL https://github.com/icy/pacapt/raw/ng/pacapt \
+-o /usr/local/bin/pacapt && \
+sudo chmod 0755 /usr/local/bin/pacapt
 
 USER $USER
 
