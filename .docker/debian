@@ -14,16 +14,21 @@ git \
 locales \
 sudo
 
-RUN ./scripts/setup-lang.sh
-RUN ./scripts/setup-user.sh $USER --password '' --groups staff
-
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+COPY ./scripts /tmp/scripts
+
+RUN /tmp/scripts/setup-lang.sh
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
+
+RUN /tmp/scripts/setup-user.sh $USER --password '' --groups staff
+
 
 USER $USER
 
 WORKDIR /home/$USER
 
-COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
 
 # Restore interactive

@@ -2,9 +2,11 @@
 
 set -e
 
-echo "SETUP USER: $USER"
-
 USER="${USER:-$1}"
+
+if [ -z "$USER" ]; then
+  exit 1
+fi
 
 # Add /usr/local/bin to PATH while sudoing
 #sed -e 's#Defaults[[:blank:]]+secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults[[:blank:]]+secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers

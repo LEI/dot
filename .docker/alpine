@@ -16,8 +16,9 @@ sudo
 # locales \
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+COPY ./scripts /tmp/scripts
 
-RUN ./scripts/setup-user.sh $USER --password ''
+RUN /tmp/scripts/setup-user.sh $USER --password ''
 
 # Pre-install pacapt
 ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
@@ -27,7 +28,6 @@ USER $USER
 
 WORKDIR /home/$USER
 
-COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
 
 # RUN touch /home/$USER/.bashrc

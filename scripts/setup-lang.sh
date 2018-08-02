@@ -2,14 +2,14 @@
 
 set -e
 
-echo "SETUP LOCALE: $LANG"
+# https://wiki.archlinux.org/index.php/locale
+# LANG, LANGUAGE, LC_ALL...
+LOCALE="${1:-en_GB.UTF-8 UTF-8}"
 
-# LANG="${LANG:-$1}"
+if [ -z "$LOCALE" ]; then
+  exit 1
+fi
 
-sed -i -e 's/#[[:blank:]]*en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
+sed -i -e "s/#[[:blank:]]*$LOCALE/$LOCALE/" /etc/locale.gen
 
 locale-gen
-
-LANG=en_GB.UTF-8
-LANGUAGE=en_GB:en
-LC_ALL=en_GB.UTF-8

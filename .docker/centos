@@ -28,12 +28,17 @@ make configure && \
 ./configure --prefix=/usr/local && \
 sudo make install
 
-RUN ./scripts/setup-lang.sh
+COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+COPY ./scripts /tmp/scripts
+
+RUN /tmp/scripts/setup-lang.sh
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
+
 RUN groupadd sudo
 RUN sed -i -e 's#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
-RUN ./scripts/setup-user.sh --groups sudo --password '' $USER
-
-COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+RUN /tmp/scripts/setup-user.sh --groups sudo --password '' $USER
 
 # Pre-install pacapt
 ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
@@ -43,7 +48,6 @@ USER $USER
 
 WORKDIR /home/$USER
 
-COPY ./scripts scripts
 COPY ./.dot.yml .dot.yml
 
 #RUN dot install --packages --sudo
