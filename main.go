@@ -116,6 +116,8 @@ func execute(options *DotCmd) error {
 		return fmt.Errorf("# No roles, at least for this OS")
 	}
 	// Sync roles
+	// TODO: refactor to sync initally disabled roles
+	// but enabled by deps after initial sync below
 	errs := make(chan error, length)
 	for _, r := range config.Roles {
 		go func(r *Role) {

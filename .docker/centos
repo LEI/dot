@@ -15,17 +15,36 @@ RUN yum update --assumeyes --quiet && \
 yum install --assumeyes --quiet \
 curl-devel expat-devel gettext-devel openssl-devel zlib-devel \
 gcc perl-ExtUtils-MakeMaker \
+kernel-devel ncurses-devel \
 autoconf make \
 sudo
 # epel-release
 
 # Install latest git instead of 1.8
 ENV GIT_VERSION 2.18.0
-ADD https://github.com/git/git/archive/v$GIT_VERSION.tar.gz git.tar.gz
-RUN tar -zxf git.tar.gz && \
+# ADD https://github.com/git/git/archive/v$GIT_VERSION.tar.gz git.tar.gz
+RUN curl -sSL -o git.tar.gz https://github.com/git/git/archive/v$GIT_VERSION.tar.gz && \
+tar -zxf git.tar.gz && \
 cd git-$GIT_VERSION && \
 make configure && \
 ./configure --prefix=/usr/local && \
+sudo make install
+
+# Install latest tmux instead of 1.8
+ENV LIBEVENT_VERSION 2.0.22
+RUN curl -sSL -o libevent.tar.gz https://github.com/libevent/libevent/releases/download/release-$LIBEVENT_VERSION-stable/libevent-$LIBEVENT_VERSION-stable.tar.gz && \
+tar -xzf libevent.tar.gz && \
+cd libevent-$LIBEVENT_VERSION-stable && \
+./configure --prefix=/usr/local && \
+make && \
+sudo make install
+ENV TMUX_VERSION 2.7
+# RUN git clone https://github.com/tmux/tmux.git && \
+RUN curl -sSL -o tmux.tar.gz https://github.com/tmux/tmux/releases/download/$TMUX_VERSION/tmux-$TMUX_VERSION.tar.gz && \
+tar -zxf tmux.tar.gz && \
+cd tmux-$TMUX_VERSION && \
+LDFLAGS="-L/usr/local/lib -Wl,-rpath=/usr/local/lib" ./configure --prefix=/usr/local && \
+make && \
 sudo make install
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
