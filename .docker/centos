@@ -28,15 +28,12 @@ make configure && \
 ./configure --prefix=/usr/local && \
 sudo make install
 
-COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
-
-RUN useradd --create-home --shell /bin/bash $USER
-RUN echo "$USER:$USER" | chpasswd
-RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
-RUN groupadd sudo && usermod -aG sudo $USER
-
-# Add /usr/local/bin to PATH while sudoing
+RUN ./scripts/setup-lang.sh
+RUN groupadd sudo
 RUN sed -i -e 's#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
+RUN ./scripts/setup-user.sh --groups sudo --password '' $USER
+
+COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 # Pre-install pacapt
 ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt

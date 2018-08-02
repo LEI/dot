@@ -14,18 +14,10 @@ git \
 locales \
 sudo
 
-RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
-locale-gen
-ENV LANG en_GB.UTF-8
-ENV LANGUAGE en_GB:en
-ENV LC_ALL en_GB.UTF-8
+RUN ./scripts/setup-lang.sh
+RUN ./scripts/setup-user.sh $USER --password '' --groups staff
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
-
-RUN useradd --create-home --shell /bin/bash $USER
-RUN echo "$USER:$USER" | chpasswd
-RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/sudo
-RUN adduser $USER sudo && adduser $USER staff
 
 USER $USER
 
