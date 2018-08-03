@@ -55,7 +55,7 @@ do_install() {
   check_dep
   check_dot
   #dot --dry-run --verbose
-  echo "Done"
+  echo "Installed dot."
 }
 
 do_install

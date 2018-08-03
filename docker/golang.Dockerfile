@@ -5,7 +5,8 @@ apt-get install -qq --no-install-suggests --no-install-recommends -y \
 ca-certificates \
 curl \
 git \
-locales
+locales \
+sudo
 
 # https://stackoverflow.com/q/28405902/7796750
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -28,4 +29,6 @@ ENTRYPOINT ["/bin/bash"]
 
 COPY . $DOT
 
+RUN sudo echo $PATH
+RUN sudo which bash
 RUN ./scripts/install.sh

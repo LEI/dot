@@ -2,6 +2,10 @@
 
 set -e
 
+DIR="${BASH_SOURCE%/*}"
+
+source "$DIR/install.sh"
+
 # sudo apt-get -qq update
 # sudo apt-get install -y vim tmux
 #GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
