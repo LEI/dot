@@ -1,4 +1,3 @@
-# vi: ft=Dockerfile
 FROM golang
 
 RUN apt-get update -qq -y && \

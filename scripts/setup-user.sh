@@ -22,7 +22,6 @@ useradd --create-home --shell /bin/bash --user-group "$@"
 # Deb: Defaults        secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 # sed -e '/secure_path/ s[=.*[&:/usr/local/bin[' /etc/sudoers
 # sed -r -e '/^\s*Defaults\s+secure_path/ s[=(.*)[=\1:/usr/local/bin[' /etc/sudoers
-echo 'Defaults secure_path="<default value>:/usr/local/bin"' >> "/etc/sudoers.d/$USER"
 
 # Allow user to execute any command without password
 echo "$USER ALL=(ALL) NOPASSWD: ALL" >> "/etc/sudoers.d/$USER"

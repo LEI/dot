@@ -1,4 +1,3 @@
-# vi: ft=Dockerfile
 FROM alpine
 
 ENV OS linux
@@ -7,7 +6,7 @@ ENV USER docker
 
 #RUN echo "ipv6" >> /etc/modules
 RUN apk add --update --no-cache \
-bash \
+ bash \
 curl \
 git \
 shadow \
@@ -24,7 +23,7 @@ RUN /tmp/scripts/setup-user.sh $USER --password ''
 # ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
 RUN curl -sSL https://github.com/icy/pacapt/raw/ng/pacapt \
 -o /usr/local/bin/pacapt && \
-sudo chmod 0755 /usr/local/bin/pacapt
+chmod 0755 /usr/local/bin/pacapt
 
 USER $USER
 
@@ -34,6 +33,8 @@ COPY ./.dot.yml .dot.yml
 
 # RUN touch /home/$USER/.bashrc
 RUN touch /$HOME/.bashrc
+
+RUN which bash
 
 #RUN dot install --packages --sudo
 

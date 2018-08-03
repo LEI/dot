@@ -72,6 +72,8 @@ COPY ./scripts /tmp/scripts
 RUN groupadd sudo
 RUN /tmp/scripts/setup-user.sh --groups sudo --password '' $USER
 
+RUN echo 'Defaults secure_path="<default value>:/usr/local/bin"' >> "/etc/sudoers.d/$USER"
+
 # Pre-install pacapt
 ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
 RUN sudo chmod 0755 /usr/local/bin/pacapt
