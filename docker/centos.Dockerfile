@@ -71,12 +71,15 @@ COPY ./scripts /tmp/scripts
 
 RUN groupadd sudo
 RUN /tmp/scripts/setup-user.sh --groups sudo --password '' $USER
-
-RUN echo 'Defaults secure_path="<default value>:/usr/local/bin"' >> "/etc/sudoers.d/$USER"
-
-# Pre-install pacapt
-ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
-RUN sudo chmod 0755 /usr/local/bin/pacapt
+# Add /usr/local/bin to sudo PATH
+#sed -e 's#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
+#sed -e 's#Defaults[[:blank:]]+secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults[[:blank:]]+secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
+# Deb: Defaults        secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# sed -e '/secure_path/ s[=.*[&:/usr/local/bin[' /etc/sudoers
+# sed -r -e '/^\s*Defaults\s+secure_path/ s[=(.*)[=\1:/usr/local/bin[' /etc/sudoers
+# RUN echo 'Defaults secure_path="<default value>:/usr/local/bin"' >> "/etc/sudoers.d/$USER"
+RUN sed -i -e 's#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin#Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin#' /etc/sudoers
+RUN /tmp/scripts/setup-pacapt.sh
 
 USER $USER
 

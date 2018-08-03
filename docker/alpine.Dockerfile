@@ -18,12 +18,7 @@ COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 COPY ./scripts /tmp/scripts
 
 RUN /tmp/scripts/setup-user.sh $USER --password ''
-
-# Pre-install pacapt
-# ADD https://github.com/icy/pacapt/raw/ng/pacapt /usr/local/bin/pacapt
-RUN curl -sSL https://github.com/icy/pacapt/raw/ng/pacapt \
--o /usr/local/bin/pacapt && \
-chmod 0755 /usr/local/bin/pacapt
+RUN /tmp/scripts/setup-pacapt.sh
 
 USER $USER
 
