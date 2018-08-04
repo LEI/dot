@@ -5,8 +5,8 @@ ENV ARCH amd64
 ENV USER docker
 
 #RUN echo "ipv6" >> /etc/modules
-RUN apk add --update --no-cache \
- bash \
+RUN apk add --update --no-cache --quiet \
+bash \
 curl \
 git \
 shadow \

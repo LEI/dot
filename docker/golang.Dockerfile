@@ -1,7 +1,7 @@
 FROM golang
 
-RUN apt-get update -qq -y && \
-apt-get install -qq --no-install-suggests --no-install-recommends -y \
+RUN apt-get update -qqy && \
+apt-get install --no-install-suggests --no-install-recommends -qqy \
 ca-certificates \
 curl \
 git \
