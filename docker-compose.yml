@@ -28,22 +28,3 @@ services:
     # image: lei/dot_$OS
     container_name: dot_$OS
     command: -l -c '/tmp/scripts/e2e-test.sh'
-
-  test_android:
-    build:
-      context: .
-      dockerfile: docker/termux.Dockerfile
-    container_name: dot_android
-    command: -l -c '/tmp/scripts/e2e-test.sh'
-    # libguestfs
-    privileged: true
-    # cap_add:
-    #   - MKNOD
-    #   - SYS_ADMIN
-    # devices:
-    #   - /dev/fuse
-    # # gcc -fPIC -shared  -o docker/wrap_uname.so docker/wrap_uname.c -ldl
-    # volumes:
-    #   - "./docker/wrap_uname.so:/lib/wrap_uname.so"
-    # environment:
-    #   LD_PRELOAD: /lib/wrap_uname.so
