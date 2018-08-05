@@ -13,6 +13,7 @@ ca-certificates \
 git \
 locales \
 sudo
+# curl
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 COPY ./scripts /tmp/scripts

@@ -43,13 +43,27 @@ func (t *ExecTask) List() (string, error) {
 // Install copy
 func (t *ExecTask) Install() (string, error) {
 	fmt.Println(t.Cmd)
-	return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
+	// return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
+	stdout, stderr, status := ExecCommandIn(t.Dir, Shell, "-c", t.Cmd)
+	stdout = strings.TrimSuffix(stdout, "\n")
+	stderr = strings.TrimSuffix(stderr, "\n")
+	if status != 0 || stderr != "" {
+		return stdout, fmt.Errorf(stderr)
+	}
+	return stdout, nil
 }
 
 // Remove copy
 func (t *ExecTask) Remove() (string, error) {
 	fmt.Println(t.Cmd)
-	return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
+	// return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
+	stdout, stderr, status := ExecCommandIn(t.Dir, Shell, "-c", t.Cmd)
+	stdout = strings.TrimSuffix(stdout, "\n")
+	stderr = strings.TrimSuffix(stderr, "\n")
+	if status != 0 || stderr != "" {
+		return stdout, fmt.Errorf(stderr)
+	}
+	return stdout, nil
 }
 
 var execWarned bool
