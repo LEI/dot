@@ -85,6 +85,9 @@ USER $USER
 
 WORKDIR /home/$USER
 
+RUN mkdir $HOME/bin
+ENV PATH $PATH:$HOME/bin
+
 COPY ./.dot.yml .dot.yml
 
 #RUN dot install --packages --sudo
