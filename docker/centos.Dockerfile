@@ -11,7 +11,6 @@ ENV USER docker
 # yum install --assumeyes --quiet \
 # gettext-devel openssl-devel perl-CPAN perl-devel zlib-devel \
 # ca-certificates \
-# epel-release
 
 # Git requires:
 #   curl-devel expat-devel gettext-devel openssl-devel zlib-devel
@@ -27,6 +26,7 @@ curl-devel expat-devel gettext-devel openssl-devel zlib-devel \
 gcc perl-ExtUtils-MakeMaker \
 kernel-devel ncurses-devel file \
 autoconf make \
+epel-release \
 sudo
 
 # Install latest git version instead of 1.8

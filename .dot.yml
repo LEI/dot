@@ -61,8 +61,14 @@ roles:
   - name: htop
     url: "https://github.com/LEI/dot-htop"
 
+  - name: node
+    url: "https://github.com/LEI/dot-node"
+
   - name: php
     url: "https://github.com/LEI/dot-php"
+
+  - name: python
+    url: "https://github.com/LEI/dot-python"
 
   - name: ruby
     url: "https://github.com/LEI/dot-ruby"
