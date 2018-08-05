@@ -47,8 +47,11 @@ func (t *ExecTask) Install() (string, error) {
 	stdout, stderr, status := ExecCommandIn(t.Dir, Shell, "-c", t.Cmd)
 	stdout = strings.TrimSuffix(stdout, "\n")
 	stderr = strings.TrimSuffix(stderr, "\n")
-	if status != 0 || stderr != "" {
-		return stdout, fmt.Errorf(stderr)
+	if status != 0 {
+		return stdout, fmt.Errorf("exit code %d: %s", status, stderr)
+	}
+	if stderr != "" {
+		fmt.Fprintf(os.Stderr, "stderr: %s\n", stderr)
 	}
 	return stdout, nil
 }
@@ -60,8 +63,11 @@ func (t *ExecTask) Remove() (string, error) {
 	stdout, stderr, status := ExecCommandIn(t.Dir, Shell, "-c", t.Cmd)
 	stdout = strings.TrimSuffix(stdout, "\n")
 	stderr = strings.TrimSuffix(stderr, "\n")
-	if status != 0 || stderr != "" {
-		return stdout, fmt.Errorf(stderr)
+	if status != 0 {
+		return stdout, fmt.Errorf("exit code %d: %s", status, stderr)
+	}
+	if stderr != "" {
+		fmt.Fprintf(os.Stderr, "stderr: %s\n", stderr)
 	}
 	return stdout, nil
 }
