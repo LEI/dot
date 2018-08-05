@@ -13,11 +13,14 @@ import (
 var (
 	// Shell ...
 	Shell = "bash"
+
+	execDir string
 )
 
 // ExecTask struct
 type ExecTask struct {
 	Cmd string
+	Dir string
 	Task
 }
 
@@ -39,12 +42,14 @@ func (t *ExecTask) List() (string, error) {
 
 // Install copy
 func (t *ExecTask) Install() (string, error) {
-	return t.Cmd, execute(Shell, "-c", t.Cmd)
+	fmt.Println(t.Cmd)
+	return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
 }
 
 // Remove copy
 func (t *ExecTask) Remove() (string, error) {
-	return t.Cmd, execute(Shell, "-c", t.Cmd)
+	fmt.Println(t.Cmd)
+	return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
 }
 
 var execWarned bool
@@ -59,9 +64,19 @@ func execute(name string, args ...string) error {
 		return nil
 	}
 	c := exec.Command(name, args...)
+	if execDir != "" {
+		c.Dir = execDir
+	}
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	return c.Run()
+}
+
+func executeIn(dir, name string, args ...string) error {
+	execDir = dir
+	err := execute(name, args...)
+	execDir = ""
+	return err
 }
 
 const defaultStatusFailed = 1
@@ -77,6 +92,9 @@ func ShellExec(c string) (stdout, stderr string, status int) {
 func ExecCommand(name string, args ...string) (stdout, stderr string, status int) {
 	var outbuf, errbuf bytes.Buffer
 	cmd := exec.Command(name, args...)
+	if execDir != "" {
+		cmd.Dir = execDir
+	}
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
 	err := cmd.Run()
@@ -109,6 +127,14 @@ func ExecCommand(name string, args ...string) (stdout, stderr string, status int
 	// fmt.Println("OUT:", stdout)
 	// fmt.Println("ERR:", stderr)
 	return
+}
+
+// ExecCommandIn ...
+func ExecCommandIn(dir, name string, args ...string) (string, string, int) {
+	execDir = dir
+	stdout, stderr, status := ExecCommand(name, args...)
+	execDir = ""
+	return stdout, stderr, status
 }
 
 // AskConfirmation ...

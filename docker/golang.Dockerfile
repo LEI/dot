@@ -29,6 +29,4 @@ ENTRYPOINT ["/bin/bash"]
 
 COPY . $DOT
 
-RUN sudo echo $PATH
-RUN sudo which bash
 RUN ./scripts/install.sh

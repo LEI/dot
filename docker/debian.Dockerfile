@@ -25,7 +25,6 @@ ENV LC_ALL en_GB.UTF-8
 
 RUN /tmp/scripts/setup-user.sh $USER --password '' --groups staff
 
-
 USER $USER
 
 WORKDIR /home/$USER

@@ -10,6 +10,7 @@ import (
 	// "github.com/jessevdk/go-flags"
 
 	"github.com/LEI/dot/dotfile"
+	"github.com/LEI/dot/parsers"
 	"github.com/LEI/dot/utils"
 )
 
@@ -228,11 +229,18 @@ func do(r *Role, a string) error {
 		if !v.IsValid() {
 			return fmt.Errorf("could not get field %s: %s", act, v)
 		}
-		before := v.Interface().([]string)
+		before := v.Interface().(parsers.Commands)
 		if len(before) > 0 && shouldRunTask("exec") {
 			for _, c := range before {
+				if c.OS != nil && len(c.OS) > 0 && !dotfile.HasOSType(c.OS.Value()...) {
+					continue
+				}
+				if c.Action != "" && strings.ToLower(c.Action) != strings.ToLower(act) {
+					continue
+				}
 				task := &dotfile.ExecTask{
-					Cmd: c,
+					Cmd: c.Command,
+					Dir: r.Path,
 				}
 				str, err := task.Do(act)
 				if err != nil {
@@ -361,11 +369,18 @@ func do(r *Role, a string) error {
 		if !v.IsValid() {
 			return fmt.Errorf("could not get field %s: %s", act, v)
 		}
-		after := r.GetField("Post" + act).Interface().([]string)
+		after := r.GetField("Post" + act).Interface().(parsers.Commands)
 		if len(after) > 0 && shouldRunTask("exec") {
 			for _, c := range after {
+				if c.OS != nil && len(c.OS) > 0 && !dotfile.HasOSType(c.OS.Value()...) {
+					continue
+				}
+				if c.Action != "" && strings.ToLower(c.Action) != strings.ToLower(act) {
+					continue
+				}
 				task := &dotfile.ExecTask{
-					Cmd: c,
+					Cmd: c.Command,
+					Dir: r.Path,
 				}
 				str, err := task.Do(act)
 				if err != nil {

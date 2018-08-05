@@ -55,10 +55,10 @@ type Role struct {
 	Templates parsers.Templates `yaml:"template"`
 
 	// Hooks
-	Install     []string
-	PostInstall []string `yaml:"post_install"`
-	Remove      []string
-	PostRemove  []string `yaml:"post_remove"`
+	Install     parsers.Commands
+	PostInstall parsers.Commands `yaml:"post_install"`
+	Remove      parsers.Commands
+	PostRemove  parsers.Commands `yaml:"post_remove"`
 
 	Pkg     parsers.Packages
 	Deps    []string `yaml:"dependencies"`
