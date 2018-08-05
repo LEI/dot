@@ -16,11 +16,7 @@ services:
 stages:
   - build
   - test
-  - name: deploy
-    on:
-      repo: LEI/dot
-      tags: true
-      condition: $TRAVIS_OS_NAME = linux
+  - deploy
   # - name: deploy
   #   # if: branch = master
 
@@ -106,10 +102,10 @@ jobs:
         # file: dist/*
         # file_glob: true
         skip_cleanup: true
-        # on:
-        #   repo: LEI/dot
-        #   tags: true
-        #   condition: $TRAVIS_OS_NAME = linux
+        on:
+          repo: LEI/dot
+          tags: true
+          condition: $TRAVIS_OS_NAME = linux
 
 notifications:
   email: false

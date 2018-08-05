@@ -63,3 +63,6 @@ roles:
 
   - name: php
     url: "https://github.com/LEI/dot-php"
+
+  - name: ruby
+    url: "https://github.com/LEI/dot-ruby"
