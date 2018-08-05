@@ -9,8 +9,8 @@ import (
 type Cmd struct {
 	Command string
 	Shell   string
-	OS     Slice
-	Action string // install, remove
+	OS      Slice
+	Action  string // install, remove
 }
 
 // NewCmd ...
