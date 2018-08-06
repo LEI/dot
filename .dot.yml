@@ -72,3 +72,6 @@ roles:
 
   - name: ruby
     url: "https://github.com/LEI/dot-ruby"
+
+  - name: rust
+    url: "https://github.com/LEI/dot-rust"
