@@ -66,8 +66,8 @@ func runLink(dotCli *command.DotCli, opts linkOptions) error {
 
 	// format := opts.format
 	// if len(format) == 0 {
-	// 	if len(dotCli.ConfigFile().NetworksFormat) > 0 && !opts.quiet {
-	// 		format = dotCli.ConfigFile().NetworksFormat
+	// 	if len(dotCli.Config().NetworksFormat) > 0 && !opts.quiet {
+	// 		format = dotCli.Config().NetworksFormat
 	// 	} else {
 	// 		format = formatter.TableFormatKey
 	// 	}

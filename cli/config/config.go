@@ -6,12 +6,21 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/LEI/dot/cli/config/configfile"
+	// "github.com/LEI/dot/cli/config/configfile"
+	"github.com/spf13/viper"
 )
 
+// Config ...
+type Config struct {
+	// Filename string
+	viper *viper.Viper
+}
+
 const (
+	// ConfigFileName is the type of config file
+	// ConfigFileType = "yaml"
 	// ConfigFileName is the name of config file
-	ConfigFileName = "dotrc.yaml"
+	ConfigFileName = "dotrc"
 	configFileDir  = ".dot"
 )
 
@@ -25,13 +34,6 @@ func init() {
 	if configDir == "" {
 		configDir = filepath.Join(homeDir, configFileDir)
 	}
-
-	// viper.SetConfigName("config") // name of config file (without extension)
-	// viper.AddConfigPath("/etc/appname/")   // path to look for the config file in
-	// viper.AddConfigPath("$HOME/.appname")  // call multiple times to add many search paths
-	// viper.AddConfigPath(".")               // optionally look for config in the working directory
-
-	// viper.SetConfigType("yaml")
 }
 
 // Dir returns the directory the configuration file is stored in
@@ -44,49 +46,64 @@ func SetDir(dir string) {
 	configDir = dir
 }
 
-// NewConfigFile initializes an empty configuration file for the given filename 'fn'
-func NewConfigFile(fn string) *configfile.ConfigFile {
-	return &configfile.ConfigFile{
-		Filename: fn,
+// NewConfig initializes an empty configuration file
+func NewConfig() *Config {
+	v := viper.New()
+	// v.SetConfigType(ConfigFileType)
+	v.SetConfigName(ConfigFileName)
+	v.AddConfigPath("/etc/"+configFileDir)
+	// v.AddConfigPath("$HOME/.dot")
+	// v.AddConfigPath(".")
+	return &Config{
+		// Filename: fn,
+		viper: v,
 	}
 }
 
-// LoadFromReader is a convenience function that creates a ConfigFile object from
+// LoadFromReader is a convenience function that creates a Config object from
 // a reader
-func LoadFromReader(configData io.Reader) (*configfile.ConfigFile, error) {
-	configFile := configfile.ConfigFile{
-		// AuthConfigs: make(map[string]types.AuthConfig),
+func LoadFromReader(configData io.Reader) (*Config, error) {
+	config := Config{
+	    viper: viper.New(),
 	}
-	err := configFile.LoadFromReader(configData)
-	return &configFile, err
+	// err := config.LoadFromReader(configData)
+	err := config.viper.ReadConfig(configData)
+	return &config, err
 }
 
 // Load reads the configuration files in the given directory, and sets up
 // the auth config information and returns values.
 // FIXME: use the internal golang config parser
-func Load(configDir string) (*configfile.ConfigFile, error) {
+func Load(configDir string) (*Config, error) {
 	if configDir == "" {
 		configDir = Dir()
 	}
-	configFile := configfile.ConfigFile{
-		// AuthConfigs: make(map[string]types.AuthConfig),
-		Filename:    filepath.Join(configDir, ConfigFileName),
+	config := Config{
+	    viper: viper.New(),
 	}
-	// if _, err := os.Stat(configFile.Filename); err == nil {
-	// 	file, err := os.Open(configFile.Filename)
+	config.viper.SetConfigName(ConfigFileName)
+	config.viper.AddConfigPath(configDir)
+	err := config.viper.ReadInConfig()
+	if err != nil {
+	    return &config, nil
+	}
+	// AuthConfigs: make(map[string]types.AuthConfig),
+	// Filename:    filepath.Join(configDir, ConfigFileName),
+	// if _, err := os.Stat(config.Filename); err == nil {
+	// 	file, err := os.Open(config.Filename)
 	// 	if err != nil {
-	// 		return &configFile, fmt.Errorf("%s - %v", configFile.Filename, err)
+	// 		return &config, fmt.Errorf("%s - %v", config.Filename, err)
 	// 	}
 	// 	defer file.Close()
-	// 	err = configFile.LoadFromReader(file)
+	// 	err = config.LoadFromReader(file)
 	// 	if err != nil {
-	// 		err = fmt.Errorf("%s - %v", configFile.Filename, err)
+	// 		err = fmt.Errorf("%s - %v", config.Filename, err)
 	// 	}
-	// 	return &configFile, err
+	// 	return &config, err
 	// } else if !os.IsNotExist(err) {
 	// 	// if file is there but we can't stat it for any reason other
 	// 	// than it doesn't exist then stop
-	// 	return &configFile, fmt.Errorf("%s - %v", configFile.Filename, err)
+	// 	return &config, fmt.Errorf("%s - %v", config.Filename, err)
 	// }
-	return &configFile, nil
+	return &config, nil
 }

@@ -7,9 +7,9 @@ import (
 	// "path/filepath"
 	// "runtime"
 
+	"github.com/LEI/dot/cli/config"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
-	"github.com/LEI/dot/cli/config/configfile"
 	"github.com/spf13/cobra"
 )
 
@@ -25,13 +25,13 @@ type Cli interface {
 	In() io.ReadCloser // *InStream
 	Out() io.Writer // *OutStream
 	Err() io.Writer
-	ConfigFile() *configfile.ConfigFile
+	Config() *config.Config
 }
 
 // DotCli is an instance the dot command line client.
 // Instances of the client can be returned from NewDotCli.
 type DotCli struct {
-	configFile     *configfile.ConfigFile
+	config     *config.Config
 	in             io.ReadCloser // *InStream
 	out            io.Writer // *OutStream
 	err            io.Writer
@@ -59,15 +59,15 @@ func (cli *DotCli) ShowHelp(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// // ConfigFile returns the ConfigFile
-// func (cli *DotCli) ConfigFile() *configfile.ConfigFile {
-// 	return cli.configFile
-// }
+// Config returns the configuration
+func (cli *DotCli) Config() *config.Config {
+	return cli.config
+}
 
 // Initialize the dotCli runs initialization that must happen after command
 // line flags are parsed.
 func (cli *DotCli) Initialize(opts *cliflags.Options) error {
-	cli.configFile = LoadDefaultConfigFile(cli.err)
+	cli.config = LoadDefaultConfig(cli.err)
 
 	return nil
 }
@@ -78,15 +78,15 @@ func NewDotCli(in io.ReadCloser, out, err io.Writer) *DotCli {
 	return &DotCli{in: in, out: out, err: err}
 }
 
-// LoadDefaultConfigFile attempts to load the default config file and returns
-// an initialized ConfigFile struct if none is found.
-func LoadDefaultConfigFile(err io.Writer) *configfile.ConfigFile {
-	configFile, e := cliconfig.Load(cliconfig.Dir())
+// LoadDefaultConfig attempts to load the default config file and returns
+// an initialized Config struct if none is found.
+func LoadDefaultConfig(err io.Writer) *config.Config {
+	config, e := cliconfig.Load(cliconfig.Dir())
 	if e != nil {
 		fmt.Fprintf(err, "WARNING: Error loading config file:%v\n", e)
 	}
-	// if !configFile.ContainsAuth() {
-	// 	credentials.DetectDefaultStore(configFile)
+	// if !config.ContainsAuth() {
+	// 	credentials.DetectDefaultStore(config)
 	// }
-	return configFile
+	return config
 }
