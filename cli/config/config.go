@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	// "fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,6 +25,13 @@ func init() {
 	if configDir == "" {
 		configDir = filepath.Join(homeDir, configFileDir)
 	}
+
+	// viper.SetConfigName("config") // name of config file (without extension)
+	// viper.AddConfigPath("/etc/appname/")   // path to look for the config file in
+	// viper.AddConfigPath("$HOME/.appname")  // call multiple times to add many search paths
+	// viper.AddConfigPath(".")               // optionally look for config in the working directory
+
+	// viper.SetConfigType("yaml")
 }
 
 // Dir returns the directory the configuration file is stored in
@@ -35,6 +42,13 @@ func Dir() string {
 // SetDir sets the directory the configuration file is stored in
 func SetDir(dir string) {
 	configDir = dir
+}
+
+// NewConfigFile initializes an empty configuration file for the given filename 'fn'
+func NewConfigFile(fn string) *configfile.ConfigFile {
+	return &configfile.ConfigFile{
+		Filename: fn,
+	}
 }
 
 // LoadFromReader is a convenience function that creates a ConfigFile object from
@@ -58,21 +72,21 @@ func Load(configDir string) (*configfile.ConfigFile, error) {
 		// AuthConfigs: make(map[string]types.AuthConfig),
 		Filename:    filepath.Join(configDir, ConfigFileName),
 	}
-	if _, err := os.Stat(configFile.Filename); err == nil {
-		file, err := os.Open(configFile.Filename)
-		if err != nil {
-			return &configFile, fmt.Errorf("%s - %v", configFile.Filename, err)
-		}
-		defer file.Close()
-		err = configFile.LoadFromReader(file)
-		if err != nil {
-			err = fmt.Errorf("%s - %v", configFile.Filename, err)
-		}
-		return &configFile, err
-	} else if !os.IsNotExist(err) {
-		// if file is there but we can't stat it for any reason other
-		// than it doesn't exist then stop
-		return &configFile, fmt.Errorf("%s - %v", configFile.Filename, err)
-	}
+	// if _, err := os.Stat(configFile.Filename); err == nil {
+	// 	file, err := os.Open(configFile.Filename)
+	// 	if err != nil {
+	// 		return &configFile, fmt.Errorf("%s - %v", configFile.Filename, err)
+	// 	}
+	// 	defer file.Close()
+	// 	err = configFile.LoadFromReader(file)
+	// 	if err != nil {
+	// 		err = fmt.Errorf("%s - %v", configFile.Filename, err)
+	// 	}
+	// 	return &configFile, err
+	// } else if !os.IsNotExist(err) {
+	// 	// if file is there but we can't stat it for any reason other
+	// 	// than it doesn't exist then stop
+	// 	return &configFile, fmt.Errorf("%s - %v", configFile.Filename, err)
+	// }
 	return &configFile, nil
 }
