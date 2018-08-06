@@ -80,10 +80,10 @@ func NewDotCli(in io.ReadCloser, out, err io.Writer) *DotCli {
 
 // LoadDefaultConfig attempts to load the default config file and returns
 // an initialized Config struct if none is found.
-func LoadDefaultConfig(err io.Writer) *config.Config {
-	config, e := cliconfig.Load(cliconfig.Dir())
-	if e != nil {
-		fmt.Fprintf(err, "WARNING: Error loading config file:%v\n", e)
+func LoadDefaultConfig(stderr io.Writer) *config.Config {
+	config, err := cliconfig.Load(cliconfig.Dir())
+	if err != nil {
+		fmt.Fprintf(stderr, "WARNING: Error loading config file: %v\n", err)
 	}
 	// if !config.ContainsAuth() {
 	// 	credentials.DetectDefaultStore(config)

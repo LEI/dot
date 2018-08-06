@@ -1,7 +1,7 @@
 package config
 
 import (
-	// "fmt"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,22 +10,47 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config ...
+// Config structure
 type Config struct {
+	Roles []*Role
 	// Filename string
-	viper *viper.Viper
+	v *viper.Viper
+}
+
+// FileUsed by viper
+func (c *Config) FileUsed() string {
+	return c.v.ConfigFileUsed()
+}
+
+func (c *Config) setName(name string) {
+	c.v.SetConfigName(name)
+}
+
+func (c *Config) setType(name string) {
+	c.v.SetConfigType(name)
+}
+
+func (c *Config) addPaths(paths ...string) {
+	addConfigPaths(c.v, paths)
+}
+
+// Role structure
+type Role struct {
+	Copy map[string]string
+	Link map[string]string
+	// Template map[string]string
 }
 
 const (
-	// ConfigFileName is the type of config file
-	// ConfigFileType = "yaml"
+	// ConfigFileType is the type of config file
+	ConfigFileType = "yaml"
 	// ConfigFileName is the name of config file
-	ConfigFileName = "dotrc"
-	configFileDir  = ".dot"
+	ConfigFileName = ".dotrc"
+	configFileDir  = "" // HOME ".dot"
 )
 
 var (
-	configDir = os.Getenv("DOCKER_CONFIG")
+	configDir = os.Getenv("DOT_CONFIG")
 	homeDir = os.Getenv("HOME")
 )
 
@@ -47,63 +72,53 @@ func SetDir(dir string) {
 }
 
 // NewConfig initializes an empty configuration file
-func NewConfig() *Config {
-	v := viper.New()
-	// v.SetConfigType(ConfigFileType)
-	v.SetConfigName(ConfigFileName)
-	v.AddConfigPath("/etc/"+configFileDir)
-	// v.AddConfigPath("$HOME/.dot")
-	// v.AddConfigPath(".")
-	return &Config{
+func NewConfig(name string) *Config {
+	c := &Config{
 		// Filename: fn,
-		viper: v,
+		v: viper.New(),
 	}
+	c.setName(name)
+	c.setType(ConfigFileType)
+	c.addPaths(configDir) // "/etc/"+configFileDir
+	// c.v.AddConfigPath("$HOME/.dot")
+	// c.v.AddConfigPath(".")
+	return c
 }
 
 // LoadFromReader is a convenience function that creates a Config object from
 // a reader
 func LoadFromReader(configData io.Reader) (*Config, error) {
 	config := Config{
-	    viper: viper.New(),
+		v: viper.New(),
 	}
-	// err := config.LoadFromReader(configData)
-	err := config.viper.ReadConfig(configData)
+	err := config.v.ReadConfig(configData)
 	return &config, err
 }
 
-// Load reads the configuration files in the given directory, and sets up
-// the auth config information and returns values.
-// FIXME: use the internal golang config parser
-func Load(configDir string) (*Config, error) {
-	if configDir == "" {
-		configDir = Dir()
+// Load reads the configuration files in the given directory
+func Load(dir string) (*Config, error) {
+	if dir == "" {
+		dir = Dir()
 	}
 	config := Config{
-	    viper: viper.New(),
+		v: viper.New(),
 	}
-	config.viper.SetConfigName(ConfigFileName)
-	config.viper.AddConfigPath(configDir)
-	err := config.viper.ReadInConfig()
+	config.setName(ConfigFileName)
+	config.setType(ConfigFileType)
+	config.addPaths(configDir)
+	err := config.v.ReadInConfig()
 	if err != nil {
-	    return &config, nil
+		return &config, err
 	}
-	// AuthConfigs: make(map[string]types.AuthConfig),
-	// Filename:    filepath.Join(configDir, ConfigFileName),
-	// if _, err := os.Stat(config.Filename); err == nil {
-	// 	file, err := os.Open(config.Filename)
-	// 	if err != nil {
-	// 		return &config, fmt.Errorf("%s - %v", config.Filename, err)
-	// 	}
-	// 	defer file.Close()
-	// 	err = config.LoadFromReader(file)
-	// 	if err != nil {
-	// 		err = fmt.Errorf("%s - %v", config.Filename, err)
-	// 	}
-	// 	return &config, err
-	// } else if !os.IsNotExist(err) {
-	// 	// if file is there but we can't stat it for any reason other
-	// 	// than it doesn't exist then stop
-	// 	return &config, fmt.Errorf("%s - %v", config.Filename, err)
-	// }
+	configFile := config.FileUsed()
+	if configFile != "" { // debug
+		fmt.Printf("Using config file: %s\n", configFile)
+	}
 	return &config, nil
+}
+
+func addConfigPaths(v *viper.Viper, paths []string) {
+	for _, p := range paths {
+		v.AddConfigPath(p)
+	}
 }
