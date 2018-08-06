@@ -202,7 +202,16 @@ func (cmd *PkgCmd) Add(opt *PkgOpt) ([]string, error) {
 		if err != nil {
 			return args, err
 		}
-		if str != "true" {
+		stdout, stderr, status := ExecCommand(Shell, "-c", str)
+		stdout = strings.TrimRight(stdout, "\n")
+		stderr = strings.TrimRight(stderr, "\n")
+		// if stdout != "" {
+		// 	fmt.Printf("stdout: %s\n", stdout)
+		// }
+		if stderr != "" {
+			fmt.Fprintf(os.Stderr, "stderr: %s\n", stderr)
+		}
+		if status != 0 {
 			// continue
 			return args, nil
 		}
