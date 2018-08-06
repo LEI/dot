@@ -42,7 +42,7 @@ func (t *ExecTask) List() (string, error) {
 
 // Install copy
 func (t *ExecTask) Install() (string, error) {
-	fmt.Println(t.Cmd)
+	fmt.Println(strings.TrimSuffix(t.Cmd, "\n"))
 	// return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
 	stdout, stderr, status := ExecCommandIn(t.Dir, Shell, "-c", t.Cmd)
 	stdout = strings.TrimSuffix(stdout, "\n")
@@ -58,7 +58,7 @@ func (t *ExecTask) Install() (string, error) {
 
 // Remove copy
 func (t *ExecTask) Remove() (string, error) {
-	fmt.Println(t.Cmd)
+	fmt.Println(strings.TrimSuffix(t.Cmd, "\n"))
 	// return "", executeIn(t.Dir, Shell, "-c", t.Cmd)
 	stdout, stderr, status := ExecCommandIn(t.Dir, Shell, "-c", t.Cmd)
 	stdout = strings.TrimSuffix(stdout, "\n")
