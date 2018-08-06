@@ -56,7 +56,7 @@ func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
 // }
 
 func runLink(dotCli *command.DotCli, opts linkOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", opts)
+	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\nCONFIG ROLES:%+v\n", opts, dotCli.Config().Roles)
 	// client := dotCli.Client()
 	// options := types.NetworkLinkOptions{Filters: opts.filter.Value()}
 	// networkResources, err := client.NetworkLink(context.Background(), options)

@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	binary string
+	binary string // "dot"
 )
 
 func init() {
