@@ -5,6 +5,7 @@ import (
 	"io"
 	// "os"
 	// "path/filepath"
+	// "reflect"
 	// "runtime"
 
 	"github.com/LEI/dot/cli/config"
@@ -31,10 +32,10 @@ type Cli interface {
 // DotCli is an instance the dot command line client.
 // Instances of the client can be returned from NewDotCli.
 type DotCli struct {
-	config     *config.Config
-	in             io.ReadCloser // *InStream
-	out            io.Writer // *OutStream
-	err            io.Writer
+	config *config.Config
+	in     io.ReadCloser // *InStream
+	out    io.Writer // *OutStream
+	err    io.Writer
 }
 
 // In returns the reader used for stdin
@@ -64,10 +65,24 @@ func (cli *DotCli) Config() *config.Config {
 	return cli.config
 }
 
+// ParseConfig unmarshals the configuration
+func (cli *DotCli) ParseConfig(i *interface{}) error {
+	return cli.config.Parse(&i)
+}
+
 // Initialize the dotCli runs initialization that must happen after command
 // line flags are parsed.
 func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	cli.config = LoadDefaultConfig(cli.err)
+
+	err := cli.config.Parse(&config.DotConfig)
+	if err != nil {
+		return err
+	}
+
+	// dotConfig := cli.config.Get("roles")
+	// fmt.Println(reflect.TypeOf(dotConfig))
+	// fmt.Println("=", reflect.TypeOf(cli.config.GetAll()))
 
 	return nil
 }
