@@ -10,6 +10,22 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	configFileDir  = "" // HOME ".dot"
+)
+
+var (
+	// ConfigFileType is the type of config file
+	ConfigFileType = "yaml"
+	// ConfigFileName is the name of config file
+	ConfigFileName = ".dotrc"
+	homeDir = os.Getenv("HOME")
+	configDir = os.Getenv("DOT_CONFIG")
+	sourceDir = os.Getenv("DOT_SOURCE")
+	targetDir = os.Getenv("DOT_TARGET")
+	roleDir = ".dot"
+)
+
 // Config structure
 type Config struct {
 	Roles []*Role
@@ -34,6 +50,24 @@ func (c *Config) Parse(i interface{}) error {
 	return c.v.Unmarshal(&i)
 }
 
+// Load role config
+func (c *Config) Load(r *Role) error {
+	ConfigFileName = ".dot" // -rc
+	roleConfig, err := Load(r.Dir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: Error loading config file: %v\n", err)
+	}
+	if roleConfig == nil {
+		fmt.Fprintf(os.Stderr, "WARNING: nil role\n")
+		return nil
+	}
+	role := roleConfig.Get("role").(map[string]interface{})
+	if err := r.Merge(role); err != nil {
+		return err
+	}
+	return nil
+}
+
 // // Value config
 // func (c *Config) Value() interface{} {
 // 	return c.value
@@ -55,22 +89,6 @@ func (c *Config) setType(name string) {
 func (c *Config) addPaths(paths ...string) {
 	addConfigPaths(c.v, paths)
 }
-
-const (
-	// ConfigFileType is the type of config file
-	ConfigFileType = "yaml"
-	// ConfigFileName is the name of config file
-	ConfigFileName = ".dotrc"
-	configFileDir  = "" // HOME ".dot"
-)
-
-var (
-	homeDir = os.Getenv("HOME")
-	configDir = os.Getenv("DOT_CONFIG")
-	sourceDir = os.Getenv("DOT_SOURCE")
-	targetDir = os.Getenv("DOT_TARGET")
-	roleDir = ".dot"
-)
 
 func init() {
 	// https://github.com/moby/moby/blob/17.05.x/pkg/homedir/homedir.go
@@ -129,7 +147,7 @@ func Load(dir string) (*Config, error) {
 	}
 	config.setName(ConfigFileName)
 	config.setType(ConfigFileType)
-	config.addPaths(configDir)
+	config.addPaths(dir) // configDir
 	err := config.v.ReadInConfig()
 	if err != nil {
 		return &config, err

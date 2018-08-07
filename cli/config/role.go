@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/LEI/dot/cli/config/tasks"
+	"github.com/imdario/mergo"
 )
 
 // type Roles []*Role
@@ -29,11 +30,29 @@ func NewRole(i interface{}) (*Role, error) {
 		// Name: "",
 		// Dir: "",
 		// URL: "",
-		OS: &tasks.OS{},
-		Deps: &tasks.Deps{},
-		// Copy: &tasks.Map{},
-		Link: &tasks.Links{},
-		// Template: &tasks.Templates{},
+	}
+	if err := r.Parse(i); err != nil {
+		return r, err
+	}
+	if r.Name == "" {
+		return r, fmt.Errorf("missing name in role: %+v", r)
+	}
+	if r.Dir == "" {
+		r.Dir = filepath.Join(targetDir, ".dot", r.Name)
+	}
+	return r, nil
+}
+
+// Parse role
+func (r *Role) Parse(i interface{}) error {
+	if r.OS == nil {
+		r.OS = &tasks.OS{}
+	}
+	if r.Deps == nil {
+		r.Deps = &tasks.Deps{}
+	}
+	if r.Link == nil {
+		r.Link = &tasks.Links{}
 	}
 	switch v := i.(type) {
 	case map[string]string:
@@ -44,7 +63,9 @@ func NewRole(i interface{}) (*Role, error) {
 		r.Deps.Parse(v["dependencies"])
 		r.Link.Parse(v["link"])
 	case map[string]interface{}:
-		r.Name = v["name"].(string)
+		if name, ok := v["name"].(string); ok {
+			r.Name = name
+		}
 		if dir, ok := v["dir"].(string); ok {
 			r.Dir = dir
 		}
@@ -55,7 +76,9 @@ func NewRole(i interface{}) (*Role, error) {
 		r.Deps.Parse(v["dependencies"])
 		r.Link.Parse(v["link"])
 	case map[interface{}]interface{}:
-		r.Name = v["name"].(string)
+		if name, ok := v["name"].(string); ok {
+			r.Name = name
+		}
 		if dir, ok := v["dir"].(string); ok {
 			r.Dir = dir
 		}
@@ -66,20 +89,26 @@ func NewRole(i interface{}) (*Role, error) {
 		r.Deps.Parse(v["dependencies"])
 		r.Link.Parse(v["link"])
 	default:
-		return r, fmt.Errorf("TODO NewRole type: %s", reflect.TypeOf(v))
+		return fmt.Errorf("TODO NewRole type: %s", reflect.TypeOf(v))
 	}
-	if r.Name == "" {
-		return r, fmt.Errorf("missing name in role: %+v", r)
-	}
-	if r.Dir == "" {
-		r.Dir = filepath.Join(targetDir, ".dot", r.Name)
-	}
-	return r, nil
+	return nil
 }
-// // Init role
-// func (r *Role) Init() error {
-// 	return nil
-// }
+
+// Merge role
+func (r *Role) Merge(i interface{}) error {
+	role := &Role{}
+	if err := role.Parse(i); err != nil {
+		return err
+	}
+	// var role *Role
+	// switch v := i.(type) {
+	// case *Role:
+	// 	role = v // .(*Role)
+	// default:
+	// 	return fmt.Errorf("?: %s", reflect.TypeOf(v))
+	// }
+	return mergo.Merge(r, role)
+}
 
 // // Init role
 // func (r *Role) Init() error {

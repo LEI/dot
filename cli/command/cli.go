@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 	"io"
-	// "os"
+	"os"
 	// "path/filepath"
 	// "reflect"
 	// "runtime"
@@ -87,39 +87,52 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	return nil
 }
 
-// Roles ...
-func (cli *DotCli) Roles() []*config.Role {
-	return cli.config.Roles
-}
-
-// ParseRoles ...
-func (cli *DotCli) ParseRoles(filter ...string) error {
+// Parse roles
+func (cli *DotCli) Parse(filter ...string) error {
 	var roles []*config.Role
 	configRoles := cli.Config().Get("roles").([]interface{})
 	for _, r := range configRoles {
-		R, err := config.NewRole(r)
+		role, err := cli.ParseRole(r)
 		if err != nil {
 			return err
 		}
 		if len(filter) > 0 {
-			matched := false
-			for _, f := range filter {
-				if f == R.Name {
-					matched = true
-					break
-				}
-			}
-			if !matched {
-				continue
-			}
+			fmt.Println("TODO FILTER ROLE:", filter)
+			// matched := false
+			// for _, f := range filter {
+			// 	if f == role.Name {
+			// 		matched = true
+			// 		break
+			// 	}
+			// }
+			// if !matched {
+			// 	continue
+			// }
 		}
-		roles = append(roles, R)
+		roles = append(roles, role)
 	}
 	if len(roles) == 0 {
 		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), filter)
 	}
 	cli.config.Roles = roles
 	return nil
+}
+
+// Roles ...
+func (cli *DotCli) Roles() []*config.Role {
+	return cli.config.Roles
+}
+
+// ParseRole ...
+func (cli *DotCli) ParseRole(i interface{}) (*config.Role, error) {
+	role, err := config.NewRole(i)
+	if err != nil {
+		return role, err
+	}
+	if err := cli.config.Load(role); err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
+	}
+	return role, nil
 }
 
 // NewDotCli returns a DotCli instance with IO output and error streams set by in, out and err.
