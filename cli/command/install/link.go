@@ -7,6 +7,7 @@ import (
 	// "github.com/docker/docker/api/types"
 	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
+	"github.com/LEI/dot/cli/config"
 	// "github.com/docker/docker/cli/command/formatter"
 	// "github.com/docker/docker/opts"
 	"github.com/spf13/cobra"
@@ -56,7 +57,7 @@ func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
 // }
 
 func runLink(dotCli *command.DotCli, opts linkOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\nCONFIG ROLES:%+v\n", opts, dotCli.Config().Roles)
+	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\nCONFIG:%+v /// %+v\n", opts, dotCli.Config(), config.DotConfig)
 	// client := dotCli.Client()
 	// options := types.NetworkLinkOptions{Filters: opts.filter.Value()}
 	// networkResources, err := client.NetworkLink(context.Background(), options)

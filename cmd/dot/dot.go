@@ -41,13 +41,14 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 				showVersion()
 				return nil
 			}
+			// list?
 			return dotCli.ShowHelp(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// if cmd.Name() == "list" ...
+			// if cmd.Name() == "list" { return nil }
 			// flags must be the top-level command flags, not cmd.Flags()
 			// opts.Common.SetDefaultOptions(flags)
-			// dotPreRun(opts)
+			dotPreRun(opts)
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
 			}
@@ -203,9 +204,9 @@ func dotPreRun(opts *cliflags.Options) {
 		cliconfig.SetDir(opts.ConfigDir)
 	}
 
-	// if opts.Debug {
-	// 	debug.Enable()
-	// }
+	if opts.Debug {
+		// debug.Enable()
+	}
 }
 
 // type versionDetails interface {

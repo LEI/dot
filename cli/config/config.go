@@ -12,10 +12,31 @@ import (
 
 // Config structure
 type Config struct {
-	Roles []*Role
 	// Filename string
+	// value interface{}
 	v *viper.Viper
 }
+
+// Get a value
+func (c *Config) Get(key string) interface{} {
+	return c.v.Get(key)
+}
+
+// GetAll values
+func (c *Config) GetAll() interface{} {
+	return c.v.AllSettings()
+}
+
+// Parse into struct
+func (c *Config) Parse(i interface{}) error {
+	// c.value = &i
+	return c.v.Unmarshal(&i)
+}
+
+// // Value config
+// func (c *Config) Value() interface{} {
+// 	return c.value
+// }
 
 // FileUsed by viper
 func (c *Config) FileUsed() string {
@@ -32,13 +53,6 @@ func (c *Config) setType(name string) {
 
 func (c *Config) addPaths(paths ...string) {
 	addConfigPaths(c.v, paths)
-}
-
-// Role structure
-type Role struct {
-	Copy map[string]string
-	Link map[string]string
-	// Template map[string]string
 }
 
 const (
