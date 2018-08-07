@@ -62,21 +62,6 @@ func (r *Repo) SetURL(url string) *Repo {
 	return r
 }
 
-// Exists checks that role.Dir is a directory
-func (r *Repo) Exists() (bool, error) {
-	stat, err := os.Stat(r.Dir)
-	if err != nil && os.IsExist(err) {
-		return false, err
-	}
-	if stat == nil {
-		return false, nil
-	}
-	return stat.IsDir(), nil
-	// _, err := os.Stat(r.Dir)
-	// return !os.IsNotExist(err)
-	// return err == nil || os.IsExist(err)
-}
-
 // Exec repo
 func (r *Repo) Exec(args ...string) (string, string, int) {
 	stdout, stderr, status := executils.Execute("git", args...)

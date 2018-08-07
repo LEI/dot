@@ -38,7 +38,7 @@ func NewRole(i interface{}) (*Role, error) {
 		return r, fmt.Errorf("missing name in role: %+v", r)
 	}
 	if r.Dir == "" {
-		r.Dir = filepath.Join(targetDir, ".dot", r.Name)
+		r.Dir = filepath.Join("/tmp/home", ".dot", r.Name)
 	}
 	return r, nil
 }

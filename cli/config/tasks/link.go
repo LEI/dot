@@ -27,6 +27,12 @@ func (l *Link) String() string {
 
 // Check task
 func (l *Link) Check() error {
+	if l.Source == "" {
+		return fmt.Errorf("link: empty source")
+	}
+	// if l.Target == "" {
+	// 	return fmt.Errorf("link: missing target")
+	// }
 	return system.CheckSymlink(l.Source, l.Target)
 }
 
@@ -69,8 +75,8 @@ func (links *Links) Parse(i interface{}) error {
 
 // Check links task
 func (links *Links) Check() error {
-	// TODO cli.Errors
-	fmt.Println("link", *links)
+	// // cli.Errors
+	// fmt.Println("link", *links)
 	for _, l := range *links {
 		if err := l.Check(); err != nil {
 			return err
