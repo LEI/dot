@@ -52,7 +52,7 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
 			}
-			if err := dotCli.ParseRoles(); err != nil {
+			if err := dotCli.Parse(); err != nil {
 				return err
 			}
 			return nil // isSupported(cmd, dotCli)
