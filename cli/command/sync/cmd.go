@@ -9,6 +9,7 @@ import (
 	"github.com/LEI/dot/cli/command"
 	// "github.com/LEI/dot/cli/config"
 	"github.com/LEI/dot/pkg/git"
+	"github.com/LEI/dot/system"
 )
 
 type syncOptions struct {
@@ -43,7 +44,7 @@ func runSync(dotCli *command.DotCli, opts syncOptions) error {
 		if err != nil {
 			return err
 		}
-		exists, err := repo.Exists()
+		exists, err := system.IsDir(r.Dir)
 		if err != nil {
 			return err
 		}

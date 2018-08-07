@@ -4,14 +4,21 @@ import (
 	"fmt"
 	"io"
 	"os"
-	// "path/filepath"
+	"path/filepath"
 	// "reflect"
-	// "runtime"
+	"runtime"
+	"strings"
 
 	"github.com/LEI/dot/cli/config"
+	"github.com/LEI/dot/cli/config/tasks"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/spf13/cobra"
+)
+
+var (
+	homeDir = os.Getenv("HOME")
+	roleDir = ".dot"
 )
 
 // Streams is an interface which exposes the standard input and output streams
@@ -74,6 +81,16 @@ func (cli *DotCli) ParseConfig(i *interface{}) error {
 // line flags are parsed.
 func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	cli.config = LoadDefaultConfig(cli.err)
+	// DOT_SOURCE
+	if cli.config.Source == "" {
+		cli.config.Source = filepath.Join(homeDir, roleDir)
+	}
+	// DOT_TARGET
+	if cli.config.Target == "" {
+		cli.config.Target = "/tmp/todo" // homeDir
+	}
+
+	// opts
 
 	// err := cli.config.Parse(&config.DotConfig)
 	// if err != nil {
@@ -96,6 +113,9 @@ func (cli *DotCli) Parse(filter ...string) error {
 		if err != nil {
 			return err
 		}
+		// if err := cli.Prepare(r); err != nil {
+		// 	return err
+		// }
 		if len(filter) > 0 {
 			fmt.Println("TODO FILTER ROLE:", filter)
 			// matched := false
@@ -132,7 +152,73 @@ func (cli *DotCli) ParseRole(i interface{}) (*config.Role, error) {
 	if err := cli.config.Load(role); err != nil {
 		fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
 	}
+	// Prepare tasks paths
+	links := &tasks.Links{}
+	for _, l := range *role.Link {
+		os.Setenv("OS", runtime.GOOS)
+		src := os.ExpandEnv(l.Source)
+		dst := os.ExpandEnv(l.Target)
+		if !filepath.IsAbs(src) {
+			src = filepath.Join(role.Dir, src)
+		}
+		*links = append(*links, l)
+		if strings.Contains(src, "*") {
+			// fmt.Println("*", src, dst)
+			glob, err := filepath.Glob(src)
+			if err != nil {
+				return role, err
+			}
+		// GLOB:
+			for _, s := range glob {
+				// // Extract source file name
+				// _, n := filepath.Split(s)
+				// for _, i := range ignore {
+				// 	// Check for ignored patterns
+				// 	matched, err := filepath.Match(i, n)
+				// 	if err != nil {
+				// 		return err
+				// 	}
+				// 	if matched {
+				// 		continue GLOB
+				// 	}
+				// }
+				// fmt.Println("PREPARE GLOB", s, "/", dst)
+				t, err := prepareTarget(cli.config.Target, s, dst)
+				if err != nil {
+					return role, err
+				}
+				l.Source = s
+				l.Target = t
+				*links = append(*links, l)
+			}
+		} else {
+			t, err := prepareTarget(cli.config.Target, src, dst)
+			if err != nil {
+				return role, err
+			}
+			l.Source = src
+			l.Target = t
+			*links = append(*links, l)
+		}
+	}
+	*role.Link = *links
 	return role, nil
+}
+
+func prepareTarget(dir, src, dst string) (string, error) {
+	//fmt.Println("+", src, dst)
+	_, f := filepath.Split(src)
+	if f == "" {
+		return "", fmt.Errorf("error (no source file name) while parsing: %s / %s", src, dst)
+	}
+	if !filepath.IsAbs(dst) {
+		dst = filepath.Join(dir, dst)
+	}
+	// if _, err := dotfile.CreateDir(baseDir); err != nil {
+	// 	return baseDir, err
+	// }
+	t := filepath.Join(dst, f)
+	return t, nil
 }
 
 // NewDotCli returns a DotCli instance with IO output and error streams set by in, out and err.
@@ -147,6 +233,10 @@ func LoadDefaultConfig(stderr io.Writer) *config.Config {
 	config, err := cliconfig.Load(cliconfig.Dir())
 	if err != nil {
 		fmt.Fprintf(stderr, "WARNING: Error loading config file: %v\n", err)
+	}
+	configFile := config.FileUsed()
+	if configFile != "" { // debug
+		fmt.Printf("Using config file: %s\n", configFile)
 	}
 	// if !config.ContainsAuth() {
 	// 	credentials.DetectDefaultStore(config)

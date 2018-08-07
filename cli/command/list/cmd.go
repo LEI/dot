@@ -33,9 +33,9 @@ func NewListCommand(dotCli *command.DotCli) *cobra.Command {
 func runList(dotCli *command.DotCli, opts listOptions) error {
 	fmt.Fprintf(dotCli.Out(), "RUN LIST %+v\n", opts)
 	for _, r := range dotCli.Roles() {
-		if err := r.Link.Check(); err != nil {
-			return err
-		}
+		// if err := r.Link.Check(); err != nil {
+		// 	return err
+		// }
 		fmt.Println("r", r)
 	}
 	return nil

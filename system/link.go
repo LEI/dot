@@ -7,6 +7,17 @@ import (
 
 // CheckSymlink ... (verify/validate)
 func CheckSymlink(src, dst string) error {
+	// fmt.Println("CheckSymlink", src, dst)
+	// if src == "" || dst == "" {
+	// 	return fmt.Errorf("missing symlink arg: [src:%s dst:%s]", src, dst)
+	// }
+	if !Exists(src) {
+	    return fmt.Errorf("%s: no such file or directory (to link %s)", src, dst)
+	}
+	if !Exists(dst) {
+	    // Stop here if the target does not exist
+	    return nil
+	}
 	fi, err := os.Lstat(dst)
 	if err != nil {
 		return err
@@ -19,17 +30,20 @@ func CheckSymlink(src, dst string) error {
 		return err
 	}
 	if real != "" && real != src {
-		return fmt.Errorf("%s: already symlinked to %s", dst, real)
+		return fmt.Errorf("%s: already a symlink to %s", dst, real)
 	}
 	return nil
 }
 
 // Symlink ...
 func Symlink(src, dst string) error {
+	// if src == "" || dst == "" {
+	// 	return fmt.Errorf("missing symlink arg! [src:%s dst:%s]", src, dst)
+	// }
 	if DryRun {
 		return nil
 	}
-	fmt.Println("DO SYMLINK", src, dst)
+	fmt.Printf("$ ln -s %s %s\n", src, dst)
 	return nil // os.Symlink(src, dst)
 }
 
