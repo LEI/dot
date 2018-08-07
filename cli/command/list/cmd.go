@@ -17,6 +17,7 @@ func NewListCommand(dotCli *command.DotCli) *cobra.Command {
 	opts := listOptions{}
 	cmd := &cobra.Command{
 		Use:   "list",
+		Aliases: []string{"ls"},
 		Short: "List",
 		Args:  cli.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -31,29 +32,13 @@ func NewListCommand(dotCli *command.DotCli) *cobra.Command {
 
 func runList(dotCli *command.DotCli, opts listOptions) error {
 	fmt.Fprintf(dotCli.Out(), "RUN LIST %+v\n", opts)
-	// client := dotCli.Client()
-	// options := types.NetworkLinkOptions{Filters: opts.filter.Value()}
-	// networkResources, err := client.NetworkLink(context.Background(), options)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// format := opts.format
-	// if len(format) == 0 {
-	// 	if len(dotCli.Config().NetworksFormat) > 0 && !opts.quiet {
-	// 		format = dotCli.Config().NetworksFormat
-	// 	} else {
-	// 		format = formatter.TableFormatKey
-	// 	}
-	// }
-
-	// sort.Sort(byNetworkName(networkResources))
-
-	// networksCtx := formatter.Context{
-	// 	Output: dotCli.Out(),
-	// 	Format: formatter.NewNetworkFormat(format, opts.quiet),
-	// 	Trunc:  !opts.noTrunc,
-	// }
-	// return formatter.NetworkWrite(networksCtx, networkResources)
+	for _, role := range dotCli.Roles() {
+		if err := role.Link.Check(); err != nil {
+			return err
+		}
+	}
+	for i, role := range dotCli.Roles() {
+		fmt.Println("ROLE", i, role)
+	}
 	return nil
 }

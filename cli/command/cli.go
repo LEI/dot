@@ -87,6 +87,14 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	return nil
 }
 
+// Roles returns the roles
+func (cli *DotCli) Roles() (roles []*config.Role) {
+	for _, r := range cli.Config().Get("roles").([]interface{}) {
+		roles = append(roles, config.NewRole(r))
+	}
+	return roles
+}
+
 // NewDotCli returns a DotCli instance with IO output and error streams set by in, out and err.
 func NewDotCli(in io.ReadCloser, out, err io.Writer) *DotCli {
 	// in: NewInStream(in), out: NewOutStream(out), err: err
