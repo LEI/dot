@@ -52,14 +52,15 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
 			}
+			if err := dotCli.ParseRoles(); err != nil {
+				return err
+			}
 			return nil // isSupported(cmd, dotCli)
 		},
 	}
 	cli.SetupRootCommand(cmd)
 
 	flags = cmd.Flags()
-	flags.BoolVarP(&opts.Version, "version", "v", false, "Print version information and quit")
-	flags.StringVar(&opts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
 	opts.InstallFlags(flags)
 
 	// setFlagErrorFunc(dotCli, cmd, flags, opts)
