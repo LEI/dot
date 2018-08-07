@@ -6,12 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
-	// "github.com/LEI/dot/cli/config/configfile"
+	// cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/spf13/viper"
 )
 
 // Config structure
 type Config struct {
+	Roles []*Role
 	// Filename string
 	// value interface{}
 	v *viper.Viper
@@ -64,14 +65,23 @@ const (
 )
 
 var (
-	configDir = os.Getenv("DOT_CONFIG")
 	homeDir = os.Getenv("HOME")
+	configDir = os.Getenv("DOT_CONFIG")
+	sourceDir = os.Getenv("DOT_SOURCE")
+	targetDir = os.Getenv("DOT_TARGET")
+	roleDir = ".dot"
 )
 
 func init() {
 	// https://github.com/moby/moby/blob/17.05.x/pkg/homedir/homedir.go
 	if configDir == "" {
 		configDir = filepath.Join(homeDir, configFileDir)
+	}
+	if sourceDir == "" {
+		sourceDir = filepath.Join(homeDir, roleDir)
+	}
+	if targetDir == "" {
+		targetDir = "/tmp/home" // homeDir
 	}
 }
 

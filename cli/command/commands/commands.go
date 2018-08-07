@@ -5,6 +5,7 @@ import (
 	"github.com/LEI/dot/cli/command/list"
 	"github.com/LEI/dot/cli/command/install"
 	// "github.com/LEI/dot/cli/command/remove"
+	"github.com/LEI/dot/cli/command/sync"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +13,7 @@ import (
 func AddCommands(cmd *cobra.Command, dockerCli *command.DotCli) {
 	cmd.AddCommand(
 		list.NewListCommand(dockerCli),
+		sync.NewSyncCommand(dockerCli),
 		install.NewInstallCommand(dockerCli),
 		// remove.NewRemoveCommand(dockerCli),
 	)

@@ -61,12 +61,12 @@ func runLink(dotCli *command.DotCli, opts linkOptions) error {
 	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", opts)
 	// fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", dotCli)
 
-	for _, role := range dotCli.Roles() {
-		if err := role.Link.Check(); err != nil {
+	for _, r := range dotCli.Roles() {
+		if err := r.Link.Check(); err != nil {
 			return err
 		}
 		// TODO confirm?
-		if err := role.Link.Execute(); err != nil {
+		if err := r.Link.Execute(); err != nil {
 			return err
 		}
 	}
