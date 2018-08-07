@@ -75,10 +75,10 @@ func (cli *DotCli) ParseConfig(i *interface{}) error {
 func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	cli.config = LoadDefaultConfig(cli.err)
 
-	err := cli.config.Parse(&config.DotConfig)
-	if err != nil {
-		return err
-	}
+	// err := cli.config.Parse(&config.DotConfig)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// dotConfig := cli.config.Get("roles")
 	// fmt.Println(reflect.TypeOf(dotConfig))

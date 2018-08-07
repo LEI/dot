@@ -1,15 +1,15 @@
 package config
 
-// Dot structure
-type Dot struct {
-	Roles []*Role
-	config *Config
-}
+// // Dot structure
+// type Dot struct {
+// 	Config
+// 	Roles []*Role
+// }
 
 // type Roles []*Role
 // func (roles *Roles) list() { }
 
-var (
-	// DotConfig value
-	DotConfig *Dot
-)
+// var (
+// 	// DotConfig value
+// 	DotConfig *Dot
+// )

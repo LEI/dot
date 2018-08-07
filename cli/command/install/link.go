@@ -57,7 +57,23 @@ func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
 // }
 
 func runLink(dotCli *command.DotCli, opts linkOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\nCONFIG:%+v /// %+v\n", opts, dotCli.Config(), config.DotConfig)
+	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", opts)
+
+	roles := dotCli.Config().Get("roles")
+	for i, r := range roles.([]interface{}) {
+		// ri := r.(map[string]interface{})
+		fmt.Printf("%d: %+v\n", i, r)
+		role := config.NewRole(r)
+		fmt.Printf("-> %+v\n", role.Link)
+		// fmt.Printf("=> %+v\n", dotCli.Config().Get("roles."+string(i)+".name"))
+	}
+	// cfg := dotCli.Config().GetAll()
+	// for i, r := range cfg["roles"].([]interface{}) {
+	// 	// ri := r.(map[string]interface{})
+	// 	role := config.NewRole(r)
+	// 	fmt.Printf("%d: %+v\n", i, role)
+	// }
+
 	// client := dotCli.Client()
 	// options := types.NetworkLinkOptions{Filters: opts.filter.Value()}
 	// networkResources, err := client.NetworkLink(context.Background(), options)
