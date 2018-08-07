@@ -7,13 +7,22 @@ import (
 	"github.com/LEI/dot/cli/command"
 )
 
+// var (
+// 	installAction
+// )
+
 // NewInstallCommand returns a cobra command for `install` subcommands
 func NewInstallCommand(dotCli *command.DotCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
+		Aliases: []string{"i"},
 		Short: "Install",
 		Args:  cli.NoArgs,
 		RunE:  dotCli.ShowHelp,
+		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// 	installAction = cmd.Name()
+		// 	return nil
+		// },
 	}
 	cmd.AddCommand(
 		NewLinkCommand(dotCli),

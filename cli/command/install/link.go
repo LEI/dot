@@ -7,7 +7,7 @@ import (
 	// "github.com/docker/docker/api/types"
 	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
-	"github.com/LEI/dot/cli/config"
+	// "github.com/LEI/dot/cli/config"
 	// "github.com/docker/docker/cli/command/formatter"
 	// "github.com/docker/docker/opts"
 	"github.com/spf13/cobra"
@@ -36,6 +36,7 @@ func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
 			// }
+			// fmt.Printf("CMD: %+v\n", cmd)
 			return runLink(dotCli, opts)
 		},
 	}
@@ -58,15 +59,18 @@ func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
 
 func runLink(dotCli *command.DotCli, opts linkOptions) error {
 	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", opts)
+	// fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", dotCli)
 
-	roles := dotCli.Config().Get("roles")
-	for i, r := range roles.([]interface{}) {
-		// ri := r.(map[string]interface{})
-		fmt.Printf("%d: %+v\n", i, r)
-		role := config.NewRole(r)
-		fmt.Printf("-> %+v\n", role.Link)
-		// fmt.Printf("=> %+v\n", dotCli.Config().Get("roles."+string(i)+".name"))
+	for _, role := range dotCli.Roles() {
+		if err := role.Link.Check(); err != nil {
+			return err
+		}
+		// TODO confirm?
+		if err := role.Link.Execute(); err != nil {
+			return err
+		}
 	}
+
 	// cfg := dotCli.Config().GetAll()
 	// for i, r := range cfg["roles"].([]interface{}) {
 	// 	// ri := r.(map[string]interface{})
