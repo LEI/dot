@@ -23,7 +23,7 @@ func (c *Config) Get(key string) interface{} {
 }
 
 // GetAll values
-func (c *Config) GetAll() interface{} {
+func (c *Config) GetAll() map[string]interface{} {
 	return c.v.AllSettings()
 }
 

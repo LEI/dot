@@ -7,7 +7,7 @@ import (
 
 	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
-	"github.com/LEI/dot/cli/config"
+	// "github.com/LEI/dot/cli/config"
 )
 
 type listOptions struct {}
@@ -30,7 +30,7 @@ func NewListCommand(dotCli *command.DotCli) *cobra.Command {
 }
 
 func runList(dotCli *command.DotCli, opts listOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\nCONFIG:%+v\n", opts, config.DotConfig)
+	fmt.Fprintf(dotCli.Out(), "RUN LIST %+v\n", opts)
 	// client := dotCli.Client()
 	// options := types.NetworkLinkOptions{Filters: opts.filter.Value()}
 	// networkResources, err := client.NetworkLink(context.Background(), options)
