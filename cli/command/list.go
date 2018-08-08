@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 
-	// "github.com/LEI/dot/cli/config"
+	"github.com/LEI/dot/cli/config/tasks"
 )
 
 type listOptions struct {}
@@ -29,12 +29,12 @@ func NewListCommand(dotCli *DotCli) *cobra.Command {
 }
 
 func runList(dotCli *DotCli, opts listOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN LIST %+v\n", opts)
-	for _, r := range dotCli.Roles() {
-		// if err := r.Link.Check(); err != nil {
-		// 	return err
-		// }
-		fmt.Println("r", r)
+	for i, r := range dotCli.Roles() {
+		if tasks.Verbose {
+			fmt.Printf("Role #%d: %+v\n", i+1, r)
+		} else {
+			fmt.Printf("Role #%d: %s\n", i+1, r.Name)
+		}
 	}
 	return nil
 }

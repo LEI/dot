@@ -13,7 +13,7 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 	a := "remove"
 	// opts := removeOpts{}
 	cmd := &cobra.Command{
-		Use:   "remove",
+		Use:   "remove [OPTIONS]",
 		Aliases: []string{"rm"},
 		Short: "Remove",
 		Args:  cobra.NoArgs,
