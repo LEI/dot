@@ -1,4 +1,4 @@
-package cli
+package flags
 
 import (
 	"fmt"
@@ -11,28 +11,27 @@ import (
 
 // Options are the options used to configure the cli
 type Options struct { // (cliflags.ClientOptions)
-	Install, Remove bool
-
 	Source, Target string
-	RoleFilter []string
+
 	ConfigDir string
 	DryRun bool
 	LogLevel string
 	Version bool
+
+	RoleFilter []string
 }
 
 // InstallFlags adds flags for the common options on the FlagSet
 func (cmdOpts *Options) InstallFlags(flags *pflag.FlagSet) {
-	flags.BoolVarP(&cmdOpts.Install, "install", "I", true, "Source directory")
-	flags.BoolVarP(&cmdOpts.Remove, "remove", "R", false, "Target directory")
-
 	flags.StringVarP(&cmdOpts.Source, "source", "s", "", "Source directory")
 	flags.StringVarP(&cmdOpts.Target, "target", "t", "", "Target directory")
-	flags.StringSliceVarP(&cmdOpts.RoleFilter, "role", "r", []string{}, "Filter role execution")
+
 	flags.StringVar(&cmdOpts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
 	flags.BoolVarP(&cmdOpts.DryRun, "debug", "d", false, "Enable debug mode")
 	flags.StringVarP(&cmdOpts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
 	flags.BoolVarP(&cmdOpts.Version, "version", "v", false, "Print version information and quit")
+
+	flags.StringSliceVarP(&cmdOpts.RoleFilter, "role", "r", []string{}, "Filter role execution")
 }
 
 // SetLogLevel sets the logrus logging level

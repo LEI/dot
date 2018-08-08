@@ -36,7 +36,14 @@ func CreateDirectory(dir string) error {
 	return os.MkdirAll(dir, DirMode)
 }
 
-// // IsDirectory checks a given file info corresponds to a symbolic link
-// func IsDirectory(fi os.FileInfo) bool {
-// 	return fi != nil && fi.Mode()&os.ModeDirectory != 0
-// }
+// RemoveDirectory ...
+func RemoveDirectory(dir string) error {
+	// if dir == "" {
+	// 	return fmt.Errorf("missing dir arg!")
+	// }
+	fmt.Printf("$ rmdir %s\n", dir)
+	if DryRun {
+		return nil
+	}
+	return os.Remove(dir)
+}

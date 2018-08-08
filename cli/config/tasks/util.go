@@ -6,6 +6,7 @@ import (
 	// "strings"
 )
 
+// Parse src:dst paths
 func parsePaths(p string) (src, dst string, err error) {
 	parts := filepath.SplitList(p)
 	switch len(parts) {

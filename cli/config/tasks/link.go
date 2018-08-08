@@ -26,23 +26,32 @@ func (l *Link) Check() error {
 	// if l.Target == "" {
 	// 	return fmt.Errorf("link: missing target")
 	// }
-	fmt.Printf("Checking %+v\n", l)
+	// fmt.Printf("Checking %+v\n", l)
 	err := system.CheckSymlink(l.Source, l.Target)
-	if err != nil && err != system.ErrLinkExist {
+	switch err {
+	case nil:
+	case system.ErrLinkExist:
+		l.toDo = true
+	default:
 		return err
-	}
-	if err != system.ErrLinkExist {
-		l.execute = true
 	}
 	return nil
 }
 
-// Execute link task
-func (l *Link) Execute() error {
-	if !l.execute {
-		return nil
+// Install link task
+func (l *Link) Install() error {
+	if !l.DoInstall() {
+		return ErrSkip
 	}
 	return system.Symlink(l.Source, l.Target)
+}
+
+// Remove link task
+func (l *Link) Remove() error {
+	if !l.DoRemove() {
+		return ErrSkip
+	}
+	return system.Unlink(l.Target)
 }
 
 // Links task slice
@@ -92,10 +101,20 @@ func (links *Links) Check() error {
 	return nil
 }
 
-// Execute link tasks
-func (links *Links) Execute() error {
+// Install link tasks
+func (links *Links) Install() error {
 	for _, l := range *links {
-		if err := l.Execute(); err != nil {
+		if err := l.Install(); err != nil && err != ErrSkip {
+			return err
+		}
+	}
+	return nil
+}
+
+// Remove link tasks
+func (links *Links) Remove() error {
+	for _, l := range *links {
+		if err := l.Remove(); err != nil && err != ErrSkip {
 			return err
 		}
 	}
