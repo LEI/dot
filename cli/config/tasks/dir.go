@@ -66,7 +66,7 @@ func (d *Dir) Remove() error {
 		return ErrSkip
 	}
 	fmt.Println("$", cmd)
-	return system.RemoveDir(d.Path)
+	return system.RemoveDir(d.Path) // RmDirIfEmpty
 }
 
 // Dirs task slice

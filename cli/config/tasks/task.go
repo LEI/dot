@@ -104,6 +104,7 @@ func Remove(i interface{}) error {
 	return nil
 }
 
+// https://ahmet.im/blog/golang-take-slices-of-any-type-as-input-parameter/
 func taskList(i interface{}) (TaskList, error) {
 	val := reflect.ValueOf(i)
 	if val.Kind() != reflect.Slice {
