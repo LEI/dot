@@ -22,21 +22,30 @@ func (d *Dir) Check() error {
 		return fmt.Errorf("dir: empty path")
 	}
 	err := system.CheckDirectory(d.Path)
-	if err != nil && err != system.ErrDirExist {
+	switch err {
+	case nil:
+	case system.ErrDirExist:
+		d.toDo = true
+	default:
 		return err
-	}
-	if err != system.ErrDirExist {
-		d.execute = true
 	}
 	return nil
 }
 
-// Execute dir task
-func (d *Dir) Execute() error {
-	if !d.execute {
-		return nil
+// Install dir task
+func (d *Dir) Install() error {
+	if !d.DoInstall() {
+		return ErrSkip
 	}
 	return system.CreateDirectory(d.Path)
+}
+
+// Remove dir task
+func (d *Dir) Remove() error {
+	if !d.DoRemove() {
+		return ErrSkip
+	}
+	return system.RemoveDirectory(d.Path)
 }
 
 // Dirs task slice
@@ -71,11 +80,6 @@ func (dirs *Dirs) Parse(i interface{}) error {
 
 // Check dir tasks
 func (dirs *Dirs) Check() error {
-	// // cli.Errors
-	// fmt.Println("dir", *dirs)
-	// if *dirs == nil {
-	// 	return nil
-	// }
 	for _, d := range *dirs {
 		if err := d.Check(); err != nil {
 			return err
@@ -84,10 +88,20 @@ func (dirs *Dirs) Check() error {
 	return nil
 }
 
-// Execute dir tasks
-func (dirs *Dirs) Execute() error {
+// Install dir tasks
+func (dirs *Dirs) Install() error {
 	for _, d := range *dirs {
-		if err := d.Execute(); err != nil {
+		if err := d.Install(); err != nil && err != ErrSkip {
+			return err
+		}
+	}
+	return nil
+}
+
+// Remove dir tasks
+func (dirs *Dirs) Remove() error {
+	for _, d := range *dirs {
+		if err := d.Remove(); err != nil && err != ErrSkip {
 			return err
 		}
 	}

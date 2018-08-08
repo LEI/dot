@@ -47,9 +47,6 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			// if cmd.Name() == "list" { return nil }
 			// flags must be the top-level command flags, not cmd.Flags()
 			// opts.Common.SetDefaultOptions(flags)
-			if opts.Install && opts.Remove {
-				return fmt.Errorf("cannot install and remove at the same time")
-			}
 			dotPreRun(opts)
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
@@ -69,17 +66,13 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 
 	// setHelpFunc(dotCli, cmd, flags, opts)
 
-	// cmd.SetOutput(dotCli.Out())
-	// cmd.AddCommand(newDaemonCommand())
-	//commands.AddCommands(cmd, dotCli)
+	cmd.SetOutput(dotCli.Out())
+
 	cmd.AddCommand(
 		command.NewListCommand(dotCli),
 		command.NewSyncCommand(dotCli),
-		command.NewDirCommand(dotCli),
-		command.NewRmDirCommand(dotCli),
-		command.NewLinkCommand(dotCli),
-		command.NewUnlinkCommand(dotCli),
-		// dir.NewDirCommand(dotCli),
+		command.NewInstallCommand(dotCli),
+		command.NewRemoveCommand(dotCli),
 	)
 
 	// setValidateArgs(dotCli, cmd, flags, opts)

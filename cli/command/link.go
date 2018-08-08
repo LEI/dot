@@ -12,9 +12,9 @@ import (
 )
 
 type linkOptions struct {
+	action string
 	// matchName string
-
-	quiet       bool
+	// quiet       bool
 	// all         bool
 	// noTrunc     bool
 	// showDigests bool
@@ -35,11 +35,12 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 			// 	opts.matchName = args[0]
 			// }
 			// fmt.Printf("CMD: %+v\n", cmd)
+			opts.action = cmd.Parent().Name()
 			return runLink(dotCli, opts)
 		},
 	}
-	flags := cmd.Flags()
-	flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Only show numeric IDs")
+	// flags := cmd.Flags()
+	// flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Only show numeric IDs")
 	// flags.BoolVarP(&opts.all, "all", "a", false, "Show all images (default hides intermediate images)")
 	// flags.BoolVar(&opts.noTrunc, "no-trunc", false, "Don't truncate output")
 	// flags.BoolVar(&opts.showDigests, "digests", false, "Show digests")
@@ -56,19 +57,27 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 // }
 
 func runLink(dotCli *DotCli, opts linkOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", opts)
-	// fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", dotCli)
-
-	// Check links
-	for _, r := range dotCli.Roles() {
+	roles := dotCli.Roles()
+	if len(roles) == 0 {
+		return fmt.Errorf("no roles")
+	}
+	for _, r := range roles {
 		if err := r.Links.Check(); err != nil {
 			return err
 		}
 	}
-	// Install links
-	for _, r := range dotCli.Roles() {
-		if err := r.Links.Execute(); err != nil {
-			return err
+	for _, r := range roles {
+		switch opts.action {
+		case "install":
+			if err := r.Links.Install(); err != nil {
+				return err
+			}
+		case "remove":
+			if err := r.Links.Remove(); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("%s: not implemented", opts.action)
 		}
 	}
 

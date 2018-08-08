@@ -7,7 +7,8 @@ import (
 )
 
 type dirOptions struct {
-	quiet       bool
+	action string
+	// quiet bool
 }
 
 // NewDirCommand creates a new `dot dir` command
@@ -15,37 +16,48 @@ func NewDirCommand(dotCli *DotCli) *cobra.Command {
 	opts := dirOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
 		Use:   "dir [ACTION] [OPTIONS]",
-		Aliases: []string{"ln"},
+		Aliases: []string{"d"},
 		Short: "Create directory",
 		Args: cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.action = cmd.Parent().Name()
 			return runDir(dotCli, opts)
 		},
 	}
-	flags := cmd.Flags()
-	flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Only show numeric IDs")
+	// flags := cmd.Flags()
+	// flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Only show numeric IDs")
 	return cmd
 }
 
 // func newDirCommand(dotCli *DotCli) *cobra.Command {
 // 	cmd := *NewDirCommand(dotCli)
-// 	cmd.Aliases = []string{"ln"}
+// 	cmd.Aliases = []string{"d"}
 // 	cmd.Use = "dir [OPTIONS]"
 // 	return &cmd
 // }
 
 func runDir(dotCli *DotCli, opts dirOptions) error {
-	fmt.Fprintf(dotCli.Out(), "RUN DIR %+v\n", opts)
-	// Check dirs
-	for _, r := range dotCli.Roles() {
+	roles := dotCli.Roles()
+	if len(roles) == 0 {
+		return fmt.Errorf("no roles")
+	}
+	for _, r := range roles {
 		if err := r.Dirs.Check(); err != nil {
 			return err
 		}
 	}
-	// Install dirs
-	for _, r := range dotCli.Roles() {
-		if err := r.Dirs.Execute(); err != nil {
-			return err
+	for _, r := range roles {
+		switch opts.action {
+		case "install":
+			if err := r.Dirs.Install(); err != nil {
+				return err
+			}
+		case "remove":
+			if err := r.Dirs.Remove(); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("%s: not implemented", opts.action)
 		}
 	}
 	return nil

@@ -50,6 +50,18 @@ func Symlink(src, dst string) error {
 	return os.Symlink(src, dst)
 }
 
+// Unlink ...
+func Unlink(dst string) error {
+	// if src == "" || dst == "" {
+	// 	return fmt.Errorf("missing symlink arg! [src:%s dst:%s]", src, dst)
+	// }
+	fmt.Printf("$ rm %s\n", dst)
+	if DryRun {
+		return nil
+	}
+	return os.Remove(dst)
+}
+
 // IsSymlink checks a given file info corresponds to a symbolic link
 func IsSymlink(fi os.FileInfo) bool {
 	return fi != nil && fi.Mode()&os.ModeSymlink != 0
