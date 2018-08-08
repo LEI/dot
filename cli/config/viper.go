@@ -33,10 +33,10 @@ func (c *Config) Parse(i interface{}) error {
 	return c.v.Unmarshal(&i)
 }
 
-// Load role config
-func (c *Config) Load(r *Role) error {
+// LoadRole config
+func (c *Config) LoadRole(r *Role) error {
 	ConfigFileName = ".dot" // -rc
-	roleConfig, err := Load(r.Dir)
+	roleConfig, err := Load(r.Path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "WARNING: Error loading config file: %v\n", err)
 	}
@@ -44,10 +44,10 @@ func (c *Config) Load(r *Role) error {
 		fmt.Fprintf(os.Stderr, "WARNING: nil role\n")
 		return nil
 	}
-	configFile := roleConfig.FileUsed()
-	if configFile != "" { // debug
-		fmt.Printf("Using role config file: %s\n", configFile)
-	}
+	// configFile := roleConfig.FileUsed()
+	// if configFile != "" { // debug
+	// 	fmt.Printf("Using role config file: %s\n", configFile)
+	// }
 	role := roleConfig.Get("role").(map[string]interface{})
 	if err := r.Merge(role); err != nil {
 		return err

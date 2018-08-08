@@ -1,7 +1,13 @@
 package tasks
 
-// Task interface
-type Task interface {
+// Task struct
+type Task struct {
+	Tasker
+	execute bool
+}
+
+// Tasker interface
+type Tasker interface {
 	Check() error
 	Execute() error
 }

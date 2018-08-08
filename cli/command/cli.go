@@ -7,10 +7,9 @@ import (
 	"path/filepath"
 	// "reflect"
 	"runtime"
-	"strings"
 
 	"github.com/LEI/dot/cli/config"
-	"github.com/LEI/dot/cli/config/tasks"
+	// "github.com/LEI/dot/cli/config/tasks"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/spf13/cobra"
@@ -117,17 +116,16 @@ func (cli *DotCli) Parse(filter ...string) error {
 		// 	return err
 		// }
 		if len(filter) > 0 {
-			fmt.Println("TODO FILTER ROLE:", filter)
-			// matched := false
-			// for _, f := range filter {
-			// 	if f == role.Name {
-			// 		matched = true
-			// 		break
-			// 	}
-			// }
-			// if !matched {
-			// 	continue
-			// }
+			matched := false
+			for _, f := range filter {
+				if f == role.Name {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
 		}
 		roles = append(roles, role)
 	}
@@ -149,76 +147,15 @@ func (cli *DotCli) ParseRole(i interface{}) (*config.Role, error) {
 	if err != nil {
 		return role, err
 	}
-	if err := cli.config.Load(role); err != nil {
+	if err := cli.config.LoadRole(role); err != nil {
 		fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
 	}
-	// Prepare tasks paths
-	links := &tasks.Links{}
-	for _, l := range *role.Link {
-		os.Setenv("OS", runtime.GOOS)
-		src := os.ExpandEnv(l.Source)
-		dst := os.ExpandEnv(l.Target)
-		if !filepath.IsAbs(src) {
-			src = filepath.Join(role.Dir, src)
-		}
-		*links = append(*links, l)
-		if strings.Contains(src, "*") {
-			// fmt.Println("*", src, dst)
-			glob, err := filepath.Glob(src)
-			if err != nil {
-				return role, err
-			}
-		// GLOB:
-			for _, s := range glob {
-				// // Extract source file name
-				// _, n := filepath.Split(s)
-				// for _, i := range ignore {
-				// 	// Check for ignored patterns
-				// 	matched, err := filepath.Match(i, n)
-				// 	if err != nil {
-				// 		return err
-				// 	}
-				// 	if matched {
-				// 		continue GLOB
-				// 	}
-				// }
-				// fmt.Println("PREPARE GLOB", s, "/", dst)
-				t, err := prepareTarget(cli.config.Target, s, dst)
-				if err != nil {
-					return role, err
-				}
-				l.Source = s
-				l.Target = t
-				*links = append(*links, l)
-			}
-		} else {
-			t, err := prepareTarget(cli.config.Target, src, dst)
-			if err != nil {
-				return role, err
-			}
-			l.Source = src
-			l.Target = t
-			*links = append(*links, l)
-		}
+	// TODO init
+	os.Setenv("OS", runtime.GOOS)
+	if err := role.Prepare(cli.config.Target); err != nil {
+		return role, err
 	}
-	*role.Link = *links
 	return role, nil
-}
-
-func prepareTarget(dir, src, dst string) (string, error) {
-	//fmt.Println("+", src, dst)
-	_, f := filepath.Split(src)
-	if f == "" {
-		return "", fmt.Errorf("error (no source file name) while parsing: %s / %s", src, dst)
-	}
-	if !filepath.IsAbs(dst) {
-		dst = filepath.Join(dir, dst)
-	}
-	// if _, err := dotfile.CreateDir(baseDir); err != nil {
-	// 	return baseDir, err
-	// }
-	t := filepath.Join(dst, f)
-	return t, nil
 }
 
 // NewDotCli returns a DotCli instance with IO output and error streams set by in, out and err.

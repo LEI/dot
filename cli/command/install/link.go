@@ -63,13 +63,13 @@ func runLink(dotCli *command.DotCli, opts linkOptions) error {
 
 	// Check links
 	for _, r := range dotCli.Roles() {
-		if err := r.Link.Check(); err != nil {
+		if err := r.Links.Check(); err != nil {
 			return err
 		}
 	}
 	// Install links
 	for _, r := range dotCli.Roles() {
-		if err := r.Link.Execute(); err != nil {
+		if err := r.Links.Execute(); err != nil {
 			return err
 		}
 	}

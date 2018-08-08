@@ -52,7 +52,7 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
 			}
-			if err := dotCli.Parse(); err != nil {
+			if err := dotCli.Parse(opts.RoleFilter...); err != nil {
 				return err
 			}
 			return nil // isSupported(cmd, dotCli)
@@ -208,6 +208,8 @@ func dotPreRun(opts *cliflags.Options) {
 	if opts.Debug {
 		// debug.Enable()
 	}
+
+	// fmt.Printf("dotPreRun opts: %+v\n", opts)
 }
 
 // type versionDetails interface {

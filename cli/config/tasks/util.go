@@ -6,7 +6,7 @@ import (
 	// "strings"
 )
 
-func parseDest(p string) (src, dst string, err error) {
+func parsePaths(p string) (src, dst string, err error) {
 	parts := filepath.SplitList(p)
 	switch len(parts) {
 	case 1:

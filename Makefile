@@ -1,3 +1,5 @@
+# https://github.com/moby/moby/blob/master/Makefile
+# https://github.com/vincentbernat/hellogopher/blob/master/Makefile
 # https://sahilm.com/makefiles-for-golang/
 
 BINARY = dot

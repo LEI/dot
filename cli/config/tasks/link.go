@@ -8,24 +8,17 @@ import (
 
 // Link task
 type Link struct {
-	Map
-	// Task
+	Task
 	Source, Target string
 	// backup bool
+	// overwrite bool
 }
 
 func (l *Link) String() string {
-	return fmt.Sprintf("%s -> %s", l.Source, l.Target)
+	return fmt.Sprintf("link %s -> %s", l.Source, l.Target)
 }
 
-// // Parse slice
-// func (l *Link) Parse(i interface{}) error {
-// 	m, err := NewMap(i)
-// 	// *l = *m
-// 	return err
-// }
-
-// Check task
+// Check link task
 func (l *Link) Check() error {
 	if l.Source == "" {
 		return fmt.Errorf("link: empty source")
@@ -33,15 +26,26 @@ func (l *Link) Check() error {
 	// if l.Target == "" {
 	// 	return fmt.Errorf("link: missing target")
 	// }
-	return system.CheckSymlink(l.Source, l.Target)
+	fmt.Printf("Checking %+v\n", l)
+	err := system.CheckSymlink(l.Source, l.Target)
+	if err != nil && err != system.ErrLinkExist {
+		return err
+	}
+	if err != system.ErrLinkExist {
+		l.execute = true
+	}
+	return nil
 }
 
-// Execute task
+// Execute link task
 func (l *Link) Execute() error {
+	if !l.execute {
+		return nil
+	}
 	return system.Symlink(l.Source, l.Target)
 }
 
-// Links list
+// Links task slice
 type Links []*Link
 
 func (links *Links) String() string {
@@ -56,27 +60,30 @@ func (links *Links) String() string {
 	return fmt.Sprintf("%s", *links)
 }
 
-// Parse links
+// Parse link tasks
 func (links *Links) Parse(i interface{}) error {
-	newLinks := &Links{}
+	ll := &Links{}
 	m, err := NewMap(i)
 	if err != nil {
 		return err
 	}
 	for k, v := range *m {
-		*newLinks = append(*newLinks, &Link{
+		*ll = append(*ll, &Link{
 			Source: k,
 			Target: v,
 		})
 	}
-	*links = *newLinks
+	*links = *ll
 	return nil
 }
 
-// Check links task
+// Check link tasks
 func (links *Links) Check() error {
 	// // cli.Errors
 	// fmt.Println("link", *links)
+	// if *links == nil {
+	// 	return nil
+	// }
 	for _, l := range *links {
 		if err := l.Check(); err != nil {
 			return err
@@ -85,7 +92,7 @@ func (links *Links) Check() error {
 	return nil
 }
 
-// Execute links task
+// Execute link tasks
 func (links *Links) Execute() error {
 	for _, l := range *links {
 		if err := l.Execute(); err != nil {
