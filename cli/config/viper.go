@@ -9,6 +9,7 @@ import (
 
 // Config structure
 type Config struct {
+	// Verbose bool
 	Source string
 	Target string
 	Roles []*Role

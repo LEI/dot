@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 
+	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/spf13/cobra"
 )
 
@@ -42,18 +43,18 @@ func runDir(dotCli *DotCli, opts dirOptions) error {
 		return fmt.Errorf("no roles")
 	}
 	for _, r := range roles {
-		if err := r.Dirs.Check(); err != nil {
+		if err := tasks.Check(r.Dirs); err != nil {
 			return err
 		}
 	}
 	for _, r := range roles {
 		switch opts.action {
 		case "install":
-			if err := r.Dirs.Install(); err != nil {
+			if err := tasks.Install(r.Dirs); err != nil {
 				return err
 			}
 		case "remove":
-			if err := r.Dirs.Remove(); err != nil {
+			if err := tasks.Remove(r.Dirs); err != nil {
 				return err
 			}
 		default:

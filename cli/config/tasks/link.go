@@ -16,7 +16,7 @@ type Link struct {
 }
 
 func (l *Link) String() string {
-	return fmt.Sprintf("link %s -> %s", l.Source, l.Target)
+	return fmt.Sprintf("link[%s:%s]", l.Source, l.Target)
 }
 
 // Check link task
@@ -30,7 +30,6 @@ func (l *Link) Check() error {
 	// fmt.Printf("Checking %+v\n", l)
 	err := system.CheckSymlink(l.Source, l.Target)
 	switch err {
-	case nil:
 	case system.ErrLinkExist:
 		l.toDo = true
 	default:
@@ -41,17 +40,27 @@ func (l *Link) Check() error {
 
 // Install link task
 func (l *Link) Install() error {
+	cmd := fmt.Sprintf("ln -s %s %s", l.Source, l.Target)
 	if !l.DoInstall() {
+		if Verbose {
+			fmt.Println("#", cmd)
+		}
 		return ErrSkip
 	}
+	fmt.Println("$", cmd)
 	return system.Symlink(l.Source, l.Target)
 }
 
 // Remove link task
 func (l *Link) Remove() error {
+	cmd := fmt.Sprintf("rm %s", l.Target)
 	if !l.DoRemove() {
+		if Verbose {
+			fmt.Println("#", cmd)
+		}
 		return ErrSkip
 	}
+	fmt.Println("$", cmd)
 	return system.Unlink(l.Target)
 }
 
@@ -78,46 +87,18 @@ func (links *Links) Parse(i interface{}) error {
 		return err
 	}
 	for k, v := range *m {
-		*ll = append(*ll, &Link{
+		l := &Link{
 			Source: k,
 			Target: v,
-		})
+		}
+		// *ll = append(*ll, l)
+		ll.Add(l)
 	}
 	*links = *ll
 	return nil
 }
 
-// Check link tasks
-func (links *Links) Check() error {
-	// // cli.Errors
-	// fmt.Println("link", *links)
-	// if *links == nil {
-	// 	return nil
-	// }
-	for _, l := range *links {
-		if err := l.Check(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Install link tasks
-func (links *Links) Install() error {
-	for _, l := range *links {
-		if err := l.Install(); err != nil && err != ErrSkip {
-			return err
-		}
-	}
-	return nil
-}
-
-// Remove link tasks
-func (links *Links) Remove() error {
-	for _, l := range *links {
-		if err := l.Remove(); err != nil && err != ErrSkip {
-			return err
-		}
-	}
-	return nil
+// Add a dir
+func (links *Links) Add(l *Link) {
+	*links = append(*links, l)
 }

@@ -15,7 +15,8 @@ type Options struct { // (cliflags.ClientOptions)
 
 	ConfigDir string
 	DryRun bool
-	LogLevel string
+	// LogLevel string
+	Verbose bool
 	Version bool
 
 	RoleFilter []string
@@ -28,8 +29,8 @@ func (cmdOpts *Options) InstallFlags(flags *pflag.FlagSet) {
 
 	flags.StringVar(&cmdOpts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
 	flags.BoolVarP(&cmdOpts.DryRun, "dry-run", "d", false, "Do not execute tasks")
-	flags.StringVarP(&cmdOpts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
-	flags.BoolVarP(&cmdOpts.Version, "version", "v", false, "Print version information and quit")
+	// flags.StringVarP(&cmdOpts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
+	flags.BoolVarP(&cmdOpts.Version, "version", "V", false, "Print version information and quit")
 
 	flags.StringSliceVarP(&cmdOpts.RoleFilter, "role", "r", []string{}, "Filter role execution")
 }

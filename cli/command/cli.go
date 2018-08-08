@@ -9,7 +9,7 @@ import (
 	"runtime"
 
 	"github.com/LEI/dot/cli/config"
-	// "github.com/LEI/dot/cli/config/tasks"
+	"github.com/LEI/dot/cli/config/tasks"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/LEI/dot/system"
@@ -91,8 +91,9 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 		cli.config.Target = "/tmp/todo" // homeDir
 	}
 	system.DryRun = opts.DryRun
-
-	// opts
+	// cli.config.Verbosity = len(cli.config.Verbose)
+	tasks.Verbose = opts.Verbose
+	// opts.Action
 
 	// err := cli.config.Parse(&config.DotConfig)
 	// if err != nil {
