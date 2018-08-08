@@ -1,12 +1,10 @@
-package install
+package command
 
 import (
 	"fmt"
 	// "golang.org/x/net/context"
 
 	// "github.com/docker/docker/api/types"
-	"github.com/LEI/dot/cli"
-	"github.com/LEI/dot/cli/command"
 	// "github.com/LEI/dot/cli/config"
 	// "github.com/docker/docker/cli/command/formatter"
 	// "github.com/docker/docker/opts"
@@ -25,13 +23,13 @@ type linkOptions struct {
 }
 
 // NewLinkCommand creates a new `dot link` command
-func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
+func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 	opts := linkOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
 		Use:   "link [ACTION] [OPTIONS]",
 		Aliases: []string{"ln"},
 		Short: "Link",
-		Args: cli.NoArgs, // RequiresMaxArgs(1),
+		Args: cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
@@ -50,14 +48,14 @@ func NewLinkCommand(dotCli *command.DotCli) *cobra.Command {
 	return cmd
 }
 
-// func newLinkCommand(dotCli *command.DotCli) *cobra.Command {
+// func newLinkCommand(dotCli *DotCli) *cobra.Command {
 // 	cmd := *NewLinkCommand(dotCli)
 // 	cmd.Aliases = []string{"ln"}
 // 	cmd.Use = "link [OPTIONS]"
 // 	return &cmd
 // }
 
-func runLink(dotCli *command.DotCli, opts linkOptions) error {
+func runLink(dotCli *DotCli, opts linkOptions) error {
 	fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", opts)
 	// fmt.Fprintf(dotCli.Out(), "RUN LINK %+v\n", dotCli)
 

@@ -1,27 +1,25 @@
-package install
+package command
 
 import (
 	"fmt"
 
-	"github.com/LEI/dot/cli"
-	"github.com/LEI/dot/cli/command"
 	"github.com/spf13/cobra"
 )
 
-type dirOptions struct {
+type rmDirOptions struct {
 	quiet       bool
 }
 
-// NewDirCommand creates a new `dot dir` command
-func NewDirCommand(dotCli *command.DotCli) *cobra.Command {
-	opts := dirOptions{} // filter: opts.NewFilterOpt()
+// NewRmDirCommand creates a new `dot dir` command
+func NewRmDirCommand(dotCli *DotCli) *cobra.Command {
+	opts := rmDirOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
-		Use:   "dir [ACTION] [OPTIONS]",
-		Aliases: []string{"ln"},
-		Short: "Dir",
-		Args: cli.NoArgs, // RequiresMaxArgs(1),
+		Use:   "rmdir [ACTION] [OPTIONS]",
+		// Aliases: []string{"rmd"},
+		Short: "Remove directory",
+		Args: cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDir(dotCli, opts)
+			return runRmDir(dotCli, opts)
 		},
 	}
 	flags := cmd.Flags()
@@ -29,14 +27,14 @@ func NewDirCommand(dotCli *command.DotCli) *cobra.Command {
 	return cmd
 }
 
-// func newDirCommand(dotCli *command.DotCli) *cobra.Command {
-// 	cmd := *NewDirCommand(dotCli)
+// func newRmDirCommand(dotCli *DotCli) *cobra.Command {
+// 	cmd := *NewRmDirCommand(dotCli)
 // 	cmd.Aliases = []string{"ln"}
 // 	cmd.Use = "dir [OPTIONS]"
 // 	return &cmd
 // }
 
-func runDir(dotCli *command.DotCli, opts dirOptions) error {
+func runRmDir(dotCli *DotCli, opts rmDirOptions) error {
 	fmt.Fprintf(dotCli.Out(), "RUN DIR %+v\n", opts)
 	// Check dirs
 	for _, r := range dotCli.Roles() {
@@ -44,7 +42,7 @@ func runDir(dotCli *command.DotCli, opts dirOptions) error {
 			return err
 		}
 	}
-	// Install dirs
+	// Remove dirs
 	for _, r := range dotCli.Roles() {
 		if err := r.Dirs.Execute(); err != nil {
 			return err

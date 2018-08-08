@@ -1,12 +1,10 @@
-package sync
+package command
 // https://github.com/moby/moby/tree/17.05.x/cli/command/image
 
 import (
 	"fmt"
 	"github.com/spf13/cobra"
 
-	// "github.com/LEI/dot/cli"
-	"github.com/LEI/dot/cli/command"
 	// "github.com/LEI/dot/cli/config"
 	"github.com/LEI/dot/pkg/git"
 	"github.com/LEI/dot/system"
@@ -19,13 +17,13 @@ type syncOptions struct {
 }
 
 // NewSyncCommand returns a cobra command for `sync` subcommands
-func NewSyncCommand(dotCli *command.DotCli) *cobra.Command {
+func NewSyncCommand(dotCli *DotCli) *cobra.Command {
 	opts := syncOptions{}
 	cmd := &cobra.Command{
 		Use:   "sync", // [OPTIONS] [FILTER...]
 		Aliases: []string{"s"},
 		Short: "Synchronize",
-		// Args:  cli.NoArgs,
+		// Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
@@ -37,7 +35,7 @@ func NewSyncCommand(dotCli *command.DotCli) *cobra.Command {
 	return cmd
 }
 
-func runSync(dotCli *command.DotCli, opts syncOptions) error {
+func runSync(dotCli *DotCli, opts syncOptions) error {
 	for _, r := range dotCli.Roles() {
 		// fmt.Fprintf(dotCli.Out(), "Syncing %s...\n", r.Name)
 		repo, err := git.NewRepo(r.Path, r.URL)
