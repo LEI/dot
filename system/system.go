@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	// DryRun ...
+	// DryRun disables task execution
 	DryRun bool
 
 	// ErrIsNotExist ...

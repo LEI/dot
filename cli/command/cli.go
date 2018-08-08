@@ -12,6 +12,7 @@ import (
 	// "github.com/LEI/dot/cli/config/tasks"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
+	"github.com/LEI/dot/system"
 	"github.com/spf13/cobra"
 )
 
@@ -85,9 +86,11 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 		cli.config.Source = filepath.Join(homeDir, roleDir)
 	}
 	// DOT_TARGET
+	// fmt.Println(cli.config.Target)
 	if cli.config.Target == "" {
 		cli.config.Target = "/tmp/todo" // homeDir
 	}
+	system.DryRun = opts.DryRun
 
 	// opts
 
