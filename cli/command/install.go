@@ -4,8 +4,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type installOpts struct {
+	sync bool
+}
+
 // NewInstallCommand returns a cobra command for `install` subcommands
 func NewInstallCommand(dotCli *DotCli) *cobra.Command {
+	a := "install" // action
+	opts := installOpts{}
 	cmd := &cobra.Command{
 		Use:   "install",
 		Aliases: []string{"i"},
@@ -26,19 +32,17 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 			// if err := NewLinkCommand(dotCli).Execute(); err != nil {
 			// 	return err
 			// }
-			if err := runDir(dotCli, dirOptions{
-				action: "install",
-			}); err != nil {
+			if err := runDir(dotCli, dirOptions{action: a}); err != nil {
 				return err
 			}
-			if err := runLink(dotCli, linkOptions{
-				action: "install",
-			}); err != nil {
+			if err := runLink(dotCli, linkOptions{action: a}); err != nil {
 				return err
 			}
 			return nil
 		},
 	}
+	flags := cmd.Flags() // var flags *pflag.FlagSet
+	flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
 	cmd.AddCommand(
 		NewDirCommand(dotCli),
 		NewLinkCommand(dotCli),
