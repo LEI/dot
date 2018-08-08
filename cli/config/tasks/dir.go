@@ -3,6 +3,7 @@ package tasks
 import (
 	"fmt"
 
+	"github.com/LEI/dot/cli/config/types"
 	"github.com/LEI/dot/system"
 )
 
@@ -66,7 +67,7 @@ func (dirs *Dirs) String() string {
 // Parse dir tasks
 func (dirs *Dirs) Parse(i interface{}) error {
 	dd := &Dirs{}
-	s, err := NewSlice(i)
+	s, err := types.NewSlice(i)
 	if err != nil {
 		return err
 	}
