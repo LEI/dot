@@ -9,7 +9,6 @@ import (
 
 	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
-	"github.com/LEI/dot/cli/command/commands"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/sirupsen/logrus"
@@ -48,6 +47,9 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			// if cmd.Name() == "list" { return nil }
 			// flags must be the top-level command flags, not cmd.Flags()
 			// opts.Common.SetDefaultOptions(flags)
+			if opts.Install && opts.Remove {
+				return fmt.Errorf("cannot install and remove at the same time")
+			}
 			dotPreRun(opts)
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
@@ -69,7 +71,16 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 
 	// cmd.SetOutput(dotCli.Out())
 	// cmd.AddCommand(newDaemonCommand())
-	commands.AddCommands(cmd, dotCli)
+	//commands.AddCommands(cmd, dotCli)
+	cmd.AddCommand(
+		command.NewListCommand(dotCli),
+		command.NewSyncCommand(dotCli),
+		command.NewDirCommand(dotCli),
+		command.NewRmDirCommand(dotCli),
+		command.NewLinkCommand(dotCli),
+		command.NewUnlinkCommand(dotCli),
+		// dir.NewDirCommand(dotCli),
+	)
 
 	// setValidateArgs(dotCli, cmd, flags, opts)
 
@@ -200,15 +211,12 @@ func showVersion() {
 
 func dotPreRun(opts *cliflags.Options) {
 	cliflags.SetLogLevel(opts.LogLevel)
-
 	if opts.ConfigDir != "" {
 		cliconfig.SetDir(opts.ConfigDir)
 	}
-
-	if opts.Debug {
-		// debug.Enable()
-	}
-
+	// if opts.Debug {
+	// 	debug.Enable()
+	// }
 	// fmt.Printf("dotPreRun opts: %+v\n", opts)
 }
 

@@ -1,35 +1,33 @@
-package remove
+package command
 
 import (
 	"fmt"
 	// "golang.org/x/net/context"
 
 	// "github.com/docker/docker/api/types"
-	"github.com/LEI/dot/cli"
-	"github.com/LEI/dot/cli/command"
 	// "github.com/LEI/dot/cli/config"
 	// "github.com/docker/docker/cli/command/formatter"
 	// "github.com/docker/docker/opts"
 	"github.com/spf13/cobra"
 )
 
-type linkOptions struct {
+type rmLinkOptions struct {
 }
 
-// NewRmLinkCommand creates a new `dot link` command
-func NewRmLinkCommand(dotCli *command.DotCli) *cobra.Command {
-	opts := linkOptions{} // filter: opts.NewFilterOpt()
+// NewUnlinkCommand creates a new `dot link` command
+func NewUnlinkCommand(dotCli *DotCli) *cobra.Command {
+	opts := rmLinkOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
-		Use:   "link [ACTION] [OPTIONS]",
-		Aliases: []string{"ln"},
-		Short: "Unlink",
-		Args: cli.NoArgs, // RequiresMaxArgs(1),
+		Use:   "unlink [ACTION] [OPTIONS]",
+		// Aliases: []string{"rmln"},
+		Short: "Remove symbolic link",
+		Args: cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
 			// }
 			// fmt.Printf("CMD: %+v\n", cmd)
-			return runRmLink(dotCli, opts)
+			return runUnlink(dotCli, opts)
 		},
 	}
 	// flags := cmd.Flags()
@@ -37,14 +35,14 @@ func NewRmLinkCommand(dotCli *command.DotCli) *cobra.Command {
 	return cmd
 }
 
-// func newRmLinkCommand(dotCli *command.DotCli) *cobra.Command {
-// 	cmd := *NewRmLinkCommand(dotCli)
+// func newUnlinkCommand(dotCli *DotCli) *cobra.Command {
+// 	cmd := *NewUnlinkCommand(dotCli)
 // 	cmd.Aliases = []string{"ln"}
 // 	cmd.Use = "link [OPTIONS]"
 // 	return &cmd
 // }
 
-func runRmLink(dotCli *command.DotCli, opts linkOptions) error {
+func runUnlink(dotCli *DotCli, opts rmLinkOptions) error {
 	fmt.Fprintf(dotCli.Out(), "REMOVE LINK %+v\n", opts)
 	// Check links
 	for _, r := range dotCli.Roles() {

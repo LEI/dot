@@ -3,7 +3,6 @@ package remove
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
 )
 
@@ -13,7 +12,7 @@ func NewRemoveCommand(dotCli *command.DotCli) *cobra.Command {
 		Use:   "remove",
 		Aliases: []string{"rm"},
 		Short: "Remove",
-		Args:  cli.NoArgs,
+		Args:  cobra.NoArgs,
 		RunE:  dotCli.ShowHelp,
 		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// 	return nil

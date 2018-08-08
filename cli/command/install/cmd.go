@@ -3,7 +3,6 @@ package install
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
 )
 
@@ -17,7 +16,7 @@ func NewInstallCommand(dotCli *command.DotCli) *cobra.Command {
 		Use:   "install",
 		Aliases: []string{"i"},
 		Short: "Install",
-		Args:  cli.NoArgs,
+		Args:  cobra.NoArgs,
 		RunE:  dotCli.ShowHelp,
 		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// 	installAction = cmd.Name()
