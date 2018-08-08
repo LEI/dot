@@ -40,7 +40,6 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 				showVersion()
 				return nil
 			}
-			// list?
 			return dotCli.ShowHelp(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

@@ -13,15 +13,14 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	a := "install" // action
 	opts := installOpts{}
 	cmd := &cobra.Command{
-		Use:   "install",
+		Use:   "install [OPTIONS]",
 		Aliases: []string{"i"},
 		Short: "Install",
-		// Args:  cobra.NoArgs,
+		Args:  cobra.NoArgs,
 		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// 	// cmd.Name()
 		// 	return nil
 		// },
-		// RunE: dotCli.ShowHelp,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// for _, c := range cmd.Commands() {
 			// 	c.SetArgs([]string{})
