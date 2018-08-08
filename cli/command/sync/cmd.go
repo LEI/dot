@@ -40,11 +40,11 @@ func NewSyncCommand(dotCli *command.DotCli) *cobra.Command {
 func runSync(dotCli *command.DotCli, opts syncOptions) error {
 	for _, r := range dotCli.Roles() {
 		// fmt.Fprintf(dotCli.Out(), "Syncing %s...\n", r.Name)
-		repo, err := git.NewRepo(r.Dir, r.URL)
+		repo, err := git.NewRepo(r.Path, r.URL)
 		if err != nil {
 			return err
 		}
-		exists, err := system.IsDir(r.Dir)
+		exists, err := system.IsDir(r.Path)
 		if err != nil {
 			return err
 		}

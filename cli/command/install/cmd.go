@@ -25,7 +25,10 @@ func NewInstallCommand(dotCli *command.DotCli) *cobra.Command {
 		// },
 	}
 	cmd.AddCommand(
+		NewDirCommand(dotCli),
+		// NewCopyCommand(dotCli),
 		NewLinkCommand(dotCli),
+		// NewTemplateCommand(dotCli),
 	)
 	return cmd
 }

@@ -25,14 +25,14 @@ func NewMap(i interface{}) (*Map, error) {
 	}
 	switch v := i.(type) {
 	case string:
-		s, t, err := parseDest(v)
+		s, t, err := parsePaths(v)
 		if err != nil {
 			return m, err
 		}
 		(*m)[s] = t
 	case []string:
 		for _, val := range v {
-			s, t, err := parseDest(val)
+			s, t, err := parsePaths(val)
 			if err != nil {
 				return m, err
 			}
@@ -40,7 +40,7 @@ func NewMap(i interface{}) (*Map, error) {
 		}
 	case []interface{}:
 		for _, val := range v {
-			s, t, err := parseDest(val.(string))
+			s, t, err := parsePaths(val.(string))
 			if err != nil {
 				return m, err
 			}

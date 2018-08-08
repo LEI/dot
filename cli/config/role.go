@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/imdario/mergo"
@@ -15,12 +17,13 @@ import (
 // Role structure
 type Role struct {
 	Name string
-	Dir string
+	Path string
 	URL string
-	OS *tasks.OS
-	Deps *tasks.Deps `mapstructure:"dependencies"`
+	OS tasks.OS
+	Deps tasks.Deps `mapstructure:"dependencies"`
+	Dirs tasks.Dirs `mapstructure:"dir"`
 	// Copy interface{} // []*tasks.Copy
-	Link *tasks.Links // []*tasks.Link
+	Links tasks.Links `mapstructure:"link"`
 	// Template interface{} // []*tasks.Template
 }
 
@@ -28,7 +31,7 @@ type Role struct {
 func NewRole(i interface{}) (*Role, error) {
 	r := &Role{
 		// Name: "",
-		// Dir: "",
+		// Path: "",
 		// URL: "",
 	}
 	if err := r.Parse(i); err != nil {
@@ -37,62 +40,26 @@ func NewRole(i interface{}) (*Role, error) {
 	if r.Name == "" {
 		return r, fmt.Errorf("missing name in role: %+v", r)
 	}
-	if r.Dir == "" {
-		r.Dir = filepath.Join("/tmp/home", ".dot", r.Name)
+	if r.Path == "" {
+		r.Path = filepath.Join("/tmp/home", ".dot", r.Name)
 	}
 	return r, nil
 }
 
-// Parse role
-func (r *Role) Parse(i interface{}) error {
-	if r.OS == nil {
-		r.OS = &tasks.OS{}
-	}
-	if r.Deps == nil {
-		r.Deps = &tasks.Deps{}
-	}
-	if r.Link == nil {
-		r.Link = &tasks.Links{}
-	}
-	switch v := i.(type) {
-	case map[string]string:
-		r.Name = v["name"]
-		r.URL = v["url"]
-		r.Dir = v["dir"]
-		r.OS.Parse(v["os"])
-		r.Deps.Parse(v["dependencies"])
-		r.Link.Parse(v["link"])
-	case map[string]interface{}:
-		if name, ok := v["name"].(string); ok {
-			r.Name = name
-		}
-		if dir, ok := v["dir"].(string); ok {
-			r.Dir = dir
-		}
-		if url, ok := v["url"].(string); ok {
-			r.URL = url
-		}
-		r.OS.Parse(v["os"])
-		r.Deps.Parse(v["dependencies"])
-		r.Link.Parse(v["link"])
-	case map[interface{}]interface{}:
-		if name, ok := v["name"].(string); ok {
-			r.Name = name
-		}
-		if dir, ok := v["dir"].(string); ok {
-			r.Dir = dir
-		}
-		if url, ok := v["url"].(string); ok {
-			r.URL = url
-		}
-		r.OS.Parse(v["os"])
-		r.Deps.Parse(v["dependencies"])
-		r.Link.Parse(v["link"])
-	default:
-		return fmt.Errorf("TODO NewRole type: %s", reflect.TypeOf(v))
-	}
-	return nil
-}
+// // Init role
+// func (r *Role) Init() error {
+// 	return nil
+// }
+
+// // Status role
+// func (r *Role) Status() bool {
+// 	return true
+// }
+
+// // Sync role
+// func (r *Role) Sync() bool {
+// 	return true
+// }
 
 // Merge role
 func (r *Role) Merge(i interface{}) error {
@@ -110,17 +77,161 @@ func (r *Role) Merge(i interface{}) error {
 	return mergo.Merge(r, role)
 }
 
-// // Init role
-// func (r *Role) Init() error {
-// 	return nil
-// }
-
-// Status role
-func (r *Role) Status() bool {
-	return true
+// Parse role
+func (r *Role) Parse(i interface{}) error {
+	// if r.OS == nil {
+	// 	r.OS = tasks.OS{}
+	// }
+	// if r.Deps == nil {
+	// 	r.Deps = tasks.Deps{}
+	// }
+	if r.Dirs == nil {
+		r.Dirs = tasks.Dirs{}
+	}
+	if r.Links == nil {
+		r.Links = tasks.Links{}
+	}
+	switch v := i.(type) {
+	case map[string]string:
+		r.Name = v["name"]
+		r.URL = v["url"]
+		r.Path = v["path"]
+		r.OS.Parse(v["os"])
+		r.Deps.Parse(v["dependencies"])
+		r.Dirs.Parse(v["dir"])
+		r.Links.Parse(v["link"])
+	case map[string]interface{}:
+		if name, ok := v["name"].(string); ok {
+			r.Name = name
+		}
+		if dir, ok := v["path"].(string); ok {
+			r.Path = dir
+		}
+		if url, ok := v["url"].(string); ok {
+			r.URL = url
+		}
+		r.OS.Parse(v["os"])
+		r.Deps.Parse(v["dependencies"])
+		r.Dirs.Parse(v["dir"])
+		r.Links.Parse(v["link"])
+	case map[interface{}]interface{}:
+		if name, ok := v["name"].(string); ok {
+			r.Name = name
+		}
+		if path, ok := v["path"].(string); ok {
+			r.Path = path
+		}
+		if url, ok := v["url"].(string); ok {
+			r.URL = url
+		}
+		r.OS.Parse(v["os"])
+		r.Deps.Parse(v["dependencies"])
+		r.Dirs.Parse(v["dir"])
+		r.Links.Parse(v["link"])
+	default:
+		return fmt.Errorf("TODO NewRole type: %s", reflect.TypeOf(v))
+	}
+	return nil
 }
 
-// Sync role
-func (r *Role) Sync() bool {
-	return true
+// Prepare role
+func (r *Role) Prepare(target string) error {
+	if err := r.PrepareDirs(target); err != nil {
+		return err
+	}
+	if err := r.PrepareLinks(target); err != nil {
+		return err
+	}
+	return nil
+}
+
+// PrepareDirs role
+func (r *Role) PrepareDirs(target string) error {
+	dirs := &tasks.Dirs{}
+	if r.Dirs != nil {
+		for _, d := range r.Dirs {
+			dir := os.ExpandEnv(d.Path)
+			if !filepath.IsAbs(dir) {
+				dir = filepath.Join(target, dir)
+			}
+			d.Path = dir
+			*dirs = append(*dirs, d)
+		}
+	}
+	r.Dirs = *dirs
+	return nil
+}
+
+// PrepareLinks role
+func (r *Role) PrepareLinks(target string) error {
+	links := &tasks.Links{}
+	for _, l := range r.Links {
+		src := os.ExpandEnv(l.Source)
+		dst := os.ExpandEnv(l.Target)
+		if !filepath.IsAbs(src) {
+			src = filepath.Join(r.Path, src)
+		}
+		//*links = append(*links, l)
+		if strings.Contains(src, "*") {
+			// fmt.Println("*", src, dst)
+			glob, err := filepath.Glob(src)
+			if err != nil {
+				return err
+			}
+		// GLOB:
+			for _, s := range glob {
+				// // Extract source file name
+				// _, n := filepath.Split(s)
+				// for _, i := range ignore {
+				// 	// Check for ignored patterns
+				// 	matched, err := filepath.Match(i, n)
+				// 	if err != nil {
+				// 		return err
+				// 	}
+				// 	if matched {
+				// 		continue GLOB
+				// 	}
+				// }
+				// fmt.Println("PREPARE GLOB", s, "/", dst)
+				t, err := prepareTarget(target, s, dst)
+				if err != nil {
+					return err
+				}
+				// FIXME copy clone struct
+				ll := &tasks.Link{}
+				if err := mergo.Merge(ll, l); err != nil {
+					return err
+				}
+				ll.Source = s
+				ll.Target = t
+				*links = append(*links, ll)
+			}
+		} else {
+			t, err := prepareTarget(target, src, dst)
+			if err != nil {
+				return err
+			}
+			l.Source = src
+			l.Target = t
+			*links = append(*links, l)
+		}
+	}
+	r.Links = *links
+	return nil
+}
+
+func prepareTarget(dir, src, dst string) (string, error) {
+	//fmt.Println("+", src, dst)
+	_, f := filepath.Split(src)
+	if f == "" {
+		return "", fmt.Errorf("error (no source file name) while parsing: %s / %s", src, dst)
+	}
+	if !filepath.IsAbs(dst) {
+		dst = filepath.Join(dir, dst)
+	}
+	// if _, err := dotfile.CreateDir(baseDir); err != nil {
+	// 	return baseDir, err
+	// }
+	t := filepath.Join(dst, f)
+	return t, nil
 }

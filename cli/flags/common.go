@@ -13,6 +13,7 @@ import (
 type Options struct { // (cliflags.ClientOptions)
 	ConfigDir string
 	Source, Target string
+	RoleFilter []string
 	Debug bool
 	LogLevel string
 	Version bool
@@ -22,6 +23,7 @@ type Options struct { // (cliflags.ClientOptions)
 func (cmdOpts *Options) InstallFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&cmdOpts.Source, "source", "s", "", "Source directory")
 	flags.StringVarP(&cmdOpts.Target, "target", "t", "", "Target directory")
+	flags.StringSliceVarP(&cmdOpts.RoleFilter, "role", "r", []string{}, "Filter role execution")
 	flags.StringVar(&cmdOpts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
 	flags.BoolVarP(&cmdOpts.Debug, "debug", "D", false, "Enable debug mode")
 	flags.StringVarP(&cmdOpts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)

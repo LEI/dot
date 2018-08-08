@@ -4,6 +4,11 @@ import (
 	"os"
 )
 
+var (
+	// FileMode ...
+	FileMode os.FileMode = 0644
+)
+
 // Exists checks if a file is present
 func Exists(file string) bool {
 	_, err := os.Stat(file)
