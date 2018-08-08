@@ -16,7 +16,7 @@ type Options struct { // (cliflags.ClientOptions)
 	ConfigDir string
 	DryRun bool
 	// LogLevel string
-	Verbose bool
+	Verbose bool // Persistent flag
 	Version bool
 
 	RoleFilter []string
