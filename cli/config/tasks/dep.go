@@ -2,11 +2,13 @@ package tasks
 
 import (
 	// "fmt"
+
+	"github.com/LEI/dot/cli/config/types"
 )
 
 // Deps task
 type Deps struct {
-	Slice
+	types.Slice
 	// Vars map[string]interface{}
 	// value []string
 }

@@ -3,6 +3,7 @@ package tasks
 import (
 	"fmt"
 
+	"github.com/LEI/dot/cli/config/types"
 	"github.com/LEI/dot/system"
 )
 
@@ -72,7 +73,7 @@ func (links *Links) String() string {
 // Parse link tasks
 func (links *Links) Parse(i interface{}) error {
 	ll := &Links{}
-	m, err := NewMap(i)
+	m, err := types.NewMap(i)
 	if err != nil {
 		return err
 	}
