@@ -57,7 +57,9 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			return nil // isSupported(cmd, dotCli)
 		},
 	}
+
 	cli.SetupRootCommand(cmd)
+	cmd.PersistentFlags().BoolVarP(&opts.Verbose, "verbose", "v", opts.Verbose, "Verbosity level")
 
 	flags = cmd.Flags()
 	opts.InstallFlags(flags)
@@ -203,7 +205,7 @@ func showVersion() {
 }
 
 func dotPreRun(opts *cliflags.Options) {
-	cliflags.SetLogLevel(opts.LogLevel)
+	// cliflags.SetLogLevel(opts.LogLevel)
 	if opts.ConfigDir != "" {
 		cliconfig.SetDir(opts.ConfigDir)
 	}

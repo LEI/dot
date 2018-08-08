@@ -5,9 +5,10 @@ import (
 	// "golang.org/x/net/context"
 
 	// "github.com/docker/docker/api/types"
-	// "github.com/LEI/dot/cli/config"
 	// "github.com/docker/docker/cli/command/formatter"
 	// "github.com/docker/docker/opts"
+	// "github.com/LEI/dot/cli/config"
+	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/spf13/cobra"
 )
 
@@ -62,18 +63,18 @@ func runLink(dotCli *DotCli, opts linkOptions) error {
 		return fmt.Errorf("no roles")
 	}
 	for _, r := range roles {
-		if err := r.Links.Check(); err != nil {
+		if err := tasks.Check(r.Links); err != nil {
 			return err
 		}
 	}
 	for _, r := range roles {
 		switch opts.action {
 		case "install":
-			if err := r.Links.Install(); err != nil {
+			if err := tasks.Install(r.Links); err != nil {
 				return err
 			}
 		case "remove":
-			if err := r.Links.Remove(); err != nil {
+			if err := tasks.Remove(r.Links); err != nil {
 				return err
 			}
 		default:

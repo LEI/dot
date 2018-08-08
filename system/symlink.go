@@ -43,7 +43,6 @@ func Symlink(src, dst string) error {
 	// if src == "" || dst == "" {
 	// 	return fmt.Errorf("missing symlink arg! [src:%s dst:%s]", src, dst)
 	// }
-	fmt.Printf("$ ln -s %s %s\n", src, dst)
 	if DryRun {
 		return nil
 	}
@@ -55,7 +54,6 @@ func Unlink(dst string) error {
 	// if src == "" || dst == "" {
 	// 	return fmt.Errorf("missing symlink arg! [src:%s dst:%s]", src, dst)
 	// }
-	fmt.Printf("$ rm %s\n", dst)
 	if DryRun {
 		return nil
 	}

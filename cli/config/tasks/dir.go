@@ -14,7 +14,7 @@ type Dir struct {
 }
 
 func (d *Dir) String() string {
-	return fmt.Sprintf("dir %s", d.Path)
+	return fmt.Sprintf("dir[%s]", d.Path)
 }
 
 // Check dir task
@@ -22,9 +22,8 @@ func (d *Dir) Check() error {
 	if d.Path == "" {
 		return fmt.Errorf("dir: empty path")
 	}
-	err := system.CheckDirectory(d.Path)
+	err := system.CheckDir(d.Path)
 	switch err {
-	case nil:
 	case system.ErrDirExist:
 		d.toDo = true
 	default:
@@ -35,22 +34,48 @@ func (d *Dir) Check() error {
 
 // Install dir task
 func (d *Dir) Install() error {
+	cmd := fmt.Sprintf("mkdir -p %s", d.Path)
 	if !d.DoInstall() {
+		if Verbose {
+			fmt.Println("#", cmd)
+		}
 		return ErrSkip
 	}
-	return system.CreateDirectory(d.Path)
+	fmt.Println("$", cmd)
+	return system.CreateDir(d.Path)
 }
 
 // Remove dir task
 func (d *Dir) Remove() error {
+	cmd := fmt.Sprintf("rmdir %s", d.Path)
 	if !d.DoRemove() {
+		if Verbose {
+			fmt.Println("#", cmd)
+		}
 		return ErrSkip
 	}
-	return system.RemoveDirectory(d.Path)
+	empty, err := system.IsEmptyDir(d.Path)
+	if err != nil {
+		return err
+	}
+	if !empty {
+		// return fmt.Errorf("remove %s: directory not empty")
+		if Verbose {
+			fmt.Println("#", cmd)
+		}
+		return ErrSkip
+	}
+	fmt.Println("$", cmd)
+	return system.RemoveDir(d.Path)
 }
 
 // Dirs task slice
 type Dirs []*Dir
+
+// // Value return the underlying slice
+// func (dirs *Dirs) Value() []*Dir {
+// 	return *dirs // (*dirs).value
+// }
 
 func (dirs *Dirs) String() string {
 	// s := ""
@@ -64,6 +89,12 @@ func (dirs *Dirs) String() string {
 	return fmt.Sprintf("%s", *dirs)
 }
 
+// Add a dir
+func (dirs *Dirs) Add(d *Dir) {
+	// (*dirs).value = append(dirs.Value(), d)
+	*dirs = append(*dirs, d)
+}
+
 // Parse dir tasks
 func (dirs *Dirs) Parse(i interface{}) error {
 	dd := &Dirs{}
@@ -73,38 +104,10 @@ func (dirs *Dirs) Parse(i interface{}) error {
 	}
 	for _, v := range *s {
 		d := &Dir{Path: v}
-		*dd = append(*dd, d)
+		// *dd = append(*dd, d)
+		// (*dd).value = append((*dd).value, d)
+		dd.Add(d)
 	}
 	*dirs = *dd
-	return nil
-}
-
-// Check dir tasks
-func (dirs *Dirs) Check() error {
-	for _, d := range *dirs {
-		if err := d.Check(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Install dir tasks
-func (dirs *Dirs) Install() error {
-	for _, d := range *dirs {
-		if err := d.Install(); err != nil && err != ErrSkip {
-			return err
-		}
-	}
-	return nil
-}
-
-// Remove dir tasks
-func (dirs *Dirs) Remove() error {
-	for _, d := range *dirs {
-		if err := d.Remove(); err != nil && err != ErrSkip {
-			return err
-		}
-	}
 	return nil
 }

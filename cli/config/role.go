@@ -85,9 +85,9 @@ func (r *Role) Parse(i interface{}) error {
 	// if r.Deps == nil {
 	// 	r.Deps = tasks.Deps{}
 	// }
-	if r.Dirs == nil {
-		r.Dirs = tasks.Dirs{}
-	}
+	// if r.Dirs == nil {
+	// 	r.Dirs = tasks.Dirs{}
+	// }
 	if r.Links == nil {
 		r.Links = tasks.Links{}
 	}
@@ -148,15 +148,13 @@ func (r *Role) Prepare(target string) error {
 // PrepareDirs role
 func (r *Role) PrepareDirs(target string) error {
 	dirs := &tasks.Dirs{}
-	if r.Dirs != nil {
-		for _, d := range r.Dirs {
-			dir := os.ExpandEnv(d.Path)
-			if !filepath.IsAbs(dir) {
-				dir = filepath.Join(target, dir)
-			}
-			d.Path = dir
-			*dirs = append(*dirs, d)
+	for _, d := range r.Dirs {
+		dir := os.ExpandEnv(d.Path)
+		if !filepath.IsAbs(dir) {
+			dir = filepath.Join(target, dir)
 		}
+		d.Path = dir
+		dirs.Add(d)
 	}
 	r.Dirs = *dirs
 	return nil
@@ -204,7 +202,7 @@ func (r *Role) PrepareLinks(target string) error {
 				}
 				ll.Source = s
 				ll.Target = t
-				*links = append(*links, ll)
+				links.Add(ll)
 			}
 		} else {
 			t, err := prepareTarget(target, src, dst)
@@ -213,7 +211,7 @@ func (r *Role) PrepareLinks(target string) error {
 			}
 			l.Source = src
 			l.Target = t
-			*links = append(*links, l)
+			links.Add(l)
 		}
 	}
 	r.Links = *links
