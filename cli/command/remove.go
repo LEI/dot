@@ -29,9 +29,6 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 	}
 	// flags := cmd.Flags() // var flags *pflag.FlagSet
 	// flags.BoolVarP(&opts.removeEmpty, "remove-empty", "R", true, "Remove empty files and directories")
-	cmd.AddCommand(
-		NewDirCommand(dotCli),
-		NewLinkCommand(dotCli),
-	)
+	dotCli.AddCommands(cmd)
 	return cmd
 }

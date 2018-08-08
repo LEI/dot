@@ -43,9 +43,6 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	}
 	flags := cmd.Flags() // var flags *pflag.FlagSet
 	flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
-	cmd.AddCommand(
-		NewDirCommand(dotCli),
-		NewLinkCommand(dotCli),
-	)
+	dotCli.AddCommands(cmd)
 	return cmd
 }

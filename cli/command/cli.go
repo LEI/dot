@@ -67,6 +67,14 @@ func (cli *DotCli) ShowHelp(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// AddCommands ...
+func (cli *DotCli) AddCommands(cmd *cobra.Command) {
+	cmd.AddCommand(
+		NewDirCommand(cli),
+		NewLinkCommand(cli),
+	)
+}
+
 // Config returns the configuration
 func (cli *DotCli) Config() *config.Config {
 	return cli.config
