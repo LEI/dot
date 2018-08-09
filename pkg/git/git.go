@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -18,11 +19,21 @@ var (
 	// Force ...
 	Force bool
 
+	// Stdout ...
+	Stdout io.Writer
+	// Stderr ...
+	Stderr io.Writer
+
 	cloneDepth = 1
 	defaultBranch = "master"
 	defaultRemote = "origin"
 	repoFmt = "https://github.com/%s.git"
 )
+
+func init() {
+	Stdout = os.Stdout
+	Stdout = os.Stderr
+}
 
 // Repo ...
 type Repo struct {
@@ -129,10 +140,10 @@ func (r *Repo) Clone() error {
 	    return fmt.Errorf(stderr)
 	}
 	if stderr != "" && tasks.Verbose {
-		fmt.Fprintln(os.Stderr, stderr)
+		fmt.Fprintln(Stderr, stderr)
 	}
 	if stdout != "" && tasks.Verbose {
-		fmt.Println(stdout)
+		fmt.Fprintf(Stdout, "%s\n", stdout)
 	}
 	return nil
 }
@@ -162,10 +173,10 @@ func (r *Repo) Pull() error {
 		return fmt.Errorf(stderr)
 	}
 	if stderr != "" { // && tasks.Verbose {
-		fmt.Fprintln(os.Stderr, stderr)
+		fmt.Fprintln(Stderr, stderr)
 	}
 	if stdout != "" && tasks.Verbose {
-		fmt.Println(stdout)
+		fmt.Fprintf(Stdout, "%s\n", stdout)
 	}
 	return nil
 }

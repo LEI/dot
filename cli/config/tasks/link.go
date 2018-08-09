@@ -42,11 +42,11 @@ func (l *Link) Install() error {
 	cmd := fmt.Sprintf("ln -s %s %s", l.Source, l.Target)
 	if !l.DoInstall() {
 		if Verbose {
-			fmt.Println("#", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip
 	}
-	fmt.Println("$", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", cmd)
 	return system.Symlink(l.Source, l.Target)
 }
 
@@ -55,11 +55,11 @@ func (l *Link) Remove() error {
 	cmd := fmt.Sprintf("rm %s", l.Target)
 	if !l.DoRemove() {
 		if Verbose {
-			fmt.Println("#", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip
 	}
-	fmt.Println("$", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", cmd)
 	return system.Unlink(l.Target)
 }
 

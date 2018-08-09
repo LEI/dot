@@ -90,6 +90,9 @@ func (cli *DotCli) ParseConfig(i *interface{}) error {
 // line flags are parsed.
 func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	cli.config = LoadDefaultConfig(cli.err)
+	if configFile := cli.config.FileUsed(); configFile != "" && opts.Verbose {
+		fmt.Fprintf(cli.Out(), "> Using config file: %s\n", configFile)
+	}
 	// DOT_SOURCE
 	if cli.config.Source == "" {
 		cli.config.Source = filepath.Join(homeDir, roleDir)
@@ -100,9 +103,15 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 		cli.config.Target = "/tmp/todo" // homeDir
 	}
 	system.DryRun = opts.DryRun
+
 	// cli.config.Verbosity = len(cli.config.Verbose)
 	tasks.Verbose = opts.Verbose
+	tasks.Stdout = cli.Out()
+	tasks.Stderr = cli.Err()
+
 	git.Force = opts.Force
+	git.Stdout = cli.Out()
+	git.Stderr = cli.Err()
 	// opts.Action
 
 	// err := cli.config.Parse(&config.DotConfig)
@@ -184,10 +193,6 @@ func LoadDefaultConfig(stderr io.Writer) *config.Config {
 	config, err := cliconfig.Load(cliconfig.Dir())
 	if err != nil {
 		fmt.Fprintf(stderr, "WARNING: Error loading config file: %v\n", err)
-	}
-	configFile := config.FileUsed()
-	if configFile != "" { // debug
-		fmt.Printf("Using config file: %s\n", configFile)
 	}
 	// if !config.ContainsAuth() {
 	// 	credentials.DetectDefaultStore(config)

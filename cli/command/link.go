@@ -35,7 +35,7 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
 			// }
-			// fmt.Printf("CMD: %+v\n", cmd)
+			// fmt.Fprintf(dotCli.Out(), "CMD: %+v\n", cmd)
 			opts.action = cmd.Parent().Name()
 			return runLink(dotCli, opts)
 		},
@@ -86,7 +86,7 @@ func runLink(dotCli *DotCli, opts linkOptions) error {
 	// for i, r := range cfg["roles"].([]interface{}) {
 	// 	// ri := r.(map[string]interface{})
 	// 	role := config.NewRole(r)
-	// 	fmt.Printf("%d: %+v\n", i, role)
+	// 	fmt.Fprintf(dotCli.Out(), "%d: %+v\n", i, role)
 	// }
 
 	// client := dotCli.Client()

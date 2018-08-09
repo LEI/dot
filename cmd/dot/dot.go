@@ -37,7 +37,7 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 		Args:             noArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Version {
-				showVersion()
+				fmt.Fprintf(dotCli.Out(), version())
 				return nil
 			}
 			return dotCli.ShowHelp(cmd, args)
@@ -196,9 +196,9 @@ func main() {
 	}
 }
 
-func showVersion() {
+func version() string {
 	// fmt.Printf("%s version %s, build %s\n", binary, dotversion.Version, dotversion.GitCommit)
-	fmt.Printf("%s version 0, build x\n", binary)
+	return fmt.Sprintf("%s version 0, build x\n", binary)
 }
 
 func dotPreRun(opts *cliflags.Options) {
@@ -209,7 +209,6 @@ func dotPreRun(opts *cliflags.Options) {
 	// if opts.Debug {
 	// 	debug.Enable()
 	// }
-	// fmt.Printf("dotPreRun opts: %+v\n", opts)
 }
 
 // type versionDetails interface {

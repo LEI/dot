@@ -31,9 +31,9 @@ func NewListCommand(dotCli *DotCli) *cobra.Command {
 func runList(dotCli *DotCli, opts listOptions) error {
 	for i, r := range dotCli.Roles() {
 		if tasks.Verbose {
-			fmt.Printf("Role #%d: %+v\n", i+1, r)
+			fmt.Fprintf(dotCli.Out(), "Role #%d: %+v\n", i+1, r)
 		} else {
-			fmt.Printf("Role #%d: %s\n", i+1, r.Name)
+			fmt.Fprintf(dotCli.Out(), "Role #%d: %s\n", i+1, r.Name)
 		}
 	}
 	return nil
