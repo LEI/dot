@@ -18,7 +18,7 @@ func Key() string {
 func Get() string {
 	home := os.Getenv(Key())
 	if home == "" {
-		log.Fatal("invalid homedir '%s", os.ExpandEnv(Key()))
+		log.Fatalf("invalid homedir '%s", os.ExpandEnv(Key()))
 	}
 	return home
 }
