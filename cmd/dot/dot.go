@@ -16,6 +16,9 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// Version number
+const Version = "0.0.0"
+
 var (
 	binary string // "dot"
 )
@@ -29,6 +32,7 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 	var flags *pflag.FlagSet
 
 	cmd := &cobra.Command{
+		Version:          Version,
 		Use:              os.Args[0]+" [OPTIONS] COMMAND [ARG...]",
 		Short:            "Dotfiles and system manager",
 		SilenceUsage:     true,
@@ -36,10 +40,10 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 		TraverseChildren: true,
 		Args:             noArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if opts.Version {
-				fmt.Fprintf(dotCli.Out(), version())
-				return nil
-			}
+			// if opts.Version {
+			// 	fmt.Fprintf(dotCli.Out(), version())
+			// 	return nil
+			// }
 			return dotCli.ShowHelp(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -194,11 +198,6 @@ func main() {
 		fmt.Fprintln(stderr, err)
 		os.Exit(1)
 	}
-}
-
-func version() string {
-	// fmt.Printf("%s version %s, build %s\n", binary, dotversion.Version, dotversion.GitCommit)
-	return fmt.Sprintf("%s version 0, build x\n", binary)
 }
 
 func dotPreRun(opts *cliflags.Options) {

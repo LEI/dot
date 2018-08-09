@@ -112,6 +112,7 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	git.Force = opts.Force
 	git.Stdout = cli.Out()
 	git.Stderr = cli.Err()
+
 	// opts.Action
 
 	// err := cli.config.Parse(&config.DotConfig)
