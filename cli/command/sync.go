@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 
-	// "github.com/LEI/dot/cli/config"
+	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/pkg/git"
 	"github.com/LEI/dot/system"
 )
@@ -36,30 +36,51 @@ func NewSyncCommand(dotCli *DotCli) *cobra.Command {
 }
 
 func runSync(dotCli *DotCli, opts syncOptions) error {
-	for _, r := range dotCli.Roles() {
+	roles := dotCli.Roles()
+	length := len(roles)
+	errs := make(chan error, length)
+	for _, r := range roles {
 		// fmt.Fprintf(dotCli.Out(), "Syncing %s...\n", r.Name)
-		repo, err := git.NewRepo(r.Path, r.URL)
-		if err != nil {
-			return err
-		}
-		exists, err := system.IsDir(r.Path)
-		if err != nil {
-			return err
-		}
-		if exists {
-			fmt.Fprintf(dotCli.Out(), "Checking %s...\n", r.Name)
-			if err := repo.Status(); err != nil {
-				return err
+		go func (name, path, url string) {
+			repo, err := git.NewRepo(path, url)
+			if err != nil {
+				errs <- err
+				return
 			}
-			if err := repo.Pull(); err != nil {
-				return err
+			exists, err := system.IsDir(path)
+			if err != nil {
+				errs <- err
+				return
 			}
-		} else {
-			fmt.Fprintf(dotCli.Out(), "Cloning %s...\n", r.Name)
-			if err := repo.Clone(); err != nil {
-				return err
+			if exists {
+				// fmt.Fprintf(dotCli.Out(), "Checking %s...\n", name)
+				if err := repo.Status(); err != nil {
+					errs <- err
+					return
+				}
+				if err := repo.Pull(); err != nil {
+					errs <- err
+					return
+				}
+			} else {
+				fmt.Fprintf(dotCli.Out(), "Cloning %s...\n", name)
+				if err := repo.Clone(); err != nil {
+					errs <- err
+					return
+				}
 			}
+			errs <- nil
+		}(r.Name, r.Path, r.URL)
+	}
+	errors := cli.Errors{}
+	for i := 0; i < length; i++ {
+		if err := <-errs; err != nil {
+			errors = append(errors, err)
 		}
+	}
+	if len(errors) > 0 {
+		fmt.Printf("Synchronisation failed: %d/%d\n", len(errors), length)
+		return fmt.Errorf(errors.Error())
 	}
 	return nil
 }

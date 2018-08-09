@@ -6,16 +6,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/pkg/executils"
+	"github.com/LEI/dot/system"
 )
 
 var (
 	cloneDepth = 1
 	defaultBranch = "master"
 	defaultRemote = "origin"
-	quiet bool
 	repoFmt = "https://github.com/%s.git"
-	verbose bool
 )
 
 // Repo ...
@@ -24,6 +24,10 @@ type Repo struct {
 	URL string
 	Branch string
 	Remote string
+}
+
+func quiet() bool {
+	return !tasks.Verbose
 }
 
 // NewRepo ...
@@ -88,7 +92,7 @@ func (r *Repo) Status() error {
 	}
 	if str != "" {
 		// fmt.Println(str)
-		return fmt.Errorf("%s: dirty git directory -> %s", r.Dir, str)
+		return fmt.Errorf("%s: dirty git directory\n%s", r.Dir, str)
 	}
 	return nil
 }
@@ -108,21 +112,21 @@ func (r *Repo) Clone() error {
 	if cloneDepth > 0 {
 		args = append(args, "--depth", strconv.Itoa(cloneDepth))
 	}
-	if quiet {
+	if !tasks.Verbose {
 		args = append(args, "--quiet")
 	}
-	// if verbose {
+	// if tasks.Verbose {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
 	stdout, stderr, status := r.Exec(args...)
 	if status != 0 {
 	    return fmt.Errorf("git clone exit status %d: %s", status, stderr)
 	}
-	if stdout != "" && verbose {
-		fmt.Println(stdout)
-	}
-	if stderr != "" && verbose {
+	if stderr != "" && tasks.Verbose {
 		fmt.Fprintln(os.Stderr, stderr)
+	}
+	if stdout != "" && tasks.Verbose {
+		fmt.Println(stdout)
 	}
 	return nil
 }
@@ -133,21 +137,24 @@ func (r *Repo) Pull() error {
 	if r.Dir != "" {
 	    args = append([]string{"-C", r.Dir}, args...)
 	}
-	if quiet {
+	if system.DryRun {
+		args = append(args, "--dry-run")
+	}
+	if !tasks.Verbose {
 		args = append(args, "--quiet")
 	}
-	// if verbose {
+	// if tasks.Verbose {
 	// 	fmt.Println("git pull", r.Remote, r.Branch)
 	// }
 	stdout, stderr, status := r.Exec(args...)
 	if status != 0 {
 	    return fmt.Errorf("git pull exit status %d: %s", status, stderr)
 	}
-	if stdout != "" && verbose {
-		fmt.Println(stdout)
-	}
-	if stderr != "" && verbose {
+	if stderr != "" { // && tasks.Verbose {
 		fmt.Fprintln(os.Stderr, stderr)
+	}
+	if stdout != "" && tasks.Verbose {
+		fmt.Println(stdout)
 	}
 	return nil
 }
