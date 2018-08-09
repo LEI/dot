@@ -10,29 +10,34 @@ import (
 )
 
 // Options are the options used to configure the cli
-type Options struct { // (cliflags.ClientOptions)
+type Options struct {
 	Source, Target string
+	DryRun, Force, Verbose bool
+	RoleFilter []string
 
 	ConfigDir string
-	DryRun bool
 	// LogLevel string
-	Verbose bool // Persistent flag
 	Version bool
+}
 
-	RoleFilter []string
+// InstallPersistentFlags adds persistent flags on the FlagSet
+func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
+	flags.StringVarP(&opts.Source, "source", "s", "", "Source directory")
+	flags.StringVarP(&opts.Target, "target", "t", "", "Target directory")
+
+	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
+	flags.BoolVarP(&opts.Force, "force", "f", opts.Force, "Force execution even if the repository is dirty")
+	flags.BoolVarP(&opts.Verbose, "verbose", "v", opts.Verbose, "Verbosity level")
+
+	flags.StringSliceVarP(&opts.RoleFilter, "role", "r", []string{}, "Filter role execution")
 }
 
 // InstallFlags adds flags for the common options on the FlagSet
-func (cmdOpts *Options) InstallFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&cmdOpts.Source, "source", "s", "", "Source directory")
-	flags.StringVarP(&cmdOpts.Target, "target", "t", "", "Target directory")
+func (opts *Options) InstallFlags(flags *pflag.FlagSet) {
 
-	flags.StringVar(&cmdOpts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
-	flags.BoolVarP(&cmdOpts.DryRun, "dry-run", "d", false, "Do not execute tasks")
-	// flags.StringVarP(&cmdOpts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
-	flags.BoolVarP(&cmdOpts.Version, "version", "V", false, "Print version information and quit")
-
-	flags.StringSliceVarP(&cmdOpts.RoleFilter, "role", "r", []string{}, "Filter role execution")
+	flags.StringVar(&opts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
+	// flags.StringVarP(&opts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
+	flags.BoolVarP(&opts.Version, "version", "V", false, "Print version information and quit")
 }
 
 // SetLogLevel sets the logrus logging level

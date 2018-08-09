@@ -12,6 +12,12 @@ import (
 )
 
 var (
+	// // ErrDirtyRepo ...
+	// ErrDirtyRepo = fmt.Errorf("dirty repository")
+
+	// Force ...
+	Force bool
+
 	cloneDepth = 1
 	defaultBranch = "master"
 	defaultRemote = "origin"
@@ -90,9 +96,8 @@ func (r *Repo) Status() error {
 	} else if status != 0 {
 		return fmt.Errorf("%s: git status exit code %d", err, status)
 	}
-	if str != "" {
-		// fmt.Println(str)
-		return fmt.Errorf("%s: dirty git directory\n%s", r.Dir, str)
+	if str != "" && !Force { // return ErrDirtyRepo
+		return fmt.Errorf("Uncommitted changes in %s:\n%s", r.Dir, str)
 	}
 	return nil
 }
@@ -120,7 +125,7 @@ func (r *Repo) Clone() error {
 	// }
 	stdout, stderr, status := r.Exec(args...)
 	if status != 0 {
-	    return fmt.Errorf("git clone exit status %d: %s", status, stderr)
+	    return fmt.Errorf(stderr)
 	}
 	if stderr != "" && tasks.Verbose {
 		fmt.Fprintln(os.Stderr, stderr)
@@ -148,7 +153,12 @@ func (r *Repo) Pull() error {
 	// }
 	stdout, stderr, status := r.Exec(args...)
 	if status != 0 {
-	    return fmt.Errorf("git pull exit status %d: %s", status, stderr)
+		// '{{.URL}}': Could not resolve host: {{.Host}}
+		// ErrNetworkUnreachable
+		if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
+			return nil
+		}
+		return fmt.Errorf(stderr)
 	}
 	if stderr != "" { // && tasks.Verbose {
 		fmt.Fprintln(os.Stderr, stderr)

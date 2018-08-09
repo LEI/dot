@@ -55,7 +55,8 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 	}
 
 	cli.SetupRootCommand(cmd)
-	cmd.PersistentFlags().BoolVarP(&opts.Verbose, "verbose", "v", opts.Verbose, "Verbosity level")
+
+	opts.InstallPersistentFlags(cmd.PersistentFlags())
 
 	flags = cmd.Flags()
 	opts.InstallFlags(flags)

@@ -13,6 +13,7 @@ import (
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/LEI/dot/system"
+	"github.com/LEI/dot/pkg/git"
 	"github.com/spf13/cobra"
 )
 
@@ -101,6 +102,7 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	system.DryRun = opts.DryRun
 	// cli.config.Verbosity = len(cli.config.Verbose)
 	tasks.Verbose = opts.Verbose
+	git.Force = opts.Force
 	// opts.Action
 
 	// err := cli.config.Parse(&config.DotConfig)

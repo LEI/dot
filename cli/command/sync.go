@@ -13,7 +13,7 @@ import (
 type syncOptions struct {
 	// check bool
 	// filter []string
-	force bool
+	// force bool
 }
 
 // NewSyncCommand returns a cobra command for `sync` subcommands
@@ -23,7 +23,7 @@ func NewSyncCommand(dotCli *DotCli) *cobra.Command {
 		Use:   "sync", // [OPTIONS] [FILTER...]
 		Aliases: []string{"s"},
 		Short: "Synchronize",
-		// Args: cobra.NoArgs,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
@@ -77,6 +77,16 @@ func runSync(dotCli *DotCli, opts syncOptions) error {
 		if err := <-errs; err != nil {
 			errors = append(errors, err)
 		}
+		// err := <-errs
+		// switch err {
+		// case git.ErrDirtyRepo:
+		// 	if opts.force {
+		// 		continue
+		// 	}
+		// 	fallthrough
+		// default:
+		// 	errors = append(errors, err)
+		// }
 	}
 	if len(errors) > 0 {
 		fmt.Printf("Synchronisation failed: %d/%d\n", len(errors), length)
