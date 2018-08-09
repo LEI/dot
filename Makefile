@@ -35,6 +35,9 @@ install:
 deps:
 	dep ensure
 
+test:
+	go test -v ./...
+
 # ci: clean dependencies build test
 
 # .PHONY: test
