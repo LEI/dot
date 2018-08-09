@@ -96,7 +96,8 @@ func (r *Repo) Status() error {
 	} else if status != 0 {
 		return fmt.Errorf("%s: git status exit code %d", err, status)
 	}
-	if str != "" && !Force { // return ErrDirtyRepo
+	if str != "" && !Force {
+		// ErrDirtyRepo
 		return fmt.Errorf("Uncommitted changes in %s:\n%s", r.Dir, str)
 	}
 	return nil
