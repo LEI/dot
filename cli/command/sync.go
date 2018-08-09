@@ -89,7 +89,7 @@ func runSync(dotCli *DotCli, opts syncOptions) error {
 		// }
 	}
 	if len(errors) > 0 {
-		fmt.Printf("Synchronisation failed: %d/%d\n", len(errors), length)
+		fmt.Fprintf(dotCli.Out(), "Synchronisation failed: %d/%d\n", len(errors), length)
 		return fmt.Errorf(errors.Error())
 	}
 	return nil

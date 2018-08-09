@@ -2,6 +2,8 @@ package tasks
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"reflect"
 
 	"github.com/LEI/dot/cli"
@@ -11,9 +13,19 @@ var (
 	// Verbose ...
 	Verbose bool
 
+	// Stdout ...
+	Stdout io.Writer
+	// Stderr ...
+	Stderr io.Writer
+
 	// ErrSkip ...
 	ErrSkip = fmt.Errorf("skip")
 )
+
+func init() {
+	Stdout = os.Stdout
+	Stderr = os.Stderr
+}
 
 // Tasker interface
 type Tasker interface {
