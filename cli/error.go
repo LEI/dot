@@ -15,12 +15,11 @@ func (errList Errors) Error() string {
 	if len(errList) < 1 {
 		return ""
 	}
-
 	out := make([]string, len(errList))
 	for i := range errList {
 		out[i] = errList[i].Error()
 	}
-	return strings.Join(out, ", ")
+	return strings.Join(out, "\n") // ", ")
 }
 
 // StatusError reports an unsuccessful exit by a command.

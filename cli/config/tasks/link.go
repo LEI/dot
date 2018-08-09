@@ -27,7 +27,6 @@ func (l *Link) Check() error {
 	// if l.Target == "" {
 	// 	return fmt.Errorf("link: missing target")
 	// }
-	// fmt.Printf("Checking %+v\n", l)
 	err := system.CheckSymlink(l.Source, l.Target)
 	switch err {
 	case system.ErrLinkExist:

@@ -3,6 +3,8 @@ package tasks
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/LEI/dot/cli"
 )
 
 var (
@@ -52,10 +54,14 @@ func Check(i interface{}) error {
 	if err != nil {
 		return err
 	}
+	errs := cli.Errors{}
 	for _, t := range tl {
 		if err := t.Check(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf(errs.Error())
 	}
 	return nil
 }
