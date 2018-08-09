@@ -102,16 +102,20 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	if cli.config.Target == "" {
 		cli.config.Target = "/tmp/todo" // homeDir
 	}
+
+	git.Force = opts.Force
+	git.Stdout = cli.Out()
+	git.Stderr = cli.Err()
+
 	system.DryRun = opts.DryRun
+	if err := system.Init(); err != nil {
+		return err
+	}
 
 	// cli.config.Verbosity = len(cli.config.Verbose)
 	tasks.Verbose = opts.Verbose
 	tasks.Stdout = cli.Out()
 	tasks.Stderr = cli.Err()
-
-	git.Force = opts.Force
-	git.Stdout = cli.Out()
-	git.Stderr = cli.Err()
 
 	// opts.Action
 

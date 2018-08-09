@@ -174,19 +174,19 @@ func noArgs(cmd *cobra.Command, args []string) error {
 }
 
 func main() {
-	stdin := os.Stdin
-	stdout := os.Stdout
-	stderr := os.Stderr
+	stdIn := os.Stdin
+	stdOut := os.Stdout
+	stdErr := os.Stderr
 
-	logrus.SetOutput(stderr)
+	logrus.SetOutput(stdErr)
 
-	dotCli := command.NewDotCli(stdin, stdout, stderr)
+	dotCli := command.NewDotCli(stdIn, stdOut, stdErr)
 	cmd := newDotCommand(dotCli)
 
 	if err := cmd.Execute(); err != nil {
 		if sterr, ok := err.(cli.StatusError); ok {
 			if sterr.Status != "" {
-				fmt.Fprintln(stderr, sterr.Status)
+				fmt.Fprintln(stdErr, sterr.Status)
 			}
 			// StatusError should only be used for errors, and all errors should
 			// have a non-zero exit status, so never exit with 0
@@ -195,7 +195,7 @@ func main() {
 			}
 			os.Exit(sterr.StatusCode)
 		}
-		fmt.Fprintln(stderr, err)
+		fmt.Fprintln(stdErr, err)
 		os.Exit(1)
 	}
 }

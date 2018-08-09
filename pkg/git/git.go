@@ -19,6 +19,9 @@ var (
 	// Force ...
 	Force bool
 
+	// GitBin path
+	GitBin = "git"
+
 	// Stdout ...
 	Stdout io.Writer
 	// Stderr ...
@@ -47,15 +50,7 @@ func quiet() bool {
 	return !tasks.Verbose
 }
 
-// NewRepo ...
-func NewRepo(dir, url string) (*Repo, error) {
-	repo := &Repo{
-		Remote: defaultRemote,
-		Branch: defaultBranch,
-	}
-	if dir == "" {
-		return repo, fmt.Errorf("missing repo dir")
-	}
+func parseURL(dir, url string) string {
 	if url != "" && !strings.Contains(url, "https://") {
 		url = fmt.Sprintf(repoFmt, url)
 		// fmt.Println("NewRepo URL:", url)
@@ -63,11 +58,23 @@ func NewRepo(dir, url string) (*Repo, error) {
 		url = fmt.Sprintf(repoFmt, dir)
 		// fmt.Println("NewRepo URL:", url)
 	}
-	if url == "" {
+	return url
+}
+
+// NewRepo ...
+func NewRepo(dir, url string) (*Repo, error) {
+	repo := &Repo{
+		Dir: dir,
+		URL: parseURL(dir, url),
+		Remote: defaultRemote,
+		Branch: defaultBranch,
+	}
+	if repo.Dir == "" {
+		return repo, fmt.Errorf("missing repo dir")
+	}
+	if repo.URL == "" {
 		return repo, fmt.Errorf("missing repo url")
 	}
-	repo.Dir = dir
-	repo.URL = url
 	return repo, nil
 }
 
@@ -83,13 +90,16 @@ func (r *Repo) SetURL(url string) *Repo {
 	return r
 }
 
-// Exec repo
-func (r *Repo) Exec(args ...string) (string, string, int) {
-	stdout, stderr, status := executils.Execute("git", args...)
-	// out := strings.TrimRight(string(stdout), "\n")
-	// err := strings.TrimRight(string(stderr), "\n")
-	out := strings.TrimRight(string(stdout), "\n")
-	err := strings.TrimRight(string(stderr), "\n")
+// Exec repo command
+func (r *Repo) Exec(args ...string) (int) {
+	return executils.Execute(GitBin, args...)
+}
+
+// ExecBuf repo command
+func (r *Repo) ExecBuf(args ...string) (string, string, int) {
+	stdOut, stdErr, status := executils.ExecuteBuf(GitBin, args...)
+	out := strings.TrimRight(string(stdOut), "\n")
+	err := strings.TrimRight(string(stdErr), "\n")
 	return out, err, status
 }
 
@@ -99,17 +109,15 @@ func (r *Repo) Status() error {
 	if r.Dir != "" {
 	    args = append([]string{"-C", r.Dir}, args...)
 	}
-	stdout, stderr, status := r.Exec(args...)
-	str := strings.TrimRight(stdout, "\n")
-	err := strings.TrimRight(stderr, "\n")
+	stdOut, stdErr, status := r.ExecBuf(args...)
 	if status == 1 {
 		return fmt.Errorf("%s: not a git directory", r.Dir)
 	} else if status != 0 {
-		return fmt.Errorf("%s: git status exit code %d", err, status)
+		return fmt.Errorf("%s: git status exit code %d", stdErr, status)
 	}
-	if str != "" && !Force {
+	if stdOut != "" && !Force {
 		// ErrDirtyRepo
-		return fmt.Errorf("Uncommitted changes in %s:\n%s", r.Dir, str)
+		return fmt.Errorf("Uncommitted changes in %s:\n%s", r.Dir, stdOut)
 	}
 	return nil
 }
@@ -135,15 +143,19 @@ func (r *Repo) Clone() error {
 	// if tasks.Verbose {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
-	stdout, stderr, status := r.Exec(args...)
+	// status := r.Exec(args...)
+	// if status != 0 {
+	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
+	// }
+	stdOut, stdErr, status := r.ExecBuf(args...)
 	if status != 0 {
-	    return fmt.Errorf(stderr)
+	    return fmt.Errorf(stdErr)
 	}
-	if stderr != "" && tasks.Verbose {
-		fmt.Fprintln(Stderr, stderr)
+	if stdErr != "" && tasks.Verbose {
+		fmt.Fprintln(Stderr, stdErr)
 	}
-	if stdout != "" && tasks.Verbose {
-		fmt.Fprintf(Stdout, "%s\n", stdout)
+	if stdOut != "" && tasks.Verbose {
+		fmt.Fprintf(Stdout, "%s\n", stdOut)
 	}
 	return nil
 }
@@ -163,20 +175,24 @@ func (r *Repo) Pull() error {
 	// if tasks.Verbose {
 	// 	fmt.Println("git pull", r.Remote, r.Branch)
 	// }
-	stdout, stderr, status := r.Exec(args...)
+	// status := r.Exec(args...)
+	// if status != 0 {
+	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
+	// }
+	stdOut, stdErr, status := r.ExecBuf(args...)
 	if status != 0 {
 		// '{{.URL}}': Could not resolve host: {{.Host}}
 		// ErrNetworkUnreachable
-		if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
+		if Force && strings.HasPrefix(stdErr, "fatal: unable to access") {
 			return nil
 		}
-		return fmt.Errorf(stderr)
+		return fmt.Errorf(stdErr)
 	}
-	if stderr != "" { // && tasks.Verbose {
-		fmt.Fprintln(Stderr, stderr)
+	if stdErr != "" { // && tasks.Verbose {
+		fmt.Fprintln(Stderr, stdErr)
 	}
-	if stdout != "" && tasks.Verbose {
-		fmt.Fprintf(Stdout, "%s\n", stdout)
+	if stdOut != "" && tasks.Verbose {
+		fmt.Fprintf(Stdout, "%s\n", stdOut)
 	}
 	return nil
 }

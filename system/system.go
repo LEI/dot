@@ -3,6 +3,8 @@ package system
 import (
 	"fmt"
 	// "os"
+
+	"github.com/LEI/dot/pkg/cache"
 )
 
 var (
@@ -20,4 +22,17 @@ var (
 
 	// ErrDirExist ...
 	ErrDirExist = fmt.Errorf("directory already exists")
+
+	cacheDir = "dot"
+	cacheName = "managed"
+	store *cache.Store
 )
+
+// Init system
+func Init() (err error) {
+	store, err = cache.New(cacheDir)
+	if err := store.Open(cacheName); err != nil {
+		return err
+	}
+	return nil
+}
