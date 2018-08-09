@@ -15,6 +15,7 @@ type Options struct {
 	DryRun, Force, Verbose bool
 	RoleFilter []string
 
+	// Root cmd opts
 	ConfigDir string
 	// LogLevel string
 	Version bool

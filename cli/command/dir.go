@@ -16,7 +16,7 @@ type dirOptions struct {
 func NewDirCommand(dotCli *DotCli) *cobra.Command {
 	opts := dirOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
-		Use:   "dir [ACTION] [OPTIONS]",
+		Use:   "dir [OPTIONS]",
 		Aliases: []string{"d"},
 		Short: "Create directory",
 		Args: cobra.NoArgs, // RequiresMaxArgs(1),
