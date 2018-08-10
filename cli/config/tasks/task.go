@@ -11,7 +11,7 @@ import (
 
 var (
 	// Verbose ...
-	Verbose bool
+	Verbose int
 
 	// Stdout ...
 	Stdout io.Writer
@@ -42,13 +42,18 @@ type Task struct {
 	toDo bool
 }
 
-// DoInstall ...
-func (t *Task) DoInstall() bool {
+// ToDo ...
+func (t *Task) ToDo() {
+	t.toDo = true
+}
+
+// ShouldInstall ...
+func (t *Task) ShouldInstall() bool {
 	return !t.toDo
 }
 
-// DoRemove ...
-func (t *Task) DoRemove() bool {
+// ShouldRemove ...
+func (t *Task) ShouldRemove() bool {
 	return t.toDo
 }
 

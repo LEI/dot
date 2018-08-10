@@ -25,7 +25,7 @@ func (d *Dir) Check() error {
 	err := system.CheckDir(d.Path)
 	switch err {
 	case system.ErrDirExist:
-		d.toDo = true
+		d.ToDo()
 	default:
 		return err
 	}
@@ -35,8 +35,8 @@ func (d *Dir) Check() error {
 // Install dir task
 func (d *Dir) Install() error {
 	cmd := fmt.Sprintf("mkdir -p %s", d.Path)
-	if !d.DoInstall() {
-		if Verbose {
+	if !d.ShouldInstall() {
+		if Verbose > 0 {
 			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip
@@ -48,8 +48,8 @@ func (d *Dir) Install() error {
 // Remove dir task
 func (d *Dir) Remove() error {
 	cmd := fmt.Sprintf("rmdir %s", d.Path)
-	if !d.DoRemove() {
-		if Verbose {
+	if !d.ShouldRemove() {
+		if Verbose > 0 {
 			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip
@@ -60,7 +60,7 @@ func (d *Dir) Remove() error {
 	}
 	if !empty {
 		// return fmt.Errorf("remove %s: directory not empty")
-		if Verbose {
+		if Verbose > 0 {
 			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip

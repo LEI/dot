@@ -27,10 +27,10 @@ var (
 	// Stderr ...
 	Stderr io.Writer
 
-	cloneDepth = 1
+	cloneDepth    = 1
 	defaultBranch = "master"
 	defaultRemote = "origin"
-	repoFmt = "https://github.com/%s.git"
+	repoFmt       = "https://github.com/%s.git"
 )
 
 func init() {
@@ -40,15 +40,15 @@ func init() {
 
 // Repo ...
 type Repo struct {
-	Dir string
-	URL string
+	Dir    string
+	URL    string
 	Branch string
 	Remote string
 }
 
-func quiet() bool {
-	return !tasks.Verbose
-}
+// func quiet() bool {
+// 	return tasks.Verbose == 0
+// }
 
 func parseURL(dir, url string) string {
 	if url != "" && !strings.Contains(url, "https://") {
@@ -64,8 +64,8 @@ func parseURL(dir, url string) string {
 // NewRepo ...
 func NewRepo(dir, url string) (*Repo, error) {
 	repo := &Repo{
-		Dir: dir,
-		URL: parseURL(dir, url),
+		Dir:    dir,
+		URL:    parseURL(dir, url),
 		Remote: defaultRemote,
 		Branch: defaultBranch,
 	}
@@ -91,7 +91,7 @@ func (r *Repo) SetURL(url string) *Repo {
 }
 
 // Exec repo command
-func (r *Repo) Exec(args ...string) (int) {
+func (r *Repo) Exec(args ...string) int {
 	return executils.Execute(GitBin, args...)
 }
 
@@ -107,7 +107,7 @@ func (r *Repo) ExecBuf(args ...string) (string, string, int) {
 func (r *Repo) Status() error {
 	args := []string{"status", "--porcelain"}
 	if r.Dir != "" {
-	    args = append([]string{"-C", r.Dir}, args...)
+		args = append([]string{"-C", r.Dir}, args...)
 	}
 	stdOut, stdErr, status := r.ExecBuf(args...)
 	if status == 1 {
@@ -137,10 +137,10 @@ func (r *Repo) Clone() error {
 	if cloneDepth > 0 {
 		args = append(args, "--depth", strconv.Itoa(cloneDepth))
 	}
-	if !tasks.Verbose {
+	if tasks.Verbose == 0 {
 		args = append(args, "--quiet")
 	}
-	// if tasks.Verbose {
+	// if tasks.Verbose > 0 {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
 	// status := r.Exec(args...)
@@ -149,12 +149,12 @@ func (r *Repo) Clone() error {
 	// }
 	stdOut, stdErr, status := r.ExecBuf(args...)
 	if status != 0 {
-	    return fmt.Errorf(stdErr)
+		return fmt.Errorf(stdErr)
 	}
-	if stdErr != "" && tasks.Verbose {
+	if stdErr != "" && tasks.Verbose > 0 {
 		fmt.Fprintln(Stderr, stdErr)
 	}
-	if stdOut != "" && tasks.Verbose {
+	if stdOut != "" && tasks.Verbose > 0 {
 		fmt.Fprintf(Stdout, "%s\n", stdOut)
 	}
 	return nil
@@ -164,15 +164,15 @@ func (r *Repo) Clone() error {
 func (r *Repo) Pull() error {
 	args := []string{"pull", r.Remote, r.Branch}
 	if r.Dir != "" {
-	    args = append([]string{"-C", r.Dir}, args...)
+		args = append([]string{"-C", r.Dir}, args...)
 	}
 	if system.DryRun {
 		args = append(args, "--dry-run")
 	}
-	if !tasks.Verbose {
+	if tasks.Verbose == 0 {
 		args = append(args, "--quiet")
 	}
-	// if tasks.Verbose {
+	// if tasks.Verbose > 0 {
 	// 	fmt.Println("git pull", r.Remote, r.Branch)
 	// }
 	// status := r.Exec(args...)
@@ -188,10 +188,10 @@ func (r *Repo) Pull() error {
 		}
 		return fmt.Errorf(stdErr)
 	}
-	if stdErr != "" { // && tasks.Verbose {
+	if stdErr != "" { // && tasks.Verbose > 0 {
 		fmt.Fprintln(Stderr, stdErr)
 	}
-	if stdOut != "" && tasks.Verbose {
+	if stdOut != "" && tasks.Verbose > 0 {
 		fmt.Fprintf(Stdout, "%s\n", stdOut)
 	}
 	return nil

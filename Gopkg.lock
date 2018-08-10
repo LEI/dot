@@ -2,16 +2,12 @@
 
 
 [[projects]]
-  digest = "1:10c3bd1ebedf1a9ae7cd66c7a584ff69ea6c059d80400de6c4c4c5ad9e5651f2"
-  name = "github.com/blang/vfs"
-  packages = [
-    ".",
-    "memfs",
-    "mountfs",
-  ]
+  digest = "1:0f98f59e9a2f4070d66f0c9c39561f68fcd1dc837b22a852d28d0003aebd1b1e"
+  name = "github.com/boltdb/bolt"
+  packages = ["."]
   pruneopts = "UT"
-  revision = "2c3e2278e174a74f31ff8bf6f47b43ecb358a870"
-  version = "v1.0.0"
+  revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
+  version = "v1.3.1"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -79,6 +75,14 @@
   pruneopts = "UT"
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:988b9bcdc23005dc29426f733b2e99bfe061a2b86e129bbe92ada0293dad232a"
+  name = "github.com/rapidloop/skv"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "565dd05fb7443ed9952697e55a672aa82fb57488"
 
 [[projects]]
   digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
@@ -174,6 +178,14 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:fe8a03a8222d5b913f256972933d26d24ad7c8286692a42943bc01633cc8fce3"
+  name = "gopkg.in/go-ini/ini.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
+  version = "v1.38.1"
+
+[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -185,14 +197,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/blang/vfs",
-    "github.com/blang/vfs/memfs",
-    "github.com/blang/vfs/mountfs",
     "github.com/imdario/mergo",
+    "github.com/rapidloop/skv",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
+    "gopkg.in/go-ini/ini.v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

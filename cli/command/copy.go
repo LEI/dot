@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type linkOptions struct {
+type copyOptions struct {
 	action string
 	// matchName string
 	// quiet       bool
@@ -23,13 +23,13 @@ type linkOptions struct {
 	// filter      opts.FilterOpt
 }
 
-// NewLinkCommand creates a new `dot link` command
-func NewLinkCommand(dotCli *DotCli) *cobra.Command {
-	opts := linkOptions{} // filter: opts.NewFilterOpt()
+// NewCopyCommand creates a new `dot copy` command
+func NewCopyCommand(dotCli *DotCli) *cobra.Command {
+	opts := copyOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
-		Use:     "link [OPTIONS]",
-		Aliases: []string{"ln"},
-		Short:   "Link",
+		Use:     "copy [OPTIONS]",
+		Aliases: []string{"cp"},
+		Short:   "Copy",
 		Args:    cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
@@ -37,7 +37,7 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 			// }
 			// fmt.Fprintf(dotCli.Out(), "CMD: %+v\n", cmd)
 			opts.action = cmd.Parent().Name()
-			return runLink(dotCli, opts)
+			return runCopy(dotCli, opts)
 		},
 	}
 	Options.InstallTaskFlags(cmd.Flags())
@@ -52,68 +52,36 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 	return cmd
 }
 
-// func newLinkCommand(dotCli *DotCli) *cobra.Command {
-// 	cmd := *NewLinkCommand(dotCli)
+// func newCopyCommand(dotCli *DotCli) *cobra.Command {
+// 	cmd := *NewCopyCommand(dotCli)
 // 	cmd.Aliases = []string{"ln"}
-// 	cmd.Use = "link [OPTIONS]"
+// 	cmd.Use = "copy [OPTIONS]"
 // 	return &cmd
 // }
 
-func runLink(dotCli *DotCli, opts linkOptions) error {
+func runCopy(dotCli *DotCli, opts copyOptions) error {
 	roles := dotCli.Roles()
 	if len(roles) == 0 {
 		return fmt.Errorf("no roles")
 	}
 	for _, r := range roles {
-		if err := tasks.Check(r.Links); err != nil {
+		if err := tasks.Check(r.Files); err != nil {
 			return err
 		}
 	}
 	for _, r := range roles {
 		switch opts.action {
 		case "install":
-			if err := tasks.Install(r.Links); err != nil {
+			if err := tasks.Install(r.Files); err != nil {
 				return err
 			}
 		case "remove":
-			if err := tasks.Remove(r.Links); err != nil {
+			if err := tasks.Remove(r.Files); err != nil {
 				return err
 			}
 		default:
 			return fmt.Errorf("%s: not implemented", opts.action)
 		}
 	}
-
-	// cfg := dotCli.Config().GetAll()
-	// for i, r := range cfg["roles"].([]interface{}) {
-	// 	// ri := r.(map[string]interface{})
-	// 	role := config.NewRole(r)
-	// 	fmt.Fprintf(dotCli.Out(), "%d: %+v\n", i, role)
-	// }
-
-	// client := dotCli.Client()
-	// options := types.NetworkLinkOptions{Filters: opts.filter.Value()}
-	// networkResources, err := client.NetworkLink(context.Background(), options)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// format := opts.format
-	// if len(format) == 0 {
-	// 	if len(dotCli.Config().NetworksFormat) > 0 && !opts.quiet {
-	// 		format = dotCli.Config().NetworksFormat
-	// 	} else {
-	// 		format = formatter.TableFormatKey
-	// 	}
-	// }
-
-	// sort.Sort(byNetworkName(networkResources))
-
-	// networksCtx := formatter.Context{
-	// 	Output: dotCli.Out(),
-	// 	Format: formatter.NewNetworkFormat(format, opts.quiet),
-	// 	Trunc:  !opts.noTrunc,
-	// }
-	// return formatter.NetworkWrite(networksCtx, networkResources)
 	return nil
 }

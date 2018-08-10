@@ -1,7 +1,7 @@
 package system
 
 import (
-	// "fmt"
+	"fmt"
 	"io"
 	"os"
 )
@@ -15,12 +15,12 @@ var (
 func CheckDir(dir string) error {
 	fi, err := os.Stat(dir)
 	if err != nil && os.IsExist(err) {
-	    return err
+		return err
 	}
 	if fi != nil && fi.IsDir() {
-	    return ErrDirExist
+		return ErrDirExist
 	} else if fi != nil {
-	    return ErrFileExist
+		return fmt.Errorf("%s: is already a file", dir) // ErrFileExist
 	}
 	return nil
 }

@@ -1,4 +1,5 @@
 package cli
+
 // https://github.com/moby/moby/blob/master/cli/error.go
 
 import (

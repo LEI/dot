@@ -1,4 +1,5 @@
 package command
+
 // https://github.com/moby/moby/tree/17.05.x/cli/command/image
 
 import (
@@ -20,10 +21,10 @@ type syncOptions struct {
 func NewSyncCommand(dotCli *DotCli) *cobra.Command {
 	opts := syncOptions{}
 	cmd := &cobra.Command{
-		Use:   "sync", // [OPTIONS] [FILTER...]
+		Use:     "sync [OPTIONS]", // [FILTER...]
 		Aliases: []string{"s"},
-		Short: "Synchronize",
-		Args: cobra.NoArgs,
+		Short:   "Synchronize",
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
 			// 	opts.matchName = args[0]
@@ -41,7 +42,7 @@ func runSync(dotCli *DotCli, opts syncOptions) error {
 	errs := make(chan error, length)
 	for _, r := range roles {
 		// fmt.Fprintf(dotCli.Out(), "Syncing %s...\n", r.Name)
-		go func (name, path, url string) {
+		go func(name, path, url string) {
 			repo, err := git.NewRepo(path, url)
 			if err != nil {
 				errs <- err
@@ -63,7 +64,7 @@ func runSync(dotCli *DotCli, opts syncOptions) error {
 					return
 				}
 			} else {
-				fmt.Fprintf(dotCli.Out(), "Cloning %s...\n", name)
+				fmt.Fprintf(dotCli.Out(), "Cloning %s into %s...\n", name, repo.Dir)
 				if err := repo.Clone(); err != nil {
 					errs <- err
 					return

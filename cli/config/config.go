@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	configFileDir  = "" // HOME ".dot"
+	configFileDir = "" // HOME ".dot"
 )
 
 var (
@@ -17,8 +17,8 @@ var (
 	ConfigFileType = "yaml"
 	// ConfigFileName is the name of config file
 	ConfigFileName = ".dotrc"
-	homeDir = os.Getenv("HOME")
-	configDir = os.Getenv("DOT_CONFIG")
+	homeDir        = os.Getenv("HOME")
+	configDir      = os.Getenv("DOT_CONFIG")
 )
 
 func init() {
@@ -73,8 +73,7 @@ func Load(dir string) (*Config, error) {
 	config.setName(ConfigFileName)
 	config.setType(ConfigFileType)
 	config.addPaths(dir) // configDir
-	err := config.v.ReadInConfig()
-	if err != nil {
+	if err := config.v.ReadInConfig(); err != nil {
 		return &config, err
 	}
 	return &config, nil
