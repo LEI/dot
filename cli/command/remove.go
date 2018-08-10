@@ -23,6 +23,9 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 			if err := runLink(dotCli, linkOptions{action: a}); err != nil {
 				return err
 			}
+			if err := runCopy(dotCli, copyOptions{action: a}); err != nil {
+				return err
+			}
 			if err := runDir(dotCli, dirOptions{action: a}); err != nil {
 				return err
 			}
@@ -33,10 +36,12 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 		// 	return nil
 		// },
 	}
-	// flags := cmd.Flags() // var flags *pflag.FlagSet
-	// flags.BoolVarP(&opts.removeEmpty, "remove-empty", "R", true, "Remove empty files and directories")
 	dotCli.AddCommands(cmd)
 	Options.InstallActionFlags(cmd.Flags())
 	Options.InstallActionPersistentFlags(cmd.PersistentFlags())
+
+	// flags := cmd.Flags() // var flags *pflag.FlagSet
+	// flags.BoolVarP(&opts.removeEmpty, "remove-empty", "R", true, "Remove empty files and directories")
+
 	return cmd
 }
