@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"os"
+	// "os"
 
 	"github.com/spf13/viper"
 )
@@ -10,9 +10,9 @@ import (
 // Config structure
 type Config struct {
 	// Verbose bool
-	Source string
-	Target string
-	Roles  []*Role
+	// Source string
+	// Target string
+	Roles []*Role
 	// Filename string
 	// value interface{}
 	v *viper.Viper
@@ -36,15 +36,17 @@ func (c *Config) Parse(i interface{}) error {
 
 // LoadRole config
 func (c *Config) LoadRole(r *Role) error {
-	ConfigFileName = ".dot" // -rc
+	// TODO arg
+	ConfigFileName = RoleConfigName
+
 	roleConfig, err := Load(r.Path)
 	if err != nil {
-		// Error loading config file
-		fmt.Fprintf(os.Stderr, "WARNING: %s\n", err)
+		// // Error loading config file
+		// fmt.Fprintf(os.Stderr, "WARNING: %s\n", err)
+		return err
 	}
 	if roleConfig == nil {
-		fmt.Fprintf(os.Stderr, "WARNING: nil role config\n")
-		return nil
+		return fmt.Errorf("fatal: nil role config")
 	}
 	// configFile := roleConfig.FileUsed()
 	// if configFile != "" { // debug
@@ -52,8 +54,7 @@ func (c *Config) LoadRole(r *Role) error {
 	// }
 	roleExtend := roleConfig.Get("role")
 	if roleExtend == nil {
-		fmt.Fprintf(os.Stderr, "WARNING: nil role interface:\n%+v\n", roleConfig.GetAll())
-		return nil
+		return fmt.Errorf("fatal: nil role interface in: %+v", roleConfig.GetAll())
 	}
 	role := roleExtend.(map[string]interface{})
 	if err := r.Merge(role); err != nil {

@@ -36,7 +36,7 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Version:          Version,
-		Use:              os.Args[0] + " [OPTIONS] COMMAND [ARG...]",
+		Use:              os.Args[0] + " [OPTIONS] COMMAND",
 		Short:            "Dotfiles and system manager",
 		SilenceUsage:     true,
 		SilenceErrors:    true,
@@ -60,7 +60,7 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
 			}
-			if err := dotCli.Parse(opts.RoleFilter...); err != nil {
+			if err := dotCli.Parse(opts); err != nil {
 				return err
 			}
 			return nil // isSupported(cmd, dotCli)

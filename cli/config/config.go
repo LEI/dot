@@ -3,8 +3,9 @@ package config
 import (
 	"io"
 	"os"
-	"path/filepath"
+	// "path/filepath"
 
+	"github.com/LEI/dot/pkg/homedir"
 	"github.com/spf13/viper"
 )
 
@@ -15,16 +16,22 @@ const (
 var (
 	// ConfigFileType is the type of config file
 	ConfigFileType = "yaml"
+	// ConfigFileDir is the directory of config file
+	ConfigFileDir = "" // ".config"
 	// ConfigFileName is the name of config file
 	ConfigFileName = ".dotrc"
-	homeDir        = os.Getenv("HOME")
-	configDir      = os.Getenv("DOT_CONFIG")
+
+	// RoleConfigDir is the name of role config file
+	RoleConfigDir = ".dot"
+	// RoleConfigName is the name of role config file
+	RoleConfigName = ".dot"
+
+	configDir = os.Getenv("DOT_CONFIG")
 )
 
 func init() {
-	// https://github.com/moby/moby/blob/17.05.x/pkg/homedir/homedir.go
 	if configDir == "" {
-		configDir = filepath.Join(homeDir, configFileDir)
+		configDir = homedir.Get() // filepath.Join(homeDir, ".config", configDir)
 	}
 }
 
