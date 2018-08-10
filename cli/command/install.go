@@ -12,7 +12,7 @@ type installOpts struct {
 // NewInstallCommand returns a cobra command for `install` subcommands
 func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	a := "install" // action
-	// opts := installOpts{}
+	opts := installOpts{}
 	cmd := &cobra.Command{
 		Use:     "install [OPTIONS] [ACTION]",
 		Aliases: []string{"i"},
@@ -23,16 +23,15 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 		// 	return nil
 		// },
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// for _, c := range cmd.Commands() {
-			// 	c.SetArgs([]string{})
-			// 	if err := c.Execute(); err != nil {
-			// 		return err
-			// 	}
-			// }
-			// if err := NewLinkCommand(dotCli).Execute(); err != nil {
-			// 	return err
-			// }
+			if opts.sync {
+				if err := runSync(dotCli, syncOptions{}); err != nil {
+					return err
+				}
+			}
 			if err := runDir(dotCli, dirOptions{action: a}); err != nil {
+				return err
+			}
+			if err := runCopy(dotCli, copyOptions{action: a}); err != nil {
 				return err
 			}
 			if err := runLink(dotCli, linkOptions{action: a}); err != nil {
@@ -44,7 +43,9 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	dotCli.AddCommands(cmd)
 	Options.InstallActionFlags(cmd.Flags())
 	Options.InstallActionPersistentFlags(cmd.PersistentFlags())
-	// flags := cmd.Flags() // var flags *pflag.FlagSet
-	// flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
+
+	flags := cmd.Flags() // var flags *pflag.FlagSet
+	flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
+
 	return cmd
 }
