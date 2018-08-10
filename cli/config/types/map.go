@@ -53,7 +53,14 @@ func NewMap(i interface{}) (*Map, error) {
 		}
 	case map[string]interface{}:
 		for s, t := range v {
-			(*m)[s] = t.(string)
+			val, _ := t.(string)
+			(*m)[s] = val
+			// if t != nil {
+			// 	str = t.(string)
+			// } else {
+			// 	str = ""
+			// }
+			// (*m)[s] = str
 		}
 	case map[interface{}]interface{}:
 		for s, t := range v {
@@ -64,6 +71,53 @@ func NewMap(i interface{}) (*Map, error) {
 	}
 	return m, nil
 }
+
+// // NewMap parse
+// func NewMap(i interface{}) (map[string]string, error) {
+// 	m := map[string]string{}
+// 	if i == nil {
+// 		return m, nil
+// 	}
+// 	switch v := i.(type) {
+// 	case string:
+// 		s, t, err := parsePaths(v)
+// 		if err != nil {
+// 			return m, err
+// 		}
+// 		m[s] = t
+// 	case []string:
+// 		for _, val := range v {
+// 			s, t, err := parsePaths(val)
+// 			if err != nil {
+// 				return m, err
+// 			}
+// 			m[s] = t
+// 		}
+// 	case []interface{}:
+// 		for _, val := range v {
+// 			s, t, err := parsePaths(val.(string))
+// 			if err != nil {
+// 				return m, err
+// 			}
+// 			m[s] = t
+// 		}
+// 	case map[string]string:
+// 		for s, t := range v {
+// 			m[s] = t
+// 		}
+// 	case map[string]interface{}:
+// 		for s, t := range v {
+// 			m[s] = t.(string)
+// 		}
+// 	case map[interface{}]interface{}:
+// 		for s, t := range v {
+// 			m[s.(string)] = t.(string)
+// 		}
+// 	default:
+// 		return m, fmt.Errorf("unable to parse map: %+v", v)
+// 	}
+// 	return m, nil
+// }
 
 // Parse src:dst paths
 func parsePaths(p string) (src, dst string, err error) {

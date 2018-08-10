@@ -30,7 +30,7 @@ func (l *Link) Check() error {
 	err := system.CheckSymlink(l.Source, l.Target)
 	switch err {
 	case system.ErrLinkExist:
-		l.toDo = true
+		l.ToDo()
 	default:
 		return err
 	}
@@ -40,8 +40,8 @@ func (l *Link) Check() error {
 // Install link task
 func (l *Link) Install() error {
 	cmd := fmt.Sprintf("ln -s %s %s", l.Source, l.Target)
-	if !l.DoInstall() {
-		if Verbose {
+	if !l.ShouldInstall() {
+		if Verbose > 0 {
 			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip
@@ -53,8 +53,8 @@ func (l *Link) Install() error {
 // Remove link task
 func (l *Link) Remove() error {
 	cmd := fmt.Sprintf("rm %s", l.Target)
-	if !l.DoRemove() {
-		if Verbose {
+	if !l.ShouldRemove() {
+		if Verbose > 0 {
 			fmt.Fprintf(Stdout, "# %s\n", cmd)
 		}
 		return ErrSkip
@@ -91,13 +91,13 @@ func (links *Links) Parse(i interface{}) error {
 			Target: v,
 		}
 		// *ll = append(*ll, l)
-		ll.Add(l)
+		ll.Add(*l)
 	}
 	*links = *ll
 	return nil
 }
 
 // Add a dir
-func (links *Links) Add(l *Link) {
-	*links = append(*links, l)
+func (links *Links) Add(l Link) {
+	*links = append(*links, &l)
 }

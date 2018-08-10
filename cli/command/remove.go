@@ -1,9 +1,11 @@
 package command
 
 import (
+	// cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/spf13/cobra"
 )
 
+// TODO
 type removeOpts struct {
 	removeEmpty bool
 }
@@ -13,10 +15,10 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 	a := "remove"
 	// opts := removeOpts{}
 	cmd := &cobra.Command{
-		Use:   "remove [OPTIONS]",
+		Use:     "remove [OPTIONS] [ACTION]",
 		Aliases: []string{"rm"},
-		Short: "Remove",
-		Args:  cobra.NoArgs,
+		Short:   "Remove",
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := runLink(dotCli, linkOptions{action: a}); err != nil {
 				return err
@@ -26,9 +28,15 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 			}
 			return nil
 		},
+		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// 	dotCli.InitializeAction(..., cmd.PersistentFlags())
+		// 	return nil
+		// },
 	}
 	// flags := cmd.Flags() // var flags *pflag.FlagSet
 	// flags.BoolVarP(&opts.removeEmpty, "remove-empty", "R", true, "Remove empty files and directories")
 	dotCli.AddCommands(cmd)
+	Options.InstallActionFlags(cmd.Flags())
+	Options.InstallActionPersistentFlags(cmd.PersistentFlags())
 	return cmd
 }

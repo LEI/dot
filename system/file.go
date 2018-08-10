@@ -27,3 +27,14 @@ func IsDir(file string) (bool, error) {
 	}
 	return fi.IsDir(), nil
 }
+
+// Remove ...
+func Remove(dst string) error {
+	// if src == "" || dst == "" {
+	// 	return fmt.Errorf("missing symlink arg! [src:%s dst:%s]", src, dst)
+	// }
+	if DryRun {
+		return nil
+	}
+	return os.Remove(dst)
+}

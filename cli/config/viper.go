@@ -12,7 +12,7 @@ type Config struct {
 	// Verbose bool
 	Source string
 	Target string
-	Roles []*Role
+	Roles  []*Role
 	// Filename string
 	// value interface{}
 	v *viper.Viper
@@ -39,17 +39,23 @@ func (c *Config) LoadRole(r *Role) error {
 	ConfigFileName = ".dot" // -rc
 	roleConfig, err := Load(r.Path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: Error loading config file: %v\n", err)
+		// Error loading config file
+		fmt.Fprintf(os.Stderr, "WARNING: %s\n", err)
 	}
 	if roleConfig == nil {
-		fmt.Fprintf(os.Stderr, "WARNING: nil role\n")
+		fmt.Fprintf(os.Stderr, "WARNING: nil role config\n")
 		return nil
 	}
 	// configFile := roleConfig.FileUsed()
 	// if configFile != "" { // debug
 	// 	fmt.Printf("Using role config file: %s\n", configFile)
 	// }
-	role := roleConfig.Get("role").(map[string]interface{})
+	roleExtend := roleConfig.Get("role")
+	if roleExtend == nil {
+		fmt.Fprintf(os.Stderr, "WARNING: nil role interface:\n%+v\n", roleConfig.GetAll())
+		return nil
+	}
+	role := roleExtend.(map[string]interface{})
 	if err := r.Merge(role); err != nil {
 		return err
 	}

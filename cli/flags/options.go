@@ -11,34 +11,50 @@ import (
 
 // Options are the options used to configure the cli
 type Options struct {
-	Source, Target string
-	DryRun, Force, Verbose bool
-	RoleFilter []string
-
-	// Root cmd opts
-	ConfigDir string
 	// LogLevel string
 	Version bool
-}
 
-// InstallPersistentFlags adds persistent flags on the FlagSet
-func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.Source, "source", "s", "", "Source directory")
-	flags.StringVarP(&opts.Target, "target", "t", "", "Target directory")
+	ConfigDir     string
+	DryRun, Force bool
+	Verbose       int
 
-	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
-	flags.BoolVarP(&opts.Force, "force", "f", opts.Force, "Force execution even if the repository is dirty")
-	flags.BoolVarP(&opts.Verbose, "verbose", "v", opts.Verbose, "Verbosity level")
+	RoleFilter []string
 
-	flags.StringSliceVarP(&opts.RoleFilter, "role", "r", []string{}, "Filter role execution")
+	Source, Target string
 }
 
 // InstallFlags adds flags for the common options on the FlagSet
 func (opts *Options) InstallFlags(flags *pflag.FlagSet) {
-
-	flags.StringVar(&opts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
 	// flags.StringVarP(&opts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
 	flags.BoolVarP(&opts.Version, "version", "V", false, "Print version information and quit")
+}
+
+// InstallPersistentFlags adds persistent flags on the FlagSet
+func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
+	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
+	flags.BoolVarP(&opts.Force, "force", "f", opts.Force, "Force execution even if the repository is dirty")
+	flags.CountVarP(&opts.Verbose, "verbose", "v", "Verbosity level")
+
+	flags.StringSliceVarP(&opts.RoleFilter, "role", "r", []string{}, "Filter role execution")
+}
+
+// InstallActionFlags adds common task falgs on the FlagSet
+func (opts *Options) InstallActionFlags(flags *pflag.FlagSet) {
+}
+
+// InstallActionPersistentFlags adds common task falgs on the FlagSet
+func (opts *Options) InstallActionPersistentFlags(flags *pflag.FlagSet) {
+	flags.StringVarP(&opts.Source, "source", "s", "", "Source directory")
+	flags.StringVarP(&opts.Target, "target", "t", "", "Target directory")
+}
+
+// InstallTaskFlags adds common task falgs on the FlagSet
+func (opts *Options) InstallTaskFlags(flags *pflag.FlagSet) {
+}
+
+// InstallTaskPersistentFlags adds common task falgs on the FlagSet
+func (opts *Options) InstallTaskPersistentFlags(flags *pflag.FlagSet) {
 }
 
 // SetLogLevel sets the logrus logging level

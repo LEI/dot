@@ -1,0 +1,36 @@
+FROM alpine
+
+ENV OS linux
+ENV ARCH amd64
+ENV USER docker
+
+#RUN echo "ipv6" >> /etc/modules
+RUN apk add --update --no-cache --quiet \
+bash \
+# ca-certificates \
+curl \
+# coreutils \
+git \
+# locales \
+shadow \
+sudo
+
+COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
+COPY ./scripts/setup-user.sh setup-user.sh
+
+RUN ./setup-user.sh $USER --password ''
+# # Pre-install pacapt
+# curl -sSL https://github.com/icy/pacapt/raw/ng/pacapt \
+#   -o /usr/local/bin/pacapt && \
+#   chmod 0755 /usr/local/bin/pacapt
+
+USER $USER
+
+WORKDIR /home/$USER
+
+COPY ./.dot.yml .dotrc.yml
+COPY ./scripts bin/
+
+RUN touch /$HOME/.bashrc
+
+ENTRYPOINT ["/bin/bash"]

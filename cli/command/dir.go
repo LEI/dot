@@ -16,15 +16,17 @@ type dirOptions struct {
 func NewDirCommand(dotCli *DotCli) *cobra.Command {
 	opts := dirOptions{} // filter: opts.NewFilterOpt()
 	cmd := &cobra.Command{
-		Use:   "dir [OPTIONS]",
-		Aliases: []string{"d"},
-		Short: "Create directory",
-		Args: cobra.NoArgs, // RequiresMaxArgs(1),
+		Use:     "dir [OPTIONS]",
+		Aliases: []string{"d", "mkdir"},
+		Short:   "Create directory",
+		Args:    cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.action = cmd.Parent().Name()
 			return runDir(dotCli, opts)
 		},
 	}
+	Options.InstallTaskFlags(cmd.Flags())
+	Options.InstallTaskPersistentFlags(cmd.PersistentFlags())
 	// flags := cmd.Flags()
 	// flags.BoolVarP(&opts.quiet, "quiet", "q", false, "Only show numeric IDs")
 	return cmd

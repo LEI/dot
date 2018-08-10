@@ -11,6 +11,7 @@ import (
 	"github.com/LEI/dot/cli/command"
 	cliconfig "github.com/LEI/dot/cli/config"
 	cliflags "github.com/LEI/dot/cli/flags"
+	"github.com/LEI/dot/system"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -21,6 +22,8 @@ const Version = "0.0.0"
 
 var (
 	binary string // "dot"
+
+	opts = command.Options
 )
 
 func init() {
@@ -28,12 +31,12 @@ func init() {
 }
 
 func newDotCommand(dotCli *command.DotCli) *cobra.Command {
-	opts := &cliflags.Options{}
+	// opts := &cliflags.Options{}
 	var flags *pflag.FlagSet
 
 	cmd := &cobra.Command{
 		Version:          Version,
-		Use:              os.Args[0]+" [OPTIONS] COMMAND [ARG...]",
+		Use:              os.Args[0] + " [OPTIONS] COMMAND [ARG...]",
 		Short:            "Dotfiles and system manager",
 		SilenceUsage:     true,
 		SilenceErrors:    true,
@@ -47,6 +50,12 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			return dotCli.ShowHelp(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Name() != "list" {
+				// Create cache store directory
+				if err := system.Init(); err != nil {
+					return err
+				}
+			}
 			dotPreRun(opts)
 			if err := dotCli.Initialize(opts); err != nil {
 				return err

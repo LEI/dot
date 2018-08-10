@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO
 type installOpts struct {
 	sync bool
 }
@@ -11,12 +12,12 @@ type installOpts struct {
 // NewInstallCommand returns a cobra command for `install` subcommands
 func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	a := "install" // action
-	opts := installOpts{}
+	// opts := installOpts{}
 	cmd := &cobra.Command{
-		Use:   "install [OPTIONS]",
+		Use:     "install [OPTIONS] [ACTION]",
 		Aliases: []string{"i"},
-		Short: "Install",
-		Args:  cobra.NoArgs,
+		Short:   "Install",
+		Args:    cobra.NoArgs,
 		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// 	// cmd.Name()
 		// 	return nil
@@ -40,8 +41,10 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 			return nil
 		},
 	}
-	flags := cmd.Flags() // var flags *pflag.FlagSet
-	flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
 	dotCli.AddCommands(cmd)
+	Options.InstallActionFlags(cmd.Flags())
+	Options.InstallActionPersistentFlags(cmd.PersistentFlags())
+	// flags := cmd.Flags() // var flags *pflag.FlagSet
+	// flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
 	return cmd
 }

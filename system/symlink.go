@@ -12,7 +12,8 @@ func CheckSymlink(src, dst string) error {
 	// 	return fmt.Errorf("missing symlink arg: [src:%s dst:%s]", src, dst)
 	// }
 	if !Exists(src) {
-		return ErrIsNotExist // fmt.Errorf("%s: no such file or directory (to link %s)", src, dst)
+		// return ErrIsNotExist
+		return fmt.Errorf("%s: no such file or directory (to link %s)", src, dst)
 	}
 	if !Exists(dst) {
 		// Stop here if the target does not exist
@@ -35,7 +36,7 @@ func CheckSymlink(src, dst string) error {
 	if real != src {
 		return fmt.Errorf("%s: already a symlink to %s", dst, real)
 	}
-	return ErrLinkExist
+	return ErrLinkExist // exact same link already exists
 }
 
 // Symlink ...

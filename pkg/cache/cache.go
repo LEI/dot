@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/LEI/dot/pkg/homedir"
-	skv "github.com/rapidloop/svk"
+	"github.com/rapidloop/skv"
 )
 
 var (
@@ -17,8 +17,8 @@ var (
 	DirMode os.FileMode = 0755
 
 	defaultCacheDir = ".cache"
-	defaultFileExt = "db"
-	homeDir string
+	defaultFileExt  = "db"
+	homeDir         string
 	// store *Store // *svk.KVStore
 )
 
@@ -44,12 +44,14 @@ func New(dir string) (*Store, error) {
 
 // Init cache directory
 func Init(path string) error {
-	_, err := os.Stat(path)
-	if err != nil && os.IsNotExist(err) {
-		fmt.Printf("%s: creating cache directory...", path)
-		err = os.Mkdir(path, DirMode)
+	if _, err := os.Stat(path); err != nil && os.IsExist(err) {
+		return err
 	}
-	return err
+	if err := os.MkdirAll(path, DirMode); err != nil {
+		return err
+	}
+	fmt.Printf("Created cache directory '%s'\n", path)
+	return nil
 }
 
 // BaseDir cache
