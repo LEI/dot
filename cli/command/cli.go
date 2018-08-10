@@ -111,7 +111,16 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	}
 	// DOT_TARGET
 	if cli.config.Target == "" { // opts.Target
-		cli.config.Target = "/tmp/todo" // homeDir
+		cli.config.Target = opts.Target
+	}
+
+	if cli.config.Target == "" {
+		fmt.Println("owait empty target")
+		os.Exit(1)
+	}
+	if cli.config.Target == homeDir {
+		fmt.Println("owait", cli.config)
+		os.Exit(2)
 	}
 
 	git.Force = opts.Force
