@@ -34,7 +34,7 @@ func CheckSymlink(src, dst string) error {
 		return fmt.Errorf("%s: unable to read symlink", dst)
 	}
 	if real != src {
-		return fmt.Errorf("%s: already a symlink to %s", dst, real)
+		return fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
 	}
 	return ErrLinkExist // exact same link already exists
 }

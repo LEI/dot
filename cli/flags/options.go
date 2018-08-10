@@ -31,7 +31,7 @@ func (opts *Options) InstallFlags(flags *pflag.FlagSet) {
 
 // InstallPersistentFlags adds persistent flags on the FlagSet
 func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&opts.ConfigDir, "config", cliconfig.Dir(), "Location of config file") // (s)
+	flags.StringVarP(&opts.ConfigDir, "config", "c", cliconfig.Dir(), "Location of config file") // (s)
 	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
 	flags.BoolVarP(&opts.Force, "force", "f", opts.Force, "Force execution even if the repository is dirty")
 	flags.CountVarP(&opts.Verbose, "verbose", "v", "Verbosity level")

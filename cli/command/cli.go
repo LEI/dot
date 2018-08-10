@@ -13,6 +13,7 @@ import (
 	"github.com/LEI/dot/cli/config/tasks"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/LEI/dot/pkg/git"
+	"github.com/LEI/dot/pkg/homedir"
 	"github.com/LEI/dot/pkg/ostype"
 	"github.com/LEI/dot/system"
 	// "github.com/LEI/dot/pkg/sliceutils"
@@ -24,14 +25,13 @@ var (
 	// Options ...
 	Options *cliflags.Options = &cliflags.Options{}
 
-	homeDir = os.Getenv("HOME")
-	roleDir = ".dot"
+	homeDir = homedir.Get()
 )
 
-// func init() {
-// 	osTypes := ostype.Get()
-// 	fmt.Println("OS TYPES", osTypes)
-// }
+func init() {
+	// osTypes := ostype.Get()
+	// fmt.Println("OS TYPES", osTypes)
+}
 
 // Streams is an interface which exposes the standard input and output streams
 type Streams interface {
@@ -106,22 +106,24 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 		fmt.Fprintf(cli.Out(), "> Using config file: %s\n", configFile)
 	}
 	// DOT_SOURCE
-	if cli.config.Source == "" { // opts.Source
-		cli.config.Source = filepath.Join(homeDir, roleDir)
+	if opts.Source == "" { // opts.Source
+		opts.Source = homeDir // filepath.Join(homeDir, config.RoleConfigDir)
 	}
 	// DOT_TARGET
-	if cli.config.Target == "" { // opts.Target
-		cli.config.Target = opts.Target
+	if opts.Target == "" { // opts.Target
+		opts.Target = homeDir
 	}
 
-	if cli.config.Target == "" {
+	if opts.Target == "" {
 		fmt.Println("owait empty target")
 		os.Exit(1)
 	}
-	if cli.config.Target == homeDir {
-		fmt.Println("owait", cli.config)
+	if opts.Target == homeDir {
+		fmt.Println("owait", opts)
 		os.Exit(2)
 	}
+	// fmt.Println("SOURCE", opts.Source)
+	// fmt.Println("TARGET", opts.Target)
 
 	git.Force = opts.Force
 	git.Stdout = cli.Out()
@@ -155,20 +157,34 @@ func (cli *DotCli) InitializeAction(opts *cliflags.Options, flags *pflag.FlagSet
 }
 
 // Parse roles
-func (cli *DotCli) Parse(filter ...string) error {
+func (cli *DotCli) Parse(opts *cliflags.Options) error {
 	var roles []*config.Role
-	configRoles := cli.Config().Get("roles").([]interface{})
+	cliConfig := cli.Config()
+	cliConfigRoles := cliConfig.Get("roles")
+	if cliConfigRoles == nil {
+		fmt.Fprintf(os.Stderr, "no roles in: %+v\n", cliConfig.GetAll())
+		return nil
+	}
+	configRoles := cliConfigRoles.([]interface{})
 	for _, r := range configRoles {
-		role, err := cli.ParseRole(r)
+		role, err := config.NewRole(r)
 		if err != nil {
 			return err
 		}
-		// if err := cli.Prepare(r); err != nil {
+		if len(role.OS) > 0 && !ostype.Has(role.OS...) {
+			// fmt.Fprintf(cli.Out(), "Skip role %s (OS: %s)\n", role.Name, role.OS)
+			continue
+		}
+		if err := cli.ParseRole(opts, role); err != nil {
+			return err
+		}
+		// TODO: check OS after loading role config?
+		// if err := cli.Prepare(role); err != nil {
 		// 	return err
 		// }
-		if len(filter) > 0 {
+		if len(opts.RoleFilter) > 0 {
 			matched := false
-			for _, f := range filter {
+			for _, f := range opts.RoleFilter {
 				if f == role.Name {
 					matched = true
 					break
@@ -178,15 +194,10 @@ func (cli *DotCli) Parse(filter ...string) error {
 				continue
 			}
 		}
-		roleOS := role.OS
-		if len(roleOS) > 0 && !ostype.Has(roleOS...) {
-			// fmt.Fprintf(cli.Out(), "Skip role %s (OS: %s)\n", role.Name, roleOS)
-			continue
-		}
 		roles = append(roles, role)
 	}
 	if len(roles) == 0 {
-		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), filter)
+		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), opts.RoleFilter)
 	}
 	cli.config.Roles = roles
 	return nil
@@ -198,23 +209,21 @@ func (cli *DotCli) Roles() []*config.Role {
 }
 
 // ParseRole ...
-func (cli *DotCli) ParseRole(i interface{}) (*config.Role, error) {
-	role, err := config.NewRole(i)
-	if err != nil {
-		return role, err
-	}
+func (cli *DotCli) ParseRole(opts *cliflags.Options, role *config.Role) error {
 	if role.Path == "" {
-		role.Path = filepath.Join(cli.config.Target, ".dot", role.Name)
+		role.Path = filepath.Join(opts.Source, config.RoleConfigDir, role.Name)
+		// role.Path = filepath.Join(opts.Source, role.Name)
 	}
 	if err := cli.config.LoadRole(role); err != nil {
 		fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
+		return nil // err
 	}
-	// TODO init
+	// TODO init env
 	os.Setenv("OS", runtime.GOOS)
-	if err := role.Prepare(cli.config.Target); err != nil {
-		return role, err
+	if err := role.Prepare(opts.Target); err != nil {
+		return err
 	}
-	return role, nil
+	return nil
 }
 
 // NewDotCli returns a DotCli instance with IO output and error streams set by in, out and err.
