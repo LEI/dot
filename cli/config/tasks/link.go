@@ -29,8 +29,8 @@ func (l *Link) Check() error {
 	// }
 	err := system.CheckSymlink(l.Source, l.Target)
 	switch err {
-	case system.ErrLinkExist:
-		l.ToDo()
+	case system.ErrLinkAlreadyExist:
+		l.Done()
 	default:
 		return err
 	}

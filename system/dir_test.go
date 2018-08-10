@@ -36,8 +36,8 @@ func TestCheckDirExist(t *testing.T) {
 		}
 	}
 	// Check dir present
-	if err := CheckDir(testDir); err != ErrDirExist {
-		t.Fatalf("CheckDir (DirExist) %s: %s", testDir, err)
+	if err := CheckDir(testDir); err != ErrDirAlreadyExist {
+		t.Fatalf("CheckDir (DirAlreadyExist) %s: %s", testDir, err)
 	}
 }
 

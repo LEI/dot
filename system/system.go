@@ -15,13 +15,22 @@ var (
 	// ErrIsNotExist = fmt.Errorf("file or directory does not exists") // no such file or directory
 
 	// ErrFileExist ...
-	ErrFileExist = fmt.Errorf("file already exists")
+	ErrFileExist = fmt.Errorf("file exists")
 
 	// ErrLinkExist ...
-	ErrLinkExist = fmt.Errorf("symlink already exists")
+	ErrLinkExist = fmt.Errorf("symlink exists")
 
 	// ErrDirExist ...
-	ErrDirExist = fmt.Errorf("directory already exists")
+	ErrDirExist = fmt.Errorf("directory exists")
+
+	// ErrFileAlreadyExist ...
+	ErrFileAlreadyExist = fmt.Errorf("file already exists")
+
+	// ErrLinkAlreadyExist ...
+	ErrLinkAlreadyExist = fmt.Errorf("symlink already exists")
+
+	// ErrDirAlreadyExist ...
+	ErrDirAlreadyExist = fmt.Errorf("directory already exists")
 
 	cacheDir  = "dot"
 	cacheName = "files"

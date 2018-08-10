@@ -21,7 +21,7 @@ func CheckCopy(src, dst string) error {
 		return nil
 	}
 	// TODO check contents
-	return ErrFileExist // nil
+	return ErrFileAlreadyExist // nil
 }
 
 // Copy ...

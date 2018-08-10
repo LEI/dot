@@ -158,7 +158,7 @@ func (cli *DotCli) InitializeAction(opts *cliflags.Options, flags *pflag.FlagSet
 
 // Parse roles
 func (cli *DotCli) Parse(opts *cliflags.Options) error {
-	var roles []*config.Role
+	var roles, final []*config.Role
 	cliConfig := cli.Config()
 	cliConfigRoles := cliConfig.Get("roles")
 	if cliConfigRoles == nil {
@@ -172,13 +172,29 @@ func (cli *DotCli) Parse(opts *cliflags.Options) error {
 			return err
 		}
 		if len(role.OS) > 0 && !ostype.Has(role.OS...) {
-			// fmt.Fprintf(cli.Out(), "Skip role %s (OS: %s)\n", role.Name, role.OS)
 			continue
 		}
+		roles = append(roles, role)
+	}
+	for _, role := range roles {
 		if err := cli.ParseRole(opts, role); err != nil {
 			return err
 		}
-		// TODO: check OS after loading role config?
+		// Check OS a second time, in case it is specified in role config only
+		if len(role.OS) > 0 && !ostype.Has(role.OS...) {
+			continue
+		}
+		if len(role.Deps) > 0 {
+		DEPS:
+			for _, d := range role.Deps {
+				for _, r := range roles {
+					if d == r.Name {
+						continue DEPS
+					}
+				}
+				return fmt.Errorf(role.Name, "required", role.Deps, "but", d, "is not found")
+			}
+		}
 		// if err := cli.Prepare(role); err != nil {
 		// 	return err
 		// }
@@ -194,12 +210,12 @@ func (cli *DotCli) Parse(opts *cliflags.Options) error {
 				continue
 			}
 		}
-		roles = append(roles, role)
+		final = append(final, role)
 	}
-	if len(roles) == 0 {
+	if len(final) == 0 {
 		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), opts.RoleFilter)
 	}
-	cli.config.Roles = roles
+	cli.config.Roles = final
 	return nil
 }
 

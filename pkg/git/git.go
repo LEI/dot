@@ -149,7 +149,8 @@ func (r *Repo) Clone() error {
 	// }
 	stdOut, stdErr, status := r.ExecBuf(args...)
 	if status != 0 {
-		return fmt.Errorf(stdErr)
+		return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, stdErr)
+		// return fmt.Errorf(stdErr)
 	}
 	if stdErr != "" && tasks.Verbose > 0 {
 		fmt.Fprintln(Stderr, stdErr)
@@ -186,7 +187,8 @@ func (r *Repo) Pull() error {
 		if Force && strings.HasPrefix(stdErr, "fatal: unable to access") {
 			return nil
 		}
-		return fmt.Errorf(stdErr)
+		return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stdErr)
+		// return fmt.Errorf(stdErr)
 	}
 	if stdErr != "" { // && tasks.Verbose > 0 {
 		fmt.Fprintln(Stderr, stdErr)
