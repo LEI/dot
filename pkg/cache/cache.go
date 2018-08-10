@@ -5,6 +5,7 @@ package cache
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -47,10 +48,10 @@ func Init(path string) error {
 	if _, err := os.Stat(path); err != nil && os.IsExist(err) {
 		return err
 	}
+	// fmt.Printf("Ensure cache directory exists '%s'\n", path)
 	if err := os.MkdirAll(path, DirMode); err != nil {
 		return err
 	}
-	fmt.Printf("Created cache directory '%s'\n", path)
 	return nil
 }
 
@@ -90,4 +91,38 @@ func (s *Store) Path(name string) string {
 // Dir cache store
 func (s *Store) Dir() string {
 	return filepath.Join(BaseDir(), s.dir)
+}
+
+// Save ...
+func (s *Store) Save(dst string) error {
+	b, err := ioutil.ReadFile(dst)
+	if err != nil { // && os.IsExist(err) {
+		return err
+	}
+	// c := string(b)
+	// if err := dotCache.Put(dst, c); err != nil {
+	// 	return true, err
+	// }
+	return s.Put(dst, b)
+}
+
+// // Forget ...
+// func (s *Store) Forget(dst string) error {
+// 	return s.Delete(dst)
+// }
+
+// Compare ...
+func (s *Store) Compare(dst string) (bool, error) {
+	var b []byte
+	if err := s.Get(dst, &b); err != nil {
+		return false, err
+	}
+	a, err := ioutil.ReadFile(dst)
+	if err != nil { // && os.IsExist(err) {
+		return false, err
+	}
+	ok := string(a) == string(b)
+	// fmt.Println("COMPARING", dst, "->", ok)
+	// fmt.Printf("<<<<\n%s====\n%s>>>>\n", string(a), string(b))
+	return ok, nil
 }

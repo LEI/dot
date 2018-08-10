@@ -20,8 +20,14 @@ func CheckCopy(src, dst string) error {
 		// Stop here if the target does not exist
 		return nil
 	}
-	// TODO check contents
-	return ErrFileAlreadyExist // nil
+	ok, err := store.Compare(dst) // (src, dst)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrFileExist
+	}
+	return ErrFileAlreadyExist
 }
 
 // Copy ...
@@ -56,13 +62,5 @@ func Copy(src, dst string) error {
 	if err := out.Close(); err != nil {
 		return err
 	}
-	// b, err := ioutil.ReadFile(dst)
-	// if err != nil && os.IsExist(err) {
-	// 	return false, err
-	// }
-	// c := string(b)
-	// if err := dotCache.Put(dst, c); err != nil {
-	// 	return true, err
-	// }
-	return nil
+	return store.Save(dst)
 }

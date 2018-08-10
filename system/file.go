@@ -36,5 +36,11 @@ func Remove(dst string) error {
 	if DryRun {
 		return nil
 	}
-	return os.Remove(dst)
+	if err := os.Remove(dst); err != nil {
+		return err
+	}
+	if err := store.Delete(dst); err != nil {
+		return err
+	}
+	return nil
 }

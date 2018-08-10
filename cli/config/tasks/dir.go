@@ -13,7 +13,7 @@ type Dir struct {
 	Path string
 }
 
-func (d *Dir) String() string {
+func (d *Dir) String() (str string) {
 	return fmt.Sprintf("dir[%s]", d.Path)
 }
 
