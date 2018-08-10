@@ -18,7 +18,7 @@ func CheckDir(dir string) error {
 		return err
 	}
 	if fi != nil && fi.IsDir() {
-		return ErrDirExist
+		return ErrDirAlreadyExist
 	} else if fi != nil {
 		return fmt.Errorf("%s: is already a file", dir) // ErrFileExist
 	}

@@ -24,8 +24,8 @@ func (d *Dir) Check() error {
 	}
 	err := system.CheckDir(d.Path)
 	switch err {
-	case system.ErrDirExist:
-		d.ToDo()
+	case system.ErrDirAlreadyExist:
+		d.Done()
 	default:
 		return err
 	}

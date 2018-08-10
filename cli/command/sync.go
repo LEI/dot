@@ -33,6 +33,13 @@ func NewSyncCommand(dotCli *DotCli) *cobra.Command {
 			return runSync(dotCli, opts)
 		},
 	}
+	// dotCli.AddCommands(cmd)
+	// Options.InstallActionFlags(cmd.Flags())
+	Options.InstallActionPersistentFlags(cmd.PersistentFlags())
+
+	// flags := cmd.Flags() // var flags *pflag.FlagSet
+	// flags.StringVarP(&opts.format, "format", "f", "", "List format")
+
 	return cmd
 }
 

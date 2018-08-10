@@ -22,13 +22,13 @@ func (c *Copy) Check() error {
 	if c.Source == "" {
 		return fmt.Errorf("copy: empty source")
 	}
-	// err := system.CheckCopy(c.Source, c.Target)
-	// switch err {
-	// case system.ErrFileExist:
-	// 	c.ToDo()
-	// default:
-	// 	return err
-	// }
+	err := system.CheckCopy(c.Source, c.Target)
+	switch err {
+	case system.ErrFileAlreadyExist:
+		c.Done()
+	default:
+		return err
+	}
 	return nil
 }
 
