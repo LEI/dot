@@ -27,8 +27,8 @@ check: fmt
 release: goreleaser publish
 
 .PHONY: dep
-dep:
 DEP := $(shell command -v dep 2> /dev/null)
+dep:
 ifndef DEP
 	curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif

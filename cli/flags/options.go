@@ -15,12 +15,13 @@ type Options struct {
 	Version bool
 
 	ConfigDir     string
-	DryRun, Force bool
+	DryRun bool
 	Verbose       int
 
 	RoleFilter []string
 
 	Source, Target string
+	Force bool
 }
 
 // InstallFlags adds flags for the common options on the FlagSet
@@ -33,7 +34,6 @@ func (opts *Options) InstallFlags(flags *pflag.FlagSet) {
 func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.ConfigDir, "config", "c", cliconfig.Dir(), "Location of config file") // (s)
 	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
-	flags.BoolVarP(&opts.Force, "force", "f", opts.Force, "Force execution even if the repository is dirty")
 	flags.CountVarP(&opts.Verbose, "verbose", "v", "Verbosity level")
 
 	flags.StringSliceVarP(&opts.RoleFilter, "role", "r", []string{}, "Filter role execution")
@@ -47,6 +47,7 @@ func (opts *Options) InstallActionFlags(flags *pflag.FlagSet) {
 func (opts *Options) InstallActionPersistentFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.Source, "source", "s", "", "Source directory")
 	flags.StringVarP(&opts.Target, "target", "t", "", "Target directory")
+	flags.BoolVarP(&opts.Force, "force", "f", opts.Force, "Force execution even if the repository is dirty")
 }
 
 // InstallTaskFlags adds common task falgs on the FlagSet

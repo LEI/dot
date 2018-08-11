@@ -4,9 +4,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO
 type installOpts struct {
-	sync bool
+	// sync bool
 }
 
 // NewInstallCommand returns a cobra command for `install` subcommands
@@ -23,11 +22,11 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 		// 	return nil
 		// },
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if opts.sync {
-				if err := runSync(dotCli, syncOptions{}); err != nil {
-					return err
-				}
-			}
+			// if opts.sync {
+			// 	if err := runSync(dotCli, syncOptions{}); err != nil {
+			// 		return err
+			// 	}
+			// }
 			if err := runDir(dotCli, dirOptions{action: a}); err != nil {
 				return err
 			}
@@ -44,8 +43,8 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	Options.InstallActionFlags(cmd.Flags())
 	Options.InstallActionPersistentFlags(cmd.PersistentFlags())
 
-	flags := cmd.Flags() // var flags *pflag.FlagSet
-	flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
+	// flags := cmd.Flags() // var flags *pflag.FlagSet
+	// flags.BoolVarP(&opts.sync, "sync", "S", false, "Clone or pull git repositories")
 
 	return cmd
 }

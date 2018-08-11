@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/LEI/dot/cli"
-	"github.com/LEI/dot/pkg/git"
-	"github.com/LEI/dot/system"
 )
 
 type syncOptions struct {
@@ -49,36 +47,13 @@ func runSync(dotCli *DotCli, opts syncOptions) error {
 	errs := make(chan error, length)
 	for _, r := range roles {
 		// fmt.Fprintf(dotCli.Out(), "Syncing %s...\n", r.Name)
-		go func(name, path, url string) {
-			repo, err := git.NewRepo(path, url)
-			if err != nil {
+		go func(r string) {
+			if err := r.Sync(); err != nil {
 				errs <- err
 				return
-			}
-			exists, err := system.IsDir(path)
-			if err != nil {
-				errs <- err
-				return
-			}
-			if exists {
-				// fmt.Fprintf(dotCli.Out(), "Checking %s...\n", name)
-				if err := repo.Status(); err != nil {
-					errs <- err
-					return
-				}
-				if err := repo.Pull(); err != nil {
-					errs <- err
-					return
-				}
-			} else {
-				fmt.Fprintf(dotCli.Out(), "Cloning %s into %s...\n", name, repo.Dir)
-				if err := repo.Clone(); err != nil {
-					errs <- err
-					return
-				}
 			}
 			errs <- nil
-		}(r.Name, r.Path, r.URL)
+		}(r)
 	}
 	errors := cli.Errors{}
 	for i := 0; i < length; i++ {
