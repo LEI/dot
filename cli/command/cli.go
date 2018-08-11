@@ -15,6 +15,7 @@ import (
 	"github.com/LEI/dot/pkg/git"
 	"github.com/LEI/dot/pkg/homedir"
 	"github.com/LEI/dot/pkg/ostype"
+	"github.com/LEI/dot/pkg/prompt"
 	"github.com/LEI/dot/system"
 	// "github.com/LEI/dot/pkg/sliceutils"
 	"github.com/spf13/cobra"
@@ -115,12 +116,12 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	}
 
 	if opts.Target == "" {
-		fmt.Println("owait empty target")
+		fmt.Println("fatal: target not specified")
 		os.Exit(1)
 	}
-	if opts.Target == homeDir {
-		fmt.Println("owait", opts)
-		os.Exit(2)
+	if opts.Target == homeDir && !prompt.AskConfirmation("use homedir?") {
+		fmt.Println("abort homedir")
+		os.Exit(1)
 	}
 	// fmt.Println("SOURCE", opts.Source)
 	// fmt.Println("TARGET", opts.Target)
@@ -158,7 +159,7 @@ func (cli *DotCli) InitializeAction(opts *cliflags.Options, flags *pflag.FlagSet
 
 // Parse roles
 func (cli *DotCli) Parse(opts *cliflags.Options) error {
-	var roles, final []*config.Role
+	var roles []*config.Role
 	cliConfig := cli.Config()
 	cliConfigRoles := cliConfig.Get("roles")
 	if cliConfigRoles == nil {
@@ -210,12 +211,11 @@ func (cli *DotCli) Parse(opts *cliflags.Options) error {
 				continue
 			}
 		}
-		final = append(final, role)
+		cli.config.Roles = append(cli.config.Roles, role)
 	}
-	if len(final) == 0 {
+	if len(cli.config.Roles) == 0 {
 		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), opts.RoleFilter)
 	}
-	cli.config.Roles = final
 	return nil
 }
 

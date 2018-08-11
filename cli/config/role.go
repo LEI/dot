@@ -9,6 +9,8 @@ import (
 
 	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/cli/config/types"
+	"github.com/LEI/dot/pkg/git"
+	"github.com/LEI/dot/system"
 	"github.com/imdario/mergo"
 )
 
@@ -27,6 +29,8 @@ type Role struct {
 	Files tasks.Files `mapstructure:"copy"`
 	Links tasks.Links `mapstructure:"link"`
 	// Template interface{} // []*tasks.Template
+
+	synced bool
 }
 
 // NewRole config
@@ -74,6 +78,34 @@ func (r *Role) Merge(i interface{}) error {
 	// 	return fmt.Errorf("?: %s", reflect.TypeOf(v))
 	// }
 	return mergo.Merge(r, role)
+}
+
+
+// Sync role
+func (r *Role) Sync(i interface{}) error {
+	repo, err := git.NewRepo(r.Path, r.URL)
+	if err != nil {
+		return err
+	}
+	exists, err := system.IsDir(r.Path)
+	if err != nil {
+		return err
+	}
+	if exists {
+		// fmt.Fprintf(dotCli.Out(), "Checking %s...\n", name)
+		if err := repo.Status(); err != nil {
+			return err
+		}
+		if err := repo.Pull(); err != nil {
+			return err
+		}
+	} else {
+		// fmt.Fprintf(dotCli.Out(), "Cloning %s into %s...\n", name, repo.Dir)
+		if err := repo.Clone(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Parse role

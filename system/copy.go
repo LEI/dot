@@ -47,6 +47,7 @@ func Copy(src, dst string) error {
 	if err != nil {
 		return err
 	}
+	defer out.Close()
 	// defer func() {
 	// 	cerr := out.Close()
 	// 	if err == nil {
@@ -57,9 +58,6 @@ func Copy(src, dst string) error {
 		return err
 	}
 	if err := out.Sync(); err != nil {
-		return err
-	}
-	if err := out.Close(); err != nil {
 		return err
 	}
 	return store.Save(dst)
