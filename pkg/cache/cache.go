@@ -45,10 +45,14 @@ func New(dir string) (*Store, error) {
 
 // Init cache directory
 func Init(path string) error {
-	if _, err := os.Stat(path); err != nil && os.IsExist(err) {
+	fi, err := os.Stat(path)
+	if err != nil && os.IsExist(err) {
 		return err
 	}
-	// fmt.Printf("Ensure cache directory exists '%s'\n", path)
+	if fi != nil {
+		return nil
+	}
+	fmt.Printf("Creating cache directory '%s'\n", path)
 	if err := os.MkdirAll(path, DirMode); err != nil {
 		return err
 	}
