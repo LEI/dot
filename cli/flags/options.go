@@ -14,14 +14,14 @@ type Options struct {
 	// LogLevel string
 	Version bool
 
-	ConfigDir     string
-	DryRun bool
-	Verbose       int
+	ConfigDir string
+	DryRun    bool
+	Verbose   int
 
 	RoleFilter []string
 
 	Source, Target string
-	Force bool
+	Force          bool
 }
 
 // InstallFlags adds flags for the common options on the FlagSet

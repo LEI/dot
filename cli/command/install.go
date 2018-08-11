@@ -11,7 +11,7 @@ type installOpts struct {
 // NewInstallCommand returns a cobra command for `install` subcommands
 func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 	a := "install" // action
-	opts := installOpts{}
+	// opts := installOpts{}
 	cmd := &cobra.Command{
 		Use:     "install [OPTIONS] [ACTION]",
 		Aliases: []string{"i"},

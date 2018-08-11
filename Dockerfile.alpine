@@ -29,7 +29,7 @@ USER $USER
 WORKDIR /home/$USER
 
 COPY ./.dot.yml .dotrc.yml
-COPY ./scripts bin/
+COPY --chown=docker:docker ./scripts bin/
 
 RUN touch /$HOME/.bashrc
 

@@ -60,6 +60,9 @@ func newDotCommand(dotCli *command.DotCli) *cobra.Command {
 			if err := dotCli.Initialize(opts); err != nil {
 				return err
 			}
+			// if cmd.Name() == "sync" {
+			// 	opts.Sync = true
+			// }
 			if err := dotCli.Parse(opts); err != nil {
 				return err
 			}

@@ -231,7 +231,9 @@ func (cli *DotCli) ParseRole(opts *cliflags.Options, role *config.Role) error {
 		// role.Path = filepath.Join(opts.Source, role.Name)
 	}
 	if err := cli.config.LoadRole(role); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
+		if opts.Verbose > 0 {
+			fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
+		}
 		return nil // err
 	}
 	// TODO init env
