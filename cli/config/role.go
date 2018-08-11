@@ -59,11 +59,6 @@ func NewRole(i interface{}) (*Role, error) {
 // 	return true
 // }
 
-// // Sync role
-// func (r *Role) Sync() bool {
-// 	return true
-// }
-
 // Merge role
 func (r *Role) Merge(i interface{}) error {
 	role := &Role{}
@@ -80,9 +75,8 @@ func (r *Role) Merge(i interface{}) error {
 	return mergo.Merge(r, role)
 }
 
-
 // Sync role
-func (r *Role) Sync(i interface{}) error {
+func (r *Role) Sync() error {
 	repo, err := git.NewRepo(r.Path, r.URL)
 	if err != nil {
 		return err

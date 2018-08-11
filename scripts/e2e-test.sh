@@ -13,7 +13,7 @@ main() {
   fi
 
   # # tail_bashrc="$(tail -n1 ~/.bashrc)"
-  yes | run dot sync
+  yes | run dot sync --verbose
   yes | run dot install --verbose
   # # run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
   for f in "$HOME"/.gitconfig; do run test -f "$f"; done

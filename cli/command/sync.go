@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/LEI/dot/cli"
+	cliconfig "github.com/LEI/dot/cli/config"
 )
 
 type syncOptions struct {
@@ -47,7 +48,7 @@ func runSync(dotCli *DotCli, opts syncOptions) error {
 	errs := make(chan error, length)
 	for _, r := range roles {
 		// fmt.Fprintf(dotCli.Out(), "Syncing %s...\n", r.Name)
-		go func(r string) {
+		go func(r *cliconfig.Role) {
 			if err := r.Sync(); err != nil {
 				errs <- err
 				return
