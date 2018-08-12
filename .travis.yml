@@ -29,9 +29,7 @@ jobs:
       script: docker-compose run test
 
     - stage: test
-      install:
-        - make # install
-        - make snapshot
+      install: make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=alpine
