@@ -163,8 +163,8 @@ func (cli *DotCli) Parse(opts *cliflags.Options) error {
 	cliConfig := cli.Config()
 	cliConfigRoles := cliConfig.Get("roles")
 	if cliConfigRoles == nil {
-		fmt.Fprintf(os.Stderr, "no roles in: %+v\n", cliConfig.GetAll())
-		return nil
+		// fmt.Fprintf(os.Stderr, "no roles in: %+v\n", cliConfig.GetAll())
+		return fmt.Errorf("no roles")
 	}
 	configRoles := cliConfigRoles.([]interface{})
 	for _, r := range configRoles {

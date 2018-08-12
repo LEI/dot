@@ -1,0 +1,92 @@
+# https://goreleaser.com
+builds:
+- env:
+    - CGO_ENABLED=0
+  # main: main.go
+  # binary: dot # "{{ .ProjectName }}"
+  goos: # https://golang.org/doc/install/source#environment
+    - windows
+    - darwin
+    - linux
+    # - freebsd
+  goarch:
+    - 386
+    - amd64
+  #   - arm
+  #   - arm64
+  # goarm:
+  #   - 6
+  #   - 7
+git:
+  short_hash: true
+snapshot:
+  # Default is "SNAPSHOT-{{.Commit}}"
+  name_template: "{{ .Tag }}-next"
+archive:
+  # format: binary # tar.gz (default), zip
+  name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  # replacements:
+  #   darwin: Darwin
+  #   linux: Linux
+  #   windows: Windows
+  #   386: i386
+  #   amd64: x86_64
+  # files:
+  #   - none* # https://github.com/goreleaser/goreleaser/issues/602
+  # hooks: {}
+changelog:
+  # sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+# sign:
+#   signature: "${artifact}.sig"
+#   cmd: gpg
+#   args: ["-u", "<key id, fingerprint, email, ...>", "--output", "${signature}", "--detach-sign", "${artifact}"]
+#   args: ["--output", "${signature}", "--detach-sign", "${artifact}"]
+#   artifacts: checksum # checksum, all, none
+checksum:
+  name_template: "checksums.txt"
+brew:
+  name: dot
+  github:
+    owner: LEI
+    name: homebrew-dot
+  # download_strategy:
+  # commit_author:
+  #   name:
+  #   email:
+  # folder: Formula
+  # caveats: ""
+  homepage: "https://github.com/LEI/dot"
+  # description: ""
+  dependencies:
+    - git
+    # - bash
+  # conflicts: []
+  # plist: |
+  # test: |
+  # install (default: bin.install "program"°
+nfpm:
+  name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  # formats:
+  #   - deb
+  #   - rpm
+  dependencies:
+    - git
+  #   - bash
+  # recommends/suggests/conflicts
+  # overrides:
+  #   rpm:
+  #     replacements:
+  #       amd64: x86_64
+  #     name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Arch }}"
+  #     files:
+  #       "tmp/man.gz": "/usr/share/man/man8/app.8.gz"
+  #     config_files:
+  #       "tmp/app_generated.conf": "/etc/app-rpm.conf"
+  #     scripts:
+  #       preinstall: "scripts/preinstall-rpm.sh"
+# snapcraft:
+#   name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"

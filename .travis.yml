@@ -23,14 +23,14 @@ install:
 
 jobs:
   include:
-    # - stage: build
-    #   install: true
-    #   before_script: docker-compose build test # base
-    #   script: docker-compose run test
+    - stage: build
+      install: true
+      before_script: docker-compose build base
+      script: docker-compose run test
 
     - stage: test
       install:
-        - make install
+        - make # install
         - make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os

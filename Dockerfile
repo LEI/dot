@@ -31,3 +31,5 @@ ENTRYPOINT ["/bin/bash"]
 COPY . $DOT
 
 RUN make install
+
+RUN cp .dotrc.yml /root/

@@ -12,6 +12,8 @@ main() {
     ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
   fi
 
+  ls -la
+  ls -la .dot*
   # # tail_bashrc="$(tail -n1 ~/.bashrc)"
   yes | run dot sync --verbose
   yes | run dot install --verbose
