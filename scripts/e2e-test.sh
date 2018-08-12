@@ -8,12 +8,10 @@ if [ -z "$DOT" ]; then
 fi
 
 main() {
-  if [ -n "$DOT" ] && [ ! -f "$HOME/.dot.yml" ]; then
-    ln -sf "$DOT/.dot.yml" "$HOME/.dot.yml"
+  if [ -n "$DOT" ] && [ ! -f "$HOME/.dotrc.yml" ]; then
+    ln -sf "$DOT/.dotrc.yml" "$HOME/.dotrc.yml"
   fi
 
-  ls -la
-  ls -la .dot*
   # # tail_bashrc="$(tail -n1 ~/.bashrc)"
   yes | run dot sync --verbose
   yes | run dot install --verbose
