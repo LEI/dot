@@ -51,6 +51,7 @@ vet:
 
 .PHONY: lint
 lint:
+        go get -u golang.org/x/lint/golint
 	golint -set_exit_status -min_confidence=$(GOLINT_MIN_CONFIDENCE) $$(go list ./...)
 
 .PHONY: format
