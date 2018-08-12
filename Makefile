@@ -97,6 +97,7 @@ endif
 .PHONY: snapshot
 # curl -sL https://git.io/goreleaser | bash --rm-dist --snapshot
 snapshot:
+	make goreleaser
 	goreleaser --rm-dist --snapshot
 
 # .PHONY: release
