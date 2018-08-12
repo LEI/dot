@@ -96,8 +96,6 @@ endif
 .PHONY: snapshot
 # curl -sL https://git.io/goreleaser | bash --rm-dist --snapshot
 snapshot:
-	make install
-	make test
 	goreleaser --rm-dist --snapshot
 
 # .PHONY: release
