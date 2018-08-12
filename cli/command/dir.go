@@ -42,7 +42,7 @@ func NewDirCommand(dotCli *DotCli) *cobra.Command {
 func runDir(dotCli *DotCli, opts dirOptions) error {
 	roles := dotCli.Roles()
 	if len(roles) == 0 {
-		return fmt.Errorf("no roles")
+		return fmt.Errorf("no roles to dir")
 	}
 	for _, r := range roles {
 		if err := tasks.Check(r.Dirs); err != nil {

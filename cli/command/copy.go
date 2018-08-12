@@ -62,7 +62,7 @@ func NewCopyCommand(dotCli *DotCli) *cobra.Command {
 func runCopy(dotCli *DotCli, opts copyOptions) error {
 	roles := dotCli.Roles()
 	if len(roles) == 0 {
-		return fmt.Errorf("no roles")
+		return fmt.Errorf("no roles to copy")
 	}
 	for _, r := range roles {
 		if err := tasks.Check(r.Files); err != nil {

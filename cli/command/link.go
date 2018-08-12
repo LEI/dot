@@ -62,7 +62,7 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 func runLink(dotCli *DotCli, opts linkOptions) error {
 	roles := dotCli.Roles()
 	if len(roles) == 0 {
-		return fmt.Errorf("no roles")
+		return fmt.Errorf("no roles to link")
 	}
 	for _, r := range roles {
 		if err := tasks.Check(r.Links); err != nil {
