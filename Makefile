@@ -24,8 +24,8 @@ default: ensure test install
 # fix: fmt
 
 .PHONY: dep
-DEP := $(shell command -v dep 2> /dev/null)
 dep:
+DEP := $(shell command -v dep 2> /dev/null)
 ifndef DEP
 	curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
@@ -38,7 +38,6 @@ ensure:
 .PHONY: test
 test: format $(PACKAGES)
 
-GOLINT := $(shell command -v golint 2> /dev/null)
 $(PACKAGES):
 ifeq ($(GO_TEST_VERBOSE),1)
 	go test -v $@
@@ -50,6 +49,7 @@ ifeq ($(GO_VET_VERBOSE),1)
 else
 	go vet $@
 endif
+GOLINT := $(shell command -v golint 2> /dev/null)
 ifndef GOLINT
 	go get -u golang.org/x/lint/golint
 endif
@@ -60,8 +60,8 @@ endif
 # 	golint -set_exit_status -min_confidence=$(GOLINT_MIN_CONFIDENCE) $$(go list ./...)
 
 .PHONY: goimports
-GOIMPORTS := $(shell command -v goimports 2> /dev/null)
 goimports:
+GOIMPORTS := $(shell command -v goimports 2> /dev/null)
 ifndef GOIMPORTS
 	go get -u golang.org/x/tools/cmd/goimports
 endif
@@ -87,9 +87,9 @@ install:
 
 .PHONY: goreleaser
 REPO_GORELEASER := github.com/goreleaser/goreleaser
-GORELEASER := $(shell command -v goreleaser 2> /dev/null)
 # git clone https://$(REPO_GORELEASER).git "$$GOPATH/src/$(REPO_GORELEASER)"
 goreleaser:
+GORELEASER := $(shell command -v goreleaser 2> /dev/null)
 ifndef GORELEASER
 	go get -d $(REPO_GORELEASER)
 	cd "$$GOPATH/src/$(REPO_GORELEASER)"; \
@@ -109,18 +109,18 @@ release:
 	make goreleaser
 	goreleaser release --help
 
-.PHONY: docker-test
-docker-test:
-	make snapshot
-	docker-compose build test
-	docker-compose run test
+# .PHONY: docker-test
+# docker-test:
+# 	make snapshot
+# 	docker-compose build test
+# 	docker-compose run test
 
-.PHONY: docker-test-os
-OS := alpine
-docker-test-os:
-	make snapshot
-	OS=$(OS) docker-compose build test_os
-	OS=$(OS) docker-compose run test_os
+# .PHONY: docker-test-os
+# OS := alpine
+# docker-test-os:
+# 	make snapshot
+# 	OS=$(OS) docker-compose build test_os
+# 	OS=$(OS) docker-compose run test_os
 
 # PACKAGES := \
 # 	github.com/eliasson/foo \
