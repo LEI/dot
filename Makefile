@@ -17,15 +17,12 @@ GOLINT_MIN_CONFIDENCE ?= 1
 .PHONY: default
 default: ensure test install
 
-# .PHONY: check
-# check: test vet lint format
-
-# .PHONY: fix
-# fix: fmt
+.PHONY: check
+check: test vet lint fmt
 
 .PHONY: dep
-dep:
 DEP := $(shell command -v dep 2> /dev/null)
+dep:
 ifndef DEP
 	curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
@@ -35,46 +32,66 @@ ensure:
 	make dep
 	dep ensure
 
-.PHONY: test
-test: format $(PACKAGES)
+# .PHONY: test
+# test: format $(PACKAGES)
 
-$(PACKAGES):
-ifeq ($(GO_TEST_VERBOSE),1)
-	go test -v $@
-else
-	go test $@
-endif
-ifeq ($(GO_VET_VERBOSE),1)
-	go vet -v $@
-else
-	go vet $@
-endif
+# $(PACKAGES):
+# ifeq ($(GO_TEST_VERBOSE),1)
+# 	go test -v $@
+# else
+# 	go test $@
+# endif
+# ifeq ($(GO_VET_VERBOSE),1)
+# 	go vet -v $@
+# else
+# 	go vet $@
+# endif
+# 	golint -set_exit_status $@ # ./...
+
+.PHONY: golint
 GOLINT := $(shell command -v golint 2> /dev/null)
+golint:
 ifndef GOLINT
 	go get golang.org/x/lint/golint
 endif
-	golint -set_exit_status $@ # ./...
 
-# .PHONY: lint
-# lint:
-# 	golint -set_exit_status -min_confidence=$(GOLINT_MIN_CONFIDENCE) $$(go list ./...)
+.PHONY: test
+test:
+ifeq ($(GO_TEST_VERBOSE),1)
+	go test -v ./...
+else
+	go test ./...
+endif
+
+.PHONY: vet
+vet:
+ifeq ($(GO_VET_VERBOSE),1)
+	go vet -v ./...
+else
+	go vet ./...
+endif
+
+.PHONY: lint
+lint:
+	golint -set_exit_status -min_confidence=$(GOLINT_MIN_CONFIDENCE) $$(go list ./...)
 
 .PHONY: goimports
-goimports:
 GOIMPORTS := $(shell command -v goimports 2> /dev/null)
+goimports:
 ifndef GOIMPORTS
 	go get golang.org/x/tools/cmd/goimports
 endif
 	goimports
 
-.PHONY: format
-format:
-	test -z $(gofmt -s -l $GO_FILES)
+.PHONY: fmt
+fmt:
+	# test -z $(gofmt -s -l $GO_FILES)
+	gofmt -l -s .
 
-# .PHONY: fmt
-# fmt:
-# 	# gofmt -s -w .
-# 	go fmt ./...
+# .PHONY: simplify
+# simplify:
+# 	# go fmt ./...
+# 	gofmt -s -w .
 
 # .PHONY: build
 # build:
@@ -87,9 +104,9 @@ install:
 
 .PHONY: goreleaser
 REPO_GORELEASER := github.com/goreleaser/goreleaser
+GORELEASER := $(shell command -v goreleaser 2> /dev/null)
 # git clone https://$(REPO_GORELEASER).git "$$GOPATH/src/$(REPO_GORELEASER)"
 goreleaser:
-GORELEASER := $(shell command -v goreleaser 2> /dev/null)
 ifndef GORELEASER
 	go get -d $(REPO_GORELEASER)
 	cd "$$GOPATH/src/$(REPO_GORELEASER)"; \
