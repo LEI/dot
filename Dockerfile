@@ -32,4 +32,5 @@ COPY . $DOT
 
 RUN if [ -d vendor ]; then make install; else make; fi
 
+RUN ls -la
 # RUN cp .dotrc.yml /root/
