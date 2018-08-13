@@ -21,9 +21,9 @@ matrix:
 
 cache:
   directories:
-    # - $GOPATH/bin
-    # - $GOPATH/pkg
-    - $GOPATH/src/github.com/LEI/dot/dist
+    - $GOPATH/bin
+    # - $GOPATH/pkg/dep
+    # - $GOPATH/src/github.com/LEI/dot/dist
     - $GOPATH/src/github.com/LEI/dot/vendor
 
 stages:
@@ -42,6 +42,7 @@ jobs:
       # install: true
       before_script: docker-compose build base
       script: docker-compose run test
+      # env: OS=
 
     - stage: test
       # install: make && make snapshot
