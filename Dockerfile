@@ -19,16 +19,16 @@ FROM golang AS base
 # ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 ENV DOT $GOPATH/src/github.com/LEI/dot
 
-WORKDIR $DOT
-
 # RUN printf "%s\n" \
 # 'PATH="$GOPATH/bin:$PATH"' \
 # >> ~/.bashrc
 
 ENTRYPOINT ["/bin/bash"]
-# ENTRYPOINT ["scripts/install"]
+# ENTRYPOINT ["scripts/install.sh"]
 
-COPY . $DOT
+WORKDIR $DOT
+
+COPY . .
 
 RUN if [ -d vendor ]; then make install; else make; fi
 
