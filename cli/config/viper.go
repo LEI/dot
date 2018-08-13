@@ -53,6 +53,10 @@ func (c *Config) LoadRole(r *Role) error {
 	// 	fmt.Printf("Using role config file: %s\n", configFile)
 	// }
 	roleExtend := roleConfig.Get("role")
+	// fmt.Printf("roleExtend => %+v\n", roleExtend)
+	// r.PostInstall = config.Get("post_install")
+	// r.Remove.Parse(v["install"])
+	// r.PostRemove.Parse(v["post_install"])
 	if roleExtend == nil {
 		return fmt.Errorf("fatal: nil role interface in: %+v", roleConfig.GetAll())
 	}

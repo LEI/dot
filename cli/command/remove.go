@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	// cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/spf13/cobra"
 )
@@ -20,15 +22,24 @@ func NewRemoveCommand(dotCli *DotCli) *cobra.Command {
 		Short:   "Remove",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := runLink(dotCli, linkOptions{action: a}); err != nil {
-				return err
+			roles := dotCli.Roles()
+			if len(roles) == 0 {
+				return fmt.Errorf("no roles to remove")
 			}
-			if err := runCopy(dotCli, copyOptions{action: a}); err != nil {
-				return err
+			for _, r := range roles {
+				if err := dotCli.ExecRole(a, r); err != nil {
+					return err
+				}
 			}
-			if err := runDir(dotCli, dirOptions{action: a}); err != nil {
-				return err
-			}
+			// if err := runLink(dotCli, linkOptions{action: a}); err != nil {
+			// 	return err
+			// }
+			// if err := runCopy(dotCli, copyOptions{action: a}); err != nil {
+			// 	return err
+			// }
+			// if err := runDir(dotCli, dirOptions{action: a}); err != nil {
+			// 	return err
+			// }
 			return nil
 		},
 		// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

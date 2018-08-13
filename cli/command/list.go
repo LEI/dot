@@ -30,7 +30,11 @@ func NewListCommand(dotCli *DotCli) *cobra.Command {
 }
 
 func runList(dotCli *DotCli, opts listOptions) error {
-	for i, r := range dotCli.Roles() {
+	roles := dotCli.Roles()
+	if len(roles) == 0 {
+		return fmt.Errorf("no roles to list")
+	}
+	for i, r := range roles {
 		fmt.Fprintf(dotCli.Out(), "Role #%d: %s\n", i+1, r.Name)
 		if tasks.Verbose > 0 {
 			// fmt.Fprintf(dotCli.Out(), "Role #%d: %+v\n", i+1, r)

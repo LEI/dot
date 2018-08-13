@@ -76,7 +76,7 @@ func (files *Files) String() string {
 // Parse copy tasks
 func (files *Files) Parse(i interface{}) error {
 	cc := &Files{}
-	m, err := types.NewMap(i)
+	m, err := types.NewMapPaths(i)
 	if err != nil {
 		return err
 	}

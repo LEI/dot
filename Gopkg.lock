@@ -198,6 +198,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/imdario/mergo",
+    "github.com/mitchellh/mapstructure",
     "github.com/rapidloop/skv",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",

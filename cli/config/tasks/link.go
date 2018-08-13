@@ -81,7 +81,7 @@ func (links *Links) String() string {
 // Parse link tasks
 func (links *Links) Parse(i interface{}) error {
 	ll := &Links{}
-	m, err := types.NewMap(i)
+	m, err := types.NewMapPaths(i)
 	if err != nil {
 		return err
 	}

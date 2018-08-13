@@ -46,6 +46,69 @@ func NewSlice(i interface{}) (*Slice, error) {
 	return s, nil
 }
 
+// SliceMap task
+type SliceMap []interface{}
+
+func (s *SliceMap) String() string {
+	return fmt.Sprintf("%s", *s)
+}
+
+// Value slice map
+func (s *SliceMap) Value() []interface{} {
+	return *s
+}
+
+// // Value slice map
+// func (s *SliceMap) Value() []string {
+// 	ss := []string{}
+// 	for _, m := range *s {
+// 		ss = append(ss, m.(string))
+// 	}
+// 	return ss // *s
+// }
+
+// Parse slice map
+func (s *SliceMap) Parse(i interface{}) error {
+	ss, err := NewSliceMap(i)
+	*s = *ss
+	return err
+}
+
+// NewSliceMap ...
+func NewSliceMap(i interface{}) (*SliceMap, error) {
+	sm := &SliceMap{}
+	if i == nil {
+		return sm, nil
+	}
+	switch v := i.(type) {
+	case string:
+		*sm = append(*sm, v)
+	case []string:
+		// *sm = append(*sm, v...)
+		for _, s := range v {
+			*sm = append(*sm, s)
+		}
+	case []interface{}:
+		for _, val := range v {
+			switch m := val.(type) {
+			case string:
+				*sm = append(*sm, m)
+			case interface{}:
+				m, err := NewMap(m)
+				if err != nil {
+					return sm, err
+				}
+				*sm = append(*sm, m)
+			default:
+				return sm, fmt.Errorf("unable to parse slice map interface: %+v", v)
+			}
+		}
+	default:
+		return sm, fmt.Errorf("unable to parse slice map: %+v", v)
+	}
+	return sm, nil
+}
+
 // // NewSlice ...
 // func NewSlice(i interface{}) ([]string, error) {
 // 	s := []string{}
