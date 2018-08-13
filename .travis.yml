@@ -14,12 +14,6 @@ language: go
 os:
   - linux
 
-env:
-  # - OS=alpine
-  - OS=archlinux
-  - OS=centos
-  - OS=debian
-
 matrix:
   allow_failures:
     - go: master
@@ -48,12 +42,16 @@ jobs:
       # install: true
       before_script: docker-compose build base
       script: docker-compose run test
-      env: OS=
 
     - stage: test
       # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
+      env:
+        - OS=alpine
+        - OS=archlinux
+        - OS=centos
+        - OS=debian
 
     - stage: test
       install:
