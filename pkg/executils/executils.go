@@ -45,6 +45,11 @@ func Run(cmd *exec.Cmd) (status int) {
 	return
 }
 
+// RunCombinedOutput command
+func RunCombinedOutput(cmd *exec.Cmd) ([]byte, error) {
+	return cmd.CombinedOutput()
+}
+
 // RunStd command
 func RunStd(cmd *exec.Cmd) (status int) {
 	return RunStream(Stdout, Stderr, cmd)

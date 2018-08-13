@@ -6,19 +6,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
-
-	"github.com/LEI/dot/pkg/sliceutils"
 )
 
 var (
 	// OS ...
 	OS = runtime.GOOS
 
-	// Types ...
-	Types []string
+	// List of OS types
+	List []string
 
 	// Verbose ...
 	Verbose bool
@@ -27,7 +26,7 @@ var (
 )
 
 func init() {
-	Types = Get()
+	List = Get()
 }
 
 // Release ...
@@ -51,14 +50,6 @@ type Release struct {
 func Get() []string {
 	types := []string{OS}
 	r := parseReleases()
-	// if isNum(r.ID) {
-	// 	if r.Name != "" {
-	// 		types = append(types, r.Name)
-	// 		if r.ID != "" {
-	// 			types = append(types, r.Name+r.ID)
-	// 		}
-	// 	}
-	// }
 	name := strings.ToLower(r.Name)
 	id := strings.ToLower(r.ID)
 	if name != "" && id != "" && isNum(id) {
@@ -76,18 +67,44 @@ func Get() []string {
 	if r.DistribCodename != "" {
 		types = append(types, r.DistribCodename)
 	}
-	types = append(types, parseOSTypes()...)
+	types = append(types, parseEnvVar("OSTYPE")...)
 	return types
-}
-
-// Has ...
-func Has(s ...string) bool {
-	return sliceutils.Matches(s, Types)
 }
 
 func isNum(v string) bool {
 	_, err := strconv.Atoi(v)
 	return err == nil
+}
+
+// Has OS type
+func Has(s ...string) bool {
+	return matches(s, List)
+}
+
+func matches(in []string, list []string) bool {
+	for _, pattern := range in {
+		negated := pattern[0] == '!'
+		if negated {
+			pattern = pattern[1:]
+		}
+		for _, str := range list {
+			matched, err := regexp.MatchString(pattern, str)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: %s\n", pattern, err)
+				os.Exit(1)
+			}
+			if negated && matched {
+				return false
+			}
+			if matched {
+				return true
+			}
+		}
+		if negated {
+			return true
+		}
+	}
+	return false
 }
 
 // /etc/os-release
@@ -174,15 +191,15 @@ func parseReleases() Release {
 	return release
 }
 
-func parseOSTypes() []string {
+func parseEnvVar(name string) []string {
 	types := make([]string, 0)
-	if o, ok := os.LookupEnv("OSTYPE"); ok && o != "" {
+	if o, ok := os.LookupEnv(name); ok && o != "" {
 		types = append(types, o)
 	} else { // !ok || s == ""
-		// fmt.Printf("OSTYPE='%s' (%v)\n", s, ok)
-		out, err := exec.Command("bash", "-c", "printf '%s' \"$OSTYPE\"").Output()
+		// fmt.Printf("%s='%s' (%v)\n", name, s, ok)
+		out, err := exec.Command("bash", "-c", "printf '%s' \"$"+name+"\"").Output()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "# OSTYPE error: %s\n", err)
+			fmt.Fprintf(os.Stderr, "%s error: %s\n", name, err)
 		}
 		if len(out) > 0 {
 			s := string(out)
