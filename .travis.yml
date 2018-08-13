@@ -26,7 +26,7 @@ install:
 jobs:
   include:
     - stage: build
-      install: true
+      # install: true
       before_script: docker-compose build base
       script: docker-compose run test
 
@@ -34,25 +34,11 @@ jobs:
       # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
-      env: OS=alpine
-
-    - stage: test
-      # install: make && make snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=archlinux
-
-    - stage: test
-      # install: make && make snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=centos
-
-    - stage: test
-      # install: make && make snapshot
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
-      env: OS=debian
+      env:
+        - OS=alpine
+        - OS=archlinux
+        - OS=centos
+        - OS=debian
 
     - stage: test
       install:

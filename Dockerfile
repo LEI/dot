@@ -30,6 +30,6 @@ ENTRYPOINT ["/bin/bash"]
 
 COPY . $DOT
 
-RUN make
+# RUN make
 
 # RUN cp .dotrc.yml /root/
