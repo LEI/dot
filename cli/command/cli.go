@@ -27,6 +27,8 @@ var (
 	Options *cliflags.Options = &cliflags.Options{}
 
 	homeDir = homedir.Get()
+
+	noConfirmFile = ".dotnc"
 )
 
 func init() {
@@ -119,9 +121,12 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 		fmt.Println("fatal: target not specified")
 		os.Exit(1)
 	}
-	if opts.Target == homeDir && !prompt.AskConfirmation("use homedir?") {
-		fmt.Println("abort homedir")
-		os.Exit(1)
+	if opts.Target == homeDir {
+		noconfirm := filepath.Join(homeDir, noConfirmFile)
+		if !system.Exists(noconfirm) || !prompt.AskConfirmation("use homedir?") {
+			fmt.Println("abort homedir")
+			os.Exit(1)
+		}
 	}
 	// fmt.Println("SOURCE", opts.Source)
 	// fmt.Println("TARGET", opts.Target)

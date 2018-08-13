@@ -30,6 +30,6 @@ ENTRYPOINT ["/bin/bash"]
 
 COPY . $DOT
 
-# RUN make
+RUN if [ -d vendor ]; then make install; else make; fi
 
 # RUN cp .dotrc.yml /root/
