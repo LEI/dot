@@ -30,8 +30,6 @@ USER $USER
 
 WORKDIR /home/$USER
 
-COPY ./.dot.yml .dot.yml
-
 # Restore interactive
 ENV DEBIAN_FRONTEND newt
 
