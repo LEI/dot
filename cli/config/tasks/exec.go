@@ -15,6 +15,8 @@ import (
 var (
 	// ExecDir ...
 	ExecDir string
+
+	defaultExecShell = "/bin/sh"
 )
 
 // Exec task
@@ -65,6 +67,9 @@ func (e *Exec) Install() error {
 	if system.DryRun {
 		return nil
 	}
+	if e.Shell == "" {
+		e.Shell = defaultExecShell
+	}
 	cmd := exec.Command(e.Shell, []string{"-c", e.Command}...)
 	cmd.Stdout = Stdout
 	cmd.Stderr = Stderr
@@ -90,6 +95,9 @@ func (e *Exec) Remove() error {
 	// return system.Exec(e.Shell, e.Command)
 	if system.DryRun {
 		return nil
+	}
+	if e.Shell == "" {
+		e.Shell = defaultExecShell
 	}
 	cmd := exec.Command(e.Shell, []string{"-c", e.Command}...)
 	cmd.Stdout = Stdout
