@@ -32,34 +32,37 @@ stages:
   - deploy
 
 install:
-  # - go test -v ./...
   - make # install
   - make snapshot
 
 jobs:
   include:
     - stage: build
-      # install: true
+      # install: skip
       before_script: docker-compose build base
       script: docker-compose run test
       # env: OS=
 
     - stage: test
+      install: true
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=alpine
 
     - stage: test
+      install: true
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=archlinux
 
     - stage: test
+      install: true
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=centos
 
     - stage: test
+      install: true
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=debian
