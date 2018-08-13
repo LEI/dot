@@ -17,6 +17,7 @@ GOLINT_MIN_CONFIDENCE ?= 1
 .PHONY: default
 default: ensure test install
 
+# https://github.com/alecthomas/gometalinter
 .PHONY: check
 check: test vet lint fmt
 
