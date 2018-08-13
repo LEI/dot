@@ -45,14 +45,24 @@ jobs:
       # env: OS=
 
     - stage: test
-      # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
-      env:
-        - OS=alpine
-        - OS=archlinux
-        - OS=centos
-        - OS=debian
+      env: OS=alpine
+
+    - stage: test
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
+      env: OS=archlinux
+
+    - stage: test
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
+      env: OS=centos
+
+    - stage: test
+      before_script: docker-compose build test_os
+      script: docker-compose run test_os
+      env: OS=debian
 
     - stage: test
       install:
