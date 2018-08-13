@@ -18,36 +18,39 @@ stages:
   - test
   - deploy
 
+# install: make install
 install:
-  make install
+  # - go test -v ./...
+  - make
+  - make snapshot
 
 jobs:
   include:
-    - stage: build
-      install: true
-      before_script: docker-compose build base
-      script: docker-compose run test
+    # - stage: build
+    #   install: true
+    #   before_script: docker-compose build base
+    #   script: docker-compose run test
 
     - stage: test
-      install: make && make snapshot
+      # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=alpine
 
     - stage: test
-      install: make && make snapshot
+      # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=archlinux
 
     - stage: test
-      install: make && make snapshot
+      # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=centos
 
     - stage: test
-      install: make && make snapshot
+      # install: make && make snapshot
       before_script: docker-compose build test_os
       script: docker-compose run test_os
       env: OS=debian
