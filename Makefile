@@ -51,7 +51,7 @@ else
 endif
 GOLINT := $(shell command -v golint 2> /dev/null)
 ifndef GOLINT
-	go get -u golang.org/x/lint/golint
+	go get golang.org/x/lint/golint
 endif
 	golint -set_exit_status $@ # ./...
 
@@ -63,7 +63,7 @@ endif
 goimports:
 GOIMPORTS := $(shell command -v goimports 2> /dev/null)
 ifndef GOIMPORTS
-	go get -u golang.org/x/tools/cmd/goimports
+	go get golang.org/x/tools/cmd/goimports
 endif
 	goimports
 
