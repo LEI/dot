@@ -2,29 +2,26 @@
 # https://github.com/vincentbernat/hellogopher/blob/master/Makefile
 # https://sahilm.com/makefiles-for-golang/
 
-BINARY := dot
-REPO := github.com/LEI/dot
-# PACKAGES := $(shell go list ./...)
+# SHELL := /bin/sh
+PROJECT := github.com/LEI/dot
+PACKAGES := $(shell go list ./... | grep -v /vendor)
+EXECUTABLE := dot # BINARY
 
-GO_TEST_SILENT ?= 1
-# GO_TEST_VERBOSE ?= 0
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
+
+GO_TEST_VERBOSE ?= 0
+GO_VET_VERBOSE ?= 0
 GOLINT_MIN_CONFIDENCE ?= 1
 
 # .DEFAULT_GOAL := default
 .PHONY: default
-default: dep ensure check install
+default: ensure test install
 
-# .PHONY: all
-# all: dep ensure check fix install
+# .PHONY: check
+# check: test vet lint format
 
-.PHONY: check
-check: test vet lint format
-
-.PHONY: fix
-check: fmt
-
-.PHONY: release
-release: goreleaser publish
+# .PHONY: fix
+# fix: fmt
 
 .PHONY: dep
 DEP := $(shell command -v dep 2> /dev/null)
@@ -35,42 +32,58 @@ endif
 
 .PHONY: ensure
 ensure:
+	make dep
 	dep ensure
 
 .PHONY: test
-test:
-ifeq ($(GO_TEST_SILENT),1)
-	go test ./...
+test: format $(PACKAGES)
+
+GOLINT := $(shell command -v golint 2> /dev/null)
+$(PACKAGES):
+ifeq ($(GO_TEST_VERBOSE),1)
+	go test -v $@
 else
-	go test -v ./...
+	go test $@
 endif
-
-.PHONY: vet
-vet:
-	go vet ./...
-
-.PHONY: lint
-lint:
+ifeq ($(GO_VET_VERBOSE),1)
+	go vet -v $@
+else
+	go vet $@
+endif
+ifndef GOLINT
 	go get -u golang.org/x/lint/golint
-	golint -set_exit_status -min_confidence=$(GOLINT_MIN_CONFIDENCE) $$(go list ./...)
+endif
+	golint -set_exit_status $@ # ./...
+
+# .PHONY: lint
+# lint:
+# 	golint -set_exit_status -min_confidence=$(GOLINT_MIN_CONFIDENCE) $$(go list ./...)
+
+.PHONY: goimports
+GOIMPORTS := $(shell command -v goimports 2> /dev/null)
+goimports:
+ifndef GOIMPORTS
+	go get -u golang.org/x/tools/cmd/goimports
+endif
+	goimports
 
 .PHONY: format
 format:
 	test -z $(gofmt -s -l $GO_FILES)
 
-.PHONY: fmt
-# gofmt -s -w .
-fmt:
-	go fmt ./...
+# .PHONY: fmt
+# fmt:
+# 	# gofmt -s -w .
+# 	go fmt ./...
 
 # .PHONY: build
 # build:
-# 	# go build $(REPO)
-# 	go build -o bin/$(BINARY) main.go
+# 	# go build $(PROJECT)
+# 	go build -o bin/$(EXECUTABLE) main.go
 
 .PHONY: install
 install:
-	go install $(REPO)
+	go install $(PROJECT)
 
 .PHONY: goreleaser
 REPO_GORELEASER := github.com/goreleaser/goreleaser
@@ -85,24 +98,16 @@ ifndef GORELEASER
 	go install $(REPO_GORELEASER)
 endif
 
-# .PHONY: tag
-# GORELEASER_SNAPSHOT ?= 1
-# tag:
-# ifeq ($(GORELEASER_SNAPSHOT),1)
-# 	goreleaser --snapshot --rm-dist
-# else
-# 	goreleaser --rm-dist --help
-# endif
-
 .PHONY: snapshot
 # curl -sL https://git.io/goreleaser | bash --rm-dist --snapshot
 snapshot:
 	make goreleaser
 	goreleaser --rm-dist --snapshot
 
-# .PHONY: release
-# release:
-# 	goreleaser release --help
+.phony: release
+release:
+	make goreleaser
+	goreleaser release --help
 
 .PHONY: docker-test
 docker-test:
