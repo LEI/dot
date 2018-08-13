@@ -26,6 +26,6 @@ services:
     # command: -c 'bin/e2e-test.sh'
     container_name: dot_$OS
     entrypoint: bin/e2e-test.sh
-    environment:
-      - DOT=$GOPATH/github.com/LEI/dot
+    # environment:
+    #   - DOT=$GOPATH/src/github.com/LEI/dot
     # image: LEI/dot-$OD

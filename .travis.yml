@@ -20,10 +20,11 @@ env:
 services:
   - docker
 
-# cache:
-#   directories:
-#     - $GOPATH/src
-#     - $GOPATH/pkg
+cache:
+  directories:
+    # - $GOPATH/src
+    # - $GOPATH/pkg
+    - $GOPATH/src/github.com/LEI/dot/vendor
 
 stages:
   - build
