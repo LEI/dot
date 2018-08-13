@@ -1,5 +1,8 @@
 sudo: false
 
+services:
+  - docker
+
 language: go
 
 # go:
@@ -12,18 +15,21 @@ os:
   - linux
 
 env:
-  - OS=alpine
+  # - OS=alpine
   - OS=archlinux
   - OS=centos
   - OS=debian
 
-services:
-  - docker
+matrix:
+  allow_failures:
+    - go: master
+  fast_finish: true
 
 cache:
   directories:
-    # - $GOPATH/src
+    # - $GOPATH/bin
     # - $GOPATH/pkg
+    - $GOPATH/src/github.com/LEI/dot/dist
     - $GOPATH/src/github.com/LEI/dot/vendor
 
 stages:

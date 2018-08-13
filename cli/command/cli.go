@@ -123,7 +123,8 @@ func (cli *DotCli) Initialize(opts *cliflags.Options) error {
 	}
 	if opts.Target == homeDir {
 		noconfirm := filepath.Join(homeDir, noConfirmFile)
-		if !system.Exists(noconfirm) || !prompt.AskConfirmation("use homedir?") {
+		msg := fmt.Sprintf("%s: use homedir?", homeDir)
+		if !system.Exists(noconfirm) && !prompt.AskConfirmation(msg) {
 			fmt.Println("abort homedir")
 			os.Exit(1)
 		}
