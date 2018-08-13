@@ -1,6 +1,7 @@
 #!/bin/sh
 
-set -eo pipefail
+set -e
+# bash: -eo pipefail
 
 if [ -z "$DOT" ]; then
   echo "DOT is undefined"
