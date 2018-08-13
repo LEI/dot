@@ -2,17 +2,23 @@ sudo: false
 
 language: go
 
+go:
+  - "1.x"
+  - "1.8"
+  - "1.10.x"
+  - master
+
 os:
   - linux
-
-services:
-  - docker
 
 env:
   - OS=alpine
   - OS=archlinux
   - OS=centos
   - OS=debian
+
+services:
+  - docker
 
 # cache:
 #   directories:

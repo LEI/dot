@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -eo pipefail
 
 if [ -z "$DOT" ]; then
   echo "DOT is undefined"
@@ -12,6 +12,7 @@ main() {
     ln -sf "$DOT/.dotrc.yml" "$HOME/.dotrc.yml"
   fi
 
+  touch ~/.dotnc
   # # tail_bashrc="$(tail -n1 ~/.bashrc)"
   yes | run dot sync --verbose
   yes | run dot install --verbose
