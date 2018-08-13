@@ -39,22 +39,22 @@ type Tasker interface {
 type Task struct {
 	Tasker
 	// execute bool
-	done bool // true if already installed
+	installed bool
 }
 
 // Done ...
 func (t *Task) Done() {
-	t.done = true
+	t.installed = true
 }
 
 // ShouldInstall ...
 func (t *Task) ShouldInstall() bool {
-	return !t.done
+	return !t.installed
 }
 
 // ShouldRemove ...
 func (t *Task) ShouldRemove() bool {
-	return t.done
+	return t.installed
 }
 
 // TaskList ...

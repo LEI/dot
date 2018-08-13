@@ -24,11 +24,21 @@ type Role struct {
 	URL   string
 	OS    types.Slice // tasks.OS
 	Env   types.Map   // tasks.Env
+	// Vars  types.Map
+	// IncludeVars types.IncludeMap
 	Deps  types.Slice `mapstructure:"dependencies"`
+	Pkg   tasks.Packages `mapstructure:"pkg"`
+
 	Dirs  tasks.Dirs  `mapstructure:"dir"`
 	Files tasks.Files `mapstructure:"copy"`
 	Links tasks.Links `mapstructure:"link"`
-	// Template interface{} // []*tasks.Template
+	Templates tasks.Templates `mapstructure:"template"`
+
+	// Hooks
+	Install     tasks.Commands
+	PostInstall tasks.Commands `mapstructure:"post_install"`
+	Remove      tasks.Commands
+	PostRemove  tasks.Commands `mapstructure:"post_remove"`
 
 	synced bool
 }
@@ -115,6 +125,10 @@ func (r *Role) Parse(i interface{}) error {
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
+		r.Install.Parse(v["install"])
+		r.PostInstall.Parse(v["post_install"])
+		r.Remove.Parse(v["install"])
+		r.PostRemove.Parse(v["post_install"])
 	case map[string]interface{}:
 		if name, ok := v["name"].(string); ok {
 			r.Name = name
@@ -131,6 +145,10 @@ func (r *Role) Parse(i interface{}) error {
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
+		r.Install.Parse(v["install"])
+		r.PostInstall.Parse(v["post_install"])
+		r.Remove.Parse(v["remove"])
+		r.PostRemove.Parse(v["post_remove"])
 	case map[interface{}]interface{}:
 		if name, ok := v["name"].(string); ok {
 			r.Name = name
@@ -147,6 +165,10 @@ func (r *Role) Parse(i interface{}) error {
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
+		r.Install.Parse(v["install"])
+		r.PostInstall.Parse(v["post_install"])
+		r.Remove.Parse(v["remove"])
+		r.PostRemove.Parse(v["post_remove"])
 	default:
 		return fmt.Errorf("TODO NewRole type: %s", reflect.TypeOf(v))
 	}

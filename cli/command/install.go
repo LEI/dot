@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -27,15 +29,30 @@ func NewInstallCommand(dotCli *DotCli) *cobra.Command {
 			// 		return err
 			// 	}
 			// }
-			if err := runDir(dotCli, dirOptions{action: a}); err != nil {
-				return err
+			roles := dotCli.Roles()
+			if len(roles) == 0 {
+				return fmt.Errorf("no roles to install")
 			}
-			if err := runCopy(dotCli, copyOptions{action: a}); err != nil {
-				return err
+			for _, r := range roles {
+				if err := dotCli.ExecRole(a, r); err != nil {
+					return err
+				}
 			}
-			if err := runLink(dotCli, linkOptions{action: a}); err != nil {
-				return err
-			}
+			// if err := runExec(dotCli, execOptions{action: a}); err != nil {
+			// 	return err
+			// }
+			// if err := runDir(dotCli, dirOptions{action: a}); err != nil {
+			// 	return err
+			// }
+			// if err := runCopy(dotCli, copyOptions{action: a}); err != nil {
+			// 	return err
+			// }
+			// if err := runLink(dotCli, linkOptions{action: a}); err != nil {
+			// 	return err
+			// }
+			// if err := runPostExec(dotCli, execOptions{action: a}); err != nil {
+			// 	return err
+			// }
 			return nil
 		},
 	}

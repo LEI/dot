@@ -167,12 +167,12 @@ func (cli *DotCli) InitializeAction(opts *cliflags.Options, flags *pflag.FlagSet
 func (cli *DotCli) Parse(opts *cliflags.Options) error {
 	var roles []*config.Role
 	cliConfig := cli.Config()
-	cliConfigRoles := cliConfig.Get("roles")
-	if cliConfigRoles == nil {
+	cfgroles := cliConfig.Get("roles")
+	if cfgroles == nil {
 		// fmt.Fprintf(os.Stderr, "no roles in: %+v\n", cliConfig.GetAll())
 		return fmt.Errorf("no roles")
 	}
-	configRoles := cliConfigRoles.([]interface{})
+	configRoles := cfgroles.([]interface{})
 	for _, r := range configRoles {
 		role, err := config.NewRole(r)
 		if err != nil {
@@ -250,6 +250,75 @@ func (cli *DotCli) ParseRole(opts *cliflags.Options, role *config.Role) error {
 	return nil
 }
 
+// CheckRole ...
+func (cli *DotCli) CheckRole(action string, role *config.Role) error {
+	if err := tasks.Check(role.Links); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ExecRole ...
+func (cli *DotCli) ExecRole(action string, role *config.Role) error {
+	if len(role.OS) > 0 && !ostype.Has(role.OS...) {
+		return fmt.Errorf("bad os: %s", role.OS)
+	}
+	// if len(role.If) > 0 {
+	// 	return nil
+	// }
+	if tasks.Verbose > 0 {
+		fmt.Printf("### %s %s ###\n", action, role.Name)
+	}
+	tasks.ExecDir = role.Path
+	if err := tasks.Check(role.Dirs); err != nil {
+		return err
+	}
+	if err := tasks.Check(role.Files); err != nil {
+		return err
+	}
+	if err := tasks.Check(role.Links); err != nil {
+		return err
+	}
+	switch action {
+	case "install":
+		if err := tasks.Install(role.Install); err != nil {
+			return err
+		}
+		if err := tasks.Install(role.Dirs); err != nil {
+			return err
+		}
+		if err := tasks.Install(role.Files); err != nil {
+			return err
+		}
+		if err := tasks.Install(role.Links); err != nil {
+			return err
+		}
+		if err := tasks.Install(role.PostInstall); err != nil {
+			return err
+		}
+	case "remove":
+		if err := tasks.Remove(role.Remove); err != nil {
+			return err
+		}
+		if err := tasks.Remove(role.Files); err != nil {
+			return err
+		}
+		if err := tasks.Remove(role.Links); err != nil {
+			return err
+		}
+		if err := tasks.Remove(role.Dirs); err != nil {
+			return err
+		}
+		if err := tasks.Remove(role.PostRemove); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("%s: not implemented", action)
+	}
+	tasks.ExecDir = ""
+	return nil
+}
+
 // NewDotCli returns a DotCli instance with IO output and error streams set by in, out and err.
 func NewDotCli(in io.ReadCloser, out, err io.Writer) *DotCli {
 	// in: NewInStream(in), out: NewOutStream(out), err: err
@@ -267,4 +336,52 @@ func LoadDefaultConfig(stderr io.Writer) *config.Config {
 	// 	credentials.DetectDefaultStore(config)
 	// }
 	return config
+}
+
+type execOptions struct {
+	action string
+}
+
+func runExec(dotCli *DotCli, opts execOptions) error {
+	roles := dotCli.Roles()
+	if len(roles) == 0 {
+		return fmt.Errorf("no roles to exec")
+	}
+	for _, r := range roles {
+		switch opts.action {
+		case "install":
+			if err := tasks.Install(r.Install); err != nil {
+				return err
+			}
+		case "remove":
+			if err := tasks.Remove(r.Remove); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("%s: not implemented", opts.action)
+		}
+	}
+	return nil
+}
+
+func runPostExec(dotCli *DotCli, opts execOptions) error {
+	roles := dotCli.Roles()
+	if len(roles) == 0 {
+		return fmt.Errorf("no roles to exec")
+	}
+	for _, r := range roles {
+		switch opts.action {
+		case "install":
+			if err := tasks.Install(r.PostInstall); err != nil {
+				return err
+			}
+		case "remove":
+			if err := tasks.Remove(r.PostRemove); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("%s: not implemented", opts.action)
+		}
+	}
+	return nil
 }
