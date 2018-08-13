@@ -27,7 +27,7 @@ type Role struct {
 	// Vars  types.Map
 	// IncludeVars types.IncludeMap
 	Deps  types.Slice `mapstructure:"dependencies"`
-	Pkg   tasks.Packages `mapstructure:"pkg"`
+	Packages   tasks.Packages `mapstructure:"pkg"`
 
 	Dirs  tasks.Dirs  `mapstructure:"dir"`
 	Files tasks.Files `mapstructure:"copy"`

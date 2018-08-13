@@ -284,6 +284,9 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 		if err := tasks.Install(role.Install); err != nil {
 			return err
 		}
+		if err := tasks.Install(role.Packages); err != nil {
+			return err
+		}
 		if err := tasks.Install(role.Dirs); err != nil {
 			return err
 		}
@@ -291,6 +294,9 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 			return err
 		}
 		if err := tasks.Install(role.Links); err != nil {
+			return err
+		}
+		if err := tasks.Install(role.Templates); err != nil {
 			return err
 		}
 		if err := tasks.Install(role.PostInstall); err != nil {
@@ -307,6 +313,12 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 			return err
 		}
 		if err := tasks.Remove(role.Dirs); err != nil {
+			return err
+		}
+		if err := tasks.Remove(role.Templates); err != nil {
+			return err
+		}
+		if err := tasks.Remove(role.Packages); err != nil {
 			return err
 		}
 		if err := tasks.Remove(role.PostRemove); err != nil {
