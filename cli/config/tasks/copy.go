@@ -92,7 +92,7 @@ func (files *Files) Parse(i interface{}) error {
 	return nil
 }
 
-// Add a dir
+// Add a file to copy
 func (files *Files) Add(c Copy) {
 	*files = append(*files, &c)
 }

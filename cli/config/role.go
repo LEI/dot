@@ -33,6 +33,7 @@ type Role struct {
 	Files tasks.Files `mapstructure:"copy"`
 	Links tasks.Links `mapstructure:"link"`
 	Templates tasks.Templates `mapstructure:"template"`
+	Lines tasks.Lines `mapstructure:"line"`
 
 	// Hooks
 	Install     tasks.Commands
@@ -127,7 +128,8 @@ func (r *Role) Parse(i interface{}) error {
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
-		r.Templates.Parse(v["templates"])
+		r.Templates.Parse(v["template"])
+		r.Lines.Parse(v["line"])
 
 		r.Install.Parse(v["install"])
 		r.PostInstall.Parse(v["post_install"])
@@ -151,7 +153,8 @@ func (r *Role) Parse(i interface{}) error {
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
-		r.Templates.Parse(v["templates"])
+		r.Templates.Parse(v["template"])
+		r.Lines.Parse(v["line"])
 
 		r.Install.Parse(v["install"])
 		r.PostInstall.Parse(v["post_install"])
@@ -175,7 +178,8 @@ func (r *Role) Parse(i interface{}) error {
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
-		r.Templates.Parse(v["templates"])
+		r.Templates.Parse(v["template"])
+		r.Lines.Parse(v["line"])
 
 		r.Install.Parse(v["install"])
 		r.PostInstall.Parse(v["post_install"])
@@ -196,6 +200,12 @@ func (r *Role) Prepare(target string) error {
 		return err
 	}
 	if err := r.PrepareLinks(target); err != nil {
+		return err
+	}
+	if err := r.PrepareTemplates(target); err != nil {
+		return err
+	}
+	if err := r.PrepareLines(target); err != nil {
 		return err
 	}
 	return nil
@@ -275,6 +285,50 @@ func (r *Role) PrepareLinks(target string) error {
 		}
 	}
 	r.Links = *links
+	return nil
+}
+
+// PrepareTemplates role
+func (r *Role) PrepareTemplates(target string) error {
+	templates := &tasks.Templates{}
+	for _, t := range r.Templates {
+		src := os.ExpandEnv(t.Source)
+		dst := os.ExpandEnv(t.Target)
+		if !filepath.IsAbs(src) {
+			src = filepath.Join(r.Path, src)
+		}
+		paths, err := preparePaths(target, src, dst)
+		if err != nil {
+			return err
+		}
+		for k, v := range paths {
+			tt := t
+			// tt := &tasks.Template{}
+			// if err := mergo.Merge(tt, t); err != nil {
+			// 	return err
+			// }
+			tt.Source = k
+			tt.Target = v
+			templates.Add(*tt)
+		}
+	}
+	r.Templates = *templates
+	return nil
+}
+
+// PrepareLines role
+func (r *Role) PrepareLines(target string) error {
+	// lines := &tasks.Lines{}
+	// for _, l := range r.Lines {
+	// 	dst := os.ExpandEnv(l.File)
+	// 	if !filepath.IsAbs(dst) {
+	// 		dst = filepath.Join(target, dst)
+	// 	}
+	// 	l.File = dst
+	// 	// l.Line = l.Line
+	// 	lines.Add(*l)
+	// }
+	// r.Lines = *lines
 	return nil
 }
 

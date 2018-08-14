@@ -97,7 +97,7 @@ func (links *Links) Parse(i interface{}) error {
 	return nil
 }
 
-// Add a dir
+// Add a link
 func (links *Links) Add(l Link) {
 	*links = append(*links, &l)
 }

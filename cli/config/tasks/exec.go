@@ -147,7 +147,7 @@ func (commands *Commands) Parse(i interface{}) error {
 		case interface{}:
 			e = val.(*Exec)
 		default:
-			return fmt.Errorf("invalid exec map: %+v", v)
+			return fmt.Errorf("invalid exec map: %+v", val)
 		}
 		// fmt.Printf("COMMAND [%+v] = [%+v]\n", v, *e)
 		cc.Add(*e)
@@ -156,7 +156,7 @@ func (commands *Commands) Parse(i interface{}) error {
 	return nil
 }
 
-// Add a dir
+// Add a command to execute
 func (commands *Commands) Add(c Exec) {
 	*commands = append(*commands, &c)
 }

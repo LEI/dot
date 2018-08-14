@@ -32,6 +32,12 @@ var (
 	// ErrDirAlreadyExist ...
 	ErrDirAlreadyExist = fmt.Errorf("directory already exists")
 
+	// ErrTemplateAlreadyExist ...
+	ErrTemplateAlreadyExist = fmt.Errorf("template already exists")
+
+	// ErrLineAlreadyExist ...
+	ErrLineAlreadyExist = fmt.Errorf("line already exists")
+
 	cacheDir  = "dot"
 	cacheName = "files"
 	store     *cache.Store
