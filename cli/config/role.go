@@ -14,6 +14,13 @@ import (
 	"github.com/imdario/mergo"
 )
 
+var ignoreFileNames = []string{
+	"*.json",
+	"*.md",
+	"*.yml",
+	".git",
+}
+
 // type Roles []*Role
 // func (roles *Roles) list() { }
 
@@ -318,17 +325,17 @@ func (r *Role) PrepareTemplates(target string) error {
 
 // PrepareLines role
 func (r *Role) PrepareLines(target string) error {
-	// lines := &tasks.Lines{}
-	// for _, l := range r.Lines {
-	// 	dst := os.ExpandEnv(l.File)
-	// 	if !filepath.IsAbs(dst) {
-	// 		dst = filepath.Join(target, dst)
-	// 	}
-	// 	l.File = dst
-	// 	// l.Line = l.Line
-	// 	lines.Add(*l)
-	// }
-	// r.Lines = *lines
+	lines := &tasks.Lines{}
+	for _, l := range r.Lines {
+		dst := os.ExpandEnv(l.File)
+		if !filepath.IsAbs(dst) {
+			dst = filepath.Join(target, dst)
+		}
+		l.File = dst
+		// l.Line = l.Line
+		lines.Add(*l)
+	}
+	r.Lines = *lines
 	return nil
 }
 
@@ -341,20 +348,20 @@ func preparePaths(target, src, dst string) (map[string]string, error) {
 		if err != nil {
 			return ret, err
 		}
-		// GLOB:
+		GLOB:
 		for _, s := range glob {
-			// // Extract source file name
-			// _, n := filepath.Split(s)
-			// for _, i := range ignore {
-			// 	// Check for ignored patterns
-			// 	matched, err := filepath.Match(i, n)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// 	if matched {
-			// 		continue GLOB
-			// 	}
-			// }
+			// Extract source file name
+			_, n := filepath.Split(s)
+			for _, i := range ignoreFileNames {
+				// Check for ignored patterns
+				matched, err := filepath.Match(i, n)
+				if err != nil {
+					return ret, err
+				}
+				if matched {
+					continue GLOB
+				}
+			}
 			// fmt.Println("PREPARE GLOB", s, "/", dst)
 			t, err := prepareTarget(target, s, dst)
 			if err != nil {

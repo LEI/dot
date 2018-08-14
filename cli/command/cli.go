@@ -267,7 +267,16 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 	// 	return nil
 	// }
 	if tasks.Verbose > 0 {
-		fmt.Printf("### %s %s ###\n", action, role.Name)
+		var s string
+		switch action {
+		case "install":
+			s = "Installing"
+		case "remove":
+			s = "Removing"
+		// default:
+		// 	s = strings.ToTitle(s)
+		}
+		fmt.Printf("## %s %s...n", s, role.Name)
 	}
 	tasks.ExecDir = role.Path
 	// if err := tasks.Check(role.Install); err != nil {
