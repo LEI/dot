@@ -276,7 +276,7 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 		// default:
 		// 	s = strings.ToTitle(s)
 		}
-		fmt.Printf("## %s %s...n", s, role.Name)
+		fmt.Printf("## %s %s...\n", s, role.Name)
 	}
 	tasks.ExecDir = role.Path
 	// if err := tasks.Check(role.Install); err != nil {

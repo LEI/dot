@@ -83,6 +83,9 @@ func Has(s ...string) bool {
 }
 
 func matches(in []string, list []string) bool {
+	if len(in) == 0 {
+		return false
+	}
 	nn := 0
 	for _, pattern := range in {
 		negated := pattern[0] == '!'
@@ -110,7 +113,7 @@ func matches(in []string, list []string) bool {
 			// return true
 		}
 	}
-	if nn == len(in) && nn > 0 {
+	if nn == len(in) { // && nn > 0
 		// fmt.Println("MATCHED NEGATED", in, list)
 		return true
 	}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/LEI/dot/cli/config/tasks"
@@ -342,7 +343,7 @@ func (r *Role) PrepareLines(target string) error {
 func preparePaths(target, src, dst string) (map[string]string, error) {
 	ret := map[string]string{}
 	//*links = append(*links, l)
-	if strings.Contains(src, "*") {
+	if hasMeta(src) { // strings.Contains(src, "*")
 		// fmt.Println("*", src, dst)
 		glob, err := filepath.Glob(src)
 		if err != nil {
@@ -393,4 +394,13 @@ func prepareTarget(target, src, dst string) (string, error) {
 	// }
 	t := filepath.Join(dst, f)
 	return t, nil
+}
+
+// Check magix chars recognized by Match
+func hasMeta(path string) bool {
+	magicChars := `*?[`
+	if runtime.GOOS == "windows" {
+		magicChars = `*?[\`
+	}
+	return strings.ContainsAny(path, magicChars)
 }
