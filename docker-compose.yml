@@ -24,9 +24,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.$OS
-    command: -c '$DOT/scripts/e2e-test.sh'
+    command: -c 'bin/e2e-test.sh'
     container_name: dot_$OS
-    # entrypoint: $DOT/scripts/e2e-test.sh
+    # entrypoint: bin/e2e-test.sh
     environment:
-      - DOT=$GOPATH/src/github.com/LEI/dot
+      - DOT=$$GOPATH/src/github.com/LEI/dot
     # image: LEI/dot-$OS

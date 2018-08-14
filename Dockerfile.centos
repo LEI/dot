@@ -90,6 +90,6 @@ RUN echo 'PATH=$PATH:$HOME/bin' >> ~/.profile
 # ENV PATH $PATH:$HOME/bin
 
 COPY ./.dotrc.yml .dotrc.yml
-# COPY --chown=docker:docker ./scripts bin/
+COPY --chown=docker:docker ./scripts bin/
 
 ENTRYPOINT ["/bin/bash"]
