@@ -1,12 +1,12 @@
 FROM golang AS base
 
-# RUN apt-get update -qqy && \
-# apt-get install --no-install-suggests --no-install-recommends -qqy \
+RUN apt-get update -qqy && \
+apt-get install --no-install-suggests --no-install-recommends -qqy \
 # ca-certificates \
 # curl \
 # git \
 # locales \
-# sudo
+sudo
 
 # # https://stackoverflow.com/q/28405902/7796750
 # RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \

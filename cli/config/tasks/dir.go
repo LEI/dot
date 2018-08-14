@@ -34,23 +34,23 @@ func (d *Dir) Check() error {
 
 // Install dir task
 func (d *Dir) Install() error {
-	cmd := fmt.Sprintf("mkdir -p %s", d.Path)
+	str := fmt.Sprintf("mkdir -p %s", d.Path)
 	if !d.ShouldInstall() {
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", str)
 	return system.CreateDir(d.Path)
 }
 
 // Remove dir task
 func (d *Dir) Remove() error {
-	cmd := fmt.Sprintf("rmdir %s", d.Path)
+	str := fmt.Sprintf("rmdir %s", d.Path)
 	if !d.ShouldRemove() {
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
@@ -61,11 +61,11 @@ func (d *Dir) Remove() error {
 	if !empty {
 		// return fmt.Errorf("remove %s: directory not empty")
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", str)
 	return system.RemoveDir(d.Path) // RmDirIfEmpty
 }
 

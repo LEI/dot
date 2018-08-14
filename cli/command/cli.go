@@ -270,6 +270,15 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 		fmt.Printf("### %s %s ###\n", action, role.Name)
 	}
 	tasks.ExecDir = role.Path
+	// if err := tasks.Check(role.Install); err != nil {
+	// 	return err
+	// }
+	// if err := tasks.Check(role.Remove); err != nil {
+	// 	return err
+	// }
+	// if err := tasks.Check(role.Packages); err != nil {
+	// 	return err
+	// }
 	if err := tasks.Check(role.Dirs); err != nil {
 		return err
 	}
@@ -279,6 +288,12 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 	if err := tasks.Check(role.Links); err != nil {
 		return err
 	}
+	// if err := tasks.Check(role.PostInstall); err != nil {
+	// 	return err
+	// }
+	// if err := tasks.Check(role.PostRemove); err != nil {
+	// 	return err
+	// }
 	switch action {
 	case "install":
 		if err := tasks.Install(role.Install); err != nil {

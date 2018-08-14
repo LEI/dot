@@ -31,27 +31,27 @@ func (l *Template) Check() error {
 
 // Install template task
 func (l *Template) Install() error {
-	cmd := fmt.Sprintf("gotpl %s %s", l.Source, l.Target)
+	str := fmt.Sprintf("gotpl %s %s", l.Source, l.Target)
 	if !l.ShouldInstall() {
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", str)
 	return nil // system.Template(l.Source, l.Target)
 }
 
 // Remove template task
 func (l *Template) Remove() error {
-	cmd := fmt.Sprintf("rm %s", l.Target)
+	str := fmt.Sprintf("rm %s", l.Target)
 	if !l.ShouldRemove() {
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", str)
 	return nil // system.Remove(l.Target)
 }
 

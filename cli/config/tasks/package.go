@@ -5,53 +5,67 @@ import (
 
 	"github.com/LEI/dot/cli/config/types"
 	// "github.com/LEI/dot/system"
+	"github.com/LEI/dot/pkg/pkg"
+	// "github.com/LEI/dot/pkg/ostype"
 	"github.com/mitchellh/mapstructure"
 )
 
 // Package task
 type Package struct {
 	Task
-	Name string
-	Opts []string
+	Type   string // package manager
+	Name   string
+	Opts   types.Slice // todo args -> opts
+	types.HasOS `mapstructure:",squash"`
+	// sudo   bool
 	// latest bool
 }
 
-func (l *Package) String() string {
-	return fmt.Sprintf("package[%s]", l.Name)
+func (p *Package) String() string {
+	return fmt.Sprintf("package[%s]", p.Name)
 }
 
 // Check package task
-func (l *Package) Check() error {
-	if l.Name == "" {
+func (p *Package) Check() error {
+	if p.Name == "" {
 		return fmt.Errorf("package: empty name")
+	}
+	if !p.CheckOS() { // len(p.OS) > 0 && !ostype.Has(p.OS...) {
+		return fmt.Errorf("package %s: only for %s", p.Name, p.OS)
 	}
 	return nil
 }
 
 // Install package task
-func (l *Package) Install() error {
-	cmd := fmt.Sprintf("pkg %s %s", l.Name, l.Opts)
-	if !l.ShouldInstall() {
-		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
-		}
+func (p *Package) Install() error {
+	if !p.CheckOS() { // len(p.OS) > 0 && !ostype.Has(p.OS...) {
+		return ErrSkip // fmt.Errorf("package %s: only for %s", p.Name, p.OS)
+	}
+	// str := fmt.Sprintf("pkg install %s %s", p.Name, p.Opts)
+	if !p.ShouldInstall() {
+		// if Verbose > 0 {
+		// 	fmt.Fprintf(Stdout, "# %s\n", str)
+		// }
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
-	return nil // system.InstallPackage(l.Name, l.Opts)
+	// fmt.Fprintf(Stdout, "$ %s\n", str)
+	return pkg.Install(p.Type, p.Name, p.Opts...)
 }
 
 // Remove package task
-func (l *Package) Remove() error {
-	cmd := fmt.Sprintf("rm %s", l.Name)
-	if !l.ShouldRemove() {
-		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
-		}
+func (p *Package) Remove() error {
+	if !p.CheckOS() { // len(p.OS) > 0 && !ostype.Has(p.OS...) {
+		return ErrSkip // fmt.Errorf("package %s: only for %s", p.Name, p.OS)
+	}
+	// str := fmt.Sprintf("pkg remove %s %s", p.Name, p.Opts)
+	if !p.ShouldRemove() {
+		// if Verbose > 0 {
+		// 	fmt.Fprintf(Stdout, "# %s\n", str)
+		// }
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
-	return nil // system.RemovePackage(l.Name, l.Opts)
+	// fmt.Fprintf(Stdout, "$ %s\n", str)
+	return pkg.Remove(p.Type, p.Name, p.Opts...)
 }
 
 // Packages task slice
@@ -59,8 +73,8 @@ type Packages []*Package
 
 func (packages *Packages) String() string {
 	// s := ""
-	// for i, l := range *packages {
-	// 	s += fmt.Sprintf("%s", l)
+	// for i, p := range *packages {
+	// 	s += fmt.Sprintf("%s", p)
 	// 	if i > 0 {
 	// 		s += "\n"
 	// 	}
