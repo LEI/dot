@@ -38,23 +38,51 @@ func runList(dotCli *DotCli, opts listOptions) error {
 		fmt.Fprintf(dotCli.Out(), "Role #%d: %s\n", i+1, r.Name)
 		if tasks.Verbose > 0 {
 			// fmt.Fprintf(dotCli.Out(), "Role #%d: %+v\n", i+1, r)
+
 			// fmt.Fprintf(dotCli.Out(), " OS: %+v\n", r.OS)
+
 			fmt.Fprintf(dotCli.Out(), " Env: %d\n", len(r.Env))
 			for k, v := range r.Env {
 				fmt.Fprintf(dotCli.Out(), "   %s=%s\n", k, v)
 			}
+
+			// Deps
+
+			// Packages
+
+			// Install, Remove
+			// PostInstall, PostRemove
+
 			fmt.Fprintf(dotCli.Out(), " Dirs: %d\n", len(r.Dirs))
 			for _, d := range r.Dirs {
 				fmt.Fprintf(dotCli.Out(), "   %+v\n", d)
 			}
+
 			fmt.Fprintf(dotCli.Out(), " Files: %d\n", len(r.Files))
 			for _, d := range r.Files {
 				fmt.Fprintf(dotCli.Out(), "   %+v\n", d)
 			}
-			// fmt.Fprintf(dotCli.Out(), " Links: %d\n", len(r.Links))
-			// for _, l := range r.Links {
-			// 	fmt.Fprintf(dotCli.Out(), "   %+v\n", l)
-			// }
+
+			fmt.Fprintf(dotCli.Out(), " Links: %d\n", len(r.Links))
+			for _, l := range r.Links {
+				fmt.Fprintf(dotCli.Out(), "   %+v\n", l)
+			}
+
+			fmt.Fprintf(dotCli.Out(), " Templates: %d\n", len(r.Templates))
+			for _, t := range r.Templates {
+				fmt.Fprintf(dotCli.Out(), "   %+v\n", t)
+				// for k, v := range t.Env {
+				// 	fmt.Fprintf(dotCli.Out(), "     ENV %s=%+v\n", k, v)
+				// }
+				// for k, v := range t.Vars {
+				// 	fmt.Fprintf(dotCli.Out(), "     VAR %s=%+v\n", k, v)
+				// }
+			}
+
+			fmt.Fprintf(dotCli.Out(), " Lines: %d\n", len(r.Lines))
+			for _, l := range r.Lines {
+				fmt.Fprintf(dotCli.Out(), "   %+v\n", l)
+			}
 		}
 	}
 	return nil

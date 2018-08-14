@@ -10,7 +10,7 @@ import (
 
 	// "github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/cli/config/types"
-	// "github.com/LEI/dot/pkg/ostype"
+	"github.com/LEI/dot/pkg/ostype"
 	"github.com/LEI/dot/system"
 )
 
@@ -92,9 +92,13 @@ var (
 			Opts: []*Opt{
 				{
 					Args: []string{
-						"--noconfirm",
+						// https://www.archlinux.org/pacman/pacman.8.html
 						"--needed",
+						"--noconfirm",
 						"--noprogressbar",
+						"--quiet",
+						"--refresh", // -y
+						"--sysupgrade", // -u
 					},
 				},
 				// {
@@ -102,6 +106,24 @@ var (
 				// 	// If:   []string{"{{eq .Verbose 0}}"},
 				// 	HasIf: types.HasIf{If: []string{"{{eq .Verbose 0}}"}},
 				// },
+			},
+		},
+		// yaourt
+		"yum": {
+			Sudo: true,
+			Bin: "yum",
+			Acts: map[string]string{
+				"install": "install",
+				"remove":  "remove",
+			},
+			Opts: []*Opt{
+				{
+					Args: []string{
+						"--assumeyes",
+						// "--error=0",
+						"--quiet",
+					},
+				},
 			},
 		},
 	}
@@ -124,8 +146,10 @@ func Detect() (c *Cmd) {
 			c = managers["apt-get"]
 		case executable("pacman"):
 			c = managers["pacman"]
+		case executable("yum"):
+			c = managers["yum"]
 		default:
-			fmt.Fprintf(os.Stderr, "no package manager for OS linux")
+			fmt.Fprintf(os.Stderr, "no package manager for OS: %s", ostype.List)
 			os.Exit(1)
 		}
 	default:
@@ -140,11 +164,16 @@ func Detect() (c *Cmd) {
 
 func executable(bin string) bool {
 	// cmd := exec.Command("/bin/sh", "-c", "hash", bin)
-	cmd := exec.Command("command", "-v", bin)
+	// cmd := exec.Command("command", "-v", bin)
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("command -v %s", bin))
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	return err != nil
+	// err := cmd.Run()
+	out, err := cmd.CombinedOutput()
+	// if err != nil {
+	// 	return false
+	// }
+	return err == nil && len(out) > 0
 }
 
 func isRoot() bool {

@@ -19,7 +19,11 @@ func (m *Map) Parse(i interface{}) error {
 }
 
 // NewMap parse
-func NewMap(i interface{}) (*Map, error) {
+func NewMap(i interface{}, fields ...string) (*Map, error) {
+	keyField := ""
+	if len(fields) > 0 {
+		keyField = fields[0]
+	}
 	m := &Map{}
 	if i == nil {
 		return m, nil
@@ -41,11 +45,23 @@ func NewMap(i interface{}) (*Map, error) {
 		}
 	case []interface{}:
 		for _, val := range v {
-			s, t, err := parsePaths(val.(string))
-			if err != nil {
-				return m, err
+			switch V := val.(type) {
+			case string:
+				s, t, err := parsePaths(V)
+				if err != nil {
+					return m, err
+				}
+				(*m)[s] = t
+			case map[interface{}]interface{}:
+				key, ok := V[keyField].(string)
+				if !ok {
+					return m, fmt.Errorf("invalid map key (%s): %s", keyField, V)
+				}
+				// fmt.Println(V, keyField)
+				(*m)[key] = V
+			default:
+				return m, fmt.Errorf("invalid map element: %s", V)
 			}
-			(*m)[s] = t
 		}
 	case map[string]string:
 		for s, t := range v {
@@ -239,3 +255,31 @@ func parsePaths(p string) (src, dst string, err error) {
 	// // }
 	// return src, dst, nil
 }
+
+// // IncludeMap ...
+// type IncludeMap string
+
+// func (m *IncludeMap) Parse(i interface{}) error {
+// 	file := i.(string)
+// 	if strings.HasPrefix(file, "~/") {
+// 		file = filepath.Join(os.Getenv("HOME"), file[2:])
+// 	}
+// 	bytes, err := ioutil.ReadFile(file)
+// 	if err != nil {
+// 		if os.IsNotExist(err) {
+// 			return nil
+// 		}
+// 		return err
+// 	}
+// 	if err := yaml.Unmarshal(bytes, &vars); err != nil {
+// 		return err
+// 	}
+// 	*m
+// 	return nil
+// 	// mm, err := NewMap(i)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+// 	// *m = *mm
+// 	// return nil
+// }

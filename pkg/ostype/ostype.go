@@ -147,7 +147,7 @@ func parseRelease() Release {
 	}
 	for _, p := range paths {
 		if err := ini.MapTo(&release, p); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", p, err)
+			// fmt.Fprintf(os.Stderr, "%s: %s\n", p, err)
 			continue
 			// return err
 		}
