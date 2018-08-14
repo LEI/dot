@@ -34,6 +34,6 @@ WORKDIR /home/$USER
 ENV DEBIAN_FRONTEND newt
 
 COPY ./.dotrc.yml .dotrc.yml
-COPY --chown=docker:docker ./scripts bin/
+# COPY --chown=docker:docker ./scripts bin/
 
 ENTRYPOINT ["/bin/bash"]

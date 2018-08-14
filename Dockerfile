@@ -5,23 +5,17 @@ apt-get install --no-install-suggests --no-install-recommends -qqy \
 # ca-certificates \
 # curl \
 # git \
-# locales \
+locales \
 sudo
 
-# # https://stackoverflow.com/q/28405902/7796750
-# RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
-# locale-gen
-# ENV LANG en_GB.UTF-8
-# ENV LANGUAGE en_GB:en
-# ENV LC_ALL en_GB.UTF-8
-
 # # ENV GOPATH /go
+ENV PATH $PATH:$GOPATH/bin
 # ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 ENV DOT $GOPATH/src/github.com/LEI/dot
 
-# RUN printf "%s\n" \
-# 'PATH="$GOPATH/bin:$PATH"' \
-# >> ~/.bashrc
+RUN printf "%s\n" \
+'PATH="$GOPATH/bin:$PATH"' \
+>> ~/.profile # ~/.bashrc
 
 ENTRYPOINT ["/bin/bash"]
 # ENTRYPOINT ["scripts/install.sh"]
@@ -29,6 +23,11 @@ ENTRYPOINT ["/bin/bash"]
 WORKDIR $DOT
 
 COPY . .
+
+RUN ./scripts/setup-lang.sh
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
 
 RUN if [ -d vendor ]; then make install; else make; fi
 

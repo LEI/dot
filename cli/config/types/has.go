@@ -15,15 +15,15 @@ func (h *HasOS) CheckOS() bool {
 	if len(h.OS) == 0 {
 		return true
 	}
-	hasOS := false
-	for _, o := range h.OS {
-		if ostype.Has(o) {
-			hasOS = true
-			break
-		}
-	}
-	return hasOS
-	// return ostype.Has(h.OS...)
+	// hasOS := false
+	// for _, o := range h.OS {
+	// 	if ostype.Has(o) {
+	// 		hasOS = true
+	// 		break
+	// 	}
+	// }
+	// return hasOS
+	return ostype.Has(h.OS...)
 }
 
 // HasIf ...
