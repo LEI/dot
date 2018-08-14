@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/pkg/executils"
 	"github.com/LEI/dot/system"
+)
+
+const (
+	minVer = 2
 )
 
 var (
@@ -34,8 +39,35 @@ var (
 )
 
 func init() {
+	if err := checkGitVersion(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 	Stdout = os.Stdout
 	Stdout = os.Stderr
+}
+
+func checkGitVersion() error {
+	cmd := exec.Command("git", "--version")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+	str := string(out)
+	ver := strings.TrimPrefix(str, "git version ")
+	// fmt.Println("GIT_VERSION", ver)
+	// if ver == "" {
+	// 	return fmt.Errorf("%s: unable to parse git version", str)
+	// }
+	parts := strings.Split(ver, ".")
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return err
+	}
+	if major < minVer {
+		return fmt.Errorf("git version %s is required", string(minVer))
+	}
+	return nil
 }
 
 // Repo ...
