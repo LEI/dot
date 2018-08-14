@@ -43,28 +43,21 @@ jobs:
       script: docker-compose run test
       # env: OS=
 
-    - stage: test
+    - &testos
+      stage: test
       # install: true
       before_script: docker-compose build test_os
       script: docker-compose run test_os
+    # - <<: *testos
       env: OS=alpine
 
-    - stage: test
-      # install: true
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
+    - <<: *testos
       env: OS=archlinux
 
-    - stage: test
-      # install: true
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
+    - <<: *testos
       env: OS=centos
 
-    - stage: test
-      # install: true
-      before_script: docker-compose build test_os
-      script: docker-compose run test_os
+    - <<: *testos
       env: OS=debian
 
     - stage: test
