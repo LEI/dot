@@ -7,7 +7,7 @@ import (
 
 	"github.com/LEI/dot/cli/config/types"
 	// "github.com/LEI/dot/pkg/executils"
-	"github.com/LEI/dot/pkg/ostype"
+	// "github.com/LEI/dot/pkg/ostype"
 	"github.com/LEI/dot/system"
 	"github.com/mitchellh/mapstructure"
 )
@@ -24,8 +24,8 @@ type Exec struct {
 	Task
 	Command string
 	Shell string
-	OS types.Slice
 	Action string // install, remove
+	types.HasOS `mapstructure:",squash"`
 }
 
 func (e *Exec) String() string {
@@ -37,8 +37,8 @@ func (e *Exec) Check() error {
 	if e.Command == "" {
 		return fmt.Errorf("exec: empty command")
 	}
-	if len(e.OS) > 0 && !ostype.Has(e.OS...) {
-		return fmt.Errorf("bad os: %s", e.OS)
+	if !e.CheckOS() { // len(e.OS) > 0 && !ostype.Has(e.OS...) {
+		return fmt.Errorf("exec %s: only for %s", e.Command, e.OS)
 	}
 	// err := system.CheckExec(e.Command)
 	// switch err {
@@ -52,8 +52,11 @@ func (e *Exec) Check() error {
 
 // Install copy task
 func (e *Exec) Install() error {
+	if !e.CheckOS() { // len(e.OS) > 0 && !ostype.Has(e.OS...) {
+		return ErrSkip
+	}
 	if e.Action != "" && e.Action != "install" {
-		return nil
+		return ErrSkip
 	}
 	str := strings.TrimSuffix(e.Command, "\n")
 	if !e.ShouldInstall() {
@@ -81,6 +84,9 @@ func (e *Exec) Install() error {
 
 // Remove copy task
 func (e *Exec) Remove() error {
+	if !e.CheckOS() { // len(e.OS) > 0 && !ostype.Has(e.OS...) {
+		return ErrSkip
+	}
 	if e.Action != "" && e.Action != "remove" {
 		return nil
 	}

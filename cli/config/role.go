@@ -122,9 +122,13 @@ func (r *Role) Parse(i interface{}) error {
 		r.OS.Parse(v["os"])
 		r.Env.Parse(v["env"])
 		r.Deps.Parse(v["dependencies"])
+		r.Packages.Parse(v["pkg"])
+
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
+		r.Templates.Parse(v["templates"])
+
 		r.Install.Parse(v["install"])
 		r.PostInstall.Parse(v["post_install"])
 		r.Remove.Parse(v["install"])
@@ -142,9 +146,13 @@ func (r *Role) Parse(i interface{}) error {
 		r.OS.Parse(v["os"])
 		r.Env.Parse(v["env"])
 		r.Deps.Parse(v["dependencies"])
+		r.Packages.Parse(v["pkg"])
+
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
+		r.Templates.Parse(v["templates"])
+
 		r.Install.Parse(v["install"])
 		r.PostInstall.Parse(v["post_install"])
 		r.Remove.Parse(v["remove"])
@@ -162,9 +170,13 @@ func (r *Role) Parse(i interface{}) error {
 		r.OS.Parse(v["os"])
 		r.Env.Parse(v["env"])
 		r.Deps.Parse(v["dependencies"])
+		r.Packages.Parse(v["pkg"])
+
 		r.Dirs.Parse(v["dir"])
 		r.Files.Parse(v["copy"])
 		r.Links.Parse(v["link"])
+		r.Templates.Parse(v["templates"])
+
 		r.Install.Parse(v["install"])
 		r.PostInstall.Parse(v["post_install"])
 		r.Remove.Parse(v["remove"])

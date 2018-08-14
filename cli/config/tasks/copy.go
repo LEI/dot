@@ -34,27 +34,27 @@ func (c *Copy) Check() error {
 
 // Install copy task
 func (c *Copy) Install() error {
-	cmd := fmt.Sprintf("cp %s %s", c.Source, c.Target)
+	str := fmt.Sprintf("cp %s %s", c.Source, c.Target)
 	if !c.ShouldInstall() {
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", str)
 	return system.Copy(c.Source, c.Target)
 }
 
 // Remove copy task
 func (c *Copy) Remove() error {
-	cmd := fmt.Sprintf("rm %s", c.Target)
+	str := fmt.Sprintf("rm %s", c.Target)
 	if !c.ShouldRemove() {
 		if Verbose > 0 {
-			fmt.Fprintf(Stdout, "# %s\n", cmd)
+			fmt.Fprintf(Stdout, "# %s\n", str)
 		}
 		return ErrSkip
 	}
-	fmt.Fprintf(Stdout, "$ %s\n", cmd)
+	fmt.Fprintf(Stdout, "$ %s\n", str)
 	return system.Remove(c.Target)
 }
 

@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/LEI/dot/cli"
+	// "github.com/LEI/dot/pkg/ostype"
 )
 
 var (
@@ -73,6 +74,9 @@ func Check(i interface{}) error {
 	}
 	errs := cli.Errors{}
 	for _, t := range tl {
+		// if len(t.OS) > 0 && !ostype.Has(t.OS...) {
+		// 	return ErrSkip
+		// }
 		if err := t.Check(); err != nil {
 			errs = append(errs, err)
 		}

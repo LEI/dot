@@ -27,6 +27,7 @@ var (
 
 func init() {
 	List = Get()
+	// fmt.Printf("OS types: %+v\n", List)
 }
 
 // Release ...
@@ -49,7 +50,7 @@ type Release struct {
 // Get OS types: name, release, family, distrib...
 func Get() []string {
 	types := []string{OS}
-	r := parseReleases()
+	r := parseRelease()
 	name := strings.ToLower(r.Name)
 	id := strings.ToLower(r.ID)
 	if name != "" && id != "" && isNum(id) {
@@ -136,8 +137,8 @@ func matches(in []string, list []string) bool {
 // VERSION_ID="7"
 // PRETTY_NAME="CentOS Linux 7 (Core)"
 
-// Read release files as INI
-func parseReleases() Release {
+// Read release file as INI
+func parseRelease() Release {
 	pattern := "/etc/*-release"
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
@@ -145,10 +146,15 @@ func parseReleases() Release {
 		os.Exit(1)
 	}
 	for _, p := range paths {
-		if err := ini.MapTo(release, p); err != nil {
+		if err := ini.MapTo(&release, p); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", p, err)
 			continue
 			// return err
 		}
+		// cmd := exec.Command("cat", p)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Run()
 	}
 	// for _, p := range paths {
 	// 	parser := flags.NewParser(&release, flags.IgnoreUnknown)
