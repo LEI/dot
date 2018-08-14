@@ -38,7 +38,7 @@ install: make snapshot
 jobs:
   include:
     - stage: build
-      # install: skip
+      install: skip
       before_script: docker-compose build base
       script: docker-compose run test
       # env: OS=

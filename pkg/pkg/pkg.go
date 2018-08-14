@@ -21,6 +21,7 @@ var (
 	Manager *Cmd
 
 	managers = map[string]*Cmd{
+		// https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management
 		"apk": {
 			Sudo: true,
 			Bin: "apk",
@@ -38,6 +39,7 @@ var (
 				},
 			},
 		},
+		// https://manpages.debian.org/stretch/apt/apt-get.8.en.html
 		"apt-get": {
 			Sudo: true,
 			Bin: "apt-get",
@@ -58,6 +60,7 @@ var (
 				},
 			},
 		},
+		// https://docs.brew.sh/Manpage
 		"brew": {
 			Bin: "brew",
 			Acts: map[string]string{
@@ -82,17 +85,17 @@ var (
 				},
 			},
 		},
+		// https://www.archlinux.org/pacman/pacman.8.html
 		"pacman": {
 			Sudo: true,
 			Bin: "pacman",
 			Acts: map[string]string{
-				"install": "-S",
-				"remove":  "-R",
+				"install": "--sync", // -S
+				"remove":  "--remove", // -R
 			},
 			Opts: []*Opt{
 				{
 					Args: []string{
-						// https://www.archlinux.org/pacman/pacman.8.html
 						"--needed",
 						"--noconfirm",
 						"--noprogressbar",
@@ -108,7 +111,23 @@ var (
 				// },
 			},
 		},
-		// yaourt
+		// https://archlinux.fr/man/yaourt.8.html
+		"yaourt": {
+			// Sudo: false,
+			Bin: "yaourt",
+			Acts: map[string]string{
+				"install": "--sync", // -S
+				"remove":  "--remove", // -R
+			},
+			Opts: []*Opt{
+				{
+					Args: []string{
+						"--noconfirm",
+						// "--sysupgrade", // -u
+					},
+				},
+			},
+		},
 		"yum": {
 			Sudo: true,
 			Bin: "yum",
@@ -206,7 +225,16 @@ func Exec(action, manager, name string, opts ...string) error {
 	if manager == "" {
 		c = Detect()
 	} else {
-		c = managers[manager]
+		var ok bool
+		c, ok = managers[manager]
+		if !ok {
+			return fmt.Errorf(
+				"%s: invalid package manager to %s %s",
+				manager,
+				action,
+				name,
+			)
+		}
 	}
 	pkgs := strings.Split(name, " ")
 	opts = append(pkgs, opts...)
