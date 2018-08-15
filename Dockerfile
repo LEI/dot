@@ -29,7 +29,9 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-RUN ./scripts/mage.sh
+# # https://magefile.org/zeroinstall
+# RUN go run mage.go # "$@"
+RUN make
 # RUN if [ -d vendor ]; then \
 # ./scripts/mage.sh install; else \
 # ./scripts/mage.sh; fi

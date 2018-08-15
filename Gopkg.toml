@@ -1,7 +1,7 @@
 # Gopkg.toml
 # https://golang.github.io/dep/docs/Gopkg.toml.html
 
-required = ["github.com/magefile/mage/mage"]
+# required = ["github.com/magefile/mage/mage"]
 # ignored = []
 
 # [[constraint]]
