@@ -46,7 +46,7 @@ jobs:
     - &base
       stage: test
       script:
-        - mage docker
+        - mage -v docker
 
     - <<: *base
       env: OS=alpine
