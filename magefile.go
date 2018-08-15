@@ -87,12 +87,17 @@ func Check() {
 
 // Run go tests
 func Test() error {
-	// v := ""
-	// if mg.Verbose() {
-	// 	v = "-v"
-	// }
-	// return sh.RunV(goexe, "test", v, "./...") // -tags none
-	return sh.Run(goexe, "test", "./...")
+	v := ""
+	if mg.Verbose() {
+		v = "-v"
+	}
+	return sh.RunV(goexe, "test", v, "./...") // -tags none
+	// return sh.RunV(goexe, "test", "./...")
+}
+
+// Run go tests with race detector
+func TestCoverage() error {
+	return sh.RunV(goexe, "test", "-v", "-race", "-coverprofile=coverage.txt", "-covermode=atomic", "./...")
 }
 
 // Run go tests with race detector
@@ -101,7 +106,7 @@ func TestRace() error {
 	if mg.Verbose() {
 		v = "-v"
 	}
-	return sh.RunV(goexe, "test", "-race", v, "./...")
+	return sh.RunV(goexe, "test", v, "-race", "./...")
 }
 
 // Run go vet
