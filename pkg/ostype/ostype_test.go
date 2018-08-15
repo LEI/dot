@@ -13,9 +13,9 @@ import (
 	"testing"
 )
 
-var osTests = []struct{
-	os string
-	in []string
+var osTests = []struct {
+	os  string
+	in  []string
 	out bool
 }{
 	{"a", []string{}, false},
