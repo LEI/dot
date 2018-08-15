@@ -14,11 +14,11 @@ RUN_ARGS := $(filter-out mage,$(RUN_ARGS))
 default:
 	$(MAGE) $(filter-out $@,$(RUN_ARGS))
 
-# Make silent default
-# Must not be first
-ifndef VERBOSE
-.SILENT:
-endif
+# # Make silent default
+# # Must not be first
+# ifndef VERBOSE
+# .SILENT:
+# endif
 
 # Install mage binary https://magefile.org/
 .PHONY: mage
