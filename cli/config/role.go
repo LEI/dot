@@ -42,6 +42,9 @@ type Role struct {
 	Remove      tasks.Commands
 	PostRemove  tasks.Commands `mapstructure:"post_remove"`
 
+	Ignore []string
+	Target string
+
 	synced bool
 }
 
@@ -193,32 +196,32 @@ func (r *Role) Parse(i interface{}) error {
 }
 
 // Prepare role
-func (r *Role) Prepare(target string, ignore ...string) error {
-	if err := r.PrepareDirs(target, ignore...); err != nil {
+func (r *Role) Prepare() error {
+	if err := r.PrepareDirs(); err != nil {
 		return err
 	}
-	if err := r.PrepareFiles(target, ignore...); err != nil {
+	if err := r.PrepareFiles(); err != nil {
 		return err
 	}
-	if err := r.PrepareLinks(target, ignore...); err != nil {
+	if err := r.PrepareLinks(); err != nil {
 		return err
 	}
-	if err := r.PrepareTemplates(target, ignore...); err != nil {
+	if err := r.PrepareTemplates(); err != nil {
 		return err
 	}
-	if err := r.PrepareLines(target, ignore...); err != nil {
+	if err := r.PrepareLines(); err != nil {
 		return err
 	}
 	return nil
 }
 
 // PrepareDirs role
-func (r *Role) PrepareDirs(target string, ignore ...string) error {
+func (r *Role) PrepareDirs() error {
 	dirs := &tasks.Dirs{}
 	for _, d := range r.Dirs {
 		dir := os.ExpandEnv(d.Path)
 		if !filepath.IsAbs(dir) {
-			dir = filepath.Join(target, dir)
+			dir = filepath.Join(r.Target, dir)
 		}
 		d.Path = dir
 		dirs.Add(d)
@@ -228,7 +231,7 @@ func (r *Role) PrepareDirs(target string, ignore ...string) error {
 }
 
 // PrepareFiles role
-func (r *Role) PrepareFiles(target string, ignore ...string) error {
+func (r *Role) PrepareFiles() error {
 	files := &tasks.Files{}
 	for _, f := range r.Files {
 		src := os.ExpandEnv(f.Source)
@@ -236,7 +239,7 @@ func (r *Role) PrepareFiles(target string, ignore ...string) error {
 		if !filepath.IsAbs(src) {
 			src = filepath.Join(r.Path, src)
 		}
-		paths, err := preparePaths(target, src, dst, ignore...)
+		paths, err := preparePaths(r, src, dst)
 		if err != nil {
 			return err
 		}
@@ -252,7 +255,7 @@ func (r *Role) PrepareFiles(target string, ignore ...string) error {
 		}
 		// dir := os.ExpandEnv(f.Path)
 		// if !filepath.IsAbs(dir) {
-		// 	dir = filepath.Join(target, dir)
+		// 	dir = filepath.Join(r.Target, dir)
 		// }
 		// f.Path = dir
 		// files.Add(f)
@@ -262,7 +265,7 @@ func (r *Role) PrepareFiles(target string, ignore ...string) error {
 }
 
 // PrepareLinks role
-func (r *Role) PrepareLinks(target string, ignore ...string) error {
+func (r *Role) PrepareLinks() error {
 	links := &tasks.Links{}
 	for _, l := range r.Links {
 		src := os.ExpandEnv(l.Source)
@@ -270,7 +273,7 @@ func (r *Role) PrepareLinks(target string, ignore ...string) error {
 		if !filepath.IsAbs(src) {
 			src = filepath.Join(r.Path, src)
 		}
-		paths, err := preparePaths(target, src, dst, ignore...)
+		paths, err := preparePaths(r, src, dst)
 		if err != nil {
 			return err
 		}
@@ -290,7 +293,7 @@ func (r *Role) PrepareLinks(target string, ignore ...string) error {
 }
 
 // PrepareTemplates role
-func (r *Role) PrepareTemplates(target string, ignore ...string) error {
+func (r *Role) PrepareTemplates() error {
 	templates := &tasks.Templates{}
 	for _, t := range r.Templates {
 		src := os.ExpandEnv(t.Source)
@@ -298,7 +301,7 @@ func (r *Role) PrepareTemplates(target string, ignore ...string) error {
 		if !filepath.IsAbs(src) {
 			src = filepath.Join(r.Path, src)
 		}
-		paths, err := preparePaths(target, src, dst, ignore...)
+		paths, err := preparePaths(r, src, dst)
 		if err != nil {
 			return err
 		}
@@ -318,12 +321,12 @@ func (r *Role) PrepareTemplates(target string, ignore ...string) error {
 }
 
 // PrepareLines role
-func (r *Role) PrepareLines(target string, ignore ...string) error {
+func (r *Role) PrepareLines() error {
 	lines := &tasks.Lines{}
 	for _, l := range r.Lines {
 		dst := os.ExpandEnv(l.File)
 		if !filepath.IsAbs(dst) {
-			dst = filepath.Join(target, dst)
+			dst = filepath.Join(r.Target, dst)
 		}
 		l.File = dst
 		// l.Line = l.Line
@@ -333,7 +336,7 @@ func (r *Role) PrepareLines(target string, ignore ...string) error {
 	return nil
 }
 
-func preparePaths(target, src, dst string, ignore ...string) (map[string]string, error) {
+func preparePaths(r *Role, src, dst string) (map[string]string, error) {
 	ret := map[string]string{}
 	//*links = append(*links, l)
 	if hasMeta(src) { // strings.Contains(src, "*")
@@ -346,7 +349,7 @@ func preparePaths(target, src, dst string, ignore ...string) (map[string]string,
 		for _, s := range glob {
 			// Extract source file name
 			_, n := filepath.Split(s)
-			for _, i := range ignore {
+			for _, i := range r.Ignore {
 				// Check for ignored patterns
 				matched, err := filepath.Match(i, n)
 				if err != nil {
@@ -357,14 +360,14 @@ func preparePaths(target, src, dst string, ignore ...string) (map[string]string,
 				}
 			}
 			// fmt.Println("PREPARE GLOB", s, "/", dst)
-			t, err := prepareTarget(target, s, dst)
+			t, err := prepareTarget(r, s, dst)
 			if err != nil {
 				return ret, err
 			}
 			ret[s] = t
 		}
 	} else {
-		t, err := prepareTarget(target, src, dst)
+		t, err := prepareTarget(r, src, dst)
 		if err != nil {
 			return ret, err
 		}
@@ -373,20 +376,36 @@ func preparePaths(target, src, dst string, ignore ...string) (map[string]string,
 	return ret, nil
 }
 
-func prepareTarget(target, src, dst string) (string, error) {
+func prepareTarget(r *Role, src, dst string) (string, error) {
 	//fmt.Println("+", src, dst)
-	_, f := filepath.Split(src)
-	if f == "" {
-		return "", fmt.Errorf("error (no source file name) while parsing: %s / %s", src, dst)
+	_, name := filepath.Split(src)
+	if name == "" {
+		return "", fmt.Errorf("no source file name for src / dst: %s / %s", src, dst)
 	}
 	if !filepath.IsAbs(dst) {
-		dst = filepath.Join(target, dst)
+		dst = filepath.Join(r.Target, dst)
 	}
 	// if _, err := dotfile.CreateDir(baseDir); err != nil {
 	// 	return baseDir, err
 	// }
-	t := filepath.Join(dst, f)
-	return t, nil
+	// if isDir, _ := system.IsDir(dst); !isDir {
+	// 	// Look for future directories
+	// 	ok := false
+	// 	for _, d := range r.Dirs {
+	// 		// _, n := filepath.Split(d.Path)
+	// 		n := strings.TrimPrefix(d.Path, r.Target+system.Separator)
+	// 		fmt.Printf("TODO %s == %s / %s\n", n, name, r.Target)
+	// 		if n == name {
+	// 			ok = true
+	// 			break
+	// 		}
+	// 	}
+	// 	if !ok {
+	// 		return dst, fmt.Errorf("%s: target directory does not exist and will not be created", dst)
+	// 	}
+	// }
+	dst = filepath.Join(dst, name)
+	return dst, nil
 }
 
 // Check magix chars recognized by Match

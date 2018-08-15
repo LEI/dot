@@ -30,6 +30,7 @@ ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
 # RUN make mage vendor install
-RUN make mage && mage
+RUN make mage
+RUN mage
 
-# RUN cp .dotrc.yml /root/
+RUN cp .dotrc.yml /root/

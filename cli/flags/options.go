@@ -50,6 +50,7 @@ func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
 
 // InstallActionFlags adds common task falgs on the FlagSet
 func (opts *Options) InstallActionFlags(flags *pflag.FlagSet) {
+	// flags.BoolVarP(&opts.NoPkg, "no-packages", "n", false, "Disable package management")
 }
 
 // InstallActionPersistentFlags adds common task falgs on the FlagSet

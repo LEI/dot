@@ -19,11 +19,11 @@ endif
 default:
 	$(MAGE) $(RUN_ARGS)
 
-# # Make silent default
-# # Must not be first
-# ifndef VERBOSE
-# .SILENT:
-# endif
+# Make silent default
+# Must not be first
+ifndef VERBOSE
+.SILENT:
+endif
 
 # Install mage binary https://magefile.org/
 .PHONY: mage
