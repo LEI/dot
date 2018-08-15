@@ -48,20 +48,16 @@ jobs:
         - mage docker
 
     - <<: *base
-      before_script:
-        - export OS=alpine
+      env: OS=alpine
 
     - <<: *base
-      before_script:
-        - export OS=archlinux
+      env: OS=archlinux
 
     - <<: *base
-      before_script:
-        - export OS=centos
+      env: OS=centos
 
     - <<: *base
-      before_script:
-        - export OS=debian
+      env: OS=debian
 
     - stage: test
       script:
