@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
 	// "reflect"
 	"runtime"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/LEI/dot/pkg/ostype"
 	"github.com/LEI/dot/pkg/prompt"
 	"github.com/LEI/dot/system"
+
 	// "github.com/LEI/dot/pkg/sliceutils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -205,9 +207,9 @@ func (cli *DotCli) Parse(opts *cliflags.Options) error {
 		// if err := cli.Prepare(role); err != nil {
 		// 	return err
 		// }
-		if len(opts.RoleFilter) > 0 {
+		if len(opts.Filter) > 0 {
 			matched := false
-			for _, f := range opts.RoleFilter {
+			for _, f := range opts.Filter {
 				if f == role.Name {
 					matched = true
 					break
@@ -220,7 +222,7 @@ func (cli *DotCli) Parse(opts *cliflags.Options) error {
 		cli.config.Roles = append(cli.config.Roles, role)
 	}
 	if len(cli.config.Roles) == 0 {
-		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), opts.RoleFilter)
+		return fmt.Errorf("no roles (total: %d) matching filter: %+v", len(configRoles), opts.Filter)
 	}
 	return nil
 }
@@ -244,7 +246,7 @@ func (cli *DotCli) ParseRole(opts *cliflags.Options, role *config.Role) error {
 	}
 	// TODO init env
 	os.Setenv("OS", runtime.GOOS)
-	if err := role.Prepare(opts.Target); err != nil {
+	if err := role.Prepare(opts.Target, opts.Ignore...); err != nil {
 		return err
 	}
 	return nil
