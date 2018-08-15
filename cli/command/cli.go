@@ -5,8 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	// "reflect"
 	"runtime"
 
 	"github.com/LEI/dot/cli/config"
@@ -18,8 +16,6 @@ import (
 	"github.com/LEI/dot/pkg/ostype"
 	"github.com/LEI/dot/pkg/prompt"
 	"github.com/LEI/dot/system"
-
-	// "github.com/LEI/dot/pkg/sliceutils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

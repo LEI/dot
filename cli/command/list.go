@@ -1,12 +1,10 @@
 package command
 
-// https://github.com/moby/moby/tree/17.05.x/cli/command/image
-
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 
 	"github.com/LEI/dot/cli/config/tasks"
+	"github.com/spf13/cobra"
 )
 
 type listOptions struct{}
