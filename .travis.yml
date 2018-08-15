@@ -31,21 +31,28 @@ stages:
   - test
   - deploy
 
-before_intall: mage
+before_intall:
+  - make mage
+  - mage
 
 install: mage snapshot
 
 jobs:
   include:
-    - stage: build
-      install: skip
-      before_script: docker-compose build base
-      script: docker-compose run test
-      # env: OS=
+    # - stage: build
+    #   install: skip
+    #   before_script: docker-compose build base
+    #   script: docker-compose run test
+    #   # env: OS=
 
     - &testos
       stage: test
       # install: true
+      script:
+        - docker-compose run base
+        - docker-compose build test
+
+    - <<: *testos
       before_script:
         - export OS=alpine
       script:
