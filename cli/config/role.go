@@ -15,13 +15,6 @@ import (
 	"github.com/imdario/mergo"
 )
 
-var ignoreFileNames = []string{
-	"*.json",
-	"*.md",
-	"*.yml",
-	".git",
-}
-
 // type Roles []*Role
 // func (roles *Roles) list() { }
 
@@ -200,27 +193,27 @@ func (r *Role) Parse(i interface{}) error {
 }
 
 // Prepare role
-func (r *Role) Prepare(target string) error {
-	if err := r.PrepareDirs(target); err != nil {
+func (r *Role) Prepare(target string, ignore ...string) error {
+	if err := r.PrepareDirs(target, ignore...); err != nil {
 		return err
 	}
-	if err := r.PrepareFiles(target); err != nil {
+	if err := r.PrepareFiles(target, ignore...); err != nil {
 		return err
 	}
-	if err := r.PrepareLinks(target); err != nil {
+	if err := r.PrepareLinks(target, ignore...); err != nil {
 		return err
 	}
-	if err := r.PrepareTemplates(target); err != nil {
+	if err := r.PrepareTemplates(target, ignore...); err != nil {
 		return err
 	}
-	if err := r.PrepareLines(target); err != nil {
+	if err := r.PrepareLines(target, ignore...); err != nil {
 		return err
 	}
 	return nil
 }
 
 // PrepareDirs role
-func (r *Role) PrepareDirs(target string) error {
+func (r *Role) PrepareDirs(target string, ignore ...string) error {
 	dirs := &tasks.Dirs{}
 	for _, d := range r.Dirs {
 		dir := os.ExpandEnv(d.Path)
@@ -235,7 +228,7 @@ func (r *Role) PrepareDirs(target string) error {
 }
 
 // PrepareFiles role
-func (r *Role) PrepareFiles(target string) error {
+func (r *Role) PrepareFiles(target string, ignore ...string) error {
 	files := &tasks.Files{}
 	for _, f := range r.Files {
 		src := os.ExpandEnv(f.Source)
@@ -243,7 +236,7 @@ func (r *Role) PrepareFiles(target string) error {
 		if !filepath.IsAbs(src) {
 			src = filepath.Join(r.Path, src)
 		}
-		paths, err := preparePaths(target, src, dst)
+		paths, err := preparePaths(target, src, dst, ignore...)
 		if err != nil {
 			return err
 		}
@@ -269,7 +262,7 @@ func (r *Role) PrepareFiles(target string) error {
 }
 
 // PrepareLinks role
-func (r *Role) PrepareLinks(target string) error {
+func (r *Role) PrepareLinks(target string, ignore ...string) error {
 	links := &tasks.Links{}
 	for _, l := range r.Links {
 		src := os.ExpandEnv(l.Source)
@@ -277,7 +270,7 @@ func (r *Role) PrepareLinks(target string) error {
 		if !filepath.IsAbs(src) {
 			src = filepath.Join(r.Path, src)
 		}
-		paths, err := preparePaths(target, src, dst)
+		paths, err := preparePaths(target, src, dst, ignore...)
 		if err != nil {
 			return err
 		}
@@ -297,7 +290,7 @@ func (r *Role) PrepareLinks(target string) error {
 }
 
 // PrepareTemplates role
-func (r *Role) PrepareTemplates(target string) error {
+func (r *Role) PrepareTemplates(target string, ignore ...string) error {
 	templates := &tasks.Templates{}
 	for _, t := range r.Templates {
 		src := os.ExpandEnv(t.Source)
@@ -305,7 +298,7 @@ func (r *Role) PrepareTemplates(target string) error {
 		if !filepath.IsAbs(src) {
 			src = filepath.Join(r.Path, src)
 		}
-		paths, err := preparePaths(target, src, dst)
+		paths, err := preparePaths(target, src, dst, ignore...)
 		if err != nil {
 			return err
 		}
@@ -325,7 +318,7 @@ func (r *Role) PrepareTemplates(target string) error {
 }
 
 // PrepareLines role
-func (r *Role) PrepareLines(target string) error {
+func (r *Role) PrepareLines(target string, ignore ...string) error {
 	lines := &tasks.Lines{}
 	for _, l := range r.Lines {
 		dst := os.ExpandEnv(l.File)
@@ -340,7 +333,7 @@ func (r *Role) PrepareLines(target string) error {
 	return nil
 }
 
-func preparePaths(target, src, dst string) (map[string]string, error) {
+func preparePaths(target, src, dst string, ignore ...string) (map[string]string, error) {
 	ret := map[string]string{}
 	//*links = append(*links, l)
 	if hasMeta(src) { // strings.Contains(src, "*")
@@ -353,7 +346,7 @@ func preparePaths(target, src, dst string) (map[string]string, error) {
 		for _, s := range glob {
 			// Extract source file name
 			_, n := filepath.Split(s)
-			for _, i := range ignoreFileNames {
+			for _, i := range ignore {
 				// Check for ignored patterns
 				matched, err := filepath.Match(i, n)
 				if err != nil {

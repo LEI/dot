@@ -18,7 +18,10 @@ type Options struct {
 	DryRun    bool
 	Verbose   int
 
-	RoleFilter []string
+	// Role filter
+	Filter []string
+	// Ignore files
+	Ignore []string
 
 	Source, Target string
 	Force          bool
@@ -36,7 +39,13 @@ func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
 	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
 	flags.CountVarP(&opts.Verbose, "verbose", "v", "Verbosity level")
 
-	flags.StringSliceVarP(&opts.RoleFilter, "role", "r", []string{}, "Filter role execution")
+	flags.StringSliceVarP(&opts.Filter, "filter", "f", []string{}, "Filter role by name")
+	flags.StringSliceVarP(&opts.Ignore, "ignore", "i", []string{
+		"*.json",
+		"*.md",
+		"*.yml",
+		".git",
+	}, "Ignore file name patterns")
 }
 
 // InstallActionFlags adds common task falgs on the FlagSet
