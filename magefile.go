@@ -189,18 +189,23 @@ func Fmt() error {
 }
 
 func build(args ...string) error {
+	args = append(
+		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
+		args...,
+	)
 	return sh.RunWith(flagEnv(), goexe, args...)
 }
 
 func buildWith(env map[string]string, args ...string) error {
 	args = append(
-		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
+		[]string{},
 		args...,
 	)
 	return sh.RunWith(env, goexe, args...)
 }
 
-func buildFor(platform, arch string) error {
+// Build binary for a specific platform
+func buildDist(platform, arch string) error {
 	env := map[string]string{
 		"GOOS":   platform,
 		"GOARCH": arch,
@@ -225,17 +230,20 @@ func buildFor(platform, arch string) error {
 
 // Build binary for macOS
 func Darwin() error {
-	return buildFor("darwin", "amd64")
+	mg.Deps(Vendor)
+	return buildDist("darwin", "amd64")
 }
 
 // Build binary for Linux
 func Linux() error {
-	return buildFor("linux", "amd64")
+	mg.Deps(Vendor)
+	return buildDist("linux", "amd64")
 }
 
 // Build binary for Windows
 func Windows() error {
-	return buildFor("windows", "amd64")
+	mg.Deps(Vendor)
+	return buildDist("windows", "amd64")
 }
 
 func Clean() error {

@@ -28,14 +28,14 @@ default:
 # Install mage binary https://magefile.org/
 .PHONY: mage
 mage:
-# ifndef MAGE
+	@echo MAGE=$(MAGE)
+ifndef MAGE
 	go get -u -d github.com/magefile/mage
 	cd $(GOPATH)/src/github.com/magefile/mage; \
 		go run bootstrap.go # $(RUN_ARGS)
-# endif
-	@echo Using binary $(MAGE)
-	ls -la $(GOPATH)/src/github.com/
-	ls -la $(GOPATH)/src/github.com/magefile/mage
+endif
+	# ls -la $(GOPATH)/src/github.com/
+	# ls -la $(GOPATH)/src/github.com/magefile/mage
 	mage --version
 
 ifneq (0,$(words $(RUN_ARGS)))
