@@ -2,6 +2,8 @@ package system
 
 import (
 	"fmt"
+	"os"
+
 	// "os"
 
 	"github.com/LEI/dot/pkg/cache"
@@ -37,6 +39,9 @@ var (
 
 	// ErrLineAlreadyExist ...
 	ErrLineAlreadyExist = fmt.Errorf("line already exists")
+
+	// Separator ...
+	Separator = string(os.PathSeparator)
 
 	cacheDir  = "dot"
 	cacheName = "files"

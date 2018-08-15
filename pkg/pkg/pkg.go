@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+
 	// "text/template"
 
 	// "github.com/LEI/dot/cli/config/tasks"
@@ -15,17 +16,18 @@ import (
 )
 
 var (
-	sudo bool
+	// Upgrade pacakges
+	Upgrade bool
 
 	// Manager pkg
-	Manager *Cmd
+	Manager *Mngr
 
-	managers = map[string]*Cmd{
+	managers = map[string]*Mngr{
 		// https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management
 		"apk": {
 			Sudo: true,
 			Bin:  "apk",
-			Acts: map[string]string{
+			Acts: map[string]interface{}{
 				"install": "add",
 				"remove":  "del",
 			},
@@ -43,7 +45,7 @@ var (
 		"apt-get": {
 			Sudo: true,
 			Bin:  "apt-get",
-			Acts: map[string]string{
+			Acts: map[string]interface{}{
 				"install": "install",
 				"remove":  "remove",
 			},
@@ -63,7 +65,35 @@ var (
 		// https://docs.brew.sh/Manpage
 		"brew": {
 			Bin: "brew",
-			Acts: map[string]string{
+			Acts: map[string]interface{}{
+				"install": func(m *Mngr, in []string) string {
+					opts := append([]string{"ls", "--versions"}, in...)
+					// TODO filter strings.HasPrefix("-")?
+					err := exec.Command("brew", opts...).Run()
+					if err == nil && Upgrade {
+						return "upgrade"
+					}
+					return "install"
+				},
+				"remove": "uninstall",
+			},
+			Opts: []*Opt{
+				{
+					Args: []string{"--quiet"},
+				},
+			},
+			Env: map[string]string{
+				// "HOMEBREW_NO_ANALYTICS": "1",
+				"HOMEBREW_NO_AUTO_UPDATE": "1",
+				// "HOMEBREW_NO_EMOJI": "1",
+			},
+			Init: func() error {
+				return execute("brew", "update", "--quiet")
+			},
+		},
+		"cask": {
+			Bin: "brew",
+			Acts: map[string]interface{}{
 				"install": "install",
 				"remove":  "uninstall",
 			},
@@ -71,15 +101,6 @@ var (
 				{
 					Args: []string{"--quiet"},
 				},
-			},
-		},
-		"cask": {
-			Bin: "brew",
-			Acts: map[string]string{
-				"install": "install",
-				"remove":  "uninstall",
-			},
-			Opts: []*Opt{
 				{
 					Args: []string{"cask"},
 				},
@@ -89,7 +110,7 @@ var (
 		"pacman": {
 			Sudo: true,
 			Bin:  "pacman",
-			Acts: map[string]string{
+			Acts: map[string]interface{}{
 				"install": "--sync",   // -S
 				"remove":  "--remove", // -R
 			},
@@ -115,7 +136,7 @@ var (
 		"yaourt": {
 			// Sudo: false,
 			Bin: "yaourt",
-			Acts: map[string]string{
+			Acts: map[string]interface{}{
 				"install": "--sync",   // -S
 				"remove":  "--remove", // -R
 			},
@@ -131,7 +152,7 @@ var (
 		"yum": {
 			Sudo: true,
 			Bin:  "yum",
-			Acts: map[string]string{
+			Acts: map[string]interface{}{
 				"install": "install",
 				"remove":  "remove",
 			},
@@ -153,20 +174,20 @@ var (
 // }
 
 // Detect default package manager
-func Detect() (c *Cmd) {
+func Detect() (m *Mngr) {
 	switch runtime.GOOS {
 	case "darwin":
-		c = managers["brew"]
+		m = managers["brew"]
 	case "linux":
 		switch true {
 		case executable("apk"):
-			c = managers["apk"]
+			m = managers["apk"]
 		case executable("apt-get"):
-			c = managers["apt-get"]
+			m = managers["apt-get"]
 		case executable("pacman"):
-			c = managers["pacman"]
+			m = managers["pacman"]
 		case executable("yum"):
-			c = managers["yum"]
+			m = managers["yum"]
 		default:
 			fmt.Fprintf(os.Stderr, "no package manager for OS: %s", ostype.List)
 			os.Exit(1)
@@ -175,7 +196,7 @@ func Detect() (c *Cmd) {
 		fmt.Fprintf(os.Stderr, "no package manager for OS %s", runtime.GOOS)
 		os.Exit(1)
 	}
-	// if c == nil {
+	// if m == nil {
 	// 	os.Exit(128)
 	// }
 	return
@@ -220,55 +241,84 @@ func Remove(manager, name string, opts ...string) error {
 
 // Exec ...
 func Exec(action, manager, name string, opts ...string) error {
-	var c *Cmd
-	if manager == "" {
-		c = Detect()
-	} else {
-		var ok bool
-		c, ok = managers[manager]
-		if !ok {
-			return fmt.Errorf(
-				"%s: invalid package manager to %s %s",
-				manager,
-				action,
-				name,
-			)
-		}
-	}
-	pkgs := strings.Split(name, " ")
-	opts = append(pkgs, opts...)
-	cmdArgs, err := c.Build(action, opts...)
+	m, err := NewMngr(manager)
 	if err != nil {
 		return err
 	}
-	bin := c.Bin
-	// Switch binary for sudo
-	if c.Sudo && bin != "sudo" && !isRoot() {
-		cmdArgs = append([]string{bin}, cmdArgs...)
-		bin = "sudo"
+	pkgs := strings.Split(name, " ")
+	opts = append(pkgs, opts...)
+	opts, err = m.Build(action, opts...)
+	if err != nil {
+		return err
 	}
-	fmt.Printf("$ %s %s\n", bin, strings.Join(cmdArgs, " "))
+	bin, opts, err := getBin(m, opts)
+	if err != nil {
+		return err
+	}
+	for k, v := range m.Env {
+		o := os.Getenv(k)
+		if o != v {
+			defer os.Setenv(k, o)
+		}
+		os.Setenv(k, v)
+	}
+	if !m.done && m.Init != nil {
+		if err := m.Init(); err != nil {
+			return err
+		}
+		m.done = true
+	}
+	return execute(bin, opts...)
+}
+
+func execute(name string, args ...string) error {
+	fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
 	if system.DryRun {
 		return nil
 	}
-	cmd := exec.Command(bin, cmdArgs...)
+	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
-// func NewCmd(t string)
+func getBin(m *Mngr, opts []string) (string, []string, error) {
+	bin := m.Bin
+	// Switch binary for sudo
+	if m.Sudo && bin != "sudo" && !isRoot() {
+		opts = append([]string{bin}, opts...)
+		bin = "sudo"
+	}
+	return bin, opts, nil
+}
 
-// Cmd ...
-type Cmd struct {
+// NewMngr ...
+func NewMngr(name string) (*Mngr, error) {
+	m := &Mngr{}
+	if name == "" {
+		m = Detect()
+	} else {
+		var ok bool
+		m, ok = managers[name]
+		if !ok {
+			return m, fmt.Errorf("%s: invalid package manager name", name)
+		}
+	}
+	return m, nil
+}
+
+// Mngr ...
+type Mngr struct {
 	Sudo bool
-	Bin  string            // Package manager binary path
-	Acts map[string]string // Command actions map
-	Opts []*Opt            // General pkg manager options
+	Bin  string                 // Package manager binary path
+	Acts map[string]interface{} // Command actions map
+	Opts []*Opt                 // General pkg manager options
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
+	Env  map[string]string
 	Init func() error // Install or prepare bin
+	done bool
 }
 
 // Opt ...
@@ -279,7 +329,7 @@ type Opt struct {
 }
 
 // Add ...
-func (cmd *Cmd) Add(opt *Opt) ([]string, error) {
+func (m *Mngr) Add(opt *Opt) ([]string, error) {
 	args := []string{}
 	// Check platform
 	if !opt.CheckOS() {
@@ -336,24 +386,35 @@ func (cmd *Cmd) Add(opt *Opt) ([]string, error) {
 }
 
 // Build command arguments
-func (cmd *Cmd) Build(a string, slice ...string) ([]string, error) {
+func (m *Mngr) Build(a string, in ...string) ([]string, error) {
 	opts := []string{}
 
 	// // General manager options
-	// if len(cmd.Opts) == 0 && !ostype.Has("alpine") {
-	// 	cmd.Opts = append(cmd.Opts, &Opt{Args: []string{"--noconfirm"}})
+	// if len(m.Opts) == 0 && !ostype.Has("alpine") {
+	// 	m.Opts = append(m.Opts, &Opt{Args: []string{"--noconfirm"}})
 	// }
 
 	// Package manager action
-	action, ok := cmd.Acts[strings.ToLower(a)]
+	act, ok := m.Acts[strings.ToLower(a)]
 	if !ok {
 		return []string{}, fmt.Errorf("unknown pkg action: %s", a)
 	}
+	var action string
+	switch A := act.(type) {
+	case string:
+		action = A
+	case func(m *Mngr, in []string) string:
+		action = A(m, in)
+	default:
+		return opts, fmt.Errorf("%s: unknown pkg manager", A)
+	}
+	// if action == "" {
+	// }
 	opts = append(opts, action)
 
 	// Action options
-	for _, a := range cmd.Opts {
-		add, err := cmd.Add(a)
+	for _, a := range m.Opts {
+		add, err := m.Add(a)
 		if err != nil {
 			return opts, err
 		}
@@ -363,11 +424,11 @@ func (cmd *Cmd) Build(a string, slice ...string) ([]string, error) {
 	}
 
 	// Insert package names and extra options
-	opts = append(opts, slice...)
+	opts = append(opts, in...)
 
 	// After action
-	// for _, a := range cmd.ActOpts {
-	// 	add, err := cmd.Add(a)
+	// for _, a := range m.ActOpts {
+	// 	add, err := m.Add(a)
 	// 	if err != nil {
 	// 		return opts, err
 	// 	}

@@ -240,6 +240,8 @@ func (cli *DotCli) ParseRole(opts *cliflags.Options, role *config.Role) error {
 		role.Path = filepath.Join(opts.Source, config.RoleConfigDir, role.Name)
 		// role.Path = filepath.Join(opts.Source, role.Name)
 	}
+	role.Ignore = opts.Ignore
+	role.Target = opts.Target
 	if err := cli.config.LoadRole(role); err != nil {
 		if opts.Verbose > 0 {
 			fmt.Fprintf(os.Stderr, "WARNING: Error loading role config file: %v\n", err)
@@ -248,7 +250,7 @@ func (cli *DotCli) ParseRole(opts *cliflags.Options, role *config.Role) error {
 	}
 	// TODO init env
 	os.Setenv("OS", runtime.GOOS)
-	if err := role.Prepare(opts.Target, opts.Ignore...); err != nil {
+	if err := role.Prepare(); err != nil {
 		return err
 	}
 	return nil

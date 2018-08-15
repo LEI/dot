@@ -3,16 +3,15 @@
 set -e
 # bash: -eo pipefail
 
-if [ -z "$DOT" ]; then
-  echo "DOT is undefined"
-  exit 1
-fi
+# if [ -z "$DOT" ]; then
+#   echo "DOT is undefined"
+#   exit 1
+# fi
 
 main() {
-  if [ -n "$DOT" ] && [ ! -f "$HOME/.dotrc.yml" ]; then
-    ln -sf "$DOT/.dotrc.yml" "$HOME/.dotrc.yml"
-  fi
-
+  # if [ -n "$DOT" ] && [ ! -f "$HOME/.dotrc.yml" ]; then
+  #   ln -sf "$DOT/.dotrc.yml" "$HOME/.dotrc.yml"
+  # fi
   touch ~/.dotnc
 
   tail_bashrc="$(tail -n1 ~/.bashrc)"
