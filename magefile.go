@@ -288,27 +288,11 @@ func Docker() error {
 	if envOS == "" {
 		return fmt.Errorf("OS is empty")
 	}
-	// // Build into dist
-	// mg.Deps(Linux) // Snapshot
-	if err := buildDist("linux", "amd64"); err != nil {
-		return err
-	}
-	// defer os.Setenv("OS", envOS)
-	// for _, platform := range []string{
-	// 	"alpine",
-	// 	"archlinux",
-	// 	"centos",
-	// 	"debian",
-	// } {
-	// 	os.Setenv("OS", platform)
-	// 	if err := dockerCompose("test_os", "test_os"); err != nil {
-	// 		return err
-	// 	}
+	return dockerComposeOS(envOS)
+	// if err := dockerCompose("test_os", "test_os"); err != nil {
+	// 	return err
 	// }
-	if err := dockerCompose("test_os", "test_os"); err != nil {
-		return err
-	}
-	return nil
+	// return nil
 }
 
 // var docker = sh.RunCmd("docker")
@@ -318,6 +302,38 @@ func dockerCompose(build, run string) error {
 	}
 	if err := sh.RunV("docker-compose", "run", run); err != nil {
 		return err
+	}
+	return nil
+}
+
+var platforms = []string{
+	"alpine",
+	"archlinux",
+	"centos",
+	"debian",
+}
+
+// Docker compose OS
+func DockerOS() error {
+	return dockerComposeOS()
+}
+
+// Docker compose OS
+func dockerComposeOS(list ...string) error {
+	if len(list) == 0 {
+		list = platforms
+	}
+	envOS, _ := os.LookupEnv("OS")
+	// mg.Deps(Linux) // Snapshot
+	if err := buildDist("linux", "amd64"); err != nil {
+		return err
+	}
+	defer os.Setenv("OS", envOS)
+	for _, platform := range list {
+		os.Setenv("OS", platform)
+		if err := dockerCompose("test_os", "test_os"); err != nil {
+			return err
+		}
 	}
 	return nil
 }
