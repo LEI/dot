@@ -78,6 +78,7 @@ jobs:
         - mage
         # - mage darwin
         # - cp dist/darwin_amd64/dot /usr/local/bin/dot
+        - cp .dotrc.yml $HOME/
         - scripts/e2e-test.sh
       env: OS=darwin
       os: osx
