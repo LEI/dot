@@ -24,7 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.$OS
-    command: -c 'bin/e2e-test.sh'
+    command: -l -c 'bin/e2e-test.sh'
     container_name: dot_$OS
     # entrypoint: bin/e2e-test.sh
     environment:
