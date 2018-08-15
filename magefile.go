@@ -211,6 +211,7 @@ func flagEnv() map[string]string {
 
 // Run go install
 func Install() error {
+	// mg.Deps(Vendor)
 	// return sh.RunWith(flagEnv(), goexe, "install", packageName)
 	return sh.Run(goexe, "install", packageName)
 }

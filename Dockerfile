@@ -31,7 +31,9 @@ ENV LC_ALL en_GB.UTF-8
 
 # # https://magefile.org/zeroinstall
 # RUN go run mage.go # "$@"
-RUN make
+# RUN if ! hash mage 2> /dev/null; then make mage; fi
+# RUN if [ -d vendor ]; then make vendor; fi
+RUN make mage && make vendor && make install
 # RUN if [ -d vendor ]; then \
 # ./scripts/mage.sh install; else \
 # ./scripts/mage.sh; fi
