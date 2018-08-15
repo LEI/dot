@@ -35,6 +35,7 @@ install:
   - make mage
 
 after_success:
+  - mage testCoverage
   - bash <(curl -s https://codecov.io/bash)
 
 jobs:
@@ -47,7 +48,6 @@ jobs:
         # - dot --version
         # - dot install --help
         - mage
-        - mage testCoverage
 
     - &base
       stage: test
