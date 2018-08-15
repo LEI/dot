@@ -182,9 +182,8 @@ func Detect() (c *Cmd) {
 }
 
 func executable(bin string) bool {
-	// cmd := exec.Command("/bin/sh", "-c", "hash", bin)
-	// cmd := exec.Command("command", "-v", bin)
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("command -v %s", bin))
+	c := fmt.Sprintf("command -v %s", bin)
+	cmd := exec.Command("sh", "-c", c)
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	// err := cmd.Run()
