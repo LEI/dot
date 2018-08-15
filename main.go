@@ -1,12 +1,9 @@
 package main
 
 import (
-	// "errors"
 	"fmt"
 	"os"
 	"path/filepath"
-
-	// "strings"
 
 	"github.com/LEI/dot/cli"
 	"github.com/LEI/dot/cli/command"
