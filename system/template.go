@@ -124,6 +124,29 @@ func ParseTemplate(file string) (data map[string]interface{}, err error) {
 	return data, nil
 }
 
+// TemplateData ...
+func TemplateData(k, v string, data interface{}, funcMaps ...template.FuncMap) (string, error) {
+	if v == "" {
+		return v, nil
+	}
+	tmpl := template.New(k).Option("missingkey=zero")
+	tmpl.Funcs(tplFuncMap)
+	for _, funcMap := range funcMaps {
+		tmpl.Funcs(funcMap)
+	}
+	tmpl, err := tmpl.Parse(v)
+	if err != nil {
+		return v, err
+	}
+	buf := &bytes.Buffer{}
+	err = tmpl.Execute(buf, data)
+	if err != nil {
+		return v, err
+	}
+	v = buf.String()
+	return v, nil
+}
+
 // CompareFileContent ...
 func CompareFileContent(s, str string) (string, bool, error) {
 	fi, err := os.Open(s)
@@ -156,29 +179,6 @@ func CompareFileContent(s, str string) (string, bool, error) {
 	// fmt.Println("COMPARED FILE CONTENT", s, len(str), "vs", len(content), "->", content == str)
 	return content, content == str, nil
 }
-
-// // TemplateData ...
-// func TemplateData(k, v string, data interface{}, funcMaps ...template.FuncMap) (string, error) {
-// 	if v == "" {
-// 		return v, nil
-// 	}
-// 	tmpl := template.New(k).Option("missingkey=zero")
-// 	tmpl.Funcs(tplFuncMap)
-// 	for _, funcMap := range funcMaps {
-// 		tmpl.Funcs(funcMap)
-// 	}
-// 	tmpl, err := tmpl.Parse(v)
-// 	if err != nil {
-// 		return v, err
-// 	}
-// 	buf := &bytes.Buffer{}
-// 	err = tmpl.Execute(buf, data)
-// 	if err != nil {
-// 		return v, err
-// 	}
-// 	v = buf.String()
-// 	return v, nil
-// }
 
 func parseTpl(src string, data map[string]interface{}) (string, error) {
 	_, name := filepath.Split(src)
