@@ -1,5 +1,6 @@
 // +build mage
 // https://github.com/gohugoio/hugo/blob/master/magefile.go
+// https://github.com/oxequa/realize
 
 package main
 
