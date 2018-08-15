@@ -15,7 +15,6 @@ sudo
 # coreutils
 # locales
 
-COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 COPY ./scripts/setup-user.sh setup-user.sh
 
 RUN ./setup-user.sh $USER --password ''
@@ -25,6 +24,8 @@ RUN ./setup-user.sh $USER --password ''
 #   chmod 0755 /usr/local/bin/pacapt
 
 USER $USER
+
+COPY --chown=docker:docker ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 
 WORKDIR /home/$USER
 
