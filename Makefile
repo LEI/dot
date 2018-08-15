@@ -29,13 +29,12 @@ default:
 .PHONY: mage
 mage:
 	@echo MAGE=$(MAGE)
-	ls -la $(MAGE)
+	ls -la $(GOPATH)/bin
 ifndef MAGE
 	go get -u -d github.com/magefile/mage
 	cd $(GOPATH)/src/github.com/magefile/mage; \
 		go run bootstrap.go # $(RUN_ARGS)
 endif
-	ls -la $(GOPATH)/src/github.com/magefile/mage
 	mage --version
 
 ifneq (0,$(words $(RUN_ARGS)))
