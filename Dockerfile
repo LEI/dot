@@ -29,13 +29,7 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-# # https://magefile.org/zeroinstall
-# RUN go run mage.go # "$@"
-# RUN if ! hash mage 2> /dev/null; then make mage; fi
-# RUN if [ -d vendor ]; then make vendor; fi
-RUN make mage && make vendor && make install
-# RUN if [ -d vendor ]; then \
-# ./scripts/mage.sh install; else \
-# ./scripts/mage.sh; fi
+# RUN make mage vendor install
+RUN make mage && mage
 
 # RUN cp .dotrc.yml /root/
