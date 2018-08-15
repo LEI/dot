@@ -28,8 +28,6 @@ default:
 # Install mage binary https://magefile.org/
 .PHONY: mage
 mage:
-	@echo MAGE=$(MAGE)
-	ls -la $(GOPATH)/bin
 ifndef MAGE
 	go get -u -d github.com/magefile/mage
 	cd $(GOPATH)/src/github.com/magefile/mage; \
