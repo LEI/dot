@@ -16,8 +16,8 @@ main() {
   touch ~/.dotnc
 
   tail_bashrc="$(tail -n1 ~/.bashrc)"
-  run /usr/local/bin/dot sync --verbose
-  run /usr/local/bin/dot install --verbose
+  run dot sync --verbose
+  run dot install --verbose
 
   # for f in "$HOME"/.gitconfig; do run test -f "$f"; done
   run test -f "$HOME/.gitconfig"
@@ -30,7 +30,7 @@ main() {
   run test -d "$HOME/.vim/pack/config"
 
   [ "$(tail -n1 ~/.bashrc)" != "$tail_bashrc" ] || exit 1
-  run /usr/local/bin/dot remove # --verbose
+  run dot remove # --verbose
   [ "$(tail -n1 ~/.bashrc)" = "$tail_bashrc" ] || exit 1
   # touch ~/{.bashrc,.vim/init.vim}
   # yes | run dot install -s -f bash,vim -c $DOT/.dotrc.yml

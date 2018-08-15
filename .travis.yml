@@ -19,12 +19,12 @@ matrix:
     - go: master
   fast_finish: true
 
-cache:
-  directories:
-    # - $GOPATH/bin
-    # - $GOPATH/pkg/dep
-    # - $GOPATH/src/github.com/LEI/dot/dist
-    - $GOPATH/src/github.com/LEI/dot/vendor
+# cache:
+#   directories:
+#     # - $GOPATH/bin
+#     # - $GOPATH/pkg/dep
+#     # - $GOPATH/src/github.com/LEI/dot/dist
+#     - $GOPATH/src/github.com/LEI/dot/vendor
 
 stages:
   - build
