@@ -197,6 +197,7 @@ func build(args ...string) error {
 }
 
 func buildWith(env map[string]string, args ...string) error {
+	mg.Deps(Vendor)
 	args = append(
 		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
 		args...,
@@ -230,19 +231,16 @@ func buildDist(platform, arch string) error {
 
 // Build binary for macOS
 func Darwin() error {
-	mg.Deps(Vendor)
 	return buildDist("darwin", "amd64")
 }
 
 // Build binary for Linux
 func Linux() error {
-	mg.Deps(Vendor)
 	return buildDist("linux", "amd64")
 }
 
 // Build binary for Windows
 func Windows() error {
-	mg.Deps(Vendor)
 	return buildDist("windows", "amd64")
 }
 
