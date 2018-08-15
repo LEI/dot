@@ -230,39 +230,52 @@ func dockerCompose(build, run string) error {
 	return nil
 }
 
+/*
 // Build container with docker compose
 func Docker() error {
-	// if err := docker("build", "-t", "hugo", "."); err != nil {
-	// 	return err
-	// }
-	// // yes ignore errors here
-	// docker("rm", "-f", "hugo-build")
-	// if err := docker("run", "--name", "hugo-build", "hugo ls /go/bin"); err != nil {
-	// 	return err
-	// }
-	// if err := docker("cp", "hugo-build:/go/bin/hugo", "."); err != nil {
-	// 	return err
-	// }
-	// return docker("rm", "hugo-build")
-	return dockerCompose("base", "test")
+	if err := docker("build", "-t", "hugo", "."); err != nil {
+		return err
+	}
+	// yes ignore errors here
+	docker("rm", "-f", "hugo-build")
+	if err := docker("run", "--name", "hugo-build", "hugo ls /go/bin"); err != nil {
+		return err
+	}
+	if err := docker("cp", "hugo-build:/go/bin/hugo", "."); err != nil {
+		return err
+	}
+	return docker("rm", "hugo-build")
 }
+*/
 
 // Build container for each OS
-func DockerOS() error {
+func Docker() error {
 	// mg.SerialDeps(Vendor, Check)
+	envOS, ok := os.LookupEnv("OS")
+	if !ok {
+		// Build from golang if OS is undefined
+		return dockerCompose("base", "test")
+		// return fmt.Errorf("OS is undefined")
+	}
+	if envOS == "" {
+		return fmt.Errorf("OS is empty")
+	}
+	// Build into dist
 	mg.Deps(Snapshot)
-	envOS := os.Getenv("OS")
-	defer os.Setenv("OS", envOS)
-	for _, platform := range []string{
-		"alpine",
-		"archlinux",
-		"centos",
-		"debian",
-	} {
-		os.Setenv("OS", platform)
-		if err := dockerCompose("test_os", "test_os"); err != nil {
-			return err
-		}
+	// defer os.Setenv("OS", envOS)
+	// for _, platform := range []string{
+	// 	"alpine",
+	// 	"archlinux",
+	// 	"centos",
+	// 	"debian",
+	// } {
+	// 	os.Setenv("OS", platform)
+	// 	if err := dockerCompose("test_os", "test_os"); err != nil {
+	// 		return err
+	// 	}
+	// }
+	if err := dockerCompose("test_os", "test_os"); err != nil {
+		return err
 	}
 	return nil
 }
