@@ -33,7 +33,8 @@ ifndef MAGE
 	cd $(GOPATH)/src/github.com/magefile/mage; \
 		go run bootstrap.go # $(RUN_ARGS)
 endif
-	command -v mage
+	hash mage
+	which mage
 	mage --version
 
 ifneq (0,$(words $(RUN_ARGS)))
