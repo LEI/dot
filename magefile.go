@@ -25,9 +25,7 @@ var (
 	// If not set, running mage will list available targets
 	Default = All
 
-	// -X $PACKAGE.version=next
-	// -X $PACKAGE.commit=$COMMIT
-	ldflags = "-s -w -X $PACKAGE.date=$DATE"
+	ldflags = "-s -w -X $PACKAGE.version=snapshot -X $PACKAGE.commit=$COMMIT -X $PACKAGE.date=$DATE"
 
 	goexe = "go"
 )
@@ -208,8 +206,10 @@ func buildWith(env map[string]string, args ...string) error {
 // Build binary for a specific platform
 func buildDist(platform, arch string) error {
 	env := map[string]string{
-		"GOOS":   platform,
-		"GOARCH": arch,
+		"CGO_ENABLED": "0",
+		"GOOS":        platform,
+		"GOARCH":      arch,
+		"GOARM":       "",
 	}
 	for k, v := range flagEnv() {
 		env[k] = v
