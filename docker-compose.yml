@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+
+  base:
+    build: .
+    #   context: .
+    #   dockerfile: Dockerfile
+    container_name: dot
+    image: lei/dot
+
+  test:
+    command: -c 'scripts/e2e-test.sh'
+    # command: -l # -c 'exec bash -l'
+    depends_on:
+      - base
+    # entrypoint: scripts/e2e-test.sh
+    # environment:
+    #   GIT_AUTHOR_NAME: Docker
+    #   GIT_AUTHOR_EMAIL: do@ck.er
+    image: lei/dot
+
+  test_os:
+    build:
+      context: .
+      dockerfile: Dockerfile.$OS
+    command: -c 'bin/e2e-test.sh'
+    container_name: dot_$OS
+    # entrypoint: bin/e2e-test.sh
+    environment:
+      - DOT=$$GOPATH/src/github.com/LEI/dot
+    # image: LEI/dot-$OS
