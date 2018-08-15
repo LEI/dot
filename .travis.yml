@@ -27,20 +27,21 @@ cache:
     - $GOPATH/src/github.com/LEI/dot/vendor
 
 stages:
-  # - build
+  - build
   - test
-  # - deploy
+  - deploy
 
-install:
-  - make mage
-  - mage
-  - dot --version
+install: make mage
 
 jobs:
   include:
+    - stage: build
+      # install: skip
+      script:
+        - mage
+        - dot --version
 
     - stage: test
-      # install: skip
       script:
         - mage docker
         - mage dockerOS
