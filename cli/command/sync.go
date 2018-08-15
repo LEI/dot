@@ -1,14 +1,13 @@
 package command
 
-// https://github.com/moby/moby/tree/17.05.x/cli/command/image
+// https://github.com/ncw/rclone
 
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/LEI/dot/cli"
 	cliconfig "github.com/LEI/dot/cli/config"
+	"github.com/spf13/cobra"
 )
 
 type syncOptions struct {
