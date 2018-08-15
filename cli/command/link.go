@@ -29,7 +29,7 @@ func NewLinkCommand(dotCli *DotCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "link [OPTIONS]",
 		Aliases: []string{"ln"},
-		Short:   "Link",
+		Short:   "Symlink file",
 		Args:    cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {
