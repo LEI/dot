@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/magefile/mage/mg" // mg contains helpful utility functions, like Deps
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
@@ -25,12 +25,29 @@ var (
 	// If not set, running mage will list available targets
 	Default = All
 
+	// -X $PACKAGE.version=next
+	// -X $PACKAGE.commit=$COMMIT
+	ldflags = "-s -w -X $PACKAGE.date=$DATE"
+
 	goexe = "go"
 )
 
 func init() {
 	if exe := os.Getenv("GOEXE"); exe != "" {
 		goexe = exe
+	}
+}
+
+func parseRev() (string, error) {
+	return sh.Output("git", "rev-parse", "--short", "HEAD")
+}
+
+func flagEnv() map[string]string {
+	hash, _ := parseRev()
+	return map[string]string{
+		"PACKAGE": packageName,
+		"COMMIT":  hash,
+		"DATE":    time.Now().Format("2006-01-02T15:04:05Z0700"),
 	}
 }
 
@@ -171,63 +188,67 @@ func Fmt() error {
 	return nil
 }
 
-func has(bin string) bool {
-	err := sh.Run("command", "-v", bin)
-	return err == nil
+func build(args ...string) error {
+	return sh.RunWith(flagEnv(), goexe, args...)
 }
 
-// func verbose(s string) string {
-// 	// if val, err := strconv.ParseBool(os.Getenv("MAGE_VERBOSE")); err == nil && val {
-// 	if !mg.Verbose() {
-// 		return ""
-// 	}
-// 	return s
+func buildWith(env map[string]string, args ...string) error {
+	args = append(
+		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
+		args...,
+	)
+	return sh.RunWith(env, goexe, args...)
+}
+
+func buildFor(platform, arch string) error {
+	env := map[string]string{
+		"GOOS":   platform,
+		"GOARCH": arch,
+	}
+	for k, v := range flagEnv() {
+		env[k] = v
+	}
+	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", packageName)
+}
+
+// type Build mg.NameSpace
+
+// // Build dot binary
+// func Build() error {
+// 	return build("-o", "dist/dot", packageName)
 // }
 
-var pkgPrefixLen = len(packageName)
+// // Build dot binary with race detector enabled
+// func BuildRace() error {
+// 	return build("-o", "dist/dot", packageName)
+// }
 
-func findPackages() ([]string, error) {
-	mg.Deps(getDep)
-	s, err := sh.Output(goexe, "list", "./...")
-	if err != nil {
-		return nil, err
-	}
-	pkgs := strings.Split(s, "\n")
-	for i := range pkgs {
-		pkgs[i] = "." + pkgs[i][pkgPrefixLen:]
-	}
-	return pkgs, nil
+// Build binary for macOS
+func Darwin() error {
+	return buildFor("darwin", "amd64")
 }
 
-func parseRev() (string, error) {
-	return sh.Output("git", "rev-parse", "--short", "HEAD")
+// Build binary for Linux
+func Linux() error {
+	return buildFor("linux", "amd64")
 }
 
-func flagEnv() map[string]string {
-	hash, _ := parseRev()
-	return map[string]string{
-		"PACKAGE":     packageName,
-		"COMMIT_HASH": hash,
-		"BUILD_DATE":  time.Now().Format("2006-01-02T15:04:05Z0700"),
+// Build binary for Windows
+func Windows() error {
+	return buildFor("windows", "amd64")
+}
+
+func Clean() error {
+	if _, err := os.Stat("dist"); err == nil || os.IsExist(err) {
+		fmt.Println("Removing dist...")
 	}
+	return sh.Rm("dist") // os.Remove("dot")
 }
 
 // Run go install
 func Install() error {
 	// mg.Deps(Vendor)
-	// return sh.RunWith(flagEnv(), goexe, "install", packageName)
-	return sh.Run(goexe, "install", packageName)
-}
-
-// var docker = sh.RunCmd("docker")
-func dockerCompose(build, run string) error {
-	if err := sh.RunV("docker-compose", "build", build); err != nil {
-		return err
-	}
-	if err := sh.RunV("docker-compose", "run", run); err != nil {
-		return err
-	}
-	return nil
+	return sh.RunWith(flagEnv(), goexe, "install", "-ldflags", ldflags, "-tags", buildTags(), packageName)
 }
 
 /*
@@ -261,7 +282,7 @@ func Docker() error {
 		return fmt.Errorf("OS is empty")
 	}
 	// Build into dist
-	mg.Deps(Snapshot)
+	mg.Deps(Linux) // Snapshot
 	// defer os.Setenv("OS", envOS)
 	// for _, platform := range []string{
 	// 	"alpine",
@@ -275,6 +296,17 @@ func Docker() error {
 	// 	}
 	// }
 	if err := dockerCompose("test_os", "test_os"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// var docker = sh.RunCmd("docker")
+func dockerCompose(build, run string) error {
+	if err := sh.RunV("docker-compose", "build", build); err != nil {
+		return err
+	}
+	if err := sh.RunV("docker-compose", "run", run); err != nil {
 		return err
 	}
 	return nil
@@ -309,9 +341,49 @@ func Release() error {
 // Create snapshot release
 func Snapshot() error {
 	mg.Deps(getGoreleaser)
-	return sh.RunV("goreleaser", "--rm-dist", "--snapshot")
+	args := []string{"--rm-dist", "--snapshot"}
+	if debug := os.Getenv("DEBUG"); debug == "1" {
+		args = append(args, "--debug")
+	}
+	return sh.RunV("goreleaser", args...)
 }
 
 // func Clean() error {
 // 	return sh.Rm("dist")
 // }
+
+var pkgPrefixLen = len(packageName)
+
+func findPackages() ([]string, error) {
+	mg.Deps(getDep)
+	s, err := sh.Output(goexe, "list", "./...")
+	if err != nil {
+		return nil, err
+	}
+	pkgs := strings.Split(s, "\n")
+	for i := range pkgs {
+		pkgs[i] = "." + pkgs[i][pkgPrefixLen:]
+	}
+	return pkgs, nil
+}
+
+func has(bin string) bool {
+	err := sh.Run("command", "-v", bin)
+	return err == nil
+}
+
+// func verbose(s string) string {
+// 	// if val, err := strconv.ParseBool(os.Getenv("MAGE_VERBOSE")); err == nil && val {
+// 	if !mg.Verbose() {
+// 		return ""
+// 	}
+// 	return s
+// }
+
+func buildTags() string {
+	// DOT_BUILD_TAGS=... mage
+	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
+		return envTags
+	}
+	return "none"
+}
