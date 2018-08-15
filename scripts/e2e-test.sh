@@ -15,10 +15,6 @@ main() {
 
   touch ~/.dotnc
 
-  run echo "$PATH"
-  run ls -la /usr/local/bin
-  run command -v dot
-
   tail_bashrc="$(tail -n1 ~/.bashrc)"
   run dot sync --verbose
   run dot install --verbose
