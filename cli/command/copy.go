@@ -29,7 +29,7 @@ func NewCopyCommand(dotCli *DotCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "copy [OPTIONS]",
 		Aliases: []string{"cp"},
-		Short:   "Copy",
+		Short:   "Copy file",
 		Args:    cobra.NoArgs, // RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// if len(args) > 0 {

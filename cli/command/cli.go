@@ -90,6 +90,8 @@ func (cli *DotCli) AddCommands(cmd *cobra.Command) {
 		NewDirCommand(cli),
 		NewCopyCommand(cli),
 		NewLinkCommand(cli),
+		NewTemplateCommand(cli),
+		NewLineCommand(cli),
 	)
 }
 
