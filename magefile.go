@@ -36,7 +36,7 @@ func init() {
 
 // Default target
 func All() {
-	mg.Deps(Vendor, Check, Install)
+	mg.SerialDeps(Vendor, Check, Install)
 	// cmd := exec.Command(goexe, "build", "-o", "bin/dot", ".")
 }
 
@@ -97,6 +97,11 @@ func Vet() error {
 
 // Run golint
 func Lint() error {
+	if !has("golint") {
+		if err := sh.Run(goexe, "get", "golang.org/x/lint/golint"); err != nil {
+			return err
+		}
+	}
 	pkgs, err := findPackages()
 	if err != nil {
 		return err
@@ -106,7 +111,8 @@ func Lint() error {
 		// We don't actually want to fail this target if we find golint errors,
 		// so we don't pass -set_exit_status, but we still print out any failures.
 		if _, err := sh.Exec(nil, os.Stderr, nil, "golint", pkg); err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: running go lint on %q: %v\n", pkg, err)
+			// fmt.Fprintf(os.Stderr, "ERROR: running go lint on %q: %v\n", pkg, err)
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 			failed = true
 		}
 	}
@@ -120,8 +126,12 @@ func Lint() error {
 
 // Run gofmt linter
 // gofmt -l -s . | grep -v ^vendor/
-// go get golang.org/x/tools/cmd/goimports
 func Fmt() error {
+	// if !has("goimports") {
+	// 	if err := sh.Run(goexe, "get", "golang.org/x/tools/cmd/goimports"); err != nil {
+	// 		return err
+	// 	}
+	// }
 	pkgs, err := findPackages()
 	if err != nil {
 		return err
