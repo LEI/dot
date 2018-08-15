@@ -31,11 +31,12 @@ stages:
   - test
   - deploy
 
-before_intall:
+before_intall: ls -la
+
+install:
   - make mage
   - mage
-
-install: mage snapshot
+  - mage snapshot
 
 jobs:
   include:
