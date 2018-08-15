@@ -29,6 +29,6 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-RUN if [ -d vendor ]; then make install; else make; fi
+RUN if [ -d vendor ]; then mage install; else mage; fi
 
 # RUN cp .dotrc.yml /root/
