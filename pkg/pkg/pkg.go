@@ -24,7 +24,7 @@ var (
 		// https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management
 		"apk": {
 			Sudo: true,
-			Bin: "apk",
+			Bin:  "apk",
 			Acts: map[string]string{
 				"install": "add",
 				"remove":  "del",
@@ -42,7 +42,7 @@ var (
 		// https://manpages.debian.org/stretch/apt/apt-get.8.en.html
 		"apt-get": {
 			Sudo: true,
-			Bin: "apt-get",
+			Bin:  "apt-get",
 			Acts: map[string]string{
 				"install": "install",
 				"remove":  "remove",
@@ -88,9 +88,9 @@ var (
 		// https://www.archlinux.org/pacman/pacman.8.html
 		"pacman": {
 			Sudo: true,
-			Bin: "pacman",
+			Bin:  "pacman",
 			Acts: map[string]string{
-				"install": "--sync", // -S
+				"install": "--sync",   // -S
 				"remove":  "--remove", // -R
 			},
 			Opts: []*Opt{
@@ -100,7 +100,7 @@ var (
 						"--noconfirm",
 						"--noprogressbar",
 						"--quiet",
-						"--refresh", // -y
+						"--refresh",    // -y
 						"--sysupgrade", // -u
 					},
 				},
@@ -116,7 +116,7 @@ var (
 			// Sudo: false,
 			Bin: "yaourt",
 			Acts: map[string]string{
-				"install": "--sync", // -S
+				"install": "--sync",   // -S
 				"remove":  "--remove", // -R
 			},
 			Opts: []*Opt{
@@ -130,7 +130,7 @@ var (
 		},
 		"yum": {
 			Sudo: true,
-			Bin: "yum",
+			Bin:  "yum",
 			Acts: map[string]string{
 				"install": "install",
 				"remove":  "remove",
@@ -264,7 +264,7 @@ type Cmd struct {
 	Sudo bool
 	Bin  string            // Package manager binary path
 	Acts map[string]string // Command actions map
-	Opts []*Opt         // General pkg manager options
+	Opts []*Opt            // General pkg manager options
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
@@ -273,11 +273,10 @@ type Cmd struct {
 
 // Opt ...
 type Opt struct {
-	Args interface{} // *parsers.Slice
-	types.HasOS // `mapstructure:",squash"`
-	types.HasIf // `mapstructure:",squash"`
+	Args        interface{} // *parsers.Slice
+	types.HasOS             // `mapstructure:",squash"`
+	types.HasIf             // `mapstructure:",squash"`
 }
-
 
 // Add ...
 func (cmd *Cmd) Add(opt *Opt) ([]string, error) {
@@ -335,7 +334,6 @@ func (cmd *Cmd) Add(opt *Opt) ([]string, error) {
 	// return args, err
 	return args, nil
 }
-
 
 // Build command arguments
 func (cmd *Cmd) Build(a string, slice ...string) ([]string, error) {

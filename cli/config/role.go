@@ -27,21 +27,21 @@ var ignoreFileNames = []string{
 
 // Role structure
 type Role struct {
-	Name  string
-	Path  string
-	URL   string
-	OS    types.Slice // tasks.OS
-	Env   types.Map   // tasks.Env
+	Name string
+	Path string
+	URL  string
+	OS   types.Slice // tasks.OS
+	Env  types.Map   // tasks.Env
 	// Vars  types.Map
 	// IncludeVars types.IncludeMap
-	Deps  types.Slice `mapstructure:"dependencies"`
-	Packages   tasks.Packages `mapstructure:"pkg"`
+	Deps     types.Slice    `mapstructure:"dependencies"`
+	Packages tasks.Packages `mapstructure:"pkg"`
 
-	Dirs  tasks.Dirs  `mapstructure:"dir"`
-	Files tasks.Files `mapstructure:"copy"`
-	Links tasks.Links `mapstructure:"link"`
+	Dirs      tasks.Dirs      `mapstructure:"dir"`
+	Files     tasks.Files     `mapstructure:"copy"`
+	Links     tasks.Links     `mapstructure:"link"`
 	Templates tasks.Templates `mapstructure:"template"`
-	Lines tasks.Lines `mapstructure:"line"`
+	Lines     tasks.Lines     `mapstructure:"line"`
 
 	// Hooks
 	Install     tasks.Commands
@@ -349,7 +349,7 @@ func preparePaths(target, src, dst string) (map[string]string, error) {
 		if err != nil {
 			return ret, err
 		}
-		GLOB:
+	GLOB:
 		for _, s := range glob {
 			// Extract source file name
 			_, n := filepath.Split(s)

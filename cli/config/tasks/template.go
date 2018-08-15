@@ -17,10 +17,10 @@ var (
 type Template struct {
 	Task
 	Source, Target string
-	Ext            string // `default:"tpl"`
+	Ext            string    // `default:"tpl"`
 	Env            types.Map // map[string]string
 	// Vars           map[string]interface{}
-	Vars  types.Map
+	Vars        types.Map
 	IncludeVars string `mapstructure:"include_vars"`
 	// backup bool
 	// overwrite bool
@@ -33,7 +33,7 @@ func (t *Template) String() string {
 // Data template
 func (t *Template) Data() (map[string]interface{}, error) {
 	data := make(map[string]interface{}, 0) // types.Map{}
-	for k, v := range t.Env { // GetEnv()
+	for k, v := range t.Env {               // GetEnv()
 		data[k] = v
 	}
 	// for k, v := range t.Env {

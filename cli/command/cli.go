@@ -273,8 +273,8 @@ func (cli *DotCli) ExecRole(action string, role *config.Role) error {
 			s = "Installing"
 		case "remove":
 			s = "Removing"
-		// default:
-		// 	s = strings.ToTitle(s)
+			// default:
+			// 	s = strings.ToTitle(s)
 		}
 		fmt.Printf("## %s %s...\n", s, role.Name)
 	}

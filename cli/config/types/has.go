@@ -43,7 +43,7 @@ func (h *HasIf) CheckIf() bool {
 		return true
 	}
 	varsMap := map[string]interface{}{
-		"DryRun":  system.DryRun,
+		"DryRun": system.DryRun,
 		// "Verbose": tasks.Verbose,
 		// "OS":      runtime.GOOS,
 	}

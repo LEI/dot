@@ -22,9 +22,9 @@ var (
 // Exec task
 type Exec struct {
 	Task
-	Command string
-	Shell string
-	Action string // install, remove
+	Command     string
+	Shell       string
+	Action      string // install, remove
 	types.HasOS `mapstructure:",squash"`
 }
 

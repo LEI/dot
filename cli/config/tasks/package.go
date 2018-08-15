@@ -13,9 +13,9 @@ import (
 // Package task
 type Package struct {
 	Task
-	Type   string // package manager
-	Name   string
-	Opts   types.Slice // todo args -> opts
+	Type        string // package manager
+	Name        string
+	Opts        types.Slice // todo args -> opts
 	types.HasOS `mapstructure:",squash"`
 	// sudo   bool
 	// latest bool
