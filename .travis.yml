@@ -45,14 +45,15 @@ jobs:
     #   script: docker-compose run test
     #   # env: OS=
 
-    - &testos
-      stage: test
+    - &base
+      stage: build
       # install: true
       script:
         - docker-compose run base
         - docker-compose build test
 
-    - <<: *testos
+    - <<: *base
+      stage: test
       before_script:
         - export OS=alpine
       script:
@@ -60,15 +61,19 @@ jobs:
         - docker-compose build test_os
       # env: OS=alpine
 
-    - <<: *testos
+    - <<: *base
+      stage: test
+      stage: test
       before_script:
         - export OS=archlinux
 
-    - <<: *testos
+    - <<: *base
+      stage: test
       before_script:
         - export OS=centos
 
-    - <<: *testos
+    - <<: *base
+      stage: test
       before_script:
         - export OS=debian
 
