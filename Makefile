@@ -25,6 +25,7 @@ default:
 mage:
 ifndef MAGE
 	go get -u -d github.com/magefile/mage
+	ls -la $$GOPATH/src/github.com/magefile/mage
 	cd $$GOPATH/src/github.com/magefile/mage; \
 		go run bootstrap.go
 endif
