@@ -38,7 +38,7 @@ jobs:
     - stage: build
       # install: skip
       script:
-        - mage
+        - mage -v
         - dot --version
 
     - stage: test

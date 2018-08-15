@@ -44,6 +44,9 @@ func getDep() error {
 	if has("dep") {
 		return nil
 	}
+	if runtime.GOOS == "darwin" {
+		return sh.RunV("brew", "install", "dep")
+	}
 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	return sh.Run(goexe, "get", "-u", "github.com/golang/dep/cmd/dep")
 }
@@ -217,6 +220,15 @@ func Install() error {
 }
 
 // var docker = sh.RunCmd("docker")
+func dockerCompose(build, run string) error {
+	if err := sh.RunV("docker-compose", "build", build); err != nil {
+		return err
+	}
+	if err := sh.RunV("docker-compose", "run", run); err != nil {
+		return err
+	}
+	return nil
+}
 
 // Build container with docker compose
 func Docker() error {
@@ -232,13 +244,7 @@ func Docker() error {
 	// 	return err
 	// }
 	// return docker("rm", "hugo-build")
-	if err := sh.RunV("docker-compose", "build", "base"); err != nil {
-		return err
-	}
-	if err := sh.RunV("docker-compose", "run", "test"); err != nil {
-		return err
-	}
-	return nil
+	return dockerCompose("base", "test")
 }
 
 // Build container for each OS
@@ -254,21 +260,21 @@ func DockerOS() error {
 		"debian",
 	} {
 		os.Setenv("OS", platform)
-		if err := sh.RunV("docker-compose", "build", "test_os"); err != nil {
-			return err
-		}
-		if err := sh.RunV("docker-compose", "run", "test_os"); err != nil {
+		if err := dockerCompose("test_os", "test_os"); err != nil {
 			return err
 		}
 	}
 	return nil
-
 }
 
 func getGoreleaser() error {
 	if has("goreleaser") {
 		return nil
 	}
+	if runtime.GOOS == "darwin" {
+		return sh.RunV("brew", "install", "goreleaser/tap/goreleaser")
+	}
+	mg.Deps(getDep)
 	repo := "github.com/goreleaser/goreleaser"
 	installCmd := "dep ensure -vendor-only && make setup build"
 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
