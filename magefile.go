@@ -289,8 +289,11 @@ func Docker() error {
 	if envOS == "" {
 		return fmt.Errorf("OS is empty")
 	}
-	// Build into dist
-	mg.Deps(Linux) // Snapshot
+	// // Build into dist
+	// mg.Deps(Linux) // Snapshot
+	if err := buildDist("linux", "amd64"); err != nil {
+		return err
+	}
 	// defer os.Setenv("OS", envOS)
 	// for _, platform := range []string{
 	// 	"alpine",
