@@ -21,7 +21,7 @@ matrix:
 
 cache:
   directories:
-    - $GOPATH/bin
+    # - $GOPATH/bin
     # - $GOPATH/pkg/dep
     # - $GOPATH/src/github.com/LEI/dot/dist
     - $GOPATH/src/github.com/LEI/dot/vendor
