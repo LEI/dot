@@ -3,23 +3,24 @@
 MAGE := $(shell command -v mage 2> /dev/null)
 # MAGE_VERBOSE ?= 0
 
-# Handle call without arguments
-# Must be first
+RUN_ARGS := $(MAKECMDGOALS)
+RUN_ARGS := $(filter-out default,$(RUN_ARGS))
+RUN_ARGS := $(filter-out mage,$(RUN_ARGS))
+# # https://stackoverflow.com/a/14061796/7796750
+# $(eval $(RUN_ARGS):;@:)
+
+#
 .PHONY: default
 default:
-ifndef MAGE
-	make mage
-endif
-	mage
+	$(MAGE) $(filter-out $@,$(RUN_ARGS))
 
 # Make silent default
 # Must not be first
-# ifndef VERBOSE
-# .SILENT:
-# endif
+ifndef VERBOSE
+.SILENT:
+endif
 
-# Install mage binary
-# https://magefile.org/
+# Install mage binary https://magefile.org/
 .PHONY: mage
 mage:
 ifndef MAGE
@@ -28,18 +29,16 @@ ifndef MAGE
 		go run bootstrap.go
 endif
 
-# Last-resort rule
-# https://www.gnu.org/software/make/manual/make.html#Last-Resort
-.DEFAULT: mage
-
-# Pass arguments to mage
-%::
-ifndef MAGE
-	make mage
-endif
-	mage $@
-# ifeq ($(MAGE_VERBOSE),1)
-# 	mage -v $@
-# else
-# 	mage $@
+# ifneq (0,$(words $(RUN_ARGS)))
+# https://stackoverflow.com/a/11731328/7796750
+%: default
+	@:
 # endif
+
+# # Last-resort rule
+# # https://www.gnu.org/software/make/manual/make.html#Last-Resort
+# .DEFAULT:
+
+# # Pass arguments to mage
+# %::
+# 	@echo RUN_ARGS $(RUN_ARGS)
