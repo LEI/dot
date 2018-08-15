@@ -35,16 +35,33 @@ install: make mage
 
 jobs:
   include:
+
     - stage: build
       # install: skip
       script:
         - mage -v
         - dot --version
 
-    - stage: test
+    - &base
+      stage: test
       script:
         - mage docker
-        - mage dockerOS
+
+    - <<: *base
+      before_script:
+        - export OS=alpine
+
+    - <<: *base
+      before_script:
+        - export OS=archlinux
+
+    - <<: *base
+      before_script:
+        - export OS=centos
+
+    - <<: *base
+      before_script:
+        - export OS=debian
 
     - stage: test
       script:
