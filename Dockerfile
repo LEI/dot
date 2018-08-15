@@ -33,4 +33,4 @@ ENV LC_ALL en_GB.UTF-8
 RUN make mage
 RUN mage
 
-RUN cp .dotrc.yml /root/
+RUN cp .dotrc.yml $HOME/
