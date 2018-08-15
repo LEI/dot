@@ -29,6 +29,8 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-RUN if [ -d vendor ]; then mage install; else mage; fi
+RUN if [ -d vendor ]; then \
+./scripts/mage.sh install; else \
+./scripts/mage.sh; fi
 
 # RUN cp .dotrc.yml /root/
