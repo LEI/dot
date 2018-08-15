@@ -39,7 +39,7 @@ func (opts *Options) InstallPersistentFlags(flags *pflag.FlagSet) {
 	flags.BoolVarP(&opts.DryRun, "dry-run", "d", false, "Do not execute tasks")
 	flags.CountVarP(&opts.Verbose, "verbose", "v", "Verbosity level")
 
-	flags.StringSliceVarP(&opts.Filter, "filter", "f", []string{}, "Filter role by name")
+	flags.StringSliceVarP(&opts.Filter, "filter-role", "r", []string{}, "Filter role names")
 	flags.StringSliceVarP(&opts.Ignore, "ignore", "i", []string{
 		"*.json",
 		"*.md",
