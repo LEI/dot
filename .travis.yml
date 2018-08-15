@@ -31,7 +31,7 @@ stages:
   - test
   - deploy
 
-install: make mage
+install: make mage && mage
 
 jobs:
   include:
@@ -43,22 +43,34 @@ jobs:
         - dot --version
         - dot install --help
 
-    - &base
-      stage: test
+    - stage: test
       script:
         - mage -v docker
 
-    - <<: *base
-      env: OS=alpine
+    - stage: test
+      script:
+        - OS=alpine mage -v docker
 
-    - <<: *base
-      env: OS=archlinux
+    - stage: test
+      script:
+        - OS=debian mage -v docker
 
-    - <<: *base
-      env: OS=centos
+    # - &base
+    #   stage: test
+    #   script:
+    #     - mage docker
 
-    - <<: *base
-      env: OS=debian
+    # - <<: *base
+    #   env: OS=alpine
+
+    # - <<: *base
+    #   env: OS=archlinux
+
+    # - <<: *base
+    #   env: OS=centos
+
+    # - <<: *base
+    #   env: OS=debian
 
     - stage: test
       script:
