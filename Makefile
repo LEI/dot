@@ -86,7 +86,8 @@ endif
 
 .PHONY: fmt
 fmt:
-	test -z $(gofmt -l -s . | grep -v ^vendor/)
+	# test -z $(shell ...)
+	gofmt -l -s . | grep -v ^vendor/
 
 # .PHONY: simplify
 # simplify:
