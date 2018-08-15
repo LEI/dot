@@ -216,6 +216,55 @@ func Install() error {
 	return sh.Run(goexe, "install", packageName)
 }
 
+// var docker = sh.RunCmd("docker")
+
+// Build container with docker compose
+func Docker() error {
+	// if err := docker("build", "-t", "hugo", "."); err != nil {
+	// 	return err
+	// }
+	// // yes ignore errors here
+	// docker("rm", "-f", "hugo-build")
+	// if err := docker("run", "--name", "hugo-build", "hugo ls /go/bin"); err != nil {
+	// 	return err
+	// }
+	// if err := docker("cp", "hugo-build:/go/bin/hugo", "."); err != nil {
+	// 	return err
+	// }
+	// return docker("rm", "hugo-build")
+	if err := sh.RunV("docker-compose", "build", "base"); err != nil {
+		return err
+	}
+	if err := sh.RunV("docker-compose", "run", "test"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Build container for each OS
+func DockerOS() error {
+	// mg.SerialDeps(Vendor, Check)
+	mg.Deps(Snapshot)
+	envOS := os.Getenv("OS")
+	defer os.Setenv("OS", envOS)
+	for _, platform := range []string{
+		"alpine",
+		"archlinux",
+		"centos",
+		"debian",
+	} {
+		os.Setenv("OS", platform)
+		if err := sh.RunV("docker-compose", "build", "test_os"); err != nil {
+			return err
+		}
+		if err := sh.RunV("docker-compose", "run", "test_os"); err != nil {
+			return err
+		}
+	}
+	return nil
+
+}
+
 func getGoreleaser() error {
 	if has("goreleaser") {
 		return nil
