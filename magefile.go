@@ -189,16 +189,16 @@ func Fmt() error {
 }
 
 func build(args ...string) error {
-	args = append(
-		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
-		args...,
-	)
-	return sh.RunWith(flagEnv(), goexe, args...)
+	// args = append(
+	// 	[]string{"build"},
+	// 	args...,
+	// )
+	return buildWith(flagEnv(), args...)
 }
 
 func buildWith(env map[string]string, args ...string) error {
 	args = append(
-		[]string{},
+		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
 		args...,
 	)
 	return sh.RunWith(env, goexe, args...)
