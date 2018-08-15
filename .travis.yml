@@ -41,6 +41,7 @@ jobs:
       script:
         - mage -v
         - dot --version
+        - dot install --help
 
     - &base
       stage: test
