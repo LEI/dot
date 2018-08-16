@@ -39,8 +39,5 @@ func Remove(dst string) error {
 	if err := os.Remove(dst); err != nil {
 		return err
 	}
-	if err := store.Delete(dst); err != nil {
-		return err
-	}
-	return nil
+	return store.Delete(dst)
 }

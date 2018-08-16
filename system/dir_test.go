@@ -1,32 +1,9 @@
 package system
 
 import (
-	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 )
-
-var (
-	testDir       string
-	testTmpDir    = "" // "/tmp"
-	testTmpPrefix = "test"
-)
-
-func TestMain(m *testing.M) {
-	dir, err := ioutil.TempDir(testTmpDir, testTmpPrefix)
-	if err != nil {
-		log.Fatal(err)
-	}
-	testDir = dir
-	// fmt.Printf("Using test dir: %s\n", dir)
-	exitCode := m.Run()
-	// defer os.RemoveAll(dir)
-	if err := os.RemoveAll(dir); err != nil {
-		log.Fatal(err)
-	}
-	os.Exit(exitCode)
-}
 
 func TestCheckDirExist(t *testing.T) {
 	// Create test dir

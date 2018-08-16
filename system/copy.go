@@ -20,7 +20,7 @@ func CheckCopy(src, dst string) error {
 		// Stop here if the target does not exist
 		return nil
 	}
-	ok, err := store.Compare(dst) // (src, dst)
+	ok, err := store.CompareFile(dst) // (src, dst)
 	if err != nil {
 		return err
 	}
@@ -60,5 +60,5 @@ func Copy(src, dst string) error {
 	if err := out.Sync(); err != nil {
 		return err
 	}
-	return store.Save(dst)
+	return store.PutFile(dst)
 }

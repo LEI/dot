@@ -122,17 +122,17 @@ func Check() {
 
 // Run go tests
 func Test() error {
-	// return sh.RunV(goexe, "test", "-v", "./...")
-	return testRun("./...")
+	// verbose := ""
+	// if mg.Verbose() {
+	// 	verbose = "-v"
+	// }
+	// return testRun(verbose, "./...")
+	return testRun("-v", "./...")
 }
 
 // Run go tests with race detector
 func TestRace() error {
-	verbose := ""
-	if mg.Verbose() {
-		verbose = "-v"
-	}
-	return testRun(verbose, "-race", "./...")
+	return testRun("-v", "-race", "./...")
 }
 
 // Run test coverage
