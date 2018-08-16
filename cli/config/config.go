@@ -5,7 +5,7 @@ import (
 	"os"
 	// "path/filepath"
 
-	"github.com/LEI/dot/pkg/homedir"
+	"github.com/LEI/dot/internal/homedir"
 	"github.com/spf13/viper"
 )
 

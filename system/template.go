@@ -13,7 +13,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/LEI/dot/pkg/comp"
+	"github.com/LEI/dot/internal/comp"
 	"gopkg.in/yaml.v2"
 )
 

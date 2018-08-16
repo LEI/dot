@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/LEI/dot/cli/config/tasks"
-	"github.com/LEI/dot/pkg/executils"
+	"github.com/LEI/dot/internal/executils"
 	"github.com/LEI/dot/system"
 )
 

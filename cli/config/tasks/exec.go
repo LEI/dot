@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/LEI/dot/cli/config/types"
-	// "github.com/LEI/dot/pkg/executils"
-	// "github.com/LEI/dot/pkg/ostype"
+	// "github.com/LEI/dot/internal/executils"
+	// "github.com/LEI/dot/internal/ostype"
 	"github.com/LEI/dot/system"
 	"github.com/mitchellh/mapstructure"
 )
