@@ -29,11 +29,22 @@ var (
 	ldflags = "-s -w -X $PACKAGE.version=snapshot -X $PACKAGE.commit=$COMMIT -X $PACKAGE.date=$DATE"
 
 	goexe = "go"
+
+	dockerCompose = RunVCmd("docker-compose")
+	testRun       = sh.RunCmd(goexe, "test")
+	testRunV      = RunVCmd(goexe, "test")
 )
 
 func init() {
 	if exe := os.Getenv("GOEXE"); exe != "" {
 		goexe = exe
+	}
+}
+
+// RunVCmd uses Exec underneath
+func RunVCmd(cmd string, args ...string) func(args ...string) error {
+	return func(args2 ...string) error {
+		return sh.RunV(cmd, append(args, args2...)...)
 	}
 }
 
@@ -85,19 +96,23 @@ func Check() {
 	// mg.Deps(TestRace)
 }
 
-// Run go tests
-func Test() error {
-	v := ""
-	if mg.Verbose() {
-		v = "-v"
-	}
-	return sh.RunV(goexe, "test", v, "./...") // -tags none
-	// return sh.RunV(goexe, "test", "./...")
+func test(args ...string) error {
+	// args = append([]string{"-tags", buildTags()}, args...)
+	return testRun(args...)
 }
 
-// Run go tests with race detector
-func TestCoverage() error {
-	return sh.RunV(goexe, "test", "-v", "-race", "-coverprofile=coverage.txt", "-covermode=atomic", "./...")
+func testV(args ...string) error {
+	// args = append([]string{"-tags", buildTags()}, args...)
+	if mg.Verbose() {
+		args = append([]string{"-v"}, args...)
+	}
+	return testRunV(args...)
+}
+
+// Run go tests
+func Test() error {
+	// return sh.RunV(goexe, "test", "-v", "./...")
+	return test("./...")
 }
 
 // Run go tests with race detector
@@ -106,7 +121,25 @@ func TestRace() error {
 	if mg.Verbose() {
 		v = "-v"
 	}
-	return sh.RunV(goexe, "test", v, "-race", "./...")
+	return test(v, "-race", "./...")
+}
+
+// Run test coverage
+func Coverage() error {
+	profile := os.Getenv("COVERPROFILE")
+	if profile == "" {
+		profile = "coverage.txt"
+	}
+	mode := os.Getenv("COVERMODE")
+	if mode == "" {
+		mode = "atomic"
+	}
+	// mg.Deps(Vendor)
+	v := ""
+	if mg.Verbose() {
+		v = "-v"
+	}
+	return test(v, "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
 }
 
 // Run go vet
@@ -223,17 +256,7 @@ func buildDist(platform, arch string) error {
 	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", packageName)
 }
 
-// type Build mg.NameSpace
-
-// // Build dot binary
-// func Build() error {
-// 	return build("-o", "dist/dot", packageName)
-// }
-
-// // Build dot binary with race detector enabled
-// func BuildRace() error {
-// 	return build("-o", "dist/dot", packageName)
-// }
+// type Build mg.Namespace
 
 // Build binary for macOS
 func Darwin() error {
@@ -287,25 +310,25 @@ func Docker() error {
 	envOS, ok := os.LookupEnv("OS")
 	if !ok {
 		// Build from golang if OS is undefined
-		return dockerCompose("base", "test")
+		return testDockerCompose("base", "test")
 		// return fmt.Errorf("OS is undefined")
 	}
 	if envOS == "" {
 		return fmt.Errorf("OS is empty")
 	}
-	return dockerComposeOS(envOS)
-	// if err := dockerCompose("test_os", "test_os"); err != nil {
+	return testDockerOS(envOS)
+	// if err := testDockerCompose("test_os", "test_os"); err != nil {
 	// 	return err
 	// }
 	// return nil
 }
 
 // var docker = sh.RunCmd("docker")
-func dockerCompose(build, run string) error {
-	if err := sh.RunV("docker-compose", "build", build); err != nil {
+func testDockerCompose(build, run string) error {
+	if err := dockerCompose("build", build); err != nil {
 		return err
 	}
-	if err := sh.RunV("docker-compose", "run", run); err != nil {
+	if err := dockerCompose("run", run); err != nil {
 		return err
 	}
 	return nil
@@ -320,11 +343,11 @@ var platforms = []string{
 
 // Docker compose OS
 func DockerOS() error {
-	return dockerComposeOS()
+	return testDockerOS()
 }
 
 // Docker compose OS
-func dockerComposeOS(list ...string) error {
+func testDockerOS(list ...string) error {
 	if len(list) == 0 {
 		list = platforms
 	}
@@ -336,7 +359,7 @@ func dockerComposeOS(list ...string) error {
 	defer os.Setenv("OS", envOS)
 	for _, platform := range list {
 		os.Setenv("OS", platform)
-		if err := dockerCompose("test_os", "test_os"); err != nil {
+		if err := testDockerCompose("test_os", "test_os"); err != nil {
 			return err
 		}
 	}
