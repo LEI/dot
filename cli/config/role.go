@@ -10,7 +10,7 @@ import (
 
 	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/cli/config/types"
-	"github.com/LEI/dot/pkg/git"
+	"github.com/LEI/dot/internal/git"
 	"github.com/LEI/dot/system"
 	"github.com/imdario/mergo"
 )

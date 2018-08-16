@@ -6,7 +6,7 @@ import (
 
 	// "os"
 
-	"github.com/LEI/dot/pkg/cache"
+	"github.com/LEI/dot/internal/cache"
 )
 
 var (

@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/LEI/dot/pkg/comp"
-	"github.com/LEI/dot/pkg/homedir"
+	"github.com/LEI/dot/internal/comp"
+	"github.com/LEI/dot/internal/homedir"
 	"github.com/rapidloop/skv"
 )
 

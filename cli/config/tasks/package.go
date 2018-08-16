@@ -5,8 +5,8 @@ import (
 
 	"github.com/LEI/dot/cli/config/types"
 	// "github.com/LEI/dot/system"
-	"github.com/LEI/dot/pkg/pkg"
-	// "github.com/LEI/dot/pkg/ostype"
+	"github.com/LEI/dot/internal/pkg"
+	// "github.com/LEI/dot/internal/ostype"
 	"github.com/mitchellh/mapstructure"
 )
 

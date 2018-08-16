@@ -1,4 +1,5 @@
 #!/bin/sh
+# https://github.com/restic/restic/blob/master/run_integration_tests.go
 
 set -e
 # bash: -eo pipefail

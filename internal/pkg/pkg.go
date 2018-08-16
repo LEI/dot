@@ -11,7 +11,7 @@ import (
 
 	// "github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/cli/config/types"
-	"github.com/LEI/dot/pkg/ostype"
+	"github.com/LEI/dot/internal/ostype"
 	"github.com/LEI/dot/system"
 )
 
