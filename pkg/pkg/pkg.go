@@ -93,6 +93,7 @@ var (
 		},
 		"cask": {
 			Bin: "brew",
+			Sub: "cask",
 			Acts: map[string]interface{}{
 				"install": "install",
 				"remove":  "uninstall",
@@ -100,9 +101,6 @@ var (
 			Opts: []*Opt{
 				{
 					Args: []string{"--quiet"},
-				},
-				{
-					Args: []string{"cask"},
 				},
 			},
 		},
@@ -311,6 +309,7 @@ func NewMngr(name string) (*Mngr, error) {
 type Mngr struct {
 	Sudo bool
 	Bin  string                 // Package manager binary path
+	Sub  string                 // Sub command
 	Acts map[string]interface{} // Command actions map
 	Opts []*Opt                 // General pkg manager options
 	// ActOpts []*Opt         // Action options
@@ -403,14 +402,19 @@ func (m *Mngr) Build(a string, in ...string) ([]string, error) {
 	switch A := act.(type) {
 	case string:
 		action = A
+	// case []string:
 	case func(m *Mngr, in []string) string:
 		action = A(m, in)
 	default:
 		return opts, fmt.Errorf("%s: unknown pkg manager", A)
 	}
-	// if action == "" {
-	// }
+	if action == "" {
+		return opts, fmt.Errorf("empty action %+v", m)
+	}
 	opts = append(opts, action)
+	if m.Sub != "" {
+		opts = append(opts, m.Sub)
+	}
 
 	// Action options
 	for _, a := range m.Opts {

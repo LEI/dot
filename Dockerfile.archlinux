@@ -29,6 +29,4 @@ WORKDIR /home/$USER
 COPY ./.dotrc.yml .dotrc.yml
 COPY --chown=docker:docker ./scripts bin/
 
-#RUN dot install --packages --sudo
-
 ENTRYPOINT ["/bin/bash"]
