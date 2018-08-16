@@ -62,10 +62,13 @@ func flagEnv() map[string]string {
 }
 
 func getEnv(key string, defaults ...string) string {
+	def := ""
+	if len(defaults) > 0 {
+		def = defaults[0]
+	}
 	// val, err := os.LookupEnv
-	val := os.Getenv(key)
-	if val == "" && len(defaults) > 0 {
-		val = defaults[0]
+	if val := os.Getenv(key); val == "" {
+		return def
 	}
 	return val
 }
@@ -438,9 +441,9 @@ func has(bin string) bool {
 // }
 
 func buildTags() string {
-	// DOT_BUILD_TAGS=... mage
-	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
-		return envTags
-	}
-	return "none"
+	// if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
+	// 	return envTags
+	// }
+	// return "none"
+	return getEnv("DOT_BUILD_TAGS", "none")
 }
