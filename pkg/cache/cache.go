@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/LEI/dot/pkg/comp"
 	"github.com/LEI/dot/pkg/homedir"
 	"github.com/rapidloop/skv"
 )
@@ -97,36 +98,44 @@ func (s *Store) Dir() string {
 	return filepath.Join(BaseDir(), s.dir)
 }
 
-// Save ...
-func (s *Store) Save(dst string) error {
-	b, err := ioutil.ReadFile(dst)
+// // Put an entry into the store
+// func (s *Store) Put(key string, value interface{}) error {
+// 	return s.Put(key, value)
+// }
+
+// PutFile ...
+func (s *Store) PutFile(path string) error {
+	b, err := ioutil.ReadFile(path)
 	if err != nil { // && os.IsExist(err) {
 		return err
 	}
 	// c := string(b)
-	// if err := dotCache.Put(dst, c); err != nil {
+	// if err := dotCache.Put(path, c); err != nil {
 	// 	return true, err
 	// }
-	return s.Put(dst, b)
+	return s.Put(path, b)
 }
 
 // // Forget ...
-// func (s *Store) Forget(dst string) error {
-// 	return s.Delete(dst)
+// func (s *Store) Forget(path string) error {
+// 	return s.Delete(path)
 // }
 
-// Compare ...
-func (s *Store) Compare(dst string) (bool, error) {
+// Compare input data with stored value
+func (s *Store) Compare(key string, data []byte) (bool, error) {
+	// Read stored value
 	var b []byte
-	if err := s.Get(dst, &b); err != nil {
+	if err := s.Get(key, &b); err != nil {
 		return false, err
 	}
-	a, err := ioutil.ReadFile(dst)
+	return comp.Equals(data, b)
+}
+
+// CompareFile content
+func (s *Store) CompareFile(path string) (bool, error) {
+	b, err := ioutil.ReadFile(path)
 	if err != nil { // && os.IsExist(err) {
 		return false, err
 	}
-	ok := string(a) == string(b)
-	// fmt.Println("COMPARING", dst, "->", ok)
-	// fmt.Printf("<<<<\n%s====\n%s>>>>\n", string(a), string(b))
-	return ok, nil
+	return s.Compare(path, b)
 }

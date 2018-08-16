@@ -67,8 +67,8 @@ var (
 			Bin: "brew",
 			Acts: map[string]interface{}{
 				"install": func(m *Mngr, in []string) string {
+					// TODO filter strings.HasPrefix(in, "-")?
 					opts := append([]string{"ls", "--versions"}, in...)
-					// TODO filter strings.HasPrefix("-")?
 					err := exec.Command("brew", opts...).Run()
 					if err == nil && Upgrade {
 						return "upgrade"
@@ -97,11 +97,6 @@ var (
 			Acts: map[string]interface{}{
 				"install": "install",
 				"remove":  "uninstall",
-			},
-			Opts: []*Opt{
-				{
-					Args: []string{"--quiet"},
-				},
 			},
 		},
 		// https://www.archlinux.org/pacman/pacman.8.html

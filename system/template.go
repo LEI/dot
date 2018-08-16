@@ -13,6 +13,7 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/LEI/dot/pkg/comp"
 	"gopkg.in/yaml.v2"
 )
 
@@ -55,24 +56,40 @@ func shellEscape(s string) string {
 
 // CheckTemplate ... (verify/validate)
 func CheckTemplate(src, dst string, data map[string]interface{}) error {
-	content, err := parseTpl(src, data)
+	if !Exists(src) {
+		// return ErrIsNotExist
+		return fmt.Errorf("%s: no such file to template to %s", src, dst)
+	}
+	if !Exists(dst) {
+		// Stop here if the target does not exist
+		return nil
+	}
+	b, err := parseTpl(src, data)
 	if err != nil {
 		return err
 	}
-	if Exists(dst) {
-		_, ok, err := CompareFileContent(dst, content)
-		if err != nil {
-			return err
-		}
-		if ok {
-			return ErrTemplateAlreadyExist
-		}
-		fmt.Println("DIFF", dst)
-		if err := printDiff(dst, content); err != nil {
-			return err
-		}
+	// Compare to cached content
+	ok, err := store.CompareFile(dst)
+	if err != nil {
+		return err
 	}
-	return nil
+	if ok {
+		fmt.Println("cache matched, remove", dst, "?")
+		return nil // ErrFileExist
+	}
+	// Compare to new content
+	ok, err = comp.RegularFile(dst, b)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		fmt.Println("DIFF OF", dst)
+		if err := printDiff(dst, b); err != nil {
+			return err
+		}
+		return ErrFileExist
+	}
+	return ErrTemplateAlreadyExist
 }
 
 // CreateTemplate ...
@@ -84,10 +101,10 @@ func CreateTemplate(src, dst string, data map[string]interface{}) (err error) {
 	if DryRun {
 		return nil
 	}
-	if err := ioutil.WriteFile(dst, []byte(content), FileMode); err != nil {
+	if err := ioutil.WriteFile(dst, content, FileMode); err != nil {
 		return err
 	}
-	return nil
+	return store.Put(dst, content)
 }
 
 // RemoveTemplate ...
@@ -96,14 +113,10 @@ func RemoveTemplate(src, dst string, data map[string]interface{}) error {
 	// if err != nil {
 	// 	return err
 	// }
-	if DryRun {
-		return nil
-	}
-	fmt.Println("TODO RemoveTemplate", src, dst)
-	// if err := os.Remove(dst); err != nil {
-	// 	return err
+	// if DryRun {
+	// 	return nil
 	// }
-	return nil
+	return Remove(dst)
 }
 
 // ParseTemplate ...
@@ -147,58 +160,25 @@ func TemplateData(k, v string, data interface{}, funcMaps ...template.FuncMap) (
 	return v, nil
 }
 
-// CompareFileContent ...
-func CompareFileContent(s, str string) (string, bool, error) {
-	fi, err := os.Open(s)
-	if err != nil {
-		return "", false, err
-	}
-	// if err != nil && os.IsExist(err) {
-	// 	return "", false, err
-	// }
-	// if fi == nil {
-	// 	return "", false, nil
-	// }
-	defer fi.Close()
-	stat, err := fi.Stat()
-	if err != nil && os.IsExist(err) {
-		return "", false, err
-	}
-	if stat != nil && !stat.Mode().IsRegular() {
-		return "", false, fmt.Errorf("not a regular file: %s (%q)", stat.Name(), stat.Mode().String())
-	}
-	// b, err := ioutil.ReadFile(s)
-	// if err != nil && os.IsExist(err) {
-	// 	return false, err
-	// }
-	b, err := ioutil.ReadAll(fi)
-	content := string(b)
-	if err != nil {
-		return content, false, err
-	}
-	// fmt.Println("COMPARED FILE CONTENT", s, len(str), "vs", len(content), "->", content == str)
-	return content, content == str, nil
-}
-
-func parseTpl(src string, data map[string]interface{}) (string, error) {
+func parseTpl(src string, data map[string]interface{}) ([]byte, error) {
+	buf := &bytes.Buffer{}
 	_, name := filepath.Split(src)
 	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(src)
 	if err != nil {
-		return "", err
+		return buf.Bytes(), err
 	}
-	buf := &bytes.Buffer{}
 	if err != nil {
-		return buf.String(), err
+		return buf.Bytes(), err
 	}
 	if err = tmpl.Execute(buf, data); err != nil {
-		return buf.String(), err
+		return buf.Bytes(), err
 	}
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
-func printDiff(s, content string) error {
+func printDiff(path string, content []byte) error {
 	// stdout, stderr, status := ExecCommand("")
-	diffCmd := exec.Command("diff", s, "-")
+	diffCmd := exec.Command("diff", path, "-")
 	// --side-by-side --suppress-common-lines
 	stdin, err := diffCmd.StdinPipe()
 	if err != nil {
@@ -207,14 +187,14 @@ func printDiff(s, content string) error {
 	defer stdin.Close()
 	diffCmd.Stdout = os.Stdout
 	diffCmd.Stderr = os.Stderr
-	fmt.Println("START DIFF", s)
+	fmt.Println("START DIFF", path)
 	if err := diffCmd.Start(); err != nil {
 		return err
 	}
-	io.WriteString(stdin, content)
+	io.WriteString(stdin, string(content))
 	// fmt.Println("WAIT")
 	stdin.Close()
 	diffCmd.Wait()
-	fmt.Println("END DIFF", s)
+	fmt.Println("END DIFF", path)
 	return nil
 }

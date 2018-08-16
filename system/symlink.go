@@ -34,6 +34,14 @@ func CheckSymlink(src, dst string) error {
 		return fmt.Errorf("%s: unable to read symlink", dst)
 	}
 	if real != src {
+		var b []byte
+		if err := store.Get(dst, &b); err != nil {
+			return err
+		}
+		if string(b) == real {
+			fmt.Println(dst, "matches cache!")
+			// return nil
+		}
 		return fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
 	}
 	return ErrLinkAlreadyExist
@@ -48,7 +56,10 @@ func Symlink(src, dst string) error {
 	if DryRun {
 		return nil
 	}
-	return os.Symlink(src, dst)
+	if err := os.Symlink(src, dst); err != nil {
+		return err
+	}
+	return store.Put(dst, src)
 }
 
 // Unlink ...
@@ -59,7 +70,10 @@ func Unlink(dst string) error {
 	if DryRun {
 		return nil
 	}
-	return os.Remove(dst)
+	if err := os.Remove(dst); err != nil {
+		return err
+	}
+	return store.Delete(dst)
 }
 
 // IsSymlink checks a given file info corresponds to a symbolic link
