@@ -93,7 +93,7 @@ var (
 		},
 		"cask": {
 			Bin: "brew",
-			Sub: "cask",
+			Sub: []string{"cask"},
 			Acts: map[string]interface{}{
 				"install": "install",
 				"remove":  "uninstall",
@@ -309,7 +309,7 @@ func NewMngr(name string) (*Mngr, error) {
 type Mngr struct {
 	Sudo bool
 	Bin  string                 // Package manager binary path
-	Sub  string                 // Sub command
+	Sub  []string               // Sub commands
 	Acts map[string]interface{} // Command actions map
 	Opts []*Opt                 // General pkg manager options
 	// ActOpts []*Opt         // Action options
@@ -393,6 +393,11 @@ func (m *Mngr) Build(a string, in ...string) ([]string, error) {
 	// 	m.Opts = append(m.Opts, &Opt{Args: []string{"--noconfirm"}})
 	// }
 
+	// Sub command
+	if len(m.Sub) > 0 {
+		opts = append(opts, m.Sub...)
+	}
+
 	// Package manager action
 	act, ok := m.Acts[strings.ToLower(a)]
 	if !ok {
@@ -412,9 +417,6 @@ func (m *Mngr) Build(a string, in ...string) ([]string, error) {
 		return opts, fmt.Errorf("empty action %+v", m)
 	}
 	opts = append(opts, action)
-	if m.Sub != "" {
-		opts = append(opts, m.Sub)
-	}
 
 	// Action options
 	for _, a := range m.Opts {

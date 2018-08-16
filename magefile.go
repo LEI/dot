@@ -62,15 +62,14 @@ func flagEnv() map[string]string {
 }
 
 func getEnv(key string, defaults ...string) string {
-	def := ""
-	if len(defaults) > 0 {
-		def = defaults[0]
-	}
 	// val, err := os.LookupEnv
-	if val := os.Getenv(key); val == "" {
-		return def
+	if val := os.Getenv(key); val != "" {
+		return val
 	}
-	return val
+	if len(defaults) > 0 {
+		return defaults[0]
+	}
+	return ""
 }
 
 // Default target
