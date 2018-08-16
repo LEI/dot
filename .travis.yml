@@ -34,9 +34,9 @@ stages:
 install:
   - make mage
 
-after_success:
-  - mage testCoverage
-  - bash <(curl -s https://codecov.io/bash)
+# after_success:
+#   - mage coverage
+#   - bash <(curl -s https://codecov.io/bash)
 
 jobs:
   include:
