@@ -61,6 +61,15 @@ func flagEnv() map[string]string {
 	}
 }
 
+func getEnv(key string, defaults ...string) string {
+	// val, err := os.LookupEnv
+	val := os.Getenv(key)
+	if val == "" && len(defaults) > 0 {
+		val = defaults[0]
+	}
+	return val
+}
+
 // Default target
 func All() {
 	mg.SerialDeps(Vendor, Check, Install)
@@ -96,59 +105,53 @@ func Check() {
 	// mg.Deps(TestRace)
 }
 
-func test(args ...string) error {
-	// args = append([]string{"-tags", buildTags()}, args...)
-	return testRun(args...)
-}
+// func test(args ...string) error {
+// 	args = append([]string{"-tags", buildTags()}, args...)
+// 	return testRun(args...)
+// }
 
-func testV(args ...string) error {
-	// args = append([]string{"-tags", buildTags()}, args...)
-	if mg.Verbose() {
-		args = append([]string{"-v"}, args...)
-	}
-	return testRunV(args...)
-}
+// func testV(args ...string) error {
+// 	args = append([]string{"-tags", buildTags()}, args...)
+// 	if mg.Verbose() {
+// 		args = append([]string{"-v"}, args...)
+// 	}
+// 	return testRunV(args...)
+// }
 
 // Run go tests
 func Test() error {
 	// return sh.RunV(goexe, "test", "-v", "./...")
-	return test("./...")
+	return testRun("./...")
 }
 
 // Run go tests with race detector
 func TestRace() error {
-	v := ""
+	verbose := ""
 	if mg.Verbose() {
-		v = "-v"
+		verbose = "-v"
 	}
-	return test(v, "-race", "./...")
+	return testRun(verbose, "-race", "./...")
 }
 
 // Run test coverage
 func Coverage() error {
-	profile := os.Getenv("COVERPROFILE")
-	if profile == "" {
-		profile = "coverage.txt"
-	}
-	mode := os.Getenv("COVERMODE")
-	if mode == "" {
-		mode = "atomic"
-	}
+	profile := getEnv("COVERPROFILE", "coverage.txt")
+	mode := getEnv("COVERMODE", "atomic")
 	// mg.Deps(Vendor)
-	v := ""
+	verbose := ""
 	if mg.Verbose() {
-		v = "-v"
+		verbose = "-v"
 	}
-	return test(v, "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
+	return testRunV(verbose, "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
 }
 
 // Run go vet
 func Vet() error {
-	// v := ""
+	// verbose := ""
 	// if mg.Verbose() {
-	// 	v = "-v"
+	// 	verbose = "-v"
 	// }
-	// return sh.RunV(goexe, "vet", v, "./...")
+	// return sh.RunV(goexe, "vet", verbose, "./...")
 	return sh.RunV(goexe, "vet", "./...")
 }
 
