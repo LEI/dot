@@ -19,10 +19,10 @@ type Config struct {
 }
 
 // Prepare config roles
-func (c *Config) Prepare() error {
+func (c *Config) Prepare(target string) error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
-		if err := r.Prepare(); err != nil {
+		if err := r.Prepare(target); err != nil {
 			return err
 		}
 		// if ok := r.Ignore(); ok {

@@ -6,6 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// CopyOptions collects all options for the copy command.
+type CopyOptions struct {
+}
+
+var copyOptions CopyOptions
+
 var cmdCopy = &cobra.Command{
 	Use:     "copy [flags]",
 	Aliases: []string{"cp"},
@@ -19,12 +25,6 @@ The "copy" task installs or removes files.
 		return runCopy(copyOptions, globalOptions, args)
 	},
 }
-
-// CopyOptions collects all options for the copy command.
-type CopyOptions struct {
-}
-
-var copyOptions CopyOptions
 
 func init() {
 	cmdInstall.AddCommand(cmdCopy)

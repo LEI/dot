@@ -88,7 +88,7 @@ dot is yet another file manager program.
 		if len(globalConfig.Roles) == 0 {
 			return fmt.Errorf("no roles to execute")
 		}
-		if err := globalConfig.Prepare(); err != nil {
+		if err := globalConfig.Prepare(globalOptions.Target); err != nil {
 			return err
 		}
 		// if err := globalConfig.Load(); err != nil {

@@ -6,6 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// LineOptions collects all options for the line command.
+type LineOptions struct {
+}
+
+var lineOptions LineOptions
+
 var cmdLine = &cobra.Command{
 	Use:     "line [flags]",
 	Aliases: []string{"li"},
@@ -19,12 +25,6 @@ The "line" task installs or removes lines.
 		return runLine(lineOptions, globalOptions, args)
 	},
 }
-
-// LineOptions collects all options for the line command.
-type LineOptions struct {
-}
-
-var lineOptions LineOptions
 
 func init() {
 	cmdInstall.AddCommand(cmdLine)

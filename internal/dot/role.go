@@ -117,16 +117,16 @@ func (r *Role) LoadConfig() error {
 }
 
 // Prepare role tasks
-func (r *Role) Prepare() error {
+func (r *Role) Prepare(target string) error {
 	if r.Path == "" {
 		r.Path = filepath.Join(os.ExpandEnv("$HOME"), ".dot", r.Name)
 	}
 	// fmt.Println("prepare", r.Name)
-	// for _, t := range r.Tasks {
-	// 	if err := t.Prepare(); err != nil {
-	// 		return err
-	// 	}
-	// }
+	for _, d := range r.Dirs {
+		if err := d.Prepare(target); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

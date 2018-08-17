@@ -4,6 +4,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// LinkOptions collects all options for the link command.
+type LinkOptions struct {
+}
+
+var linkOptions LinkOptions
+
 var cmdLink = &cobra.Command{
 	Use:     "link [flags]",
 	Aliases: []string{"ln"},
@@ -17,12 +23,6 @@ The "link" task installs or removes symlinks.
 		return runLink(linkOptions, globalOptions, args)
 	},
 }
-
-// LinkOptions collects all options for the link command.
-type LinkOptions struct {
-}
-
-var linkOptions LinkOptions
 
 func init() {
 	cmdInstall.AddCommand(cmdLink)

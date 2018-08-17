@@ -4,6 +4,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// InstallOptions collects all options for the install command.
+type InstallOptions struct {
+	Sync bool
+}
+
+var installOptions InstallOptions
+
 var cmdInstall = &cobra.Command{
 	Use:     "install [flags]",
 	Aliases: []string{"i"},
@@ -17,13 +24,6 @@ The "install" command installs roles by executing their tasks.
 		return runInstall(installOptions, globalOptions, args)
 	},
 }
-
-// InstallOptions collects all options for the install command.
-type InstallOptions struct {
-	Sync bool
-}
-
-var installOptions InstallOptions
 
 func init() {
 	cmdRoot.AddCommand(cmdInstall)
@@ -42,14 +42,10 @@ func runInstall(opts InstallOptions, gopts GlobalOptions, args []string) error {
 	// 		}
 	// 	}
 	// }
-	// for _, r := range globalConfig.Roles {
-	// 	if err := r.RunInstall(); err != nil {
-	// 		return err
-	// 	}
-	// }
+	action := "install"
 	for _, r := range globalConfig.Roles {
 		for _, d := range r.Dirs {
-			if err := doDir(d, DirOptions{}, gopts); err != nil {
+			if err := runTask(action, d); err != nil {
 				return err
 			}
 		}

@@ -6,6 +6,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ListOptions collects all options for the list command.
+type ListOptions struct {
+	ListLong bool
+	// Host      string
+	// Tags      restic.TagLists
+	// Paths     []string
+	// Recursive bool
+}
+
+var listOptions ListOptions
+
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]
 	Aliases: []string{"ls"},
@@ -19,17 +30,6 @@ The "list" command lists roles and their tasks.
 		return runList(listOptions, globalOptions, args)
 	},
 }
-
-// ListOptions collects all options for the list command.
-type ListOptions struct {
-	ListLong bool
-	// Host      string
-	// Tags      restic.TagLists
-	// Paths     []string
-	// Recursive bool
-}
-
-var listOptions ListOptions
 
 func init() {
 	cmdRoot.AddCommand(cmdList)
