@@ -22,7 +22,8 @@ type Config struct {
 func (c *Config) Prepare(target string) error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
-		if err := r.Prepare(target); err != nil {
+		fmt.Println("CONFIG PREPARING", r.Dirs)
+		if err := r.Parse(target); err != nil {
 			return err
 		}
 		// if ok := r.Ignore(); ok {
