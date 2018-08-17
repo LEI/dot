@@ -102,14 +102,14 @@ func tasksPrefix(prefix string, r *Role) string {
 	if r.Files != nil {
 		s += fmt.Sprintf("%sFiles: %s\n", prefix, r.Files)
 	}
-	if r.Lines != nil {
-		s += fmt.Sprintf("%sLines: %s\n", prefix, r.Lines)
-	}
 	if r.Links != nil {
 		s += fmt.Sprintf("%sLinks: %s\n", prefix, r.Links)
 	}
 	if r.Templates != nil {
 		s += fmt.Sprintf("%sTemplates: %s\n", prefix, r.Templates)
+	}
+	if r.Lines != nil {
+		s += fmt.Sprintf("%sLines: %s\n", prefix, r.Lines)
 	}
 	return s
 }
@@ -127,10 +127,6 @@ func (r *Role) LoadConfig() error {
 
 // Parse all role tasks
 func (r *Role) Parse(target string) error {
-	if r.Path == "" {
-		r.Path = filepath.Join(os.ExpandEnv("$HOME"), ".dot", r.Name)
-	}
-	// fmt.Println("prepare", r.Name)
 	if err := r.ParseDirs(target); err != nil {
 		return err
 	}
@@ -152,8 +148,9 @@ func (r *Role) Parse(target string) error {
 // ParseDirs tasks
 func (r *Role) ParseDirs(target string) error {
 	for _, d := range r.Dirs {
-		if err := d.Prepare(target); err != nil {
-			return err
+		d.Path = os.ExpandEnv(d.Path)
+		if !filepath.IsAbs(d.Path) {
+			d.Path = filepath.Join(target, d.Path)
 		}
 	}
 	return nil
@@ -165,8 +162,19 @@ func (r *Role) ParseFiles(target string) error {
 	for _, c := range r.Files {
 		c.Source = os.ExpandEnv(c.Source)
 		c.Target = os.ExpandEnv(c.Target)
-		if err := c.Prepare(target); err != nil {
-			return err
+		if c.Target == "" {
+			src, dst, err := parsePaths(c.Source)
+			if err != nil {
+				return err
+			}
+			c.Source = src
+			c.Target = dst
+		}
+		if !filepath.IsAbs(c.Source) {
+			c.Source = filepath.Join(r.Path, c.Source)
+		}
+		if !filepath.IsAbs(c.Target) {
+			c.Target = filepath.Join(target, c.Target)
 		}
 		paths, err := preparePaths(target, c.Source, c.Target)
 		if err != nil {
@@ -191,8 +199,19 @@ func (r *Role) ParseLinks(target string) error {
 	for _, l := range r.Links {
 		l.Source = os.ExpandEnv(l.Source)
 		l.Target = os.ExpandEnv(l.Target)
-		if err := l.Prepare(target); err != nil {
-			return err
+		if l.Target == "" {
+			src, dst, err := parsePaths(l.Source)
+			if err != nil {
+				return err
+			}
+			l.Source = src
+			l.Target = dst
+		}
+		if !filepath.IsAbs(l.Source) {
+			l.Source = filepath.Join(r.Path, l.Source)
+		}
+		if !filepath.IsAbs(l.Target) {
+			l.Target = filepath.Join(target, l.Target)
 		}
 		paths, err := preparePaths(target, l.Source, l.Target)
 		if err != nil {
@@ -214,8 +233,19 @@ func (r *Role) ParseTemplates(target string) error {
 	for _, t := range r.Templates {
 		t.Source = os.ExpandEnv(t.Source)
 		t.Target = os.ExpandEnv(t.Target)
-		if err := t.Prepare(target); err != nil {
-			return err
+		if t.Target == "" {
+			src, dst, err := parsePaths(t.Source)
+			if err != nil {
+				return err
+			}
+			t.Source = src
+			t.Target = dst
+		}
+		if !filepath.IsAbs(t.Source) {
+			t.Source = filepath.Join(r.Path, t.Source)
+		}
+		if !filepath.IsAbs(t.Target) {
+			t.Target = filepath.Join(target, t.Target)
 		}
 		paths, err := preparePaths(target, t.Source, t.Target)
 		if err != nil {
@@ -235,18 +265,46 @@ func (r *Role) ParseTemplates(target string) error {
 func (r *Role) ParseLines(target string) error {
 	for _, l := range r.Lines {
 		l.Target = os.ExpandEnv(l.Target)
-		if err := l.Prepare(target); err != nil {
-			return err
+		if !filepath.IsAbs(l.Target) {
+			l.Target = filepath.Join(target, l.Target)
 		}
 	}
 	return nil
+}
+
+// Parse src:dst paths
+func parsePaths(p string) (src, dst string, err error) {
+	parts := filepath.SplitList(p)
+	switch len(parts) {
+	case 1:
+		src = p
+	case 2:
+		src = parts[0]
+		dst = parts[1]
+	default:
+		return src, dst, fmt.Errorf("unhandled path spec: %s", src)
+	}
+	return src, dst, nil
+	// src = s
+	// if strings.Contains(s, ":") {
+	// 	parts := strings.Split(s, ":")
+	// 	if len(parts) != 2 {
+	// 		return src, dst, fmt.Errorf("unable to parse dest spec: %s", s)
+	// 	}
+	// 	src = parts[0]
+	// 	dst = parts[1]
+	// }
+	// // if dst == "" && isDir(src) {
+	// // 	dst = PathHead(src)
+	// // }
+	// return src, dst, nil
 }
 
 func preparePaths(target, src, dst string) (map[string]string, error) {
 	ret := map[string]string{}
 	//*links = append(*links, l)
 	if hasMeta(src) { // strings.Contains(src, "*")
-		// fmt.Println("*", src, dst)
+		// fmt.Println("*** GLOB", src, dst)
 		glob, err := filepath.Glob(src)
 		if err != nil {
 			return ret, err
@@ -336,9 +394,8 @@ func LoadRole(path string) (Role, error) {
 		return rc.Role, err
 	}
 	decoderConfig := &mapstructure.DecoderConfig{
-		// DecodeHook:       weaklyTypedHook,
-		DecodeHook:       roleDecodeHook,
-		ErrorUnused:      true,
+		DecodeHook: roleDecodeHook,
+		// ErrorUnused:      true,
 		WeaklyTypedInput: true,
 		Result:           &rc,
 	}
@@ -405,34 +462,3 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 	}
 	return i, nil
 }
-
-// func weaklyTypedHook(
-// 	f reflect.Kind,
-// 	t reflect.Kind,
-// 	data interface{}) (interface{}, error) {
-// 	dataVal := reflect.ValueOf(data)
-// 	switch t {
-// 	case reflect.String:
-// 		switch f {
-// 		case reflect.Bool:
-// 			if dataVal.Bool() {
-// 				return "1", nil
-// 			}
-// 			return "0", nil
-// 		case reflect.Float32:
-// 			return strconv.FormatFloat(dataVal.Float(), 'f', -1, 64), nil
-// 		case reflect.Int:
-// 			return strconv.FormatInt(dataVal.Int(), 10), nil
-// 		case reflect.Slice:
-// 			dataType := dataVal.Type()
-// 			elemKind := dataType.Elem().Kind()
-// 			if elemKind == reflect.Uint8 {
-// 				return string(dataVal.Interface().([]uint8)), nil
-// 			}
-// 		case reflect.Uint:
-// 			return strconv.FormatUint(dataVal.Uint(), 10), nil
-// 		}
-// 	}
-
-// 	return data, nil
-// }

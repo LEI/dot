@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -18,18 +20,20 @@ type Config struct {
 	Roles []*Role
 }
 
-// Prepare config roles
-func (c *Config) Prepare(target string) error {
+// Parse config roles
+func (c *Config) Parse(target string) error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
-		fmt.Println("CONFIG PREPARING", r.Dirs)
-		if err := r.Parse(target); err != nil {
-			return err
+		if r.Path == "" {
+			r.Path = filepath.Join(os.ExpandEnv("$HOME"), ".dot", r.Name)
 		}
 		// if ok := r.Ignore(); ok {
 		// 	continue
 		// }
 		if err := r.LoadConfig(); err != nil {
+			return err
+		}
+		if err := r.Parse(target); err != nil {
 			return err
 		}
 		roles = append(roles, r)

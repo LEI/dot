@@ -67,7 +67,6 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			}
 		}
 		for _, l := range r.Lines {
-			// fmt.Println("====>", l)
 			if err := runTask(action, l); err != nil {
 				return err
 			}

@@ -29,11 +29,6 @@ func (h *Hook) UndoString() string {
 	return "" // h.String()
 }
 
-// Prepare task
-func (h *Hook) Prepare(target string) error {
-	return nil
-}
-
 // Status check task
 func (h *Hook) Status() error {
 	// if hookExists(h.Target) {

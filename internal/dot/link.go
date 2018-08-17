@@ -2,7 +2,6 @@ package dot
 
 import (
 	"fmt"
-	"path/filepath"
 )
 
 // Links task list
@@ -26,17 +25,6 @@ func (l *Link) DoString() string {
 // UndoString string
 func (l *Link) UndoString() string {
 	return fmt.Sprintf("rm %s", l.Target)
-}
-
-// Prepare task
-func (l *Link) Prepare(target string) error {
-	// if !filepath.IsAbs(l.Source) {
-	// 	l.Target = filepath.Join(source, l.Source)
-	// }
-	if !filepath.IsAbs(l.Target) {
-		l.Target = filepath.Join(target, l.Target)
-	}
-	return nil
 }
 
 // Status check task

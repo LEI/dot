@@ -2,7 +2,6 @@ package dot
 
 import (
 	"fmt"
-	"path/filepath"
 )
 
 // Templates task list
@@ -28,14 +27,6 @@ func (t *Template) DoString() string {
 // UndoString string
 func (t *Template) UndoString() string {
 	return fmt.Sprintf("rm %s", t.Target)
-}
-
-// Prepare task
-func (t *Template) Prepare(target string) error {
-	if !filepath.IsAbs(t.Target) {
-		t.Target = filepath.Join(target, t.Target)
-	}
-	return nil
 }
 
 // Status check task
