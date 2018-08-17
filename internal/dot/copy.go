@@ -1,6 +1,10 @@
 package dot
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
 
 // Files task list
 type Files []*Copy
@@ -26,17 +30,53 @@ func (c *Copy) UndoString() string {
 	return fmt.Sprintf("rm %s", c.Target)
 }
 
-// Status check
+// Prepare task
+func (c *Copy) Prepare(target string) error {
+	// if !filepath.IsAbs(c.Source) {
+	// 	c.Target = filepath.Join(source, c.Source)
+	// }
+	if !filepath.IsAbs(c.Target) {
+		c.Target = filepath.Join(target, c.Target)
+	}
+	return nil
+}
+
+// Status check task
 func (c *Copy) Status() error {
+	if fileExists(c.Target) {
+		return ErrAlreadyExist
+	}
 	return nil
 }
 
 // Do task
-func (c *Copy) Do(run bool) error {
+func (c *Copy) Do() error {
+	if err := c.Status(); err != nil {
+		if err == ErrAlreadyExist {
+			return nil
+		}
+		return err
+	}
+	fmt.Println("todo", c)
 	return nil
 }
 
 // Undo task
-func (c *Copy) Undo(run bool) error {
+func (c *Copy) Undo() error {
+	fmt.Println("toundo", c)
 	return nil
+	// return os.Remove(c.Target)
+}
+
+// fileExists returns true if the file has the same content.
+func fileExists(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	if _, err := f.Stat(); err != nil && os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

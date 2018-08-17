@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +19,7 @@ The "copy" task installs or removes files.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runCopy(copyOptions, globalOptions, args)
-	},
+	RunE:              runCopy,
 }
 
 func init() {
@@ -33,7 +29,14 @@ func init() {
 	// flags := cmdCopy.Flags()
 }
 
-func runCopy(opts CopyOptions, gopts GlobalOptions, args []string) error {
-	fmt.Println("runCopy", args)
+func runCopy(cmd *cobra.Command, args []string) error {
+	action := cmd.Parent().Name()
+	for _, r := range globalConfig.Roles {
+		for _, c := range r.Files {
+			if err := runTask(action, c); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }

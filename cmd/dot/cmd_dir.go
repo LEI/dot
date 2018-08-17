@@ -20,9 +20,7 @@ The "dir" task installs or removes directories.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runDir(cmd.Parent().Name(), args)
-	},
+	RunE:              runDir,
 }
 
 func init() {
@@ -33,7 +31,8 @@ func init() {
 }
 
 // opts DirOptions, gopts GlobalOptions
-func runDir(action string, args []string) error {
+func runDir(cmd *cobra.Command, args []string) error {
+	action := cmd.Parent().Name()
 	for _, r := range globalConfig.Roles {
 		for _, d := range r.Dirs {
 			if err := runTask(action, d); err != nil {

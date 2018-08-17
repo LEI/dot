@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +19,7 @@ The "line" task installs or removes lines.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runLine(lineOptions, globalOptions, args)
-	},
+	RunE:              runLine,
 }
 
 func init() {
@@ -33,7 +29,14 @@ func init() {
 	// flags := cmdLine.Flags()
 }
 
-func runLine(opts LineOptions, gopts GlobalOptions, args []string) error {
-	fmt.Println("runLine", args)
+func runLine(cmd *cobra.Command, args []string) error {
+	action := cmd.Parent().Name()
+	for _, r := range globalConfig.Roles {
+		for _, l := range r.Lines {
+			if err := runTask(action, l); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }

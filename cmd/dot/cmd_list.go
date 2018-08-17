@@ -26,9 +26,7 @@ The "list" command lists roles and their tasks.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runList(listOptions, globalOptions, args)
-	},
+	RunE:              runList,
 }
 
 func init() {
@@ -42,7 +40,7 @@ func init() {
 	// flags.BoolVar(&listOptions.Recursive, "recursive", false, "include files in subfolders of the listed directories")
 }
 
-func runList(opts ListOptions, gopts GlobalOptions, args []string) error {
+func runList(cmd *cobra.Command, args []string) error {
 	// if len(args) == 0 && opts.Host == "" && len(opts.Tags) == 0 && len(opts.Paths) == 0 {
 	// 	return errors.Fatal("Invalid arguments, either give one or more snapshot IDs or set filters.")
 	// }

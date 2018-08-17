@@ -17,12 +17,14 @@ and the version of this software.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%s %s compiled with %v on %v/%v\n",
-			binary, version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
-	},
+	Run:               runVersion,
 }
 
 func init() {
 	cmdRoot.AddCommand(versionCmd)
+}
+
+func runVersion(cmd *cobra.Command, args []string) {
+	fmt.Printf("%s %s compiled with %v on %v/%v\n",
+		binary, version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }

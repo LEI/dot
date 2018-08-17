@@ -19,9 +19,7 @@ The "link" task installs or removes symlinks.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runLink(linkOptions, globalOptions, args)
-	},
+	RunE:              runLink,
 }
 
 func init() {
@@ -31,6 +29,14 @@ func init() {
 	// flags := cmdLink.Flags()
 }
 
-func runLink(opts LinkOptions, gopts GlobalOptions, args []string) error {
+func runLink(cmd *cobra.Command, args []string) error {
+	action := cmd.Parent().Name()
+	for _, r := range globalConfig.Roles {
+		for _, l := range r.Links {
+			if err := runTask(action, l); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }

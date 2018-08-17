@@ -1,5 +1,9 @@
 package dot
 
+import (
+	"fmt"
+)
+
 // Hooks task list
 type Hooks []*Hook
 
@@ -11,24 +15,46 @@ type Hook struct {
 	OS      []string
 }
 
-// // InstallString string
-// func (h *Hook) InstallString() string {
-// 	return fmt.Sprintf("%s", h.Command)
-// }
+func (h *Hook) String() string {
+	return fmt.Sprintf("%s", h.Command)
+}
 
-// // Install ...
-// func (h *Hook) Install() error {
-// 	fmt.Println("$", h.InstallString())
-// 	return nil
-// }
+// DoString string
+func (h *Hook) DoString() string {
+	return h.String()
+}
 
-// // RemoveString string
-// func (h *Hook) RemoveString() string {
-// 	return fmt.Sprintf("%s", h.Command)
-// }
+// UndoString string
+func (h *Hook) UndoString() string {
+	return "" // h.String()
+}
 
-// // Remove ...
-// func (h *Hook) Remove() error {
-// 	fmt.Println("$", h.RemoveString())
-// 	return nil
-// }
+// Prepare task
+func (h *Hook) Prepare(target string) error {
+	return nil
+}
+
+// Status check task
+func (h *Hook) Status() error {
+	// if hookExists(h.Target) {
+	// 	return ErrAlreadyExist
+	// }
+	return nil
+}
+
+// Do task
+func (h *Hook) Do() error {
+	if err := h.Status(); err != nil {
+		if err == ErrAlreadyExist {
+			return nil
+		}
+		return err
+	}
+	fmt.Println("todo", h)
+	return nil
+}
+
+// Undo task
+func (h *Hook) Undo() error {
+	return fmt.Errorf("not implemented")
+}
