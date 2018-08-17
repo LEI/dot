@@ -5,11 +5,20 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 )
+
+// TODO flag
+var ignoredFilePatterns = []string{
+	"*.json",
+	"*.md",
+	"*.yml",
+	".git",
+}
 
 // RoleConfig struct
 type RoleConfig struct {
@@ -116,12 +125,32 @@ func (r *Role) LoadConfig() error {
 	return mergo.Merge(r, role)
 }
 
-// Prepare role tasks
-func (r *Role) Prepare(target string) error {
+// Parse all role tasks
+func (r *Role) Parse(target string) error {
 	if r.Path == "" {
 		r.Path = filepath.Join(os.ExpandEnv("$HOME"), ".dot", r.Name)
 	}
 	// fmt.Println("prepare", r.Name)
+	if err := r.ParseDirs(target); err != nil {
+		return err
+	}
+	if err := r.ParseFiles(target); err != nil {
+		return err
+	}
+	if err := r.ParseLinks(target); err != nil {
+		return err
+	}
+	if err := r.ParseTemplates(target); err != nil {
+		return err
+	}
+	if err := r.ParseLines(target); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ParseDirs tasks
+func (r *Role) ParseDirs(target string) error {
 	for _, d := range r.Dirs {
 		if err := d.Prepare(target); err != nil {
 			return err
@@ -130,23 +159,169 @@ func (r *Role) Prepare(target string) error {
 	return nil
 }
 
-// // RunSync role tasks
-// func (r *Role) RunSync() error {
-// 	fmt.Println("Sync", r.Name)
-// 	return nil
-// }
+// ParseFiles tasks
+func (r *Role) ParseFiles(target string) error {
+	files := Files{}
+	for _, c := range r.Files {
+		c.Source = os.ExpandEnv(c.Source)
+		c.Target = os.ExpandEnv(c.Target)
+		if err := c.Prepare(target); err != nil {
+			return err
+		}
+		paths, err := preparePaths(target, c.Source, c.Target)
+		if err != nil {
+			return err
+		}
+		for k, v := range paths {
+			// cc := c
+			// cc.Source = k
+			// cc.Target = v
+			c.Source = k
+			c.Target = v
+			files = append(files, c)
+		}
+	}
+	r.Files = files
+	return nil
+}
 
-// // RunInstall role tasks
-// func (r *Role) RunInstall() error {
-// 	fmt.Println("Install", r.Name)
-// 	return nil
-// }
+// ParseLinks tasks
+func (r *Role) ParseLinks(target string) error {
+	links := Links{}
+	for _, l := range r.Links {
+		l.Source = os.ExpandEnv(l.Source)
+		l.Target = os.ExpandEnv(l.Target)
+		if err := l.Prepare(target); err != nil {
+			return err
+		}
+		paths, err := preparePaths(target, l.Source, l.Target)
+		if err != nil {
+			return err
+		}
+		for k, v := range paths {
+			l.Source = k
+			l.Target = v
+			links = append(links, l)
+		}
+	}
+	r.Links = links
+	return nil
+}
 
-// // RunRemove role tasks
-// func (r *Role) RunRemove() error {
-// 	fmt.Println("Remove", r.Name)
-// 	return nil
-// }
+// ParseTemplates tasks
+func (r *Role) ParseTemplates(target string) error {
+	templates := Templates{}
+	for _, t := range r.Templates {
+		t.Source = os.ExpandEnv(t.Source)
+		t.Target = os.ExpandEnv(t.Target)
+		if err := t.Prepare(target); err != nil {
+			return err
+		}
+		paths, err := preparePaths(target, t.Source, t.Target)
+		if err != nil {
+			return err
+		}
+		for k, v := range paths {
+			t.Source = k
+			t.Target = v
+			templates = append(templates, t)
+		}
+	}
+	r.Templates = templates
+	return nil
+}
+
+// ParseLines tasks
+func (r *Role) ParseLines(target string) error {
+	for _, l := range r.Lines {
+		l.Target = os.ExpandEnv(l.Target)
+		if err := l.Prepare(target); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func preparePaths(target, src, dst string) (map[string]string, error) {
+	ret := map[string]string{}
+	//*links = append(*links, l)
+	if hasMeta(src) { // strings.Contains(src, "*")
+		// fmt.Println("*", src, dst)
+		glob, err := filepath.Glob(src)
+		if err != nil {
+			return ret, err
+		}
+	GLOB:
+		for _, s := range glob {
+			// Extract source file name
+			_, n := filepath.Split(s)
+			for _, i := range ignoredFilePatterns {
+				// Check for ignored patterns
+				matched, err := filepath.Match(i, n)
+				if err != nil {
+					return ret, err
+				}
+				if matched {
+					continue GLOB
+				}
+			}
+			// fmt.Println("PREPARE GLOB", s, "/", dst)
+			t, err := prepareTarget(target, s, dst)
+			if err != nil {
+				return ret, err
+			}
+			ret[s] = t
+		}
+	} else {
+		t, err := prepareTarget(target, src, dst)
+		if err != nil {
+			return ret, err
+		}
+		ret[src] = t
+	}
+	return ret, nil
+}
+
+func prepareTarget(target, src, dst string) (string, error) {
+	//fmt.Println("+", src, dst)
+	_, name := filepath.Split(src)
+	if name == "" {
+		return "", fmt.Errorf("no source file name for src / dst: %s / %s", src, dst)
+	}
+	if !filepath.IsAbs(dst) {
+		dst = filepath.Join(target, dst)
+	}
+	// if _, err := dotfile.CreateDir(baseDir); err != nil {
+	// 	return baseDir, err
+	// }
+	// if isDir, _ := system.IsDir(dst); !isDir {
+	// 	// Look for future directories
+	// 	ok := false
+	// 	for _, d := range r.Dirs {
+	// 		// _, n := filepath.Split(d.Path)
+	// 		n := strings.TrimPrefix(d.Path, r.Target+system.Separator)
+	// 		fmt.Printf("TODO %s == %s / %s\n", n, name, r.Target)
+	// 		if n == name {
+	// 			ok = true
+	// 			break
+	// 		}
+	// 	}
+	// 	if !ok {
+	// 		return dst, fmt.Errorf("%s: target directory does not exist and will not be created", dst)
+	// 	}
+	// }
+	dst = filepath.Join(dst, name)
+	return dst, nil
+}
+
+// Check magix chars recognized by Match
+func hasMeta(path string) bool {
+	magicChars := `*?[`
+	if runtime.GOOS == "windows" {
+		magicChars = `*?[\`
+	}
+	return strings.ContainsAny(path, magicChars)
+}
 
 // NewRole ...
 func NewRole() *Role {
@@ -208,7 +383,6 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 		// case map[string]interface{}:
 		switch t {
 		case reflect.TypeOf((Lines)(nil)):
-			fmt.Println("xLINES", i)
 			lines := Lines{}
 			for k, v := range val {
 				lines = append(lines, &Line{
