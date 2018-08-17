@@ -4,12 +4,6 @@ import (
 	"fmt"
 )
 
-// // Lines task map
-// type Lines map[string]string
-
-// Lines task list
-type Lines []*Line
-
 // Line task
 type Line struct {
 	Task

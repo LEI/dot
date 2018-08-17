@@ -38,18 +38,18 @@ type Role struct {
 	// IncludeVars types.IncludeMap
 
 	Deps []string `mapstructure:"dependencies"`
-	Pkgs Pkgs     `mapstructure:"pkg"`
+	Pkgs []*Pkg   `mapstructure:"pkg"`
 
-	Dirs      Dirs      `mapstructure:"dir"`
-	Files     Files     `mapstructure:"copy"`
-	Links     Links     `mapstructure:"link"`
-	Templates Templates `mapstructure:"template"`
-	Lines     Lines     `mapstructure:"line"`
+	Dirs  []*Dir      `mapstructure:"dir"`
+	Files []*Copy     `mapstructure:"copy"`
+	Links []*Link     `mapstructure:"link"`
+	Tpls  []*Template `mapstructure:"template"`
+	Lines []*Line     `mapstructure:"line"`
 
-	Install     Hooks
-	PostInstall Hooks `mapstructure:"post_install"`
-	Remove      Hooks
-	PostRemove  Hooks `mapstructure:"post_remove"`
+	Install     []*Hook
+	PostInstall []*Hook `mapstructure:"post_install"`
+	Remove      []*Hook
+	PostRemove  []*Hook `mapstructure:"post_remove"`
 
 	// Ignore []string
 	// Target string
@@ -63,53 +63,64 @@ func (r *Role) String() string {
 	s += fmt.Sprintf("%s\n", r.Name)
 	s += fmt.Sprintf("  Path: %s\n", r.Path)
 	s += fmt.Sprintf("  URL: %s\n", r.URL)
-
-	if r.Deps != nil {
+	if len(r.Deps) > 0 {
 		s += fmt.Sprintf("  Deps: %s\n", r.Deps)
 	}
-	if r.Env != nil {
+	if len(r.Env) > 0 {
 		s += fmt.Sprintf("  Env: %s\n", r.Env)
 	}
-	if r.OS != nil {
+	if len(r.OS) > 0 {
 		s += fmt.Sprintf("  OS: %s\n", r.OS)
 	}
-	if r.Pkgs != nil {
+	if len(r.Pkgs) > 0 {
 		s += fmt.Sprintf("  Pkgs: %s\n", r.Pkgs)
 	}
-	if t := tasksPrefix("  ", r); t != "" {
-		s += t
-	}
-	if r.Install != nil {
+	s += formatRoleTasks("  ", r)
+	if len(r.Install) > 0 {
 		s += fmt.Sprintf("  Install: %s\n", r.Install)
 	}
-	if r.PostInstall != nil {
+	if len(r.PostInstall) > 0 {
 		s += fmt.Sprintf("  PostInstall: %s\n", r.PostInstall)
 	}
-	if r.Remove != nil {
+	if len(r.Remove) > 0 {
 		s += fmt.Sprintf("  Remove: %s\n", r.Remove)
 	}
-	if r.PostRemove != nil {
+	if len(r.PostRemove) > 0 {
 		s += fmt.Sprintf("  PostRemove: %s\n", r.PostRemove)
 	}
 	return strings.TrimRight(s, "\n")
 }
 
-func tasksPrefix(prefix string, r *Role) string {
+func formatRoleTasks(prefix string, r *Role) string {
 	s := ""
-	if r.Dirs != nil {
-		s += fmt.Sprintf("%sDirs: %s\n", prefix, r.Dirs)
+	if len(r.Dirs) > 0 {
+		s += fmt.Sprintf("%sDirs:\n", prefix)
+		s += formatTasks(prefix+"  ", r.Dirs)
 	}
-	if r.Files != nil {
-		s += fmt.Sprintf("%sFiles: %s\n", prefix, r.Files)
+	if len(r.Files) > 0 {
+		s += fmt.Sprintf("%sFiles:\n", prefix)
+		s += formatTasks(prefix+"  ", r.Files)
 	}
-	if r.Links != nil {
-		s += fmt.Sprintf("%sLinks: %s\n", prefix, r.Links)
+	if len(r.Links) > 0 {
+		s += fmt.Sprintf("%sLinks:\n", prefix)
+		s += formatTasks(prefix+"  ", r.Links)
 	}
-	if r.Templates != nil {
-		s += fmt.Sprintf("%sTemplates: %s\n", prefix, r.Templates)
+	if len(r.Tpls) > 0 {
+		s += fmt.Sprintf("%sTemplates:\n", prefix)
+		s += formatTasks(prefix+"  ", r.Tpls)
 	}
 	if r.Lines != nil {
-		s += fmt.Sprintf("%sLines: %s\n", prefix, r.Lines)
+		s += fmt.Sprintf("%sLines:\n", prefix)
+		s += formatTasks(prefix+"  ", r.Lines)
+	}
+	return s
+}
+
+func formatTasks(prefix string, i interface{}) string {
+	s := ""
+	tasks := i.([]*Task)
+	for _, t := range tasks {
+		s += fmt.Sprintf("%s  %s\n", prefix, t)
 	}
 	return s
 }
@@ -136,7 +147,7 @@ func (r *Role) Parse(target string) error {
 	if err := r.ParseLinks(target); err != nil {
 		return err
 	}
-	if err := r.ParseTemplates(target); err != nil {
+	if err := r.ParseTpls(target); err != nil {
 		return err
 	}
 	if err := r.ParseLines(target); err != nil {
@@ -158,7 +169,7 @@ func (r *Role) ParseDirs(target string) error {
 
 // ParseFiles tasks
 func (r *Role) ParseFiles(target string) error {
-	files := Files{}
+	files := []*Copy{}
 	for _, c := range r.Files {
 		c.Source = os.ExpandEnv(c.Source)
 		c.Target = os.ExpandEnv(c.Target)
@@ -181,12 +192,10 @@ func (r *Role) ParseFiles(target string) error {
 			return err
 		}
 		for k, v := range paths {
-			// cc := c
-			// cc.Source = k
-			// cc.Target = v
-			c.Source = k
-			c.Target = v
-			files = append(files, c)
+			cc := *c
+			cc.Source = k
+			cc.Target = v
+			files = append(files, &cc)
 		}
 	}
 	r.Files = files
@@ -195,7 +204,7 @@ func (r *Role) ParseFiles(target string) error {
 
 // ParseLinks tasks
 func (r *Role) ParseLinks(target string) error {
-	links := Links{}
+	links := []*Link{}
 	for _, l := range r.Links {
 		l.Source = os.ExpandEnv(l.Source)
 		l.Target = os.ExpandEnv(l.Target)
@@ -218,19 +227,20 @@ func (r *Role) ParseLinks(target string) error {
 			return err
 		}
 		for k, v := range paths {
-			l.Source = k
-			l.Target = v
-			links = append(links, l)
+			ll := *l
+			ll.Source = k
+			ll.Target = v
+			links = append(links, &ll)
 		}
 	}
 	r.Links = links
 	return nil
 }
 
-// ParseTemplates tasks
-func (r *Role) ParseTemplates(target string) error {
-	templates := Templates{}
-	for _, t := range r.Templates {
+// ParseTpls tasks
+func (r *Role) ParseTpls(target string) error {
+	templates := []*Template{}
+	for _, t := range r.Tpls {
 		t.Source = os.ExpandEnv(t.Source)
 		t.Target = os.ExpandEnv(t.Target)
 		if t.Target == "" {
@@ -257,7 +267,7 @@ func (r *Role) ParseTemplates(target string) error {
 			templates = append(templates, t)
 		}
 	}
-	r.Templates = templates
+	r.Tpls = templates
 	return nil
 }
 
@@ -439,8 +449,8 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 	case map[interface{}]interface{}:
 		// case map[string]interface{}:
 		switch t {
-		case reflect.TypeOf((Lines)(nil)):
-			lines := Lines{}
+		case reflect.TypeOf(([]*Line)(nil)):
+			lines := []*Line{}
 			for k, v := range val {
 				lines = append(lines, &Line{
 					Target: k.(string),

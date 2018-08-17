@@ -1,8 +1,5 @@
 package dot
 
-// Pkgs task list
-type Pkgs []*Pkg
-
 // Pkg task
 type Pkg struct {
 	Name   string

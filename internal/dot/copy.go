@@ -5,9 +5,6 @@ import (
 	"os"
 )
 
-// Files task list
-type Files []*Copy
-
 // Copy task
 type Copy struct {
 	Task

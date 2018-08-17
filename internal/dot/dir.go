@@ -5,9 +5,6 @@ import (
 	"os"
 )
 
-// Dirs task list
-type Dirs []*Dir
-
 // Dir task
 type Dir struct {
 	Task

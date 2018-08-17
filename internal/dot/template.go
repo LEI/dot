@@ -4,9 +4,6 @@ import (
 	"fmt"
 )
 
-// Templates task list
-type Templates []*Template
-
 // Template task
 type Template struct {
 	Source string
