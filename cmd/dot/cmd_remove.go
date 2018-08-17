@@ -46,7 +46,7 @@ func runRemove(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
-		for _, t := range r.Templates {
+		for _, t := range r.Tpls {
 			if err := runTask(action, t); err != nil {
 				return err
 			}

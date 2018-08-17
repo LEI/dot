@@ -32,7 +32,7 @@ func init() {
 func runTemplate(cmd *cobra.Command, args []string) error {
 	action := cmd.Parent().Name()
 	for _, r := range globalConfig.Roles {
-		for _, t := range r.Templates {
+		for _, t := range r.Tpls {
 			if err := runTask(action, t); err != nil {
 				return err
 			}

@@ -4,9 +4,6 @@ import (
 	"fmt"
 )
 
-// Links task list
-type Links []*Link
-
 // Link task
 type Link struct {
 	Source string

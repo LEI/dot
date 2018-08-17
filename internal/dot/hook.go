@@ -4,9 +4,6 @@ import (
 	"fmt"
 )
 
-// Hooks task list
-type Hooks []*Hook
-
 // Hook command to execute
 type Hook struct {
 	Command string
