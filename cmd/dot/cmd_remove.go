@@ -4,6 +4,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// RemoveOptions collects all options for the remove command.
+type RemoveOptions struct {
+	// Empty bool
+}
+
+var removeOptions RemoveOptions
+
 var cmdRemove = &cobra.Command{
 	Use:     "remove [flags]",
 	Aliases: []string{"rm"},
@@ -18,13 +25,6 @@ The "remove" command removes roles by executing their tasks.
 	},
 }
 
-// RemoveOptions collects all options for the remove command.
-type RemoveOptions struct {
-	// Empty bool
-}
-
-var removeOptions RemoveOptions
-
 func init() {
 	cmdRoot.AddCommand(cmdRemove)
 
@@ -33,9 +33,10 @@ func init() {
 }
 
 func runRemove(opts RemoveOptions, gopts GlobalOptions, args []string) error {
+	action := "remove"
 	for _, r := range globalConfig.Roles {
 		for _, d := range r.Dirs {
-			if err := undoDir(d, DirOptions{}, gopts); err != nil {
+			if err := runTask(action, d); err != nil {
 				return err
 			}
 		}

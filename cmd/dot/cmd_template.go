@@ -6,6 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TemplateOptions collects all options for the template command.
+type TemplateOptions struct {
+}
+
+var templateOptions TemplateOptions
+
 var cmdTemplate = &cobra.Command{
 	Use:     "template [flags]",
 	Aliases: []string{"tpl"},
@@ -19,12 +25,6 @@ The "template" task installs or removes templates.
 		return runTemplate(templateOptions, globalOptions, args)
 	},
 }
-
-// TemplateOptions collects all options for the template command.
-type TemplateOptions struct {
-}
-
-var templateOptions TemplateOptions
 
 func init() {
 	cmdInstall.AddCommand(cmdTemplate)

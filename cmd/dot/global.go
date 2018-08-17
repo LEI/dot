@@ -259,3 +259,57 @@ func OpenConfig(opts GlobalOptions) (*dot.Config, error) {
 
 	return cfg, nil
 }
+
+func runTask(action string, i interface{}) error {
+	t := i.(dot.Tasker)
+	switch action {
+	case "install":
+		if err := doTask(t); err != nil {
+			return err
+		}
+	case "remove":
+		if err := undoTask(t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doTask(t dot.Tasker) error {
+	err := t.Status()
+	ok := dot.IsOk(err)
+	if !ok && err != nil {
+		return err
+	}
+	if ok {
+		if globalOptions.Verbose > 0 {
+			fmt.Println("#", t.DoString())
+		}
+		return nil
+	}
+	fmt.Println("$", t.DoString())
+	if globalOptions.DryRun {
+		return nil
+	}
+	return t.Do()
+}
+
+func undoTask(t dot.Tasker) error {
+	err := t.Status()
+	ok := dot.IsOk(err)
+	if !ok && err != nil {
+		return err
+	}
+	if !ok {
+		fmt.Println("# TODO AskConfirmation", t.UndoString())
+		// if globalOptions.Verbose > 0 {
+		// 	fmt.Println("#", t.UndoString())
+		// }
+		return nil
+	}
+	fmt.Println("$", t.UndoString())
+	if globalOptions.DryRun {
+		return nil
+	}
+	return t.Undo()
+}
