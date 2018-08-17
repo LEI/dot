@@ -3,7 +3,6 @@ package dot
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 // Dirs task list
@@ -27,14 +26,6 @@ func (d *Dir) DoString() string {
 // UndoString string
 func (d *Dir) UndoString() string {
 	return fmt.Sprintf("rmdir %s", d.Path)
-}
-
-// Prepare task
-func (d *Dir) Prepare(target string) error {
-	if !filepath.IsAbs(d.Path) {
-		d.Path = filepath.Join(target, d.Path)
-	}
-	return nil
 }
 
 // Status check task

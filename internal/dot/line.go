@@ -2,7 +2,6 @@ package dot
 
 import (
 	"fmt"
-	"path/filepath"
 )
 
 // // Lines task map
@@ -30,14 +29,6 @@ func (l *Line) DoString() string {
 // UndoString string
 func (l *Line) UndoString() string {
 	return fmt.Sprintf("sed -i '#^%s$#d' %s", l.Data, l.Target)
-}
-
-// Prepare task
-func (l *Line) Prepare(target string) error {
-	if !filepath.IsAbs(l.Target) {
-		l.Target = filepath.Join(target, l.Target)
-	}
-	return nil
 }
 
 // Status check task
