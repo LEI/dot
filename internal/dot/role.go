@@ -161,7 +161,9 @@ func LoadRole(path string) (Role, error) {
 		return rc.Role, err
 	}
 	decoderConfig := &mapstructure.DecoderConfig{
+		// DecodeHook:       weaklyTypedHook,
 		DecodeHook:       roleDecodeHook,
+		ErrorUnused:      true,
 		WeaklyTypedInput: true,
 		Result:           &rc,
 	}
@@ -181,48 +183,82 @@ func LoadRole(path string) (Role, error) {
 func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
 	// input := i.(map[string]interface{})
 	// f == reflect.TypeOf("")
+	// fmt.Printf("\n---\nroleDecodeHook %s -> %s\n%+v\n---\n", f, t, i)
 	switch val := i.(type) {
 	case string:
-		switch {
-		// case t == reflect.TypeOf((*Dirs)(nil)):
-		case t == reflect.TypeOf((*Dir)(nil)):
-			i = &Dir{Path: val}
-		case t == reflect.TypeOf((*Hook)(nil)):
+		switch t {
+		case reflect.TypeOf((*Hook)(nil)):
 			i = &Hook{Command: val}
-		case t == reflect.TypeOf((*Pkg)(nil)):
+		// case reflect.TypeOf((*Dirs)(nil)):
+		case reflect.TypeOf((*Dir)(nil)):
+			i = &Dir{Path: val}
+		case reflect.TypeOf((*Pkg)(nil)):
 			i = &Pkg{Name: val}
-		case t == reflect.TypeOf((*Link)(nil)):
+		case reflect.TypeOf((*Link)(nil)):
 			i = &Link{Source: val}
-		case t == reflect.TypeOf((*Template)(nil)):
+		case reflect.TypeOf((*Template)(nil)):
 			i = &Template{Source: val}
-			// default:
-			// 	fmt.Println("sss", val)
+		case reflect.TypeOf((*Line)(nil)):
+			i = &Template{Source: val}
+		default:
+			// fmt.Println("roleDecodeHook string", t, "/", val)
+			// fmt.Println("FALLBACK2", t)
 		}
-		// case map[interface{}]interface{}:
-		// 	// case map[string]interface{}:
-		// 	switch {
-		// 	case t == reflect.TypeOf((*Line)(nil)):
-		// 		fmt.Println("LINE", val)
-		// 		lines := &Lines{} // []*Line{}
-		// 		for k, v := range val {
-		// 			*lines = append(*lines, &Line{
-		// 				File: k.(string),
-		// 				Line: v.(string),
-		// 			})
-		// 		}
-		// 		i = *lines
-		// 		fmt.Println("=======", i)
-		// 	case t == reflect.TypeOf((*Lines)(nil)):
-		// 		fmt.Println("LINES", val)
-		// 	}
-		// default:
-		// 	fmt.Println("->", f, t)
+	case map[interface{}]interface{}:
+		// case map[string]interface{}:
+		switch t {
+		case reflect.TypeOf((Lines)(nil)):
+			fmt.Println("xLINES", i)
+			lines := Lines{}
+			for k, v := range val {
+				lines = append(lines, &Line{
+					Target: k.(string),
+					Data:   v.(string),
+				})
+			}
+			i = lines
+		}
+	// case Line:
+	// 	fmt.Println("LIIIIIIIIIIIINE")
+	// case *Line:
+	// 	fmt.Println("*LIIIIIIIIIIIINE")
+	// case Lines:
+	// 	fmt.Println("Lines", reflect.TypeOf(i), f, "======>", t, reflect.TypeOf(val))
+	// 	// i = map[string]string{} // val
+	// case *Lines:
+	// 	fmt.Println("*Lines", reflect.TypeOf(i), f, "======>", t, reflect.TypeOf(val))
+	default:
 	}
-	// switch t {
-	// case reflect.TypeOf(&Dir{}):
-	// 	fmt.Println("DIR", t, "=>", i)
-	// default:
-	// 	fmt.Println("???", t, "=>", reflect.TypeOf(i))
-	// }
 	return i, nil
 }
+
+// func weaklyTypedHook(
+// 	f reflect.Kind,
+// 	t reflect.Kind,
+// 	data interface{}) (interface{}, error) {
+// 	dataVal := reflect.ValueOf(data)
+// 	switch t {
+// 	case reflect.String:
+// 		switch f {
+// 		case reflect.Bool:
+// 			if dataVal.Bool() {
+// 				return "1", nil
+// 			}
+// 			return "0", nil
+// 		case reflect.Float32:
+// 			return strconv.FormatFloat(dataVal.Float(), 'f', -1, 64), nil
+// 		case reflect.Int:
+// 			return strconv.FormatInt(dataVal.Int(), 10), nil
+// 		case reflect.Slice:
+// 			dataType := dataVal.Type()
+// 			elemKind := dataType.Elem().Kind()
+// 			if elemKind == reflect.Uint8 {
+// 				return string(dataVal.Interface().([]uint8)), nil
+// 			}
+// 		case reflect.Uint:
+// 			return strconv.FormatUint(dataVal.Uint(), 10), nil
+// 		}
+// 	}
+
+// 	return data, nil
+// }

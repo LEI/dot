@@ -13,16 +13,14 @@ The "init" command initializes a new repository.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runInit(globalOptions, args)
-	},
+	RunE:              runInit,
 }
 
 func init() {
 	cmdRoot.AddCommand(cmdInit)
 }
 
-func runInit(gopts GlobalOptions, args []string) error {
+func runInit(cmd *cobra.Command, args []string) error {
 	// if gopts.Repo == "" {
 	// 	return fmt.Errorf("Please specify repository location (-r)")
 	// }

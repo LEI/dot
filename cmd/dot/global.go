@@ -20,9 +20,9 @@ type GlobalOptions struct {
 	ConfigFile string
 	RoleFilter []string
 	DryRun     bool
-	// Force        bool
-	Quiet   bool
-	Verbose int
+	Force      bool
+	Quiet      bool
+	Verbose    int
 	// CacheDir     string
 	// NoCache      bool
 	// CleanupCache bool
@@ -70,7 +70,7 @@ func init() {
 	f.StringVarP(&globalOptions.ConfigFile, "config-file", "c", cfgFile, "global configuration file (default: $DOT_CONFIG)")
 	f.StringSliceVarP(&globalOptions.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
 	f.BoolVarP(&globalOptions.DryRun, "dry-run", "d", false, "do not execute tasks")
-	// f.BoolVarP(&globalOptions.Force, "force", "f", false, "force execution")
+	f.BoolVarP(&globalOptions.Force, "force", "f", false, "force execution")
 	f.BoolVarP(&globalOptions.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
 	f.CountVarP(&globalOptions.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
 	// f.StringVar(&globalOptions.CacheDir, "cache-dir", "", "set the cache directory")

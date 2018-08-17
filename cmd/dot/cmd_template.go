@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +19,7 @@ The "template" task installs or removes templates.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runTemplate(templateOptions, globalOptions, args)
-	},
+	RunE:              runTemplate,
 }
 
 func init() {
@@ -33,7 +29,14 @@ func init() {
 	// flags := cmdTemplate.Flags()
 }
 
-func runTemplate(opts TemplateOptions, gopts GlobalOptions, args []string) error {
-	fmt.Println("runTemplate", args)
+func runTemplate(cmd *cobra.Command, args []string) error {
+	action := cmd.Parent().Name()
+	for _, r := range globalConfig.Roles {
+		for _, t := range r.Templates {
+			if err := runTask(action, t); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
