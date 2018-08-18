@@ -32,7 +32,6 @@ var (
 	Default = All
 
 	defaultLDFlags = "-s -w"
-	// -X $PACKAGE.version=snapshot -X $PACKAGE.commit=$COMMIT -X $PACKAGE.date=$DATE
 
 	defaultBuildTags = []string{} // {"selfupdate"}
 
@@ -245,39 +244,35 @@ func Windows() error {
 	return buildDist("windows", "amd64")
 }
 
-func build(args ...string) error {
-	// args = append(
-	// 	[]string{"build"},
-	// 	args...,
-	// )
-	return buildWith(flagEnv(), args...)
-}
-
 // Build binary for a specific platform
 func buildDist(platform, arch string) error {
 	env := map[string]string{
 		"CGO_ENABLED": "0",
 		"GOOS":        platform,
 		"GOARCH":      arch,
-		"GOARM":       "",
+		// "GOARM":       "",
 	}
 	for k, v := range flagEnv() {
 		env[k] = v
 	}
-	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", mainPackage)
+	// output := "dist/${GOOS}_${GOARCH}/dot"
+	output := "dist/" + platform + "_" + arch + "/dot"
+	return build(env, "-o", output, mainPackage)
 }
 
-func buildWith(env map[string]string, args ...string) error {
+// func buildEnv(args ...string) error {
+// 	return build(flagEnv(), args...)
+// }
+
+func build(env map[string]string, args ...string) error {
 	mg.Deps(Vendor)
+	a := []string{"build"}
 	ldflags := defaultLDFlags + " " + constantsLDFlags()
-	args = append(
-		[]string{
-			"build",
-			"-ldflags", ldflags,
-			"-tags", buildTags(),
-		},
-		args...,
-	)
+	a = append(a, []string{
+		"-ldflags", ldflags,
+		"-tags", buildTags(),
+	}...)
+	a = append(a, args...)
 	return sh.RunWith(env, goexe, args...)
 }
 
@@ -303,8 +298,9 @@ func Install() error {
 
 func constantsLDFlags() string {
 	cs := map[string]string{
-		"main.version": getVersionFromFile(),
-		"main.commit":  getVersionFromGit(),
+		"main.version":   getVersionFromFile(),
+		"main.commit":    getVersionFromGit(),
+		"main.timestamp": time.Now().Format("2006-01-02T15:04:05Z0700"),
 	}
 	l := make([]string, 0, len(cs))
 	for k, v := range cs {
@@ -321,6 +317,7 @@ func buildTags() string {
 		}
 	}
 	if len(bd) == 0 {
+		// bd = append(bd, "release")
 		return "none"
 	}
 	for i := range bd {

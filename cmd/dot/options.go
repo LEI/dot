@@ -9,13 +9,14 @@ import (
 )
 
 var (
-	binary  = "dot" // _, binary = filepath.Split(os.Args[0])
-	version = "compiled manually"
-	commit  = ""
+	binary    = "dot" // _, binary = filepath.Split(os.Args[0])
+	version   = "compiled manually"
+	commit    string
+	timestamp string
 )
 
-// GlobalOptions hold all global options for restic.
-type GlobalOptions struct {
+// DotOptions hold all global options for restic.
+type DotOptions struct {
 	Source     string
 	Target     string
 	ConfigFile string
@@ -47,7 +48,7 @@ type GlobalOptions struct {
 	// extended options.Options
 }
 
-var dotOpts = GlobalOptions{
+var dotOpts = DotOptions{
 	stdout: os.Stdout,
 	stderr: os.Stderr,
 }
@@ -77,7 +78,7 @@ func init() {
 	f := cmdRoot.PersistentFlags()
 	f.StringVarP(&dotOpts.Source, "source", "s", source, "`DOT_SOURCE` directory")
 	f.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
-	f.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "global configuration `DOT_FILE`")
+	f.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "main configuration `DOT_FILE`")
 	f.StringVarP(&dotOpts.RoleDir, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
 	f.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
 	f.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
@@ -198,7 +199,7 @@ func init() {
 // const maxKeys = 20
 
 // OpenConfig ...
-func OpenConfig(opts GlobalOptions) (*dot.Config, error) {
+func OpenConfig(opts DotOptions) (*dot.Config, error) {
 	if opts.ConfigFile == "" {
 		return nil, fmt.Errorf("Please specify config file location (-c)")
 	}
