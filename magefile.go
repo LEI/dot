@@ -21,6 +21,7 @@ import (
 
 const (
 	packageName = "github.com/LEI/dot"
+	now         = time.Now().Format("2006-01-02T15:04:05Z0700")
 )
 
 var (
@@ -28,7 +29,10 @@ var (
 	// If not set, running mage will list available targets
 	Default = All
 
-	ldflags = "-s -w -X $PACKAGE.version=snapshot -X $PACKAGE.commit=$COMMIT -X $PACKAGE.date=$DATE"
+	defaultLDFlags = "-s -w"
+	// -X $PACKAGE.version=snapshot -X $PACKAGE.commit=$COMMIT -X $PACKAGE.date=$DATE
+
+	defaultBuildTags = []string{} // {"selfupdate"}
 
 	goexe = "go"
 
@@ -108,8 +112,14 @@ func TestRace() error {
 
 // Run test coverage
 func Coverage() error {
-	profile := getEnv("COVERPROFILE", "coverage.txt")
-	mode := getEnv("COVERMODE", "atomic")
+	profile := os.Getenv("COVERPROFILE")
+	if profile == "" {
+		profile = "coverage.txt"
+	}
+	mode := os.Getenv("COVERMODE")
+	if mode == "" {
+		mode = "atomic"
+	}
 	// mg.Deps(Vendor)
 	verbose := ""
 	if mg.Verbose() {
@@ -201,6 +211,21 @@ func Fmt() error {
 	return nil
 }
 
+var pkgPrefixLen = len(packageName)
+
+func findPackages() ([]string, error) {
+	mg.Deps(getDep)
+	s, err := sh.Output(goexe, "list", "./...")
+	if err != nil {
+		return nil, err
+	}
+	pkgs := strings.Split(s, "\n")
+	for i := range pkgs {
+		pkgs[i] = "." + pkgs[i][pkgPrefixLen:]
+	}
+	return pkgs, nil
+}
+
 // type Build mg.Namespace
 
 // Build binary for macOS
@@ -242,8 +267,13 @@ func buildDist(platform, arch string) error {
 
 func buildWith(env map[string]string, args ...string) error {
 	mg.Deps(Vendor)
+	ldflags := defaultLDFlags + " " + constantsLDFlags()
 	args = append(
-		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
+		[]string{
+			"build",
+			"-ldflags", ldflags,
+			"-tags", buildTags(),
+		},
 		args...,
 	)
 	return sh.RunWith(env, goexe, args...)
@@ -259,7 +289,54 @@ func Clean() error {
 // Run go install
 func Install() error {
 	// mg.Deps(Vendor)
-	return sh.RunWith(flagEnv(), goexe, "install", "-ldflags", ldflags, "-tags", buildTags(), packageName)
+	ldflags := defaultLDFlags + " " + constantsLDFlags()
+	args := []string{
+		"install",
+		"-ldflags", ldflags,
+		"-tags", buildTags(),
+		packageName,
+	}
+	return sh.RunWith(flagEnv(), goexe, args...)
+}
+
+func constantsLDFlags() string {
+	cs := map[string]string{
+		"main.version": getVersionFromFile(),
+		"main.commit":  getVersionFromGit(),
+		"main.date":    now,
+	}
+	l := make([]string, 0, len(cs))
+	for k, v := range cs {
+		l = append(l, fmt.Sprintf(`-X "%s=%s"`, k, v))
+	}
+	return strings.Join(l, " ")
+}
+
+func buildTags() string {
+	bd := defaultBuildTags
+	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
+		for _, et := range strings.Split(envTags, " ") {
+			bd = append(bd, et)
+		}
+	}
+	if len(bd) == 0 {
+		return "none"
+	}
+	for i := range bd {
+		bd[i] = strings.TrimSpace(bd[i])
+	}
+	return strings.Join(bd, " ")
+	// return getEnv("DOT_BUILD_TAGS", "none")
+}
+
+func flagEnv() map[string]string {
+	// hash, _ := parseRev()
+	return map[string]string{
+		"PACKAGE": packageName,
+		"VERSION": getVersionFromFile(),
+		"COMMIT":  getVersionFromGit(),
+		"DATE":    now,
+	}
 }
 
 /*
@@ -389,43 +466,21 @@ func RunVCmd(cmd string, args ...string) func(args ...string) error {
 	}
 }
 
-var pkgPrefixLen = len(packageName)
+// getVersionFromGit returns a version string that identifies the currently
+// checked out git commit.
+func getVersionFromGit() string {
+	// cmd := exec.Command("git", "describe",
+	// 	"--long", "--tags", "--dirty", "--always")
+	// out, err := cmd.Output()
+	// if err != nil {
+	// 	log.Fprintf(os.Stderr, "git describe returned error: %v\n", err)
+	// 	return ""
+	// }
 
-func findPackages() ([]string, error) {
-	mg.Deps(getDep)
-	s, err := sh.Output(goexe, "list", "./...")
-	if err != nil {
-		return nil, err
-	}
-	pkgs := strings.Split(s, "\n")
-	for i := range pkgs {
-		pkgs[i] = "." + pkgs[i][pkgPrefixLen:]
-	}
-	return pkgs, nil
-}
-
-func parseRev() (string, error) {
+	// version := strings.TrimSpace(string(out))
+	// log.Printf("git version is %s\n", version)
+	// return version
 	return sh.Output("git", "rev-parse", "--short", "HEAD")
-}
-
-func flagEnv() map[string]string {
-	hash, _ := parseRev()
-	return map[string]string{
-		"PACKAGE": packageName,
-		"COMMIT":  hash,
-		"DATE":    time.Now().Format("2006-01-02T15:04:05Z0700"),
-	}
-}
-
-func getEnv(key string, defaults ...string) string {
-	// val, err := os.LookupEnv
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	if len(defaults) > 0 {
-		return defaults[0]
-	}
-	return ""
 }
 
 // getVersion returns the version string from the file VERSION in the current
@@ -433,7 +488,7 @@ func getEnv(key string, defaults ...string) string {
 func getVersionFromFile() string {
 	buf, err := ioutil.ReadFile("VERSION")
 	if err != nil {
-		fmt.Printf("error reading file VERSION: %v\n", err)
+		log.Fprintf(os.Stderr, "error reading file VERSION: %v\n", err)
 		return ""
 	}
 
@@ -452,11 +507,3 @@ func executable(bin string) bool {
 // 	}
 // 	return s
 // }
-
-func buildTags() string {
-	// if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
-	// 	return envTags
-	// }
-	// return "none"
-	return getEnv("DOT_BUILD_TAGS", "none")
-}
