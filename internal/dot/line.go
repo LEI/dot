@@ -13,9 +13,9 @@ var (
 
 // Line task
 type Line struct {
-	Task
-	Target string // Target file
-	Data   string // Line content
+	Task   `mapstructure:",squash"` // Action, If, OS
+	Target string                   // Target file
+	Data   string                   // Line content
 }
 
 func (l *Line) String() string {

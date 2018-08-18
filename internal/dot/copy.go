@@ -10,7 +10,7 @@ import (
 
 // Copy task
 type Copy struct {
-	Task
+	Task   `mapstructure:",squash"` // Action, If, OS
 	Source string
 	Target string
 }

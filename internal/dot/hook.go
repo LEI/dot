@@ -13,7 +13,7 @@ var (
 
 // Hook command to execute
 type Hook struct {
-	Task    // Action, If, OS
+	Task    `mapstructure:",squash"` // Action, If, OS
 	Command string
 	Shell   string
 	ExecDir string

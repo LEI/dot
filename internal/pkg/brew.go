@@ -34,11 +34,10 @@ var brew = &Pm{
 		// "HOMEBREW_NO_EMOJI": "1",
 	},
 	Init: func() error {
-		return execute("brew", "update", "--quiet")
+		return execCommand("brew", "update", "--quiet")
 	},
 	Has: func(name string) (bool, error) {
-		args := []string{"ls", "--versions", name}
-		cmd := exec.Command("brew", args...)
+		cmd := exec.Command("brew", "ls", "--versions", name)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin

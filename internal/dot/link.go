@@ -7,7 +7,7 @@ import (
 
 // Link task
 type Link struct {
-	Task
+	Task   `mapstructure:",squash"` // Action, If, OS
 	Source string
 	Target string
 }

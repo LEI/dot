@@ -6,7 +6,7 @@ import (
 
 // Template task
 type Template struct {
-	Task
+	Task        `mapstructure:",squash"` // Action, If, OS
 	Source      string
 	Target      string
 	Env         map[string]string

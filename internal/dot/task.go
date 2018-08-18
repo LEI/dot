@@ -19,14 +19,15 @@ type Tasker interface {
 	Undo() error
 	CheckIf() error
 	CheckOS() error
+	GetOS() []string
 }
 
 // Task struct
 type Task struct {
 	Tasker
-	state string   `mapstructure:"action,omitempty,squash"` // install, remove
-	If    []string `mapstructure:",omitempty,squash"`
-	OS    []string `mapstructure:",omitempty,squash"`
+	state string   `mapstructure:"action,omitempty"` // install, remove
+	If    []string `mapstructure:",omitempty"`
+	OS    []string `mapstructure:",omitempty"`
 }
 
 // IsAction task
@@ -43,6 +44,11 @@ func IsOk(err error) bool {
 func exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil || os.IsExist(err)
+}
+
+// GetOS task
+func (t *Task) GetOS() []string {
+	return t.OS
 }
 
 // CheckOS task
