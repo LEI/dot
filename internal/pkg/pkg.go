@@ -20,9 +20,9 @@ var (
 	Upgrade bool
 
 	// Manager pkg
-	Manager *Mngr
+	Manager *Pm
 
-	managers = map[string]*Mngr{
+	managers = map[string]*Pm{
 		// https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management
 		"apk": {
 			Sudo: true,
@@ -66,7 +66,7 @@ var (
 		"brew": {
 			Bin: "brew",
 			Acts: map[string]interface{}{
-				"install": func(m *Mngr, in []string) string {
+				"install": func(m *Pm, in []string) string {
 					// TODO filter strings.HasPrefix(in, "-")?
 					opts := append([]string{"ls", "--versions"}, in...)
 					err := exec.Command("brew", opts...).Run()
@@ -162,12 +162,167 @@ var (
 	}
 )
 
+// Pm ...
+type Pm struct {
+	Sudo bool
+	Bin  string                 // Package manager binary path
+	Sub  []string               // Sub commands
+	Acts map[string]interface{} // Command actions map
+	Opts []*Opt                 // General pkg manager options
+	// ActOpts []*Opt         // Action options
+	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
+	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
+	Env  map[string]string
+	Init func() error // Install or prepare bin
+	done bool
+}
+
+// Opt ...
+type Opt struct {
+	Args        interface{} // *parsers.Slice
+	types.HasOS             // `mapstructure:",squash"`
+	types.HasIf             // `mapstructure:",squash"`
+}
+
+// NewMngr ...
+func NewMngr(name string) (*Pm, error) {
+	m := &Pm{}
+	if name == "" {
+		m = Detect()
+	} else {
+		var ok bool
+		m, ok = managers[name]
+		if !ok {
+			return m, fmt.Errorf("%s: invalid package manager name", name)
+		}
+	}
+	return m, nil
+}
+
+// Add ...
+func (m *Pm) Add(opt *Opt) ([]string, error) {
+	args := []string{}
+	// Check platform
+	if !opt.CheckOS() {
+		// continue
+		return args, nil
+	}
+	if !opt.CheckIf() {
+		// continue
+		return args, nil
+	}
+	// Check condition template
+	// pkgVarsMap := map[string]interface{}{
+	// 	// "DryRun":  DryRun,
+	// 	// "Verbose": Verbose,
+	// 	// "OS":      OS,
+	// }
+	// pkgFuncMap := template.FuncMap{
+	// 	// "hasOS": HasOSType,
+	// }
+	// for _, cond := range opt.If {
+	// 	str, err := TemplateData(cmd.Bin, cond, pkgVarsMap, pkgFuncMap)
+	// 	if err != nil {
+	// 		return args, err
+	// 	}
+	// 	stdout, stderr, status := ExecCommand(Shell, "-c", str)
+	// 	stdout = strings.TrimRight(stdout, "\n")
+	// 	stderr = strings.TrimRight(stderr, "\n")
+	// 	// if stdout != "" {
+	// 	// 	fmt.Printf("stdout: %s\n", stdout)
+	// 	// }
+	// 	if stderr != "" {
+	// 		fmt.Fprintf(os.Stderr, "stderr: %s\n", stderr)
+	// 	}
+	// 	if status != 0 {
+	// 		// continue
+	// 		return args, nil
+	// 	}
+	// }
+	// optArgs, err := tasks.NewSlice(opt.Args)
+	// if err != nil {
+	// 	return args, err
+	// }
+	// args = append(args, *optArgs...)
+	switch o := opt.Args.(type) {
+	case string:
+		args = append(args, o)
+	case []string:
+		args = append(args, o...)
+	default:
+		return args, fmt.Errorf("todo: opt args %+v", opt)
+	}
+	// return args, err
+	return args, nil
+}
+
+// Build command arguments
+func (m *Pm) Build(a string, in ...string) ([]string, error) {
+	opts := []string{}
+
+	// // General manager options
+	// if len(m.Opts) == 0 && !ostype.Has("alpine") {
+	// 	m.Opts = append(m.Opts, &Opt{Args: []string{"--noconfirm"}})
+	// }
+
+	// Sub command
+	if len(m.Sub) > 0 {
+		opts = append(opts, m.Sub...)
+	}
+
+	// Package manager action
+	act, ok := m.Acts[strings.ToLower(a)]
+	if !ok {
+		return []string{}, fmt.Errorf("unknown pkg action: %s", a)
+	}
+	var action string
+	switch A := act.(type) {
+	case string:
+		action = A
+	// case []string:
+	case func(m *Pm, in []string) string:
+		action = A(m, in)
+	default:
+		return opts, fmt.Errorf("%s: unknown pkg manager", A)
+	}
+	if action == "" {
+		return opts, fmt.Errorf("empty action %+v", m)
+	}
+	opts = append(opts, action)
+
+	// Action options
+	for _, a := range m.Opts {
+		add, err := m.Add(a)
+		if err != nil {
+			return opts, err
+		}
+		if len(add) > 0 {
+			opts = append(opts, add...)
+		}
+	}
+
+	// Insert package names and extra options
+	opts = append(opts, in...)
+
+	// After action
+	// for _, a := range m.ActOpts {
+	// 	add, err := m.Add(a)
+	// 	if err != nil {
+	// 		return opts, err
+	// 	}
+	// 	if len(add) > 0 {
+	// 		opts = append(opts, add...)
+	// 	}
+	// }
+	return opts, nil
+}
+
 // func init() {
 // 	Detect()
 // }
 
 // Detect default package manager
-func Detect() (m *Mngr) {
+func Detect() (m *Pm) {
 	switch runtime.GOOS {
 	case "darwin":
 		m = managers["brew"]
@@ -206,10 +361,6 @@ func executable(bin string) bool {
 	// 	return false
 	// }
 	return err == nil && len(out) > 0
-}
-
-func isRoot() bool {
-	return os.Geteuid() == 0
 }
 
 // Install ...
@@ -275,7 +426,7 @@ func execute(name string, args ...string) error {
 	return cmd.Run()
 }
 
-func getBin(m *Mngr, opts []string) (string, []string, error) {
+func getBin(m *Pm, opts []string) (string, []string, error) {
 	bin := m.Bin
 	// Switch binary for sudo
 	if m.Sudo && bin != "sudo" && !isRoot() {
@@ -285,157 +436,6 @@ func getBin(m *Mngr, opts []string) (string, []string, error) {
 	return bin, opts, nil
 }
 
-// NewMngr ...
-func NewMngr(name string) (*Mngr, error) {
-	m := &Mngr{}
-	if name == "" {
-		m = Detect()
-	} else {
-		var ok bool
-		m, ok = managers[name]
-		if !ok {
-			return m, fmt.Errorf("%s: invalid package manager name", name)
-		}
-	}
-	return m, nil
-}
-
-// Mngr ...
-type Mngr struct {
-	Sudo bool
-	Bin  string                 // Package manager binary path
-	Sub  []string               // Sub commands
-	Acts map[string]interface{} // Command actions map
-	Opts []*Opt                 // General pkg manager options
-	// ActOpts []*Opt         // Action options
-	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
-	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
-	Env  map[string]string
-	Init func() error // Install or prepare bin
-	done bool
-}
-
-// Opt ...
-type Opt struct {
-	Args        interface{} // *parsers.Slice
-	types.HasOS             // `mapstructure:",squash"`
-	types.HasIf             // `mapstructure:",squash"`
-}
-
-// Add ...
-func (m *Mngr) Add(opt *Opt) ([]string, error) {
-	args := []string{}
-	// Check platform
-	if !opt.CheckOS() {
-		// continue
-		return args, nil
-	}
-	if !opt.CheckIf() {
-		// continue
-		return args, nil
-	}
-	// Check condition template
-	// pkgVarsMap := map[string]interface{}{
-	// 	// "DryRun":  DryRun,
-	// 	// "Verbose": Verbose,
-	// 	// "OS":      OS,
-	// }
-	// pkgFuncMap := template.FuncMap{
-	// 	// "hasOS": HasOSType,
-	// }
-	// for _, cond := range opt.If {
-	// 	str, err := TemplateData(cmd.Bin, cond, pkgVarsMap, pkgFuncMap)
-	// 	if err != nil {
-	// 		return args, err
-	// 	}
-	// 	stdout, stderr, status := ExecCommand(Shell, "-c", str)
-	// 	stdout = strings.TrimRight(stdout, "\n")
-	// 	stderr = strings.TrimRight(stderr, "\n")
-	// 	// if stdout != "" {
-	// 	// 	fmt.Printf("stdout: %s\n", stdout)
-	// 	// }
-	// 	if stderr != "" {
-	// 		fmt.Fprintf(os.Stderr, "stderr: %s\n", stderr)
-	// 	}
-	// 	if status != 0 {
-	// 		// continue
-	// 		return args, nil
-	// 	}
-	// }
-	// optArgs, err := tasks.NewSlice(opt.Args)
-	// if err != nil {
-	// 	return args, err
-	// }
-	// args = append(args, *optArgs...)
-	switch o := opt.Args.(type) {
-	case string:
-		args = append(args, o)
-	case []string:
-		args = append(args, o...)
-	default:
-		return args, fmt.Errorf("todo: opt args %+v", opt)
-	}
-	// return args, err
-	return args, nil
-}
-
-// Build command arguments
-func (m *Mngr) Build(a string, in ...string) ([]string, error) {
-	opts := []string{}
-
-	// // General manager options
-	// if len(m.Opts) == 0 && !ostype.Has("alpine") {
-	// 	m.Opts = append(m.Opts, &Opt{Args: []string{"--noconfirm"}})
-	// }
-
-	// Sub command
-	if len(m.Sub) > 0 {
-		opts = append(opts, m.Sub...)
-	}
-
-	// Package manager action
-	act, ok := m.Acts[strings.ToLower(a)]
-	if !ok {
-		return []string{}, fmt.Errorf("unknown pkg action: %s", a)
-	}
-	var action string
-	switch A := act.(type) {
-	case string:
-		action = A
-	// case []string:
-	case func(m *Mngr, in []string) string:
-		action = A(m, in)
-	default:
-		return opts, fmt.Errorf("%s: unknown pkg manager", A)
-	}
-	if action == "" {
-		return opts, fmt.Errorf("empty action %+v", m)
-	}
-	opts = append(opts, action)
-
-	// Action options
-	for _, a := range m.Opts {
-		add, err := m.Add(a)
-		if err != nil {
-			return opts, err
-		}
-		if len(add) > 0 {
-			opts = append(opts, add...)
-		}
-	}
-
-	// Insert package names and extra options
-	opts = append(opts, in...)
-
-	// After action
-	// for _, a := range m.ActOpts {
-	// 	add, err := m.Add(a)
-	// 	if err != nil {
-	// 		return opts, err
-	// 	}
-	// 	if len(add) > 0 {
-	// 		opts = append(opts, add...)
-	// 	}
-	// }
-	return opts, nil
+func isRoot() bool {
+	return os.Geteuid() == 0
 }

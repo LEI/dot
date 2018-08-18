@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/LEI/dot/cli"
-	// "github.com/LEI/dot/internal/ostype"
+	// "github.com/LEI/dot/pkg/ostype"
 )
 
 var (

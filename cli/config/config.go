@@ -3,6 +3,7 @@ package config
 import (
 	"io"
 	"os"
+
 	// "path/filepath"
 
 	"github.com/LEI/dot/internal/homedir"

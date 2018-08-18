@@ -1,6 +1,7 @@
 package git
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/LEI/dot/cli/config/tasks"
-	"github.com/LEI/dot/internal/executils"
+	"github.com/LEI/dot/internal/shell"
 	"github.com/LEI/dot/system"
 )
 
@@ -122,17 +123,16 @@ func (r *Repo) SetURL(url string) *Repo {
 	return r
 }
 
-// Exec repo command
-func (r *Repo) Exec(args ...string) int {
-	return executils.Execute(GitBin, args...)
-}
+// // ExecStatus repo command
+// func (r *Repo) ExecStatus(args ...string) int {
+// 	return shell.Run(GitBin, args...)
+// }
 
-// ExecBuf repo command
-func (r *Repo) ExecBuf(args ...string) (string, string, int) {
-	stdOut, stdErr, status := executils.ExecuteBuf(GitBin, args...)
-	out := strings.TrimRight(string(stdOut), "\n")
-	err := strings.TrimRight(string(stdErr), "\n")
-	return out, err, status
+// Exec repo command
+func (r *Repo) Exec(args ...string) (string, string, error) {
+	var stdout, stderr *bytes.Buffer // io.Writer
+	_, err := shell.Exec(nil, stdout, stderr, GitBin, args...)
+	return stdout.String(), stderr.String(), err
 }
 
 // Status repo
@@ -141,15 +141,17 @@ func (r *Repo) Status() error {
 	if r.Dir != "" {
 		args = append([]string{"-C", r.Dir}, args...)
 	}
-	stdOut, stdErr, status := r.ExecBuf(args...)
-	if status == 1 {
-		return fmt.Errorf("%s: not a git directory", r.Dir)
-	} else if status != 0 {
-		return fmt.Errorf("%s: git status exit code %d", stdErr, status)
+	stdout, stderr, err := r.Exec(args...)
+	if err != nil {
+		// return fmt.Errorf("%s: not a git directory", r.Dir)
+		return fmt.Errorf("git status %s: %s", r.Dir, err)
 	}
-	if stdOut != "" && !Force {
+	if stderr != "" {
+		fmt.Fprintf(os.Stderr, stderr)
+	}
+	if stdout != "" && !Force {
 		// ErrDirtyRepo
-		return fmt.Errorf("Uncommitted changes in %s:\n%s", r.Dir, stdOut)
+		return fmt.Errorf("Uncommitted changes in %s:\n%s", r.Dir, stdout)
 	}
 	return nil
 }
@@ -175,20 +177,20 @@ func (r *Repo) Clone() error {
 	// if tasks.Verbose > 0 {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
-	// status := r.Exec(args...)
+	// status := r.ExecStatus(args...)
 	// if status != 0 {
 	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
 	// }
-	stdOut, stdErr, status := r.ExecBuf(args...)
-	if status != 0 {
-		return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, stdErr)
-		// return fmt.Errorf(stdErr)
+	stdout, stderr, err := r.Exec(args...)
+	if err != nil {
+		return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, err)
+		// return fmt.Errorf(stderr)
 	}
-	if stdErr != "" && tasks.Verbose > 0 {
-		fmt.Fprintln(Stderr, stdErr)
+	if stderr != "" && tasks.Verbose > 0 {
+		fmt.Fprintln(Stderr, stderr)
 	}
-	if stdOut != "" && tasks.Verbose > 0 {
-		fmt.Fprintf(Stdout, "%s\n", stdOut)
+	if stdout != "" && tasks.Verbose > 0 {
+		fmt.Fprintf(Stdout, "%s\n", stdout)
 	}
 	return nil
 }
@@ -208,25 +210,25 @@ func (r *Repo) Pull() error {
 	// if tasks.Verbose > 0 {
 	// 	fmt.Println("git pull", r.Remote, r.Branch)
 	// }
-	// status := r.Exec(args...)
+	// status := r.ExecStatus(args...)
 	// if status != 0 {
 	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
 	// }
-	stdOut, stdErr, status := r.ExecBuf(args...)
-	if status != 0 {
+	stdout, stderr, err := r.Exec(args...)
+	if err != nil {
 		// '{{.URL}}': Could not resolve host: {{.Host}}
 		// ErrNetworkUnreachable
-		if Force && strings.HasPrefix(stdErr, "fatal: unable to access") {
+		if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
 			return nil
 		}
-		return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stdErr)
-		// return fmt.Errorf(stdErr)
+		// return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stderr)
+		return err
 	}
-	if stdErr != "" { // && tasks.Verbose > 0 {
-		fmt.Fprintln(Stderr, stdErr)
+	if stderr != "" { // && tasks.Verbose > 0 {
+		fmt.Fprintln(Stderr, stderr)
 	}
-	if stdOut != "" && tasks.Verbose > 0 {
-		fmt.Fprintf(Stdout, "%s\n", stdOut)
+	if stdout != "" && tasks.Verbose > 0 {
+		fmt.Fprintf(Stdout, "%s\n", stdout)
 	}
 	return nil
 }
