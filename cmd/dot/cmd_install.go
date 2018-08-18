@@ -22,6 +22,7 @@ The "install" command installs roles by executing their tasks.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunInstall,
 	RunE:              runInstall,
 }
 
@@ -34,17 +35,33 @@ func init() {
 	// flags.BoolVarP(&installOpts.force, "force", "f", false, "ignore uncommitted changes")
 }
 
+func preRunInstall(cmd *cobra.Command, args []string) error {
+	if installOpts.sync {
+		for _, r := range globalConfig.Roles {
+			// Clone or pull git repository
+			if err := r.Sync(); err != nil {
+				return err
+			}
+			// Parse config file again
+			if err := r.LoadConfig(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// TODO: check nothing to do
 func runInstall(cmd *cobra.Command, args []string) error {
-	// if installOpts.sync {
-	// 	for _, r := range globalConfig.Roles {
-	// 		if err := r.RunSync(); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
 	action := "install"
 	for _, r := range globalConfig.Roles {
 		fmt.Printf("## Installing %s...\n", r.Name)
+		// Package management
+		for _, p := range r.Pkgs {
+			if err := runTask(action, p); err != nil {
+				return err
+			}
+		}
 		// Remove directories first
 		for _, d := range r.Dirs {
 			if err := runTask(action, d); err != nil {

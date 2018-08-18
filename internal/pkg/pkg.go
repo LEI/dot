@@ -162,7 +162,7 @@ var (
 	}
 )
 
-// Pm ...
+// Pm package manager
 type Pm struct {
 	Sudo bool
 	Bin  string                 // Package manager binary path
@@ -184,8 +184,8 @@ type Opt struct {
 	types.HasIf             // `mapstructure:",squash"`
 }
 
-// NewMngr ...
-func NewMngr(name string) (*Pm, error) {
+// NewPm ...
+func NewPm(name string) (*Pm, error) {
 	m := &Pm{}
 	if name == "" {
 		m = Detect()
@@ -385,7 +385,7 @@ func Remove(manager, name string, opts ...string) error {
 
 // Exec ...
 func Exec(action, manager, name string, opts ...string) error {
-	m, err := NewMngr(manager)
+	m, err := NewPm(manager)
 	if err != nil {
 		return err
 	}

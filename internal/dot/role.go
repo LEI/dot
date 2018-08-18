@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/LEI/dot/internal/git"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 )
@@ -68,6 +69,7 @@ type Role struct {
 	// Target string
 
 	// synced bool
+	configFile string
 }
 
 // NewRole from a config file path
@@ -79,8 +81,8 @@ func NewRole(path string) (*Role, error) {
 	}
 	dc := &mapstructure.DecoderConfig{
 		DecodeHook:       roleDecodeHook,
-		ErrorUnused:      true,
-		WeaklyTypedInput: true,
+		ErrorUnused:      decodeErrorUnused,
+		WeaklyTypedInput: decodeWeaklyTypedInput,
 		Result:           &rc,
 	}
 	decoder, err := mapstructure.NewDecoder(dc)
@@ -198,11 +200,51 @@ func formatTasks(prefix string, i interface{}) string {
 	return s
 }
 
-// LoadConfig ...
-func (r *Role) LoadConfig(path string) error {
-	role, err := NewRole(path)
+// Sync role repository
+func (r *Role) Sync() error {
+	repo, err := git.NewRepo(r.Path, r.URL)
 	if err != nil {
-		return fmt.Errorf("error loading %s config: %s", r.Name, err)
+		return err
+	}
+	if dirExists(r.Path) {
+		// fmt.Fprintf(dotCli.Out(), "Checking %s...\n", name)
+		if err := repo.Status(); err != nil {
+			return err
+		}
+		if err := repo.Pull(); err != nil {
+			return err
+		}
+	} else {
+		// fmt.Fprintf(dotCli.Out(), "Cloning %s into %s...\n", name, repo.Dir)
+		if err := repo.Clone(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetConfigFile path
+func (r *Role) GetConfigFile() string {
+	return r.configFile
+}
+
+// SetConfigFile path
+func (r *Role) SetConfigFile(name string) *Role {
+	if !filepath.IsAbs(name) {
+		name = filepath.Join(r.Path, name)
+	}
+	r.configFile = name
+	return r
+}
+
+// LoadConfig file
+func (r *Role) LoadConfig() error {
+	if r.configFile == "" {
+		return fmt.Errorf("role %s: empty config file path", r.Name)
+	}
+	role, err := NewRole(r.configFile)
+	if err != nil {
+		return fmt.Errorf("role %s: %s", r.Name, err)
 	}
 	// fmt.Printf("Merging role config %+v with original %+v\n", role, r)
 	return mergo.Merge(r, role)

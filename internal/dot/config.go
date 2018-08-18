@@ -12,12 +12,29 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	decodeErrorUnused      bool // TODO = true if opts.Force
+	decodeWeaklyTypedInput = true
+)
+
 // Config struct
 type Config struct {
-	Source  string
-	Target  string
-	DirName string
-	Roles   []*Role
+	Source string
+	Target string
+	Roles  []*Role
+
+	dirname  string // Role directory name
+	filename string // Role config file name
+}
+
+// SetDir name
+func (c *Config) SetDir(name string) {
+	c.dirname = name
+}
+
+// SetRoleFile name
+func (c *Config) SetRoleFile(name string) {
+	c.filename = name
 }
 
 // ParseRoles config
@@ -25,7 +42,7 @@ func (c *Config) ParseRoles() error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
 		if r.Path == "" {
-			r.Path = filepath.Join(c.DirName, r.Name)
+			r.Path = filepath.Join(c.dirname, r.Name)
 			if !filepath.IsAbs(r.Path) {
 				r.Path = filepath.Join(c.Source, r.Path)
 			}
@@ -33,9 +50,11 @@ func (c *Config) ParseRoles() error {
 		// if ok := r.Ignore(); ok {
 		// 	continue
 		// }
-		cfgPath := filepath.Join(r.Path, ".dot.yml")
-		if err := r.LoadConfig(cfgPath); err != nil {
-			return err
+		r.SetConfigFile(c.filename)
+		if exists(r.GetConfigFile()) {
+			if err := r.LoadConfig(); err != nil {
+				return err
+			}
 		}
 		if err := r.Parse(c.Target); err != nil {
 			return err
@@ -76,8 +95,8 @@ func LoadConfig(path string) (Config, error) {
 	// fmt.Printf("md: %+v\n", md)
 	dc := &mapstructure.DecoderConfig{
 		// DecodeHook:       ...,
-		ErrorUnused:      true,
-		WeaklyTypedInput: true,
+		ErrorUnused:      decodeErrorUnused,
+		WeaklyTypedInput: decodeWeaklyTypedInput,
 		Result:           &cfg,
 	}
 	decoder, err := mapstructure.NewDecoder(dc)
