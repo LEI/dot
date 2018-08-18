@@ -41,12 +41,9 @@ var (
 	dockerCompose = RunVCmd("docker-compose")
 	testRun       = sh.RunCmd(goexe, "test")
 	testRunV      = RunVCmd(goexe, "test")
-
-	now string
 )
 
 func init() {
-	now = time.Now().Format("2006-01-02T15:04:05Z0700")
 	if exe := os.Getenv("GOEXE"); exe != "" {
 		goexe = exe
 	}
@@ -308,7 +305,6 @@ func constantsLDFlags() string {
 	cs := map[string]string{
 		"main.version": getVersionFromFile(),
 		"main.commit":  getVersionFromGit(),
-		"main.date":    now,
 	}
 	l := make([]string, 0, len(cs))
 	for k, v := range cs {
@@ -340,7 +336,7 @@ func flagEnv() map[string]string {
 		"PACKAGE": mainPackage,
 		"VERSION": getVersionFromFile(),
 		"COMMIT":  getVersionFromGit(),
-		"DATE":    now,
+		"DATE":    time.Now().Format("2006-01-02T15:04:05Z0700"),
 	}
 }
 

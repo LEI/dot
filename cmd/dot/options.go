@@ -11,6 +11,7 @@ import (
 var (
 	binary  = "dot" // _, binary = filepath.Split(os.Args[0])
 	version = "compiled manually"
+	commit  = ""
 )
 
 // GlobalOptions hold all global options for restic.
