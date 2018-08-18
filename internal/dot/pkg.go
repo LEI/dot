@@ -10,11 +10,9 @@ import (
 
 // Pkg task
 type Pkg struct {
-	Task
+	Task    // Action, If, OS
 	Name    string
 	Args    []string
-	OS      []string
-	Action  string
 	Manager string `mapstructure:"type"`
 }
 
@@ -57,13 +55,14 @@ func (p *Pkg) Status() error {
 
 // Do task
 func (p *Pkg) Do() error {
-	// if err := c.Status(); err != nil {
-	// 	if err == ErrAlreadyExist {
-	// 		return nil
-	// 	}
-	// 	return err
-	// }
-	// TODO OS, If, Action
+	if err := p.Status(); err != nil {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
+			return nil
+		default:
+			return err
+		}
+	}
 	err := pkg.Install(p.Manager, p.Name, p.Args...)
 	switch err {
 	// case nil:
@@ -76,12 +75,16 @@ func (p *Pkg) Do() error {
 
 // Undo task
 func (p *Pkg) Undo() error {
-	// if err := h.Status(); err != nil {
-	// 	if err != ErrAlreadyExist {
-	// 		return err
-	// 	}
-	// }
-	// TODO OS, If, Action
+	if err := p.Status(); err != nil {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
+			return err
+		}
+	}
 	err := pkg.Remove(p.Manager, p.Name, p.Args...)
 	switch err {
 	// case nil:

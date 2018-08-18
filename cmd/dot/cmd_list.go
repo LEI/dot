@@ -72,9 +72,9 @@ func runList(cmd *cobra.Command, args []string) error {
 	// 	return errors.Fatal("Invalid arguments, either give one or more snapshot IDs or set filters.")
 	// }
 	// if !listOpts.all {
-	// 	globalConfig.Roles.FilterOS()
+	// 	dotConfig.Roles.FilterOS()
 	// }
-	for _, r := range globalConfig.Roles {
+	for _, r := range dotConfig.Roles {
 		// fmt.Printf("%+v\n", r)
 		if listOpts.quiet {
 			fmt.Println(r.Name)

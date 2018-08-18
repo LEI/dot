@@ -21,7 +21,7 @@ func init() {
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
-	// for _, r := range globalConfig.Roles {
+	// for _, r := range dotConfig.Roles {
 	// 	if err := r.Sync(); err != nil {
 	// 		return err
 	// 	}

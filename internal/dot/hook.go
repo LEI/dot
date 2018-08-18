@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 var (
@@ -12,16 +13,15 @@ var (
 
 // Hook command to execute
 type Hook struct {
-	Task
+	Task    // Action, If, OS
 	Command string
 	Shell   string
-	Action  string // install, remove
-	OS      []string
 	ExecDir string
 }
 
 func (h *Hook) String() string {
-	return fmt.Sprintf("%s", h.Command)
+	s := strings.TrimRight(h.Command, "\n")
+	return fmt.Sprintf("%s", s)
 }
 
 // DoString string
@@ -36,19 +36,18 @@ func (h *Hook) UndoString() string {
 
 // Status check task
 func (h *Hook) Status() error {
-	// if hookExists(h.Target) {
-	// 	return ErrAlreadyExist
-	// }
 	return nil
 }
 
 // Do task
 func (h *Hook) Do() error {
 	if err := h.Status(); err != nil {
-		if err == ErrAlreadyExist {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
 			return nil
+		default:
+			return err
 		}
-		return err
 	}
 	if h.Shell == "" {
 		h.Shell = defaultExecShell
@@ -60,10 +59,15 @@ func (h *Hook) Do() error {
 	return nil
 }
 
-// Undo task
+// Undo task (non applicable)
 func (h *Hook) Undo() error {
 	if err := h.Status(); err != nil {
-		if err != ErrAlreadyExist {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
 			return err
 		}
 	}

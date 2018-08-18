@@ -39,7 +39,7 @@ func init() {
 
 func preRunInstall(cmd *cobra.Command, args []string) error {
 	if installOpts.sync {
-		for _, r := range globalConfig.Roles {
+		for _, r := range dotConfig.Roles {
 			// Clone or pull git repository
 			if err := r.Sync(); err != nil {
 				return err
@@ -56,8 +56,17 @@ func preRunInstall(cmd *cobra.Command, args []string) error {
 // TODO: check nothing to do
 func runInstall(cmd *cobra.Command, args []string) error {
 	action := "install"
-	for _, r := range globalConfig.Roles {
-		fmt.Printf("## Installing %s...\n", r.Name)
+	for _, r := range dotConfig.Roles {
+		if dotOpts.verbosity >= 1 {
+			fmt.Printf("## Installing %s...\n", r.Name)
+		}
+		// Pre install hooks
+		for _, h := range r.Install {
+			h.ExecDir = r.Path
+			if err := runTask(action, h); err != nil {
+				return err
+			}
+		}
 		// Package management
 		for _, p := range r.Pkgs {
 			if err := runTask(action, p); err != nil {
@@ -87,6 +96,13 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		}
 		for _, l := range r.Lines {
 			if err := runTask(action, l); err != nil {
+				return err
+			}
+		}
+		// Post install hooks
+		for _, h := range r.PostInstall {
+			h.ExecDir = r.Path
+			if err := runTask(action, h); err != nil {
 				return err
 			}
 		}

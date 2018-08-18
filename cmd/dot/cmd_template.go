@@ -35,7 +35,7 @@ func init() {
 
 func runTpl(cmd *cobra.Command, args []string) error {
 	action := cmd.Parent().Name()
-	for _, r := range globalConfig.Roles {
+	for _, r := range dotConfig.Roles {
 		for _, t := range r.Tpls {
 			if err := runTask(action, t); err != nil {
 				return err
