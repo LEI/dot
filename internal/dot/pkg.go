@@ -24,12 +24,12 @@ func (p *Pkg) String() string {
 
 // DoString string
 func (p *Pkg) DoString() string {
-	return fmt.Sprintf("Install %s package %s %s", p.Type, p.Name, strings.Join(p.Args, " "))
+	return fmt.Sprintf("install %s %s", p.Name, strings.Join(p.Args, " "))
 }
 
 // UndoString string
 func (p *Pkg) UndoString() string {
-	return fmt.Sprintf("Remove %s package %s %s", p.Type, p.Name, strings.Join(p.Args, " "))
+	return fmt.Sprintf("remove %s %s", p.Name, strings.Join(p.Args, " "))
 }
 
 // Status check task
@@ -37,7 +37,8 @@ func (p *Pkg) Status() error {
 	// if hookExists(p.Target) {
 	// 	return ErrAlreadyExist
 	// }
-	return nil
+	// return nil
+	return ErrAlreadyExist
 }
 
 // Do task
@@ -49,5 +50,5 @@ func (p *Pkg) Do() error {
 // Undo task
 func (p *Pkg) Undo() error {
 	// TODO OS, Action
-	return pkg.Install(p.Type, p.Name, p.Args...)
+	return pkg.Remove(p.Type, p.Name, p.Args...)
 }

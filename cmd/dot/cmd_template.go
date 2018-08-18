@@ -10,7 +10,7 @@ type templateOptions struct {
 
 var templateOpts templateOptions
 
-var cmdTemplate = &cobra.Command{
+var cmdTpl = &cobra.Command{
 	Use:     "template [flags]",
 	Aliases: []string{"tpl"},
 	Short:   "Template managed files",
@@ -19,17 +19,20 @@ The "template" task installs or removes templates.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
-	RunE:              runTemplate,
+	RunE:              runTpl,
 }
 
 func init() {
-	cmdInstall.AddCommand(cmdTemplate)
-	cmdRemove.AddCommand(cmdTemplate)
+	cmdInstall.AddCommand(cmdTpl)
 
-	// flags := cmdTemplate.Flags()
+	cmdRmTpl := &cobra.Command{}
+	*cmdRmTpl = *cmdTpl
+	cmdRemove.AddCommand(cmdRmTpl)
+
+	// flags := cmdTpl.Flags()
 }
 
-func runTemplate(cmd *cobra.Command, args []string) error {
+func runTpl(cmd *cobra.Command, args []string) error {
 	action := cmd.Parent().Name()
 	for _, r := range globalConfig.Roles {
 		for _, t := range r.Tpls {

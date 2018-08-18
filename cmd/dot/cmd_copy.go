@@ -24,7 +24,10 @@ The "copy" task installs or removes files.
 
 func init() {
 	cmdInstall.AddCommand(cmdCopy)
-	cmdRemove.AddCommand(cmdCopy)
+
+	cmdRmCopy := &cobra.Command{}
+	*cmdRmCopy = *cmdCopy
+	cmdRemove.AddCommand(cmdRmCopy)
 
 	// flags := cmdCopy.Flags()
 }

@@ -17,6 +17,8 @@ func runTask(action string, i interface{}) error {
 		if err := undoTask(t); err != nil {
 			return err
 		}
+	default:
+		return fmt.Errorf("%s: unknown action", action)
 	}
 	return nil
 }

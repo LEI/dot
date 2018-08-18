@@ -12,7 +12,6 @@ import (
 	// "github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/cli/config/types"
 	"github.com/LEI/dot/internal/ostype"
-	"github.com/LEI/dot/system"
 )
 
 var (
@@ -417,13 +416,14 @@ func Exec(action, manager, name string, opts ...string) error {
 
 func execute(name string, args ...string) error {
 	fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
-	if system.DryRun {
-		return nil
-	}
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	// if DryRun {
+	// 	return nil
+	// }
+	// cmd := exec.Command(name, args...)
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+	// return cmd.Run()
+	return nil
 }
 
 func getBin(m *Pm, opts []string) (string, []string, error) {
