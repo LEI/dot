@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/LEI/dot/internal/comp"
+	"github.com/LEI/dot/pkg/comp"
 )
 
 var copyTests = []struct {

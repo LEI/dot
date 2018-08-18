@@ -6,8 +6,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/LEI/dot/internal/executils"
 	"github.com/LEI/dot/internal/ostype"
+	"github.com/LEI/dot/pkg/executils"
 	"github.com/LEI/dot/system"
 )
 
