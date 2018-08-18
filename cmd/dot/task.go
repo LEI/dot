@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
@@ -44,13 +45,19 @@ func doTask(t dot.Tasker) error {
 	if !ok && err != nil {
 		return err
 	}
+	str := t.DoString()
+	if str == "" {
+		fmt.Fprintln(os.Stderr, "warning: empty task string")
+	}
 	if ok {
-		if dotOpts.Verbose > 0 {
-			fmt.Println("#", t.DoString())
+		if str != "" && dotOpts.verbosity >= 2 {
+			fmt.Printf("# %s\n", str)
 		}
 		return nil
 	}
-	fmt.Println("$", t.DoString())
+	if str != "" && dotOpts.verbosity >= 1 {
+		fmt.Printf("$ %s\n", str)
+	}
 	if dotOpts.DryRun {
 		return nil
 	}
@@ -63,14 +70,20 @@ func undoTask(t dot.Tasker) error {
 	if !ok && err != nil {
 		return err
 	}
+	str := t.UndoString()
+	if str == "" {
+		fmt.Fprintln(os.Stderr, "warning: empty task string")
+	}
 	if !ok {
-		fmt.Println("# TODO AskConfirmation", t.UndoString())
-		// if dotOpts.Verbose > 0 {
-		// 	fmt.Println("#", t.UndoString())
-		// }
+		fmt.Println("# TODO AskConfirmation")
+		if str != "" && dotOpts.verbosity >= 2 {
+			fmt.Printf("# %s\n", str)
+		}
 		return nil
 	}
-	fmt.Println("$", t.UndoString())
+	if str != "" && dotOpts.verbosity >= 1 {
+		fmt.Printf("$ %s\n", str)
+	}
 	if dotOpts.DryRun {
 		return nil
 	}
