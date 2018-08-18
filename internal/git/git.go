@@ -37,6 +37,9 @@ var (
 	defaultBranch = "master"
 	defaultRemote = "origin"
 	repoFmt       = "https://github.com/%s.git"
+
+	git               = shell.RunCmd("git")
+	gitCombinedOutput = shell.CombinedOutputCmd("git")
 )
 
 func init() {
@@ -49,13 +52,14 @@ func init() {
 }
 
 func checkGitVersion() error {
+	// out, err := gitCombinedOutput("--version")
 	cmd := exec.Command("git", "--version")
-	out, err := cmd.CombinedOutput()
+	buf, err := cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
-	str := string(out)
-	ver := strings.TrimPrefix(str, "git version ")
+	out := string(buf)
+	ver := strings.TrimPrefix(out, "git version ")
 	// fmt.Println("GIT_VERSION", ver)
 	// if ver == "" {
 	// 	return fmt.Errorf("%s: unable to parse git version", str)
@@ -147,7 +151,7 @@ func (r *Repo) Status() error {
 		return fmt.Errorf("git status %s: %s", r.Dir, err)
 	}
 	if stderr != "" {
-		fmt.Fprintf(os.Stderr, stderr)
+		fmt.Fprintf(Stderr, stderr)
 	}
 	if stdout != "" && !Force {
 		// ErrDirtyRepo
@@ -181,17 +185,25 @@ func (r *Repo) Clone() error {
 	// if status != 0 {
 	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
 	// }
-	stdout, stderr, err := r.Exec(args...)
+	err := git(args...)
+	// out, err := git(args...)
+	// if out != "" {
+	// 	fmt.Printf("%s", out)
+	// }
 	if err != nil {
-		return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, err)
-		// return fmt.Errorf(stderr)
+		return err
 	}
-	if stderr != "" && tasks.Verbose > 0 {
-		fmt.Fprintln(Stderr, stderr)
-	}
-	if stdout != "" && tasks.Verbose > 0 {
-		fmt.Fprintf(Stdout, "%s\n", stdout)
-	}
+	// stdout, stderr, err := r.Exec(args...)
+	// if err != nil {
+	// 	return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, err)
+	// 	// return fmt.Errorf(stderr)
+	// }
+	// if stderr != "" && tasks.Verbose > 0 {
+	// 	fmt.Fprintln(Stderr, stderr)
+	// }
+	// if stdout != "" && tasks.Verbose > 0 {
+	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
+	// }
 	return nil
 }
 
@@ -214,21 +226,31 @@ func (r *Repo) Pull() error {
 	// if status != 0 {
 	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
 	// }
-	stdout, stderr, err := r.Exec(args...)
+	out, err := gitCombinedOutput(args...)
 	if err != nil {
-		// '{{.URL}}': Could not resolve host: {{.Host}}
-		// ErrNetworkUnreachable
-		if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
+		if Force && strings.HasPrefix(out, "fatal: unable to access") {
 			return nil
 		}
-		// return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stderr)
 		return err
 	}
-	if stderr != "" { // && tasks.Verbose > 0 {
-		fmt.Fprintln(Stderr, stderr)
+	if out != "" {
+		fmt.Fprintln(Stdout, out)
 	}
-	if stdout != "" && tasks.Verbose > 0 {
-		fmt.Fprintf(Stdout, "%s\n", stdout)
-	}
+	// stdout, stderr, err := r.Exec(args...)
+	// if err != nil {
+	// 	// '{{.URL}}': Could not resolve host: {{.Host}}
+	// 	// ErrNetworkUnreachable
+	// 	if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
+	// 		return nil
+	// 	}
+	// 	// return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stderr)
+	// 	return err
+	// }
+	// if stderr != "" { // && tasks.Verbose > 0 {
+	// 	fmt.Fprintln(Stderr, stderr)
+	// }
+	// if stdout != "" && tasks.Verbose > 0 {
+	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
+	// }
 	return nil
 }

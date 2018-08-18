@@ -19,6 +19,7 @@ The "template" task installs or removes templates.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunTask,
 	RunE:              runTpl,
 }
 

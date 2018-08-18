@@ -29,8 +29,10 @@ The "install" command installs roles by executing their tasks.
 func init() {
 	cmdRoot.AddCommand(cmdInstall)
 
-	flags := cmdInstall.Flags()
-	flags.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
+	f := cmdInstall.PersistentFlags()
+	f.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
+
+	// flags := cmdInstall.Flags()
 	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
 	// flags.BoolVarP(&installOpts.force, "force", "f", false, "ignore uncommitted changes")
 }

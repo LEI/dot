@@ -19,6 +19,7 @@ The "link" task installs or removes symlinks.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunTask,
 	RunE:              runLink,
 }
 

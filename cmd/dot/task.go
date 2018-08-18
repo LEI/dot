@@ -4,7 +4,22 @@ import (
 	"fmt"
 
 	"github.com/LEI/dot/internal/dot"
+	"github.com/spf13/cobra"
 )
+
+func preRunTask(cmd *cobra.Command, args []string) error {
+	action := cmd.Parent().Name()
+	switch action {
+	// case "list":
+	// 	return preRunList(cmd, args)
+	case "install":
+		return preRunInstall(cmd, args)
+	case "remove":
+		return preRunRemove(cmd, args)
+	default:
+		return fmt.Errorf("%s: invalid action", action)
+	}
+}
 
 func runTask(action string, i interface{}) error {
 	t := i.(dot.Tasker)

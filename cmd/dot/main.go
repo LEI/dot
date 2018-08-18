@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/LEI/dot/internal/dot"
+	"github.com/LEI/dot/internal/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -22,87 +24,11 @@ dot is yet another file manager program.
 	SilenceErrors:     true,
 	SilenceUsage:      true,
 	DisableAutoGenTag: true,
-	// TraverseChildren:  true,
-	// Args:              cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		if flagVersion {
-			fmt.Printf("%s %s\n", binary, version)
-			return
-		}
-		// if err := cmd.Usage(); err != nil {
-		// 	return err
-		// }
-		// cmd.SetOutput(os.Stderr)
-		// cmd.HelpFunc()(cmd, args)
-		cmd.Help()
-	},
-	PersistentPreRunE: func(c *cobra.Command, args []string) error {
-		// set verbosity, default is one
-		dotOpts.verbosity = 1
-		if dotOpts.Quiet && dotOpts.Verbose > 1 {
-			return fmt.Errorf("--quiet and --verbose cannot be specified at the same time")
-		}
-
-		switch {
-		case dotOpts.Verbose >= 2:
-			dotOpts.verbosity = 3
-		case dotOpts.Verbose > 0:
-			dotOpts.verbosity = 2
-		case dotOpts.Quiet:
-			dotOpts.verbosity = 0
-		}
-
-		// parse extended options
-		// opts, err := options.Parse(dotOpts.Options)
-		// if err != nil {
-		// 	return err
-		// }
-		// dotOpts.extended = opts
-		if c.Name() == "version" {
-			return nil
-		}
-		// pwd, err := resolvePassword(dotOpts, "RESTIC_PASSWORD")
-		// if err != nil {
-		// 	fmt.Fprintf(os.Stderr, "Resolving password failed: %v\n", err)
-		// 	Exit(1)
-		// }
-		// dotOpts.password = pwd
-
-		cfg, err := OpenConfig(dotOpts)
-		if err != nil {
-			return err
-		}
-		globalConfig = cfg
-		if len(dotOpts.RoleFilter) > 0 {
-			roles := []*dot.Role{}
-			for _, r := range globalConfig.Roles {
-				for _, s := range dotOpts.RoleFilter {
-					if s == r.Name {
-						roles = append(roles, r)
-						break
-					}
-				}
-			}
-			globalConfig.Roles = roles
-		}
-		if len(globalConfig.Roles) == 0 {
-			return fmt.Errorf("no roles to execute in: %+v", cfg.Roles)
-		}
-		if err := globalConfig.ParseRoles(); err != nil {
-			return err
-		}
-		// if err := globalConfig.Load(); err != nil {
-		// 	return err
-		// }
-
-		// // run the debug functions for all subcommands (if build tag "debug" is
-		// // enabled)
-		// if err := runDebug(); err != nil {
-		// 	return err
-		// }
-
-		return nil
-	},
+	TraverseChildren:  true,
+	Args:              cobra.NoArgs,
+	// Cannot be overriden
+	PersistentPreRunE: persistentPreRunDot,
+	RunE:              runDot,
 }
 
 // var logBuffer = bytes.NewBuffer(nil)
@@ -114,6 +40,8 @@ func init() {
 
 	flags := cmdRoot.Flags()
 	flags.BoolVarP(&flagVersion, "version", "V", flagVersion, "Print short version information")
+
+	// cmdRoot.SetVersionTemplate("dot version {{.Version}}\n")
 }
 
 func main() {
@@ -145,4 +73,95 @@ func main() {
 	}
 
 	os.Exit(exitCode)
+}
+
+func runDot(cmd *cobra.Command, args []string) error {
+	if flagVersion {
+		str := fmt.Sprintf("%s %s", binary, version)
+		// if commit != "" {
+		// 	str += fmt.Sprintf(" (%s)", commit)
+		// }
+		fmt.Println(str)
+		return nil
+	}
+	// if err := cmd.Usage(); err != nil {
+	// 	return err
+	// }
+	// cmd.SetOutput(os.Stderr)
+	// cmd.HelpFunc()(cmd, args)
+	usage := strings.TrimRight(cmd.UsageString(), "\n")
+	return fmt.Errorf("%s", usage)
+	// return fmt.Errorf("%s", cmd.UseLine())
+}
+
+func persistentPreRunDot(c *cobra.Command, args []string) error {
+	// set package options
+	pkg.DryRun = dotOpts.DryRun
+	// pkg.Update = true
+
+	// set verbosity, default is one
+	dotOpts.verbosity = 1
+	if dotOpts.Quiet && dotOpts.Verbose > 1 {
+		return fmt.Errorf("--quiet and --verbose cannot be specified at the same time")
+	}
+
+	switch {
+	case dotOpts.Verbose >= 2:
+		dotOpts.verbosity = 3
+	case dotOpts.Verbose > 0:
+		dotOpts.verbosity = 2
+	case dotOpts.Quiet:
+		dotOpts.verbosity = 0
+	}
+
+	// parse extended options
+	// opts, err := options.Parse(dotOpts.Options)
+	// if err != nil {
+	// 	return err
+	// }
+	// dotOpts.extended = opts
+	if c.Name() == "version" {
+		return nil
+	}
+	// pwd, err := resolvePassword(dotOpts, "RESTIC_PASSWORD")
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "Resolving password failed: %v\n", err)
+	// 	Exit(1)
+	// }
+	// dotOpts.password = pwd
+
+	cfg, err := OpenConfig(dotOpts)
+	if err != nil {
+		return err
+	}
+	globalConfig = cfg
+	if len(dotOpts.RoleFilter) > 0 {
+		roles := []*dot.Role{}
+		for _, r := range globalConfig.Roles {
+			for _, s := range dotOpts.RoleFilter {
+				if s == r.Name {
+					roles = append(roles, r)
+					break
+				}
+			}
+		}
+		globalConfig.Roles = roles
+	}
+	if len(globalConfig.Roles) == 0 {
+		return fmt.Errorf("no roles to execute in: %+v", cfg.Roles)
+	}
+	if err := globalConfig.ParseRoles(); err != nil {
+		return err
+	}
+	// if err := globalConfig.Load(); err != nil {
+	// 	return err
+	// }
+
+	// // run the debug functions for all subcommands (if build tag "debug" is
+	// // enabled)
+	// if err := runDebug(); err != nil {
+	// 	return err
+	// }
+
+	return nil
 }

@@ -11,19 +11,21 @@ import (
 	"strings"
 )
 
-// RunCmd uses Exec underneath.
+// Run command without specifying any environment variables.
+func Run(cmd string, args ...string) error {
+	// return RunWith(nil, cmd, args...)
+	_, err := Exec(nil, os.Stdout, os.Stderr, cmd, args...)
+	return err
+}
+
+// RunCmd uses Run and Exec underneath.
 func RunCmd(cmd string, args ...string) func(args ...string) error {
 	return func(args2 ...string) error {
 		return Run(cmd, append(args, args2...)...)
 	}
 }
 
-// Run is like RunWith, but doesn't specify any environment variables.
-func Run(cmd string, args ...string) error {
-	return RunWith(nil, cmd, args...)
-}
-
-// RunWith runs the given command.
+// RunWith executes a command within the given environment.
 func RunWith(env map[string]string, cmd string, args ...string) error {
 	// var output io.Writer
 	// if Verbose {
@@ -40,10 +42,38 @@ func Output(cmd string, args ...string) (string, error) {
 	return strings.TrimSuffix(buf.String(), "\n"), err
 }
 
+// OutputCmd uses Ouput and Exec underneath.
+func OutputCmd(cmd string, args ...string) func(args ...string) (string, error) {
+	return func(args2 ...string) (string, error) {
+		return Output(cmd, append(args, args2...)...)
+	}
+}
+
 // OutputWith is like RunWith, ubt returns what is written to stdout.
 func OutputWith(env map[string]string, cmd string, args ...string) (string, error) {
 	buf := &bytes.Buffer{}
 	_, err := Exec(env, buf, os.Stderr, cmd, args...)
+	return strings.TrimSuffix(buf.String(), "\n"), err
+}
+
+// CombinedOutput runs the command and returns the text from stdout and stderr.
+func CombinedOutput(cmd string, args ...string) (string, error) {
+	buf := &bytes.Buffer{}
+	_, err := Exec(nil, buf, buf, cmd, args...)
+	return strings.TrimSuffix(buf.String(), "\n"), err
+}
+
+// CombinedOutputCmd uses CombinedOutput and Exec underneath.
+func CombinedOutputCmd(cmd string, args ...string) func(args ...string) (string, error) {
+	return func(args2 ...string) (string, error) {
+		return CombinedOutput(cmd, append(args, args2...)...)
+	}
+}
+
+// CombinedOutputWith is like RunWith, ubt returns what is written to stdout. and stderr
+func CombinedOutputWith(env map[string]string, cmd string, args ...string) (string, error) {
+	buf := &bytes.Buffer{}
+	_, err := Exec(env, buf, buf, cmd, args...)
 	return strings.TrimSuffix(buf.String(), "\n"), err
 }
 

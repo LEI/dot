@@ -20,6 +20,7 @@ The "dir" task installs or removes directories.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunTask,
 	RunE:              runDir,
 }
 

@@ -2,6 +2,7 @@ package dot
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/LEI/dot/internal/pkg"
@@ -10,26 +11,36 @@ import (
 // Pkg task
 type Pkg struct {
 	Task
-	Name   string
-	Args   []string
-	OS     []string
-	Action string
-	Type   string
+	Name    string
+	Args    []string
+	OS      []string
+	Action  string
+	Manager string `mapstructure:"type"`
 }
 
 func (p *Pkg) String() string {
-	// return fmt.Sprintf("%s %s %s %s %s", p.Type, p.Action, p.Name, p.Args, p.OS)
+	// return fmt.Sprintf("%s %s %s %s %s", p.Manager, p.Action, p.Name, p.Args, p.OS)
 	return p.Name // fmt.Sprintf("%s %s", p.Name, p.Args)
 }
 
 // DoString string
 func (p *Pkg) DoString() string {
-	return fmt.Sprintf("install %s %s", p.Name, strings.Join(p.Args, " "))
+	bin, opts, err := pkg.Build("install", p.Manager, p.Name, p.Args...)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return ""
+	}
+	return fmt.Sprintf("%s %s", bin, strings.Join(opts, " "))
 }
 
 // UndoString string
 func (p *Pkg) UndoString() string {
-	return fmt.Sprintf("remove %s %s", p.Name, strings.Join(p.Args, " "))
+	bin, opts, err := pkg.Build("remove", p.Manager, p.Name, p.Args...)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return ""
+	}
+	return fmt.Sprintf("%s %s", bin, strings.Join(opts, " "))
 }
 
 // Status check task
@@ -37,18 +48,17 @@ func (p *Pkg) Status() error {
 	// if hookExists(p.Target) {
 	// 	return ErrAlreadyExist
 	// }
-	// return nil
-	return ErrAlreadyExist
+	return nil // ErrAlreadyExist
 }
 
 // Do task
 func (p *Pkg) Do() error {
-	// TODO OS, Action
-	return pkg.Install(p.Type, p.Name, p.Args...)
+	// TODO OS, If, Action
+	return nil // pkg.Install(p.Manager, p.Name, p.Args...)
 }
 
 // Undo task
 func (p *Pkg) Undo() error {
-	// TODO OS, Action
-	return pkg.Remove(p.Type, p.Name, p.Args...)
+	// TODO OS, If, Action
+	return nil // pkg.Remove(p.Manager, p.Name, p.Args...)
 }
