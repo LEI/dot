@@ -22,10 +22,10 @@ The "pkg" task installs or removes packages.
 	RunE:              runPkg,
 }
 
+var cmdRmPkg = &cobra.Command{}
+
 func init() {
 	cmdInstall.AddCommand(cmdPkg)
-
-	cmdRmPkg := &cobra.Command{}
 	*cmdRmPkg = *cmdPkg
 	cmdRemove.AddCommand(cmdRmPkg)
 

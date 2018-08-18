@@ -22,9 +22,12 @@ The "link" task installs or removes symlinks.
 	RunE:              runLink,
 }
 
+var cmdRmLink = &cobra.Command{}
+
 func init() {
 	cmdInstall.AddCommand(cmdLink)
-	cmdRemove.AddCommand(cmdLink)
+	*cmdRmLink = *cmdLink
+	cmdRemove.AddCommand(cmdRmLink)
 
 	// flags := cmdLink.Flags()
 }

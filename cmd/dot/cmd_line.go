@@ -22,10 +22,10 @@ The "line" task installs or removes lines.
 	RunE:              runLine,
 }
 
+var cmdRmLine = &cobra.Command{}
+
 func init() {
 	cmdInstall.AddCommand(cmdLine)
-
-	cmdRmLine := &cobra.Command{}
 	*cmdRmLine = *cmdLine
 	cmdRemove.AddCommand(cmdRmLine)
 

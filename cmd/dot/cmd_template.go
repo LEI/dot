@@ -22,10 +22,10 @@ The "template" task installs or removes templates.
 	RunE:              runTpl,
 }
 
+var cmdRmTpl = &cobra.Command{}
+
 func init() {
 	cmdInstall.AddCommand(cmdTpl)
-
-	cmdRmTpl := &cobra.Command{}
 	*cmdRmTpl = *cmdTpl
 	cmdRemove.AddCommand(cmdRmTpl)
 

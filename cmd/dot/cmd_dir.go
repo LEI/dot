@@ -23,12 +23,11 @@ The "dir" task installs or removes directories.
 	RunE:              runDir,
 }
 
+var cmdRmDir = *cmdDir
+
 func init() {
 	cmdInstall.AddCommand(cmdDir)
-
-	cmdRmDir := &cobra.Command{}
-	*cmdRmDir = *cmdDir
-	cmdRemove.AddCommand(cmdRmDir)
+	cmdRemove.AddCommand(&cmdRmDir)
 
 	// flags := cmdDir.Flags()
 }
