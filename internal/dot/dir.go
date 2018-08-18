@@ -56,6 +56,11 @@ func (d *Dir) Do() error {
 
 // Undo task
 func (d *Dir) Undo() error {
+	if err := d.Status(); err != nil {
+		if err != ErrAlreadyExist {
+			return err
+		}
+	}
 	// if err := d.Status(); err != ErrAlreadyExist {
 	// 	return err
 	// }

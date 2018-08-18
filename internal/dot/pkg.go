@@ -57,6 +57,12 @@ func (p *Pkg) Status() error {
 
 // Do task
 func (p *Pkg) Do() error {
+	// if err := c.Status(); err != nil {
+	// 	if err == ErrAlreadyExist {
+	// 		return nil
+	// 	}
+	// 	return err
+	// }
 	// TODO OS, If, Action
 	err := pkg.Install(p.Manager, p.Name, p.Args...)
 	switch err {
@@ -70,6 +76,11 @@ func (p *Pkg) Do() error {
 
 // Undo task
 func (p *Pkg) Undo() error {
+	// if err := h.Status(); err != nil {
+	// 	if err != ErrAlreadyExist {
+	// 		return err
+	// 	}
+	// }
 	// TODO OS, If, Action
 	err := pkg.Remove(p.Manager, p.Name, p.Args...)
 	switch err {

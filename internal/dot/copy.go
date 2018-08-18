@@ -1,7 +1,10 @@
 package dot
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -28,7 +31,11 @@ func (c *Copy) UndoString() string {
 
 // Status check task
 func (c *Copy) Status() error {
-	if fileExists(c.Target) {
+	ok, err := copyExists(c.Source, c.Target)
+	if err != nil {
+		return err
+	}
+	if ok {
 		return ErrAlreadyExist
 	}
 	return nil
@@ -42,26 +49,67 @@ func (c *Copy) Do() error {
 		}
 		return err
 	}
-	fmt.Println("todo", c)
+	in, err := os.Open(c.Source)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.Create(c.Target)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+	if err := out.Sync(); err != nil {
+		return err
+	}
 	return nil
 }
 
 // Undo task
 func (c *Copy) Undo() error {
-	fmt.Println("toundo", c)
-	return nil
-	// return os.Remove(c.Target)
+	if err := c.Status(); err != nil {
+		if err != ErrAlreadyExist {
+			return err
+		}
+	}
+	return os.Remove(c.Target)
 }
 
-// fileExists returns true if the file has the same content.
+// copyExists returns true if the file source and target have the same content.
+func copyExists(src, dst string) (bool, error) {
+	if !exists(src) {
+		// return ErrIsNotExist
+		return false, fmt.Errorf("%s: no such file to copy to %s", src, dst)
+	}
+	if !exists(dst) {
+		// Stop here if the target does not exist
+		return false, nil
+	}
+	a, err := ioutil.ReadFile(src)
+	if err != nil {
+		return false, err
+	}
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return false, err
+	}
+	ok := bytes.Compare(a, b) == 0
+	return ok, nil
+}
+
+// fileExists returns true if the name exists and is a not a directory.
 func fileExists(name string) bool {
 	f, err := os.Open(name)
 	if err != nil {
 		return false
 	}
 	defer f.Close()
-	if _, err := f.Stat(); err != nil && os.IsNotExist(err) {
+	fi, err := f.Stat()
+	if err != nil && os.IsNotExist(err) {
 		return false
 	}
-	return true
+	return !fi.IsDir()
 }

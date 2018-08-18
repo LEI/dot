@@ -2,6 +2,7 @@ package dot
 
 import (
 	"fmt"
+	"os"
 )
 
 // Link task
@@ -27,7 +28,11 @@ func (l *Link) UndoString() string {
 
 // Status check task
 func (l *Link) Status() error {
-	if linkExists(l.Target) {
+	ok, err := linkExists(l.Source, l.Target)
+	if err != nil {
+		return nil
+	}
+	if ok {
 		return ErrAlreadyExist
 	}
 	return nil
@@ -41,18 +46,49 @@ func (l *Link) Do() error {
 		}
 		return err
 	}
-	fmt.Println("todo", l)
-	return nil
+	return os.Symlink(l.Source, l.Target)
 }
 
 // Undo task
 func (l *Link) Undo() error {
-	fmt.Println("toundo", l)
-	return nil
-	// return os.Remove(l.Target)
+	if err := l.Status(); err != nil {
+		if err != ErrAlreadyExist {
+			return err
+		}
+	}
+	return os.Remove(l.Target)
 }
 
 // linkExists returns true if the link has the same target.
-func linkExists(name string) bool {
-	return true
+func linkExists(src, dst string) (bool, error) {
+	if !exists(src) {
+		return false, fmt.Errorf("%s: no such file or directory (to link %s)", src, dst)
+	}
+	if !exists(dst) {
+		// Stop here if the target does not exist
+		return false, nil
+	}
+	fi, err := os.Lstat(dst)
+	if err != nil {
+		return false, err
+	}
+	if !isSymlink(fi) {
+		return false, fmt.Errorf("%s: not a symlink", dst)
+	}
+	real, err := os.Readlink(dst)
+	if err != nil {
+		return false, err
+	}
+	if real == "" {
+		return false, fmt.Errorf("%s: unable to read symlink", dst)
+	}
+	if real != src {
+		return false, fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
+	}
+	return true, nil
+}
+
+// isSymlink checks a given file info corresponds to a symbolic link
+func isSymlink(fi os.FileInfo) bool {
+	return fi != nil && fi.Mode()&os.ModeSymlink != 0
 }
