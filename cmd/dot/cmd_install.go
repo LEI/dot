@@ -39,15 +39,8 @@ func init() {
 
 func preRunInstall(cmd *cobra.Command, args []string) error {
 	if installOpts.sync {
-		for _, r := range dotConfig.Roles {
-			// Clone or pull git repository
-			if err := r.Sync(); err != nil {
-				return err
-			}
-			// Parse config file again
-			if err := r.LoadConfig(); err != nil {
-				return err
-			}
+		if err := runSync(cmd, []string{}); err != nil {
+			return err
 		}
 	}
 	return nil

@@ -21,10 +21,15 @@ func init() {
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
-	// for _, r := range dotConfig.Roles {
-	// 	if err := r.Sync(); err != nil {
-	// 		return err
-	// 	}
-	// }
+	for _, r := range dotConfig.Roles {
+		// Clone or pull git repository
+		if err := r.Sync(); err != nil {
+			return err
+		}
+		// Parse config file (again)
+		if err := r.LoadConfig(); err != nil {
+			return err
+		}
+	}
 	return nil
 }

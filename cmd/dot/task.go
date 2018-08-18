@@ -41,14 +41,15 @@ func runTask(action string, i interface{}) error {
 
 func doTask(t dot.Tasker) error {
 	if !t.IsAction("install") {
+		fmt.Println("Skip action")
 		return dot.ErrSkip
 	}
 	if err := t.CheckIf(); err != nil {
-		// fmt.Println("Check If failed", err)
+		fmt.Println("Skip If", err)
 		return err
 	}
 	if err := t.CheckOS(); err != nil {
-		// fmt.Println("Check OS failed", err)
+		fmt.Println("Skip OS", err)
 		return err
 	}
 	err := t.Status()
