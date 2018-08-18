@@ -19,7 +19,7 @@ type Tasker interface {
 	Undo() error
 	CheckIf() error
 	CheckOS() error
-	GetOS() []string
+	// GetOS() []string
 }
 
 // Task struct
@@ -46,17 +46,18 @@ func exists(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
-// GetOS task
-func (t *Task) GetOS() []string {
-	return t.OS
-}
+// // GetOS ...
+// func (t *Task) GetOS() []string {
+// 	return t.OS
+// }
 
 // CheckOS task
 func (t *Task) CheckOS() error {
 	if len(t.OS) == 0 {
 		return nil
 	}
-	if ostype.Has(t.OS...) {
+	ok := ostype.Has(t.OS...)
+	if !ok {
 		return ErrSkip
 	}
 	return nil

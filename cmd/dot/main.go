@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/LEI/dot/internal/dot"
+	"github.com/LEI/dot/internal/ostype"
 	"github.com/LEI/dot/internal/pkg"
 	"github.com/spf13/cobra"
 )
 
 var flagVersion bool
 
-var dotConfig *dot.Config
+var dotConfig *dot.Config = &dot.Config{}
 
 // cmdRoot is the base command when no other command has been specified.
 var cmdRoot = &cobra.Command{
@@ -135,26 +136,36 @@ func persistentPreRunDot(c *cobra.Command, args []string) error {
 		return err
 	}
 	dotConfig = cfg
+	roles := []*dot.Role{}
+	// Filter roles by platform
+	for _, r := range dotConfig.Roles {
+		if len(r.OS) > 0 && !ostype.Has(r.OS...) {
+			continue
+		}
+		roles = append(roles, r)
+	}
+	// Filter roles by name
 	if len(dotOpts.RoleFilter) > 0 {
-		roles := []*dot.Role{}
-		for _, r := range dotConfig.Roles {
+		tmp := roles[:0]
+		for _, r := range roles {
 			for _, s := range dotOpts.RoleFilter {
 				if s == r.Name {
-					roles = append(roles, r)
+					tmp = append(tmp, r)
 					break
 				}
 			}
 		}
-		dotConfig.Roles = roles
+		roles = tmp
 	}
-	if len(dotConfig.Roles) == 0 {
+	if len(roles) == 0 {
 		msg := "nothing to do"
-		msg += fmt.Sprintf(" with %d roles", len(cfg.Roles))
+		msg += fmt.Sprintf(" with %d roles", len(dotConfig.Roles))
 		if len(dotOpts.RoleFilter) > 0 {
 			msg += fmt.Sprintf(" and filter %s", dotOpts.RoleFilter)
 		}
 		return fmt.Errorf(msg)
 	}
+	dotConfig.Roles = roles
 	if err := dotConfig.ParseRoles(); err != nil {
 		return err
 	}
