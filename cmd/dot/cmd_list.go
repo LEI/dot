@@ -6,16 +6,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ListOptions collects all options for the list command.
-type ListOptions struct {
-	ListLong bool
-	// Host      string
-	// Tags      restic.TagLists
-	// Paths     []string
-	// Recursive bool
+// Options for the list command.
+type listOptions struct {
+	quiet  bool
+	all    bool
+	format string
+	// listLong bool
+	// host      string
+	// tags      restic.TagLists
+	// paths     []string
+	// recursive bool
 }
 
-var listOptions ListOptions
+var listOpts listOptions
 
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]
@@ -33,19 +36,22 @@ func init() {
 	cmdRoot.AddCommand(cmdList)
 
 	flags := cmdList.Flags()
-	flags.BoolVarP(&listOptions.ListLong, "long", "l", false, "use a long listing format showing size and mode")
-	// flags.StringVarP(&listOptions.Host, "host", "H", "", "only consider snapshots for this `host`, when no snapshot ID is given")
-	// flags.Var(&listOptions.Tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
-	// flags.StringArrayVar(&listOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot ID is given")
-	// flags.BoolVar(&listOptions.Recursive, "recursive", false, "include files in subfolders of the listed directories")
+	flags.BoolVarP(&listOpts.quiet, "quiet", "q", false, "Only show role names")
+	flags.BoolVarP(&listOpts.all, "all", "a", false, "Show all roles (default hides incompatible platforms)")
+	flags.StringVarP(&listOpts.format, "format", "f", "{{.Name}}", "Pretty-print roles using a Go template")
+	// flags.BoolVarP(&listOpts.listLong, "long", "l", false, "use a long listing format showing size and mode")
+	// flags.StringVarP(&listOpts.host, "host", "H", "", "only consider snapshots for this `host`, when no snapshot ID is given")
+	// flags.Var(&listOpts.tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
+	// flags.StringArrayVar(&listOpts.paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot ID is given")
+	// flags.BoolVar(&listOpts.recursive, "recursive", false, "include files in subfolders of the listed directories")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
-	// if len(args) == 0 && opts.Host == "" && len(opts.Tags) == 0 && len(opts.Paths) == 0 {
+	// if len(args) == 0 && opts.Host == "" && len(opts.tags) == 0 && len(opts.paths) == 0 {
 	// 	return errors.Fatal("Invalid arguments, either give one or more snapshot IDs or set filters.")
 	// }
 	for _, r := range globalConfig.Roles {
-		if globalOptions.Quiet {
+		if listOpts.quiet {
 			fmt.Println(r.Name)
 			continue
 		}
@@ -109,8 +115,8 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	// ctx, cancel := context.WithCancel(gopts.ctx)
 	// defer cancel()
-	// for sn := range FindFilteredSnapshots(ctx, repo, opts.Host, opts.Tags, opts.Paths, args[:1]) {
-	// 	Verbosef("snapshot %s of %v filtered by %v at %s):\n", sn.ID().Str(), sn.Paths, dirs, sn.Time)
+	// for sn := range FindFilteredSnapshots(ctx, repo, opts.Host, opts.tags, opts.paths, args[:1]) {
+	// 	Verbosef("snapshot %s of %v filtered by %v at %s):\n", sn.ID().Str(), sn.paths, dirs, sn.Time)
 
 	// 	err := walker.Walk(ctx, repo, *sn.Tree, nil, func(nodepath string, node *restic.Node, err error) (bool, error) {
 	// 		if err != nil {
@@ -126,7 +132,7 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	// 			// if recursive listing is requested, signal the walker that it
 	// 			// should continue walking recursively
-	// 			if opts.Recursive {
+	// 			if opts.recursive {
 	// 				return false, nil
 	// 			}
 	// 		}

@@ -4,12 +4,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DirOptions collects all options for the dir command.
-type DirOptions struct {
-	// Empty bool
+// Options for the dir command.
+type dirOptions struct {
+	// empty bool
 }
 
-var dirOptions DirOptions
+var dirOpts dirOptions
 
 var cmdDir = &cobra.Command{
 	Use:     "dir [flags]",
@@ -30,7 +30,7 @@ func init() {
 	// flags := cmdDir.Flags()
 }
 
-// opts DirOptions, gopts GlobalOptions
+// opts DirOpts, gopts GlobalOptions
 func runDir(cmd *cobra.Command, args []string) error {
 	action := cmd.Parent().Name()
 	for _, r := range globalConfig.Roles {

@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LinkOptions collects all options for the link command.
-type LinkOptions struct {
+// Options for the link command.
+type linkOptions struct {
 }
 
-var linkOptions LinkOptions
+var linkOpts linkOptions
 
 var cmdLink = &cobra.Command{
 	Use:     "link [flags]",

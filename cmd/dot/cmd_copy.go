@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CopyOptions collects all options for the copy command.
-type CopyOptions struct {
+// Options for the copy command.
+type copyOptions struct {
 }
 
-var copyOptions CopyOptions
+var copyOpts copyOptions
 
 var cmdCopy = &cobra.Command{
 	Use:     "copy [flags]",

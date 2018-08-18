@@ -45,7 +45,7 @@ type GlobalOptions struct {
 	// extended options.Options
 }
 
-var globalOptions = GlobalOptions{
+var dotOptions = GlobalOptions{
 	stdout: os.Stdout,
 	stderr: os.Stderr,
 }
@@ -65,18 +65,18 @@ func init() {
 	}
 
 	f := cmdRoot.PersistentFlags()
-	f.StringVarP(&globalOptions.Source, "source", "s", source, "Source directory")
-	f.StringVarP(&globalOptions.Target, "target", "t", target, "Target directory")
-	f.StringVarP(&globalOptions.ConfigFile, "config-file", "c", cfgFile, "global configuration file (default: $DOT_CONFIG)")
-	f.StringSliceVarP(&globalOptions.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
-	f.BoolVarP(&globalOptions.DryRun, "dry-run", "d", false, "do not execute tasks")
-	f.BoolVarP(&globalOptions.Force, "force", "f", false, "force execution")
-	f.BoolVarP(&globalOptions.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
-	f.CountVarP(&globalOptions.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
-	// f.StringVar(&globalOptions.CacheDir, "cache-dir", "", "set the cache directory")
-	// f.BoolVar(&globalOptions.NoCache, "no-cache", false, "do not use a local cache")
-	// f.BoolVar(&globalOptions.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
-	// f.StringSliceVarP(&globalOptions.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
+	f.StringVarP(&dotOptions.Source, "source", "s", source, "Source directory")
+	f.StringVarP(&dotOptions.Target, "target", "t", target, "Target directory")
+	f.StringVarP(&dotOptions.ConfigFile, "config-file", "c", cfgFile, "global configuration file (default: $DOT_CONFIG)")
+	f.StringSliceVarP(&dotOptions.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
+	f.BoolVarP(&dotOptions.DryRun, "dry-run", "d", false, "do not execute tasks")
+	f.BoolVarP(&dotOptions.Force, "force", "f", false, "force execution")
+	f.BoolVarP(&dotOptions.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
+	f.CountVarP(&dotOptions.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
+	// f.StringVar(&dotOptions.CacheDir, "cache-dir", "", "set the cache directory")
+	// f.BoolVar(&dotOptions.NoCache, "no-cache", false, "do not use a local cache")
+	// f.BoolVar(&dotOptions.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
+	// f.StringSliceVarP(&dotOptions.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
 }
 
 // // checkErrno returns nil when err is set to syscall.Errno(0), since this is no
@@ -125,7 +125,7 @@ func init() {
 
 // // Printf writes the message to the configured stdout stream.
 // func Printf(format string, args ...interface{}) {
-// 	_, err := fmt.Fprintf(globalOptions.stdout, format, args...)
+// 	_, err := fmt.Fprintf(dotOptions.stdout, format, args...)
 // 	if err != nil {
 // 		fmt.Fprintf(os.Stderr, "unable to write to stdout: %v\n", err)
 // 		os.Exit(100)
@@ -134,7 +134,7 @@ func init() {
 
 // // Verbosef calls Printf to write the message when the verbose flag is set.
 // func Verbosef(format string, args ...interface{}) {
-// 	if globalOptions.verbosity >= 1 {
+// 	if dotOptions.verbosity >= 1 {
 // 		Printf(format, args...)
 // 	}
 // }
@@ -166,7 +166,7 @@ func init() {
 
 // // Warnf writes the message to the configured stderr stream.
 // func Warnf(format string, args ...interface{}) {
-// 	_, err := fmt.Fprintf(globalOptions.stderr, format, args...)
+// 	_, err := fmt.Fprintf(dotOptions.stderr, format, args...)
 // 	if err != nil {
 // 		fmt.Fprintf(os.Stderr, "unable to write to stderr: %v\n", err)
 // 		os.Exit(100)
@@ -258,58 +258,4 @@ func OpenConfig(opts GlobalOptions) (*dot.Config, error) {
 	// }
 
 	return cfg, nil
-}
-
-func runTask(action string, i interface{}) error {
-	t := i.(dot.Tasker)
-	switch action {
-	case "install":
-		if err := doTask(t); err != nil {
-			return err
-		}
-	case "remove":
-		if err := undoTask(t); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func doTask(t dot.Tasker) error {
-	err := t.Status()
-	ok := dot.IsOk(err)
-	if !ok && err != nil {
-		return err
-	}
-	if ok {
-		if globalOptions.Verbose > 0 {
-			fmt.Println("#", t.DoString())
-		}
-		return nil
-	}
-	fmt.Println("$", t.DoString())
-	if globalOptions.DryRun {
-		return nil
-	}
-	return t.Do()
-}
-
-func undoTask(t dot.Tasker) error {
-	err := t.Status()
-	ok := dot.IsOk(err)
-	if !ok && err != nil {
-		return err
-	}
-	if !ok {
-		fmt.Println("# TODO AskConfirmation", t.UndoString())
-		// if globalOptions.Verbose > 0 {
-		// 	fmt.Println("#", t.UndoString())
-		// }
-		return nil
-	}
-	fmt.Println("$", t.UndoString())
-	if globalOptions.DryRun {
-		return nil
-	}
-	return t.Undo()
 }

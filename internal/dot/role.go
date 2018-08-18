@@ -117,11 +117,12 @@ func formatRoleTasks(prefix string, r *Role) string {
 }
 
 func formatTasks(prefix string, i interface{}) string {
-	s := ""
-	tasks := i.([]*Task)
-	for _, t := range tasks {
-		s += fmt.Sprintf("%s  %s\n", prefix, t)
-	}
+	s := fmt.Sprintf("%s%s\n", prefix, i)
+	// s := ""
+	// tasks := i.([]Tasker)
+	// for _, t := range tasks {
+	// 	s += fmt.Sprintf("%s%s\n", prefix, t)
+	// }
 	return s
 }
 
@@ -404,8 +405,8 @@ func LoadRole(path string) (Role, error) {
 		return rc.Role, err
 	}
 	decoderConfig := &mapstructure.DecoderConfig{
-		DecodeHook: roleDecodeHook,
-		// ErrorUnused:      true,
+		DecodeHook:       roleDecodeHook,
+		ErrorUnused:      true,
 		WeaklyTypedInput: true,
 		Result:           &rc,
 	}
@@ -423,15 +424,11 @@ func LoadRole(path string) (Role, error) {
 }
 
 func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
-	// input := i.(map[string]interface{})
-	// f == reflect.TypeOf("")
-	// fmt.Printf("\n---\nroleDecodeHook %s -> %s\n%+v\n---\n", f, t, i)
 	switch val := i.(type) {
 	case string:
 		switch t {
 		case reflect.TypeOf((*Hook)(nil)):
 			i = &Hook{Command: val}
-		// case reflect.TypeOf((*Dirs)(nil)):
 		case reflect.TypeOf((*Dir)(nil)):
 			i = &Dir{Path: val}
 		case reflect.TypeOf((*Pkg)(nil)):
@@ -442,33 +439,24 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 			i = &Template{Source: val}
 		case reflect.TypeOf((*Line)(nil)):
 			i = &Template{Source: val}
-		default:
-			// fmt.Println("roleDecodeHook string", t, "/", val)
-			// fmt.Println("FALLBACK2", t)
 		}
 	case map[interface{}]interface{}:
-		// case map[string]interface{}:
 		switch t {
 		case reflect.TypeOf(([]*Line)(nil)):
-			lines := []*Line{}
-			for k, v := range val {
-				lines = append(lines, &Line{
-					Target: k.(string),
-					Data:   v.(string),
-				})
-			}
-			i = lines
+			i = decodeLines(val)
 		}
-	// case Line:
-	// 	fmt.Println("LIIIIIIIIIIIINE")
-	// case *Line:
-	// 	fmt.Println("*LIIIIIIIIIIIINE")
-	// case Lines:
-	// 	fmt.Println("Lines", reflect.TypeOf(i), f, "======>", t, reflect.TypeOf(val))
-	// 	// i = map[string]string{} // val
-	// case *Lines:
-	// 	fmt.Println("*Lines", reflect.TypeOf(i), f, "======>", t, reflect.TypeOf(val))
-	default:
 	}
 	return i, nil
+}
+
+// Transform map[string]interface{} to []*Line
+func decodeLines(in map[interface{}]interface{}) []*Line {
+	lines := []*Line{}
+	for k, v := range in {
+		lines = append(lines, &Line{
+			Target: k.(string),
+			Data:   v.(string),
+		})
+	}
+	return lines
 }

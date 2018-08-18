@@ -6,6 +6,7 @@ import (
 
 // Link task
 type Link struct {
+	Task
 	Source string
 	Target string
 }
