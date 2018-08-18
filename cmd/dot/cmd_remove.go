@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RemoveOptions collects all options for the remove command.
-type RemoveOptions struct {
-	// Empty bool
+// Options for the remove command.
+type removeOptions struct {
+	// empty bool
 }
 
-var removeOptions RemoveOptions
+var removeOpts removeOptions
 
 var cmdRemove = &cobra.Command{
 	Use:     "remove [flags]",

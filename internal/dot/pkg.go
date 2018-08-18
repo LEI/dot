@@ -2,6 +2,7 @@ package dot
 
 // Pkg task
 type Pkg struct {
+	Task
 	Name   string
 	Args   []string
 	OS     []string

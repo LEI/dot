@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TemplateOptions collects all options for the template command.
-type TemplateOptions struct {
+// Options for the template command.
+type templateOptions struct {
 }
 
-var templateOptions TemplateOptions
+var templateOpts templateOptions
 
 var cmdTemplate = &cobra.Command{
 	Use:     "template [flags]",

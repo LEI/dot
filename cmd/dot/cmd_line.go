@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LineOptions collects all options for the line command.
-type LineOptions struct {
+// Options for the line command.
+type lineOptions struct {
 }
 
-var lineOptions LineOptions
+var lineOpts lineOptions
 
 var cmdLine = &cobra.Command{
 	Use:     "line [flags]",

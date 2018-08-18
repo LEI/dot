@@ -6,10 +6,12 @@ import (
 
 // Template task
 type Template struct {
-	Source string
-	Target string
-	Env    map[string]string
-	Vars   map[string]interface{}
+	Task
+	Source      string
+	Target      string
+	Env         map[string]string
+	Vars        map[string]interface{}
+	IncludeVars string `mapstructure:"include_vars"`
 }
 
 func (t *Template) String() string {

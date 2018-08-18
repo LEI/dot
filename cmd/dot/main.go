@@ -38,45 +38,45 @@ dot is yet another file manager program.
 	},
 	PersistentPreRunE: func(c *cobra.Command, args []string) error {
 		// set verbosity, default is one
-		globalOptions.verbosity = 1
-		if globalOptions.Quiet && globalOptions.Verbose > 1 {
+		dotOptions.verbosity = 1
+		if dotOptions.Quiet && dotOptions.Verbose > 1 {
 			return fmt.Errorf("--quiet and --verbose cannot be specified at the same time")
 		}
 
 		switch {
-		case globalOptions.Verbose >= 2:
-			globalOptions.verbosity = 3
-		case globalOptions.Verbose > 0:
-			globalOptions.verbosity = 2
-		case globalOptions.Quiet:
-			globalOptions.verbosity = 0
+		case dotOptions.Verbose >= 2:
+			dotOptions.verbosity = 3
+		case dotOptions.Verbose > 0:
+			dotOptions.verbosity = 2
+		case dotOptions.Quiet:
+			dotOptions.verbosity = 0
 		}
 
 		// parse extended options
-		// opts, err := options.Parse(globalOptions.Options)
+		// opts, err := options.Parse(dotOptions.Options)
 		// if err != nil {
 		// 	return err
 		// }
-		// globalOptions.extended = opts
+		// dotOptions.extended = opts
 		if c.Name() == "version" {
 			return nil
 		}
-		// pwd, err := resolvePassword(globalOptions, "RESTIC_PASSWORD")
+		// pwd, err := resolvePassword(dotOptions, "RESTIC_PASSWORD")
 		// if err != nil {
 		// 	fmt.Fprintf(os.Stderr, "Resolving password failed: %v\n", err)
 		// 	Exit(1)
 		// }
-		// globalOptions.password = pwd
+		// dotOptions.password = pwd
 
-		cfg, err := OpenConfig(globalOptions)
+		cfg, err := OpenConfig(dotOptions)
 		if err != nil {
 			return err
 		}
 		globalConfig = cfg
-		if len(globalOptions.RoleFilter) > 0 {
+		if len(dotOptions.RoleFilter) > 0 {
 			roles := []*dot.Role{}
 			for _, r := range globalConfig.Roles {
-				for _, s := range globalOptions.RoleFilter {
+				for _, s := range dotOptions.RoleFilter {
 					if s == r.Name {
 						roles = append(roles, r)
 						break
@@ -88,7 +88,7 @@ dot is yet another file manager program.
 		if len(globalConfig.Roles) == 0 {
 			return fmt.Errorf("no roles to execute")
 		}
-		if err := globalConfig.Parse(globalOptions.Target); err != nil {
+		if err := globalConfig.Parse(dotOptions.Target); err != nil {
 			return err
 		}
 		// if err := globalConfig.Load(); err != nil {

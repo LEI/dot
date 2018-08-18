@@ -6,6 +6,7 @@ import (
 
 // Hook command to execute
 type Hook struct {
+	Task
 	Command string
 	Shell   string
 	Action  string // install, remove

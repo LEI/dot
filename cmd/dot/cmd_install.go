@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// InstallOptions collects all options for the install command.
-type InstallOptions struct {
-	Sync bool
+// Options for the install command.
+type installOptions struct {
+	sync bool
 }
 
-var installOptions InstallOptions
+var installOpts installOptions
 
 var cmdInstall = &cobra.Command{
 	Use:     "install [flags]",
@@ -29,13 +29,13 @@ func init() {
 	cmdRoot.AddCommand(cmdInstall)
 
 	flags := cmdInstall.Flags()
-	flags.BoolVarP(&installOptions.Sync, "sync", "S", false, "synchronize repositories")
-	// flags.BoolVarP(&installOptions.Pull, "pull", "p", false, "pull repositories")
-	// flags.BoolVarP(&installOptions.Force, "force", "f", false, "ignore uncommitted changes")
+	flags.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
+	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
+	// flags.BoolVarP(&installOpts.force, "force", "f", false, "ignore uncommitted changes")
 }
 
 func runInstall(cmd *cobra.Command, args []string) error {
-	// if installOptions.Sync {
+	// if installOpts.sync {
 	// 	for _, r := range globalConfig.Roles {
 	// 		if err := r.RunSync(); err != nil {
 	// 			return err
