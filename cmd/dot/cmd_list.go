@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"text/template"
 
 	"github.com/spf13/cobra"
 )
@@ -11,6 +14,7 @@ type listOptions struct {
 	quiet  bool
 	all    bool
 	format string
+	filter []string
 	// listLong bool
 	// host      string
 	// tags      restic.TagLists
@@ -19,6 +23,8 @@ type listOptions struct {
 }
 
 var listOpts listOptions
+
+var defaultListFormat = "{{.Name}} {{.Ok}}"
 
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]
@@ -29,6 +35,7 @@ The "list" command lists roles and their tasks.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunList,
 	RunE:              runList,
 }
 
@@ -38,7 +45,8 @@ func init() {
 	flags := cmdList.Flags()
 	flags.BoolVarP(&listOpts.quiet, "quiet", "q", false, "Only show role names")
 	flags.BoolVarP(&listOpts.all, "all", "a", false, "Show all roles (default hides incompatible platforms)")
-	flags.StringVarP(&listOpts.format, "format", "f", "{{.Name}}", "Pretty-print roles using a Go template")
+	flags.StringVarP(&listOpts.format, "format", "", defaultListFormat, "Pretty-print roles using a Go template")
+	flags.StringSliceVarP(&listOpts.filter, "filter", "f", []string{}, "Filter task list")
 	// flags.BoolVarP(&listOpts.listLong, "long", "l", false, "use a long listing format showing size and mode")
 	// flags.StringVarP(&listOpts.host, "host", "H", "", "only consider snapshots for this `host`, when no snapshot ID is given")
 	// flags.Var(&listOpts.tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
@@ -46,17 +54,45 @@ func init() {
 	// flags.BoolVar(&listOpts.recursive, "recursive", false, "include files in subfolders of the listed directories")
 }
 
+func preRunList(cmd *cobra.Command, args []string) error {
+	// if listOpts.quiet && listOpts.format != "" {
+	// 	return fmt.Errorf("--quiet and --format cannot be specified at the same time")
+	// }
+	// if listOpts.format == "" {
+	// 	listOpts.format = defaultListFormat
+	// }
+	if len(listOpts.filter) > 0 {
+		fmt.Fprintf(os.Stderr, "--filter not implemented\n")
+	}
+	return nil
+}
+
 func runList(cmd *cobra.Command, args []string) error {
 	// if len(args) == 0 && opts.Host == "" && len(opts.tags) == 0 && len(opts.paths) == 0 {
 	// 	return errors.Fatal("Invalid arguments, either give one or more snapshot IDs or set filters.")
 	// }
+	// if !listOpts.all {
+	// 	globalConfig.Roles.FilterOS()
+	// }
 	for _, r := range globalConfig.Roles {
+		// fmt.Printf("%+v\n", r)
 		if listOpts.quiet {
 			fmt.Println(r.Name)
 			continue
 		}
-		// fmt.Printf("%+v\n", r)
-		fmt.Println(r)
+		if listOpts.format == "" {
+			fmt.Println(r) // equivalent to format {{.}}
+			continue
+		}
+		t, err := template.New(r.Name).Parse(listOpts.format)
+		if err != nil {
+			return err
+		}
+		var tpl bytes.Buffer
+		if err := t.Execute(&tpl, r); err != nil {
+			return err
+		}
+		fmt.Println(tpl.String())
 	}
 
 	// // extract any specific directories to walk

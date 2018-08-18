@@ -70,7 +70,7 @@ func init() {
 	f.StringVarP(&dotOptions.ConfigFile, "config-file", "c", cfgFile, "global configuration file (default: $DOT_CONFIG)")
 	f.StringSliceVarP(&dotOptions.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
 	f.BoolVarP(&dotOptions.DryRun, "dry-run", "d", false, "do not execute tasks")
-	f.BoolVarP(&dotOptions.Force, "force", "f", false, "force execution")
+	f.BoolVarP(&dotOptions.Force, "force", "F", false, "force execution")
 	f.BoolVarP(&dotOptions.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
 	f.CountVarP(&dotOptions.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
 	// f.StringVar(&dotOptions.CacheDir, "cache-dir", "", "set the cache directory")
