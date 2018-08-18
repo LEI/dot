@@ -8,6 +8,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -42,45 +43,20 @@ func init() {
 	}
 }
 
-// RunVCmd uses Exec underneath
-func RunVCmd(cmd string, args ...string) func(args ...string) error {
-	return func(args2 ...string) error {
-		return sh.RunV(cmd, append(args, args2...)...)
-	}
-}
-
-func parseRev() (string, error) {
-	return sh.Output("git", "rev-parse", "--short", "HEAD")
-}
-
-func flagEnv() map[string]string {
-	hash, _ := parseRev()
-	return map[string]string{
-		"PACKAGE": packageName,
-		"COMMIT":  hash,
-		"DATE":    time.Now().Format("2006-01-02T15:04:05Z0700"),
-	}
-}
-
-func getEnv(key string, defaults ...string) string {
-	// val, err := os.LookupEnv
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	if len(defaults) > 0 {
-		return defaults[0]
-	}
-	return ""
-}
-
 // Default target
 func All() {
 	mg.SerialDeps(Vendor, Check, Install)
 	// cmd := exec.Command(goexe, "build", "-o", "bin/dot", ".")
 }
 
+// Install go dep and sync vendored dependencies
+func Vendor() error {
+	mg.Deps(getDep)
+	return sh.Run("dep", "ensure")
+}
+
 func getDep() error {
-	if has("dep") {
+	if executable("dep") {
 		return nil
 	}
 	if runtime.GOOS == "darwin" {
@@ -88,12 +64,6 @@ func getDep() error {
 	}
 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	return sh.Run(goexe, "get", "-u", "github.com/golang/dep/cmd/dep")
-}
-
-// Install go dep and sync vendored dependencies
-func Vendor() error {
-	mg.Deps(getDep)
-	return sh.Run("dep", "ensure")
 }
 
 // Run tests and linters
@@ -160,7 +130,7 @@ func Vet() error {
 
 // Run golint
 func Lint() error {
-	if !has("golint") {
+	if !executable("golint") {
 		if err := sh.Run(goexe, "get", "golang.org/x/lint/golint"); err != nil {
 			return err
 		}
@@ -190,7 +160,7 @@ func Lint() error {
 // Run gofmt linter
 // gofmt -l -s . | grep -v ^vendor/
 func Fmt() error {
-	// if !has("goimports") {
+	// if !executable("goimports") {
 	// 	if err := sh.Run(goexe, "get", "golang.org/x/tools/cmd/goimports"); err != nil {
 	// 		return err
 	// 	}
@@ -231,37 +201,6 @@ func Fmt() error {
 	return nil
 }
 
-func build(args ...string) error {
-	// args = append(
-	// 	[]string{"build"},
-	// 	args...,
-	// )
-	return buildWith(flagEnv(), args...)
-}
-
-func buildWith(env map[string]string, args ...string) error {
-	mg.Deps(Vendor)
-	args = append(
-		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
-		args...,
-	)
-	return sh.RunWith(env, goexe, args...)
-}
-
-// Build binary for a specific platform
-func buildDist(platform, arch string) error {
-	env := map[string]string{
-		"CGO_ENABLED": "0",
-		"GOOS":        platform,
-		"GOARCH":      arch,
-		"GOARM":       "",
-	}
-	for k, v := range flagEnv() {
-		env[k] = v
-	}
-	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", packageName)
-}
-
 // type Build mg.Namespace
 
 // Build binary for macOS
@@ -279,6 +218,37 @@ func Windows() error {
 	return buildDist("windows", "amd64")
 }
 
+func build(args ...string) error {
+	// args = append(
+	// 	[]string{"build"},
+	// 	args...,
+	// )
+	return buildWith(flagEnv(), args...)
+}
+
+// Build binary for a specific platform
+func buildDist(platform, arch string) error {
+	env := map[string]string{
+		"CGO_ENABLED": "0",
+		"GOOS":        platform,
+		"GOARCH":      arch,
+		"GOARM":       "",
+	}
+	for k, v := range flagEnv() {
+		env[k] = v
+	}
+	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", packageName)
+}
+
+func buildWith(env map[string]string, args ...string) error {
+	mg.Deps(Vendor)
+	args = append(
+		[]string{"build", "-ldflags", ldflags, "-tags", buildTags()},
+		args...,
+	)
+	return sh.RunWith(env, goexe, args...)
+}
+
 func Clean() error {
 	if _, err := os.Stat("dist"); err == nil || os.IsExist(err) {
 		fmt.Println("Removing dist...")
@@ -293,7 +263,7 @@ func Install() error {
 }
 
 /*
-// Build container with docker compose
+// Build container with docker
 func Docker() error {
 	if err := docker("build", "-t", "hugo", "."); err != nil {
 		return err
@@ -310,7 +280,7 @@ func Docker() error {
 }
 */
 
-// Build container for each OS
+// Build container for a given OS
 func Docker() error {
 	// mg.SerialDeps(Vendor, Check)
 	envOS, ok := os.LookupEnv("OS")
@@ -329,15 +299,9 @@ func Docker() error {
 	// return nil
 }
 
-// var docker = sh.RunCmd("docker")
-func testDockerCompose(build, run string) error {
-	if err := dockerCompose("build", build); err != nil {
-		return err
-	}
-	if err := dockerCompose("run", run); err != nil {
-		return err
-	}
-	return nil
+// Build all OS containers
+func DockerOS() error {
+	return testDockerOS()
 }
 
 var platforms = []string{
@@ -345,11 +309,6 @@ var platforms = []string{
 	"archlinux",
 	"centos",
 	"debian",
-}
-
-// Docker compose OS
-func DockerOS() error {
-	return testDockerOS()
 }
 
 // Docker compose OS
@@ -372,8 +331,25 @@ func testDockerOS(list ...string) error {
 	return nil
 }
 
+// var docker = sh.RunCmd("docker")
+func testDockerCompose(build, run string) error {
+	if err := dockerCompose("build", build); err != nil {
+		return err
+	}
+	if err := dockerCompose("run", run); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Create release
+func Release() error {
+	mg.Deps(getGoreleaser)
+	return sh.RunV("goreleaser", "--rm-dist")
+}
+
 func getGoreleaser() error {
-	if has("goreleaser") {
+	if executable("goreleaser") {
 		return nil
 	}
 	if runtime.GOOS == "darwin" {
@@ -392,12 +368,6 @@ func getGoreleaser() error {
 	return sh.Run(goexe, "install", repo)
 }
 
-// Create release
-func Release() error {
-	mg.Deps(getGoreleaser)
-	return sh.RunV("goreleaser", "--rm-dist")
-}
-
 // Create snapshot release
 func Snapshot() error {
 	mg.Deps(getGoreleaser)
@@ -411,6 +381,13 @@ func Snapshot() error {
 // func Clean() error {
 // 	return sh.Rm("dist")
 // }
+
+// RunVCmd uses Exec underneath
+func RunVCmd(cmd string, args ...string) func(args ...string) error {
+	return func(args2 ...string) error {
+		return sh.RunV(cmd, append(args, args2...)...)
+	}
+}
 
 var pkgPrefixLen = len(packageName)
 
@@ -427,7 +404,43 @@ func findPackages() ([]string, error) {
 	return pkgs, nil
 }
 
-func has(bin string) bool {
+func parseRev() (string, error) {
+	return sh.Output("git", "rev-parse", "--short", "HEAD")
+}
+
+func flagEnv() map[string]string {
+	hash, _ := parseRev()
+	return map[string]string{
+		"PACKAGE": packageName,
+		"COMMIT":  hash,
+		"DATE":    time.Now().Format("2006-01-02T15:04:05Z0700"),
+	}
+}
+
+func getEnv(key string, defaults ...string) string {
+	// val, err := os.LookupEnv
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	if len(defaults) > 0 {
+		return defaults[0]
+	}
+	return ""
+}
+
+// getVersion returns the version string from the file VERSION in the current
+// directory.
+func getVersionFromFile() string {
+	buf, err := ioutil.ReadFile("VERSION")
+	if err != nil {
+		fmt.Printf("error reading file VERSION: %v\n", err)
+		return ""
+	}
+
+	return strings.TrimSpace(string(buf))
+}
+
+func executable(bin string) bool {
 	err := sh.Run("command", "-v", bin)
 	return err == nil
 }

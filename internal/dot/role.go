@@ -397,13 +397,56 @@ func prepareTarget(target, src, dst string) (string, error) {
 	return dst, nil
 }
 
-// Check magix chars recognized by Match
+// Check magic chars recognized by Match
 func hasMeta(path string) bool {
 	magicChars := `*?[`
 	if runtime.GOOS == "windows" {
 		magicChars = `*?[\`
 	}
 	return strings.ContainsAny(path, magicChars)
+}
+
+// StatusDirs ...
+func (r *Role) StatusDirs() error {
+	return checkTasks(r.taskDirs())
+}
+
+// StatusFiles ...
+func (r *Role) StatusFiles() error {
+	return checkTasks(r.taskFiles())
+}
+
+// StatusLinks ...
+func (r *Role) StatusLinks() error {
+	return checkTasks(r.taskLinks())
+}
+
+// StatusTpls ...
+func (r *Role) StatusTpls() error {
+	return checkTasks(r.taskTpls())
+}
+
+// StatusLines ...
+func (r *Role) StatusLines() error {
+	return checkTasks(r.taskLines())
+}
+
+func checkTasks(s []Tasker) error {
+	ok := 0 // make([]bool, len(r.Tpls))
+	for _, t := range s {
+		err := t.Status()
+		switch err {
+		case nil:
+		case ErrAlreadyExist:
+			ok++ // [i] = true
+		default:
+			return err
+		}
+	}
+	if ok == len(s) {
+		return ErrAlreadyExist
+	}
+	return nil
 }
 
 // Ok returns true if already installed
@@ -418,90 +461,73 @@ func (r *Role) Ok() bool {
 
 // Status of role tasks
 func (r *Role) Status() error {
-	ok, err := r.check()
-	if err != nil {
+	// err != nil || err != ErrAlreadyExist
+	// if err != nil && !IsOk(err) {
+	// 	return err
+	// } else if err == nil {
+	// 	return nil
+	// }
+	if err := r.StatusDirs(); !IsOk(err) {
 		return err
 	}
-	if ok {
-		return ErrAlreadyExist
+	if err := r.StatusFiles(); !IsOk(err) {
+		return err
 	}
-	return nil
+	if err := r.StatusLinks(); !IsOk(err) {
+		return err
+	}
+	if err := r.StatusTpls(); !IsOk(err) {
+		return err
+	}
+	if err := r.StatusLines(); !IsOk(err) {
+		return err
+	}
+	return ErrAlreadyExist
 }
 
-// check tasks list
-func (r *Role) check() (bool, error) {
-	// tasks := []Tasker{}
-	v := reflect.ValueOf(*r)
-	// list := make(map[string]interface{}, v.NumField())
-	// TASKLISTS:
-	for i := 0; i < v.NumField(); i++ {
-		k := v.Type().Field(i).Name
-		// for _, key := range taskListFields {
-		// 	if k == key {
-		// 		list[k] = v.Field(i).Interface().(Tasker)
-		// 		break
-		// 	}
-		// }
-		for _, key := range taskListFields {
-			// fmt.Printf("%s == %s\n", k, key)
-			if k == key {
-				// for _, t := range v.Field(i).Type().Elem() {
-				// 	fmt.Println("ELEM", t)
-				// }
-				i := v.Field(i).Interface()
-				err := checkTasks(i)
-				if err != nil {
-					return false, err
-				}
-				if err != ErrAlreadyExist {
-					return false, nil // break 2
-				}
-				// list[k] = v.Field(i).Interface().(Tasker)
-				// for _, t := range v.Field(i).Interface().([]Tasker) {
-				// 	fmt.Println(t)
-				// 	// tasks = append(tasks, t)
-				// }
-				// continue TASKLISTS
-				break
-			}
-		}
-		// return tasks, fmt.Errorf("%s: key not found, not a task list?", k)
-		// list[k] = v.Field(i).Interface()
+// taskDirs ...
+func (r *Role) taskDirs() []Tasker {
+	s := make([]Tasker, len(r.Lines))
+	for i := range r.Lines {
+		s[i] = r.Lines[i]
 	}
-	// OS, Env, Vars...
-	// fmt.Printf("---------------------\n%s\n---------------\n", list)
-	return true, nil
+	return s
 }
 
-func checkTasks(i interface{}) error {
-	// reflect.TypeOf(i).Kind() == reflect.Slice
-	s := reflect.ValueOf(i)
-	ok := 0 // make([]bool, s.Len())
-	for i := 0; i < s.Len(); i++ {
-		v := s.Index(i)
-		t := v.Interface().(Tasker)
-		if IsOk(t.Status()) {
-			ok++
-		}
-		// err := t.Status()
-		// switch err {
-		// // case nil:
-		// // 	ok = append(ok, false)
-		// case ErrAlreadyExist:
-		// 	ok++ // = append(ok, true)
-		// default:
-		// 	return err
-		// }
+// taskFiles ...
+func (r *Role) taskFiles() []Tasker {
+	s := make([]Tasker, len(r.Lines))
+	for i := range r.Lines {
+		s[i] = r.Lines[i]
 	}
-	if ok == s.Len() {
-		return ErrAlreadyExist
+	return s
+}
+
+// taskLinks ...
+func (r *Role) taskLinks() []Tasker {
+	s := make([]Tasker, len(r.Lines))
+	for i := range r.Lines {
+		s[i] = r.Lines[i]
 	}
-	// for _, b := range ok {
-	// 	if !b {
-	// 		return false
-	// 	}
-	// }
-	return nil
+	return s
+}
+
+// taskTpls ...
+func (r *Role) taskTpls() []Tasker {
+	s := make([]Tasker, len(r.Lines))
+	for i := range r.Lines {
+		s[i] = r.Lines[i]
+	}
+	return s
+}
+
+// taskLines ...
+func (r *Role) taskLines() []Tasker {
+	s := make([]Tasker, len(r.Lines))
+	for i := range r.Lines {
+		s[i] = r.Lines[i]
+	}
+	return s
 }
 
 // NewRole ...
