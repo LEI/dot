@@ -39,10 +39,18 @@ func preRunRemove(cmd *cobra.Command, args []string) error {
 
 func runRemove(cmd *cobra.Command, args []string) error {
 	action := "remove"
-	for _, r := range globalConfig.Roles {
+	for _, r := range dotConfig.Roles {
 		if dotOpts.verbosity >= 1 {
 			fmt.Printf("## Removing %s...\n", r.Name)
 		}
+		// Pre remove hooks
+		for _, h := range r.Remove {
+			h.ExecDir = r.Path
+			if err := runTask(action, h); err != nil {
+				return err
+			}
+		}
+		// Package management
 		for _, c := range r.Files {
 			if err := runTask(action, c); err != nil {
 				return err
@@ -72,6 +80,13 @@ func runRemove(cmd *cobra.Command, args []string) error {
 		// Package management
 		for _, p := range r.Pkgs {
 			if err := runTask(action, p); err != nil {
+				return err
+			}
+		}
+		// Post remove hooks
+		for _, h := range r.PostRemove {
+			h.ExecDir = r.Path
+			if err := runTask(action, h); err != nil {
 				return err
 			}
 		}

@@ -36,7 +36,7 @@ func init() {
 // opts DirOpts, gopts GlobalOptions
 func runDir(cmd *cobra.Command, args []string) error {
 	action := cmd.Parent().Name()
-	for _, r := range globalConfig.Roles {
+	for _, r := range dotConfig.Roles {
 		for _, d := range r.Dirs {
 			if err := runTask(action, d); err != nil {
 				return err

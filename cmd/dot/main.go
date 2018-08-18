@@ -12,7 +12,7 @@ import (
 
 var flagVersion bool
 
-var globalConfig *dot.Config
+var dotConfig *dot.Config
 
 // cmdRoot is the base command when no other command has been specified.
 var cmdRoot = &cobra.Command{
@@ -134,10 +134,10 @@ func persistentPreRunDot(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	globalConfig = cfg
+	dotConfig = cfg
 	if len(dotOpts.RoleFilter) > 0 {
 		roles := []*dot.Role{}
-		for _, r := range globalConfig.Roles {
+		for _, r := range dotConfig.Roles {
 			for _, s := range dotOpts.RoleFilter {
 				if s == r.Name {
 					roles = append(roles, r)
@@ -145,15 +145,20 @@ func persistentPreRunDot(c *cobra.Command, args []string) error {
 				}
 			}
 		}
-		globalConfig.Roles = roles
+		dotConfig.Roles = roles
 	}
-	if len(globalConfig.Roles) == 0 {
-		return fmt.Errorf("no roles to execute in: %+v", cfg.Roles)
+	if len(dotConfig.Roles) == 0 {
+		msg := "nothing to do"
+		msg += fmt.Sprintf(" with %d roles", len(cfg.Roles))
+		if len(dotOpts.RoleFilter) > 0 {
+			msg += fmt.Sprintf(" and filter %s", dotOpts.RoleFilter)
+		}
+		return fmt.Errorf(msg)
 	}
-	if err := globalConfig.ParseRoles(); err != nil {
+	if err := dotConfig.ParseRoles(); err != nil {
 		return err
 	}
-	// if err := globalConfig.Load(); err != nil {
+	// if err := dotConfig.Load(); err != nil {
 	// 	return err
 	// }
 

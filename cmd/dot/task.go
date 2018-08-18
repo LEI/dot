@@ -26,11 +26,11 @@ func runTask(action string, i interface{}) error {
 	t := i.(dot.Tasker)
 	switch action {
 	case "install":
-		if err := doTask(t); err != nil {
+		if err := doTask(t); err != nil && err != dot.ErrSkip {
 			return err
 		}
 	case "remove":
-		if err := undoTask(t); err != nil {
+		if err := undoTask(t); err != nil && err != dot.ErrSkip {
 			return err
 		}
 	default:
@@ -40,6 +40,17 @@ func runTask(action string, i interface{}) error {
 }
 
 func doTask(t dot.Tasker) error {
+	if !t.IsAction("install") {
+		return dot.ErrSkip
+	}
+	if err := t.CheckIf(); err != nil {
+		// fmt.Println("Check If failed", err)
+		return err
+	}
+	if err := t.CheckOS(); err != nil {
+		// fmt.Println("Check OS failed", err)
+		return err
+	}
 	err := t.Status()
 	ok := dot.IsOk(err)
 	if !ok && err != nil {
@@ -65,6 +76,9 @@ func doTask(t dot.Tasker) error {
 }
 
 func undoTask(t dot.Tasker) error {
+	if !t.IsAction("remove") {
+		return dot.ErrSkip
+	}
 	err := t.Status()
 	ok := dot.IsOk(err)
 	if !ok && err != nil {

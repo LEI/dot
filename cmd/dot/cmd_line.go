@@ -35,7 +35,7 @@ func init() {
 
 func runLine(cmd *cobra.Command, args []string) error {
 	action := cmd.Parent().Name()
-	for _, r := range globalConfig.Roles {
+	for _, r := range dotConfig.Roles {
 		for _, l := range r.Lines {
 			if err := runTask(action, l); err != nil {
 				return err
