@@ -21,6 +21,12 @@ var (
 	// Upgrade pacakges
 	Upgrade bool
 
+	// ErrExist ...
+	ErrExist = fmt.Errorf("package already present")
+
+	// ErrUnknown ...
+	ErrUnknown = fmt.Errorf("unable to determine if package is present")
+
 	// Manager pkg
 	Manager *Pm
 
@@ -91,6 +97,11 @@ var (
 			},
 			Init: func() error {
 				return execute("brew", "update", "--quiet")
+			},
+			Has: func(name string) (bool, error) {
+				args := []string{"ls", "--versions", name}
+				err := exec.Command("brew", args...).Run()
+				return err == nil, err
 			},
 		},
 		"cask": {
@@ -175,7 +186,8 @@ type Pm struct {
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
 	Env  map[string]string
-	Init func() error // Install or prepare bin
+	Init func() error               // Install or prepare bin
+	Has  func(string) (bool, error) // Search install package
 	done bool
 }
 
@@ -365,6 +377,18 @@ func executable(bin string) bool {
 	return err == nil && len(out) > 0
 }
 
+// Has ...
+func Has(manager, name string, opts ...string) (bool, error) {
+	m, err := NewPm(manager)
+	if err != nil {
+		return false, err
+	}
+	if m.Has == nil {
+		return false, ErrUnknown
+	}
+	return m.Has(name)
+}
+
 // Install ...
 func Install(manager, name string, opts ...string) error {
 	// fmt.Printf("%s %s\n", cmd.Bin, strings.Join(cmdArgs, " "))
@@ -377,21 +401,53 @@ func Install(manager, name string, opts ...string) error {
 	// if status != 0 {
 	// 	return str, fmt.Errorf(stderr)
 	// }
-	return Exec("install", manager, name, opts...)
+	return Exec(manager, "install", name, opts...)
 }
 
 // Remove ...
 func Remove(manager, name string, opts ...string) error {
-	return Exec("remove", manager, name, opts...)
+	return Exec(manager, "remove", name, opts...)
 }
 
-// Build ...
-func Build(action, manager, name string, opts ...string) (string, []string, error) {
+// Exec ...
+func Exec(manager, action, name string, opts ...string) error {
+	bin, opts, err := Init(manager, action, name, opts...)
+	if err != nil {
+		return err
+	}
+	// Get manager again to check package presence
 	m, err := NewPm(manager)
 	if err != nil {
-		return m.Bin, []string{}, err
+		return err
 	}
+	for k, v := range m.Env {
+		o := os.Getenv(k)
+		if o != v {
+			defer os.Setenv(k, o)
+		}
+		os.Setenv(k, v)
+	}
+	if action == "install" && m.Has != nil {
+		ok, err := m.Has(name)
+		if err != nil {
+			return err
+		}
+		if ok {
+			return ErrExist
+		}
+	}
+	return execute(bin, opts...)
+}
+
+// Init can return ErrExist if the package is already installed
+func Init(manager, action, name string, opts ...string) (string, []string, error) {
+	m, err := NewPm(manager)
+	if err != nil {
+		return "", []string{}, err
+	}
+	// TODO forbid opts in name
 	pkgs := strings.Split(name, " ")
+	name = pkgs[0]
 	opts = append(pkgs, opts...)
 	opts, err = m.Build(action, opts...)
 	if err != nil {
@@ -401,13 +457,6 @@ func Build(action, manager, name string, opts ...string) (string, []string, erro
 	if err != nil {
 		return bin, opts, err
 	}
-	for k, v := range m.Env {
-		o := os.Getenv(k)
-		if o != v {
-			defer os.Setenv(k, o)
-		}
-		os.Setenv(k, v)
-	}
 	if !m.done && m.Init != nil {
 		if err := m.Init(); err != nil {
 			return bin, opts, err
@@ -415,15 +464,6 @@ func Build(action, manager, name string, opts ...string) (string, []string, erro
 		m.done = true
 	}
 	return bin, opts, nil
-}
-
-// Exec ...
-func Exec(action, manager, name string, opts ...string) error {
-	bin, opts, err := Build(action, manager, name, opts...)
-	if err != nil {
-		return err
-	}
-	return execute(bin, opts...)
 }
 
 func execute(name string, args ...string) error {

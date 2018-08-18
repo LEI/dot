@@ -25,7 +25,7 @@ func (p *Pkg) String() string {
 
 // DoString string
 func (p *Pkg) DoString() string {
-	bin, opts, err := pkg.Build("install", p.Manager, p.Name, p.Args...)
+	bin, opts, err := pkg.Init(p.Manager, "install", p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return ""
@@ -35,7 +35,7 @@ func (p *Pkg) DoString() string {
 
 // UndoString string
 func (p *Pkg) UndoString() string {
-	bin, opts, err := pkg.Build("remove", p.Manager, p.Name, p.Args...)
+	bin, opts, err := pkg.Init(p.Manager, "remove", p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return ""
@@ -45,20 +45,38 @@ func (p *Pkg) UndoString() string {
 
 // Status check task
 func (p *Pkg) Status() error {
-	// if hookExists(p.Target) {
-	// 	return ErrAlreadyExist
-	// }
-	return nil // ErrAlreadyExist
+	ok, err := pkg.Has(p.Manager, p.Name, p.Args...)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return ErrAlreadyExist
+	}
+	return nil
 }
 
 // Do task
 func (p *Pkg) Do() error {
 	// TODO OS, If, Action
-	return nil // pkg.Install(p.Manager, p.Name, p.Args...)
+	err := pkg.Install(p.Manager, p.Name, p.Args...)
+	switch err {
+	// case nil:
+	case pkg.ErrExist:
+		return ErrAlreadyExist
+	default:
+		return err
+	}
 }
 
 // Undo task
 func (p *Pkg) Undo() error {
 	// TODO OS, If, Action
-	return nil // pkg.Remove(p.Manager, p.Name, p.Args...)
+	err := pkg.Remove(p.Manager, p.Name, p.Args...)
+	switch err {
+	// case nil:
+	case pkg.ErrExist:
+		return ErrAlreadyExist
+	default:
+		return err
+	}
 }
