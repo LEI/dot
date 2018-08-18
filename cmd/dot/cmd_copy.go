@@ -22,10 +22,10 @@ The "copy" task installs or removes files.
 	RunE:              runCopy,
 }
 
+var cmdRmCopy = &cobra.Command{}
+
 func init() {
 	cmdInstall.AddCommand(cmdCopy)
-
-	cmdRmCopy := &cobra.Command{}
 	*cmdRmCopy = *cmdCopy
 	cmdRemove.AddCommand(cmdRmCopy)
 
