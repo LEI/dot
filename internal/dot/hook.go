@@ -26,7 +26,11 @@ func (h *Hook) String() string {
 
 // DoString string
 func (h *Hook) DoString() string {
-	return h.String()
+	s := h.String()
+	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
+		s = fmt.Sprintf("(%s)", s)
+	}
+	return s
 }
 
 // UndoString string
@@ -52,11 +56,12 @@ func (h *Hook) Do() error {
 	if h.Shell == "" {
 		h.Shell = defaultExecShell
 	}
+	// fmt.Println("EXEC:", h.Command)
 	cmd := exec.Command(h.Shell, []string{"-c", h.Command}...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
-	return nil
+	return cmd.Run()
 }
 
 // Undo task (non applicable)

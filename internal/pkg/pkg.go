@@ -31,147 +31,13 @@ var (
 	Manager *Pm
 
 	managers = map[string]*Pm{
-		// https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management
-		"apk": {
-			Sudo: true,
-			Bin:  "apk",
-			Acts: map[string]interface{}{
-				"install": "add",
-				"remove":  "del",
-			},
-			Opts: []*Opt{
-				{
-					Args: []string{
-						"--no-cache",
-						"--quiet",
-						"--update",
-					},
-				},
-			},
-		},
-		// https://manpages.debian.org/stretch/apt/apt-get.8.en.html
-		"apt-get": {
-			Sudo: true,
-			Bin:  "apt-get",
-			Acts: map[string]interface{}{
-				"install": "install",
-				"remove":  "remove",
-			},
-			Opts: []*Opt{
-				{
-					// Args: []string{"-qqy"},
-					Args: []string{
-						"--assume-yes",
-						"--no-install-recommends",
-						"--no-install-suggests",
-						"--quiet",
-						"--quiet",
-					},
-				},
-			},
-		},
-		// https://docs.brew.sh/Manpage
-		"brew": {
-			Bin: "brew",
-			Acts: map[string]interface{}{
-				"install": func(m *Pm, in []string) string {
-					// TODO filter strings.HasPrefix(in, "-")?
-					opts := append([]string{"ls", "--versions"}, in...)
-					err := exec.Command("brew", opts...).Run()
-					if err == nil && Upgrade {
-						return "upgrade"
-					}
-					return "install"
-				},
-				"remove": "uninstall",
-			},
-			Opts: []*Opt{
-				{
-					Args: []string{"--quiet"},
-				},
-			},
-			Env: map[string]string{
-				// "HOMEBREW_NO_ANALYTICS": "1",
-				"HOMEBREW_NO_AUTO_UPDATE": "1",
-				// "HOMEBREW_NO_EMOJI": "1",
-			},
-			Init: func() error {
-				return execute("brew", "update", "--quiet")
-			},
-			Has: func(name string) (bool, error) {
-				args := []string{"ls", "--versions", name}
-				err := exec.Command("brew", args...).Run()
-				return err == nil, err
-			},
-		},
-		"cask": {
-			Bin: "brew",
-			Sub: []string{"cask"},
-			Acts: map[string]interface{}{
-				"install": "install",
-				"remove":  "uninstall",
-			},
-		},
-		// https://www.archlinux.org/pacman/pacman.8.html
-		"pacman": {
-			Sudo: true,
-			Bin:  "pacman",
-			Acts: map[string]interface{}{
-				"install": "--sync",   // -S
-				"remove":  "--remove", // -R
-			},
-			Opts: []*Opt{
-				{
-					Args: []string{
-						"--needed",
-						"--noconfirm",
-						"--noprogressbar",
-						"--quiet",
-						"--refresh",    // -y
-						"--sysupgrade", // -u
-					},
-				},
-				// {
-				// 	Args: []string{"--quiet"},
-				// 	// If:   []string{"{{eq .Verbose 0}}"},
-				// 	HasIf: types.HasIf{If: []string{"{{eq .Verbose 0}}"}},
-				// },
-			},
-		},
-		// https://archlinux.fr/man/yaourt.8.html
-		"yaourt": {
-			// Sudo: false,
-			Bin: "yaourt",
-			Acts: map[string]interface{}{
-				"install": "--sync",   // -S
-				"remove":  "--remove", // -R
-			},
-			Opts: []*Opt{
-				{
-					Args: []string{
-						"--noconfirm",
-						// "--sysupgrade", // -u
-					},
-				},
-			},
-		},
-		"yum": {
-			Sudo: true,
-			Bin:  "yum",
-			Acts: map[string]interface{}{
-				"install": "install",
-				"remove":  "remove",
-			},
-			Opts: []*Opt{
-				{
-					Args: []string{
-						"--assumeyes",
-						// "--error=0",
-						"--quiet",
-					},
-				},
-			},
-		},
+		"apk":     apk,
+		"apt-get": aptGet,
+		"brew":    brew,
+		"cask":    brewCask,
+		"pacman":  pacman,
+		"yaourt":  yaourt,
+		"yum":     yum,
 	}
 )
 
@@ -294,8 +160,8 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	case string:
 		action = A
 	// case []string:
-	case func(m *Pm, in []string) string:
-		action = A(m, in)
+	case func(*Pm, string, ...string) string:
+		action = A(m, in[0], in[1:]...)
 	default:
 		return opts, fmt.Errorf("%s: unknown pkg manager", A)
 	}
@@ -445,7 +311,7 @@ func Init(manager, action, name string, opts ...string) (string, []string, error
 	if err != nil {
 		return "", []string{}, err
 	}
-	// TODO forbid opts in name
+	// TODO forbid opts in name and/or multiple package names
 	pkgs := strings.Split(name, " ")
 	name = pkgs[0]
 	opts = append(pkgs, opts...)
