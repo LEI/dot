@@ -18,6 +18,7 @@ type GlobalOptions struct {
 	Source     string
 	Target     string
 	ConfigFile string
+	RoleDir    string
 	RoleFilter []string
 	DryRun     bool
 	Force      bool
@@ -45,7 +46,7 @@ type GlobalOptions struct {
 	// extended options.Options
 }
 
-var dotOptions = GlobalOptions{
+var dotOpts = GlobalOptions{
 	stdout: os.Stdout,
 	stderr: os.Stderr,
 }
@@ -59,24 +60,33 @@ func init() {
 	if target == "" {
 		target = os.Getenv("HOME")
 	}
-	cfgFile := os.Getenv("DOT_CONFIG")
-	if cfgFile == "" {
-		cfgFile = os.ExpandEnv("$HOME/.dotrc.yml")
+	// Dotfile
+	envCfgFile := os.Getenv("DOT_FILE")
+	if envCfgFile == "" {
+		// envCfgFile = os.ExpandEnv("$HOME/.dotrc.yml")
+		envCfgFile = ".dotrc.yml"
+	}
+	// Roles directory
+	envRoleDir := os.Getenv("DOT_ROLE_DIR")
+	if envRoleDir == "" {
+		envRoleDir = os.ExpandEnv("$HOME/.dot")
+		envRoleDir = ".dot"
 	}
 
 	f := cmdRoot.PersistentFlags()
-	f.StringVarP(&dotOptions.Source, "source", "s", source, "Source directory")
-	f.StringVarP(&dotOptions.Target, "target", "t", target, "Target directory")
-	f.StringVarP(&dotOptions.ConfigFile, "config-file", "c", cfgFile, "global configuration file (default: $DOT_CONFIG)")
-	f.StringSliceVarP(&dotOptions.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
-	f.BoolVarP(&dotOptions.DryRun, "dry-run", "d", false, "do not execute tasks")
-	f.BoolVarP(&dotOptions.Force, "force", "F", false, "force execution")
-	f.BoolVarP(&dotOptions.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
-	f.CountVarP(&dotOptions.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
-	// f.StringVar(&dotOptions.CacheDir, "cache-dir", "", "set the cache directory")
-	// f.BoolVar(&dotOptions.NoCache, "no-cache", false, "do not use a local cache")
-	// f.BoolVar(&dotOptions.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
-	// f.StringSliceVarP(&dotOptions.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
+	f.StringVarP(&dotOpts.Source, "source", "s", source, "`DOT_SOURCE` directory")
+	f.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
+	f.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "global configuration `DOT_FILE`")
+	f.StringVarP(&dotOpts.RoleDir, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
+	f.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
+	f.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
+	f.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
+	f.BoolVarP(&dotOpts.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
+	f.CountVarP(&dotOpts.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
+	// f.StringVar(&dotOpts.CacheDir, "cache-dir", "", "set the cache directory")
+	// f.BoolVar(&dotOpts.NoCache, "no-cache", false, "do not use a local cache")
+	// f.BoolVar(&dotOpts.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
+	// f.StringSliceVarP(&dotOpts.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
 }
 
 // // checkErrno returns nil when err is set to syscall.Errno(0), since this is no
@@ -125,7 +135,7 @@ func init() {
 
 // // Printf writes the message to the configured stdout stream.
 // func Printf(format string, args ...interface{}) {
-// 	_, err := fmt.Fprintf(dotOptions.stdout, format, args...)
+// 	_, err := fmt.Fprintf(dotOpts.stdout, format, args...)
 // 	if err != nil {
 // 		fmt.Fprintf(os.Stderr, "unable to write to stdout: %v\n", err)
 // 		os.Exit(100)
@@ -134,7 +144,7 @@ func init() {
 
 // // Verbosef calls Printf to write the message when the verbose flag is set.
 // func Verbosef(format string, args ...interface{}) {
-// 	if dotOptions.verbosity >= 1 {
+// 	if dotOpts.verbosity >= 1 {
 // 		Printf(format, args...)
 // 	}
 // }
@@ -166,7 +176,7 @@ func init() {
 
 // // Warnf writes the message to the configured stderr stream.
 // func Warnf(format string, args ...interface{}) {
-// 	_, err := fmt.Fprintf(dotOptions.stderr, format, args...)
+// 	_, err := fmt.Fprintf(dotOpts.stderr, format, args...)
 // 	if err != nil {
 // 		fmt.Fprintf(os.Stderr, "unable to write to stderr: %v\n", err)
 // 		os.Exit(100)
@@ -195,6 +205,15 @@ func OpenConfig(opts GlobalOptions) (*dot.Config, error) {
 	cfg, err := dot.NewConfig(opts.ConfigFile)
 	if err != nil {
 		return nil, err
+	}
+	if cfg.Source == "" {
+		cfg.Source = opts.Source
+	}
+	if cfg.Target == "" {
+		cfg.Target = opts.Target
+	}
+	if cfg.DirName == "" {
+		cfg.DirName = ".dot"
 	}
 	// s := repository.New(be)
 

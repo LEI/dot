@@ -213,6 +213,7 @@
     "github.com/magefile/mage/mg",
     "github.com/magefile/mage/sh",
     "github.com/mitchellh/mapstructure",
+    "github.com/pelletier/go-toml",
     "github.com/rapidloop/skv",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",

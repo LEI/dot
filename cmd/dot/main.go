@@ -38,45 +38,45 @@ dot is yet another file manager program.
 	},
 	PersistentPreRunE: func(c *cobra.Command, args []string) error {
 		// set verbosity, default is one
-		dotOptions.verbosity = 1
-		if dotOptions.Quiet && dotOptions.Verbose > 1 {
+		dotOpts.verbosity = 1
+		if dotOpts.Quiet && dotOpts.Verbose > 1 {
 			return fmt.Errorf("--quiet and --verbose cannot be specified at the same time")
 		}
 
 		switch {
-		case dotOptions.Verbose >= 2:
-			dotOptions.verbosity = 3
-		case dotOptions.Verbose > 0:
-			dotOptions.verbosity = 2
-		case dotOptions.Quiet:
-			dotOptions.verbosity = 0
+		case dotOpts.Verbose >= 2:
+			dotOpts.verbosity = 3
+		case dotOpts.Verbose > 0:
+			dotOpts.verbosity = 2
+		case dotOpts.Quiet:
+			dotOpts.verbosity = 0
 		}
 
 		// parse extended options
-		// opts, err := options.Parse(dotOptions.Options)
+		// opts, err := options.Parse(dotOpts.Options)
 		// if err != nil {
 		// 	return err
 		// }
-		// dotOptions.extended = opts
+		// dotOpts.extended = opts
 		if c.Name() == "version" {
 			return nil
 		}
-		// pwd, err := resolvePassword(dotOptions, "RESTIC_PASSWORD")
+		// pwd, err := resolvePassword(dotOpts, "RESTIC_PASSWORD")
 		// if err != nil {
 		// 	fmt.Fprintf(os.Stderr, "Resolving password failed: %v\n", err)
 		// 	Exit(1)
 		// }
-		// dotOptions.password = pwd
+		// dotOpts.password = pwd
 
-		cfg, err := OpenConfig(dotOptions)
+		cfg, err := OpenConfig(dotOpts)
 		if err != nil {
 			return err
 		}
 		globalConfig = cfg
-		if len(dotOptions.RoleFilter) > 0 {
+		if len(dotOpts.RoleFilter) > 0 {
 			roles := []*dot.Role{}
 			for _, r := range globalConfig.Roles {
-				for _, s := range dotOptions.RoleFilter {
+				for _, s := range dotOpts.RoleFilter {
 					if s == r.Name {
 						roles = append(roles, r)
 						break
@@ -88,7 +88,7 @@ dot is yet another file manager program.
 		if len(globalConfig.Roles) == 0 {
 			return fmt.Errorf("no roles to execute")
 		}
-		if err := globalConfig.Parse(dotOptions.Target); err != nil {
+		if err := globalConfig.Parse(); err != nil {
 			return err
 		}
 		// if err := globalConfig.Load(); err != nil {

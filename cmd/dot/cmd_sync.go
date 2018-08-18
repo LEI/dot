@@ -5,8 +5,8 @@ import (
 )
 
 var cmdSync = &cobra.Command{
-	Use:     "init",
-	Aliases: []string{},
+	Use:     "sync",
+	Aliases: []string{"s"},
 	Short:   "Synchronize a role",
 	Long: `
 The "sync" command clone or pull a role repository.

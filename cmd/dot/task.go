@@ -28,13 +28,13 @@ func doTask(t dot.Tasker) error {
 		return err
 	}
 	if ok {
-		if dotOptions.Verbose > 0 {
+		if dotOpts.Verbose > 0 {
 			fmt.Println("#", t.DoString())
 		}
 		return nil
 	}
 	fmt.Println("$", t.DoString())
-	if dotOptions.DryRun {
+	if dotOpts.DryRun {
 		return nil
 	}
 	return t.Do()
@@ -48,13 +48,13 @@ func undoTask(t dot.Tasker) error {
 	}
 	if !ok {
 		fmt.Println("# TODO AskConfirmation", t.UndoString())
-		// if dotOptions.Verbose > 0 {
+		// if dotOpts.Verbose > 0 {
 		// 	fmt.Println("#", t.UndoString())
 		// }
 		return nil
 	}
 	fmt.Println("$", t.UndoString())
-	if dotOptions.DryRun {
+	if dotOpts.DryRun {
 		return nil
 	}
 	return t.Undo()
