@@ -2,6 +2,12 @@ package dot
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+)
+
+var (
+	defaultExecShell = "sh"
 )
 
 // Hook command to execute
@@ -11,6 +17,7 @@ type Hook struct {
 	Shell   string
 	Action  string // install, remove
 	OS      []string
+	ExecDir string
 }
 
 func (h *Hook) String() string {
@@ -43,11 +50,22 @@ func (h *Hook) Do() error {
 		}
 		return err
 	}
-	fmt.Println("todo", h)
+	if h.Shell == "" {
+		h.Shell = defaultExecShell
+	}
+	cmd := exec.Command(h.Shell, []string{"-c", h.Command}...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = h.ExecDir
 	return nil
 }
 
 // Undo task
 func (h *Hook) Undo() error {
+	if err := h.Status(); err != nil {
+		if err != ErrAlreadyExist {
+			return err
+		}
+	}
 	return fmt.Errorf("not implemented")
 }
