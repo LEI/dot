@@ -25,6 +25,6 @@ func init() {
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
-	fmt.Printf("%s %s compiled with %v on %v/%v\n",
-		binary, version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("%s %s (%s) compiled with %v on %v/%v\n",
+		binary, version, commit, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }

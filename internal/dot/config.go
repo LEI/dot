@@ -12,11 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var (
-	// ConfigDirName relative to source directory
-	ConfigDirName = ".dot"
-)
-
 // Config struct
 type Config struct {
 	Source  string
