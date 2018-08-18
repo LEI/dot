@@ -2,7 +2,6 @@ package ostype
 
 import (
 	"fmt"
-	"gopkg.in/go-ini/ini.v1"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,6 +9,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"gopkg.in/go-ini/ini.v1"
 )
 
 var (
