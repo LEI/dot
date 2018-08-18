@@ -7,5 +7,5 @@ var (
 	ErrAlreadyExist = fmt.Errorf("already exists")
 
 	// ErrSkip ...
-	ErrSkip = fmt.Errorf("skip")
+	ErrSkip = fmt.Errorf("skip task")
 )

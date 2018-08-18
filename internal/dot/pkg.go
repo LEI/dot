@@ -10,7 +10,7 @@ import (
 
 // Pkg task
 type Pkg struct {
-	Task    // Action, If, OS
+	Task    `mapstructure:",squash"` // Action, If, OS
 	Name    string
 	Args    []string
 	Manager string `mapstructure:"type"`

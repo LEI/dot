@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	decodeErrorUnused      bool // TODO = true if opts.Force
+	decodeErrorUnused      = true // TODO false if opts.Force
 	decodeWeaklyTypedInput = true
 )
 

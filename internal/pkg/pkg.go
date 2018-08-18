@@ -267,16 +267,16 @@ func Install(manager, name string, opts ...string) error {
 	// if status != 0 {
 	// 	return str, fmt.Errorf(stderr)
 	// }
-	return Exec(manager, "install", name, opts...)
+	return execute(manager, "install", name, opts...)
 }
 
 // Remove ...
 func Remove(manager, name string, opts ...string) error {
-	return Exec(manager, "remove", name, opts...)
+	return execute(manager, "remove", name, opts...)
 }
 
 // Exec ...
-func Exec(manager, action, name string, opts ...string) error {
+func execute(manager, action, name string, opts ...string) error {
 	bin, opts, err := Init(manager, action, name, opts...)
 	if err != nil {
 		return err
@@ -302,7 +302,18 @@ func Exec(manager, action, name string, opts ...string) error {
 			return ErrExist
 		}
 	}
-	return execute(bin, opts...)
+	return execCommand(bin, opts...)
+}
+
+func execCommand(name string, args ...string) error {
+	// fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
+	if DryRun {
+		return nil
+	}
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // Init can return ErrExist if the package is already installed
@@ -330,17 +341,6 @@ func Init(manager, action, name string, opts ...string) (string, []string, error
 		m.done = true
 	}
 	return bin, opts, nil
-}
-
-func execute(name string, args ...string) error {
-	fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
-	if DryRun {
-		return nil
-	}
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 func getBin(m *Pm, opts []string) (string, []string, error) {

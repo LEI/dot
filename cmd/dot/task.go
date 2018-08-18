@@ -48,6 +48,7 @@ func doTask(t dot.Tasker) error {
 		fmt.Println("Skip If", err)
 		return err
 	}
+	fmt.Println("OS ->", t.GetOS())
 	if err := t.CheckOS(); err != nil {
 		fmt.Println("Skip OS", err)
 		return err

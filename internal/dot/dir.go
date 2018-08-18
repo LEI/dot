@@ -7,7 +7,7 @@ import (
 
 // Dir task
 type Dir struct {
-	Task
+	Task `mapstructure:",squash"` // Action, If, OS
 	Path string
 }
 
