@@ -538,27 +538,22 @@ func NewRole() *Role {
 // LoadRole ...
 func LoadRole(path string) (Role, error) {
 	rc := &RoleConfig{}
-	data, err := Read(path)
+	data, err := ReadFile(path)
 	if err != nil {
 		return rc.Role, err
 	}
-	decoderConfig := &mapstructure.DecoderConfig{
+	dc := &mapstructure.DecoderConfig{
 		DecodeHook:       roleDecodeHook,
 		ErrorUnused:      true,
 		WeaklyTypedInput: true,
 		Result:           &rc,
 	}
-	decoder, err := mapstructure.NewDecoder(decoderConfig)
+	decoder, err := mapstructure.NewDecoder(dc)
 	if err != nil {
 		return rc.Role, err
 	}
-	if err := decoder.Decode(data); err != nil {
-		return rc.Role, err
-	}
-	// if err := mapstructure.WeakDecode(data, &rc); err != nil {
-	// 	return rc.Role, err
-	// }
-	return rc.Role, nil
+	err = decoder.Decode(data)
+	return rc.Role, err
 }
 
 func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {

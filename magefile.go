@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -20,8 +21,9 @@ import (
 )
 
 const (
-	packageName = "github.com/LEI/dot"
-	now         = time.Now().Format("2006-01-02T15:04:05Z0700")
+	name        = "dot"                        // name of the program executable and directories
+	namespace   = "github.com/LEI/dot"         // subdir of GOPATH
+	mainPackage = "github.com/LEI/dot/cmd/dot" // package name for the main package
 )
 
 var (
@@ -39,9 +41,12 @@ var (
 	dockerCompose = RunVCmd("docker-compose")
 	testRun       = sh.RunCmd(goexe, "test")
 	testRunV      = RunVCmd(goexe, "test")
+
+	now string
 )
 
 func init() {
+	now = time.Now().Format("2006-01-02T15:04:05Z0700")
 	if exe := os.Getenv("GOEXE"); exe != "" {
 		goexe = exe
 	}
@@ -211,7 +216,7 @@ func Fmt() error {
 	return nil
 }
 
-var pkgPrefixLen = len(packageName)
+var pkgPrefixLen = len(namespace)
 
 func findPackages() ([]string, error) {
 	mg.Deps(getDep)
@@ -262,7 +267,7 @@ func buildDist(platform, arch string) error {
 	for k, v := range flagEnv() {
 		env[k] = v
 	}
-	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", packageName)
+	return buildWith(env, "-o", "dist/${GOOS}_${GOARCH}/dot", mainPackage)
 }
 
 func buildWith(env map[string]string, args ...string) error {
@@ -294,7 +299,7 @@ func Install() error {
 		"install",
 		"-ldflags", ldflags,
 		"-tags", buildTags(),
-		packageName,
+		mainPackage,
 	}
 	return sh.RunWith(flagEnv(), goexe, args...)
 }
@@ -332,7 +337,7 @@ func buildTags() string {
 func flagEnv() map[string]string {
 	// hash, _ := parseRev()
 	return map[string]string{
-		"PACKAGE": packageName,
+		"PACKAGE": mainPackage,
 		"VERSION": getVersionFromFile(),
 		"COMMIT":  getVersionFromGit(),
 		"DATE":    now,
@@ -469,18 +474,23 @@ func RunVCmd(cmd string, args ...string) func(args ...string) error {
 // getVersionFromGit returns a version string that identifies the currently
 // checked out git commit.
 func getVersionFromGit() string {
+	// sh.Output("git", "rev-parse", "--short", "HEAD")
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
 	// cmd := exec.Command("git", "describe",
 	// 	"--long", "--tags", "--dirty", "--always")
-	// out, err := cmd.Output()
-	// if err != nil {
-	// 	log.Fprintf(os.Stderr, "git describe returned error: %v\n", err)
-	// 	return ""
-	// }
+	out, err := cmd.Output()
+	if err != nil {
+		if mg.Verbose() {
+			fmt.Fprintf(os.Stderr, "git returned error: %v\n", err)
+		}
+		return ""
+	}
 
-	// version := strings.TrimSpace(string(out))
-	// log.Printf("git version is %s\n", version)
-	// return version
-	return sh.Output("git", "rev-parse", "--short", "HEAD")
+	version := strings.TrimSpace(string(out))
+	if mg.Verbose() {
+		fmt.Printf("git version is %s\n", version)
+	}
+	return version
 }
 
 // getVersion returns the version string from the file VERSION in the current
@@ -488,7 +498,9 @@ func getVersionFromGit() string {
 func getVersionFromFile() string {
 	buf, err := ioutil.ReadFile("VERSION")
 	if err != nil {
-		log.Fprintf(os.Stderr, "error reading file VERSION: %v\n", err)
+		if mg.Verbose() {
+			fmt.Fprintf(os.Stderr, "error reading file VERSION: %v\n", err)
+		}
 		return ""
 	}
 

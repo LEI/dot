@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -13,19 +12,28 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	// ConfigDirName relative to source directory
+	ConfigDirName = ".dot"
+)
+
 // Config struct
 type Config struct {
-	// Source string
-	// Target string
-	Roles []*Role
+	Source  string
+	Target  string
+	DirName string
+	Roles   []*Role
 }
 
 // Parse config roles
-func (c *Config) Parse(target string) error {
+func (c *Config) Parse() error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
 		if r.Path == "" {
-			r.Path = filepath.Join(os.ExpandEnv("$HOME"), ".dot", r.Name)
+			r.Path = filepath.Join(c.DirName, r.Name)
+			if !filepath.IsAbs(r.Path) {
+				r.Path = filepath.Join(c.Source, r.Path)
+			}
 		}
 		// if ok := r.Ignore(); ok {
 		// 	continue
@@ -33,7 +41,7 @@ func (c *Config) Parse(target string) error {
 		if err := r.LoadConfig(); err != nil {
 			return err
 		}
-		if err := r.Parse(target); err != nil {
+		if err := r.Parse(c.Target); err != nil {
 			return err
 		}
 		roles = append(roles, r)
@@ -58,29 +66,31 @@ func FindConfig(path string) string {
 // LoadConfig ...
 func LoadConfig(path string) (Config, error) {
 	cfg := Config{}
-	data, err := Read(path)
+	data, err := ReadFile(path)
 	if err != nil {
 		return cfg, err
 	}
-	var md mapstructure.Metadata
-	// decoderConfig := &mapstructure.DecoderConfig{
-	// 	WeaklyTypedInput: true,
-	// 	Result:           &cfg,
+	// var md mapstructure.Metadata
+	// if err := mapstructure.WeakDecodeMetadata(data, &cfg, &md); err != nil {
+	// 	return cfg, err
 	// }
-	// decoder, err := mapstructure.NewDecoder(decoderConfig)
-	// if err != nil {
-	// 	return err
-	// }
-	// return decoder.Decode(data)
-	if err := mapstructure.WeakDecodeMetadata(data, &cfg, &md); err != nil {
+	// fmt.Printf("md: %+v\n", md)
+	dc := &mapstructure.DecoderConfig{
+		// DecodeHook:       ...,
+		ErrorUnused:      true,
+		WeaklyTypedInput: true,
+		Result:           &cfg,
+	}
+	decoder, err := mapstructure.NewDecoder(dc)
+	if err != nil {
 		return cfg, err
 	}
-	// fmt.Printf("md: %+v\n", md)
-	return cfg, nil
+	err = decoder.Decode(data)
+	return cfg, err
 }
 
-// Read ...
-func Read(path string) (map[string]interface{}, error) {
+// ReadFile ...
+func ReadFile(path string) (map[string]interface{}, error) {
 	// fmt.Println("Loading config file", path)
 	var data map[string]interface{}
 	b, err := ioutil.ReadFile(path)

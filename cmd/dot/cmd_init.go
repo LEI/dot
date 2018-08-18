@@ -17,7 +17,7 @@ The "init" command initializes a new repository.
 }
 
 func init() {
-	cmdRoot.AddCommand(cmdInit)
+	// TODO cmdRoot.AddCommand(cmdInit)
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
