@@ -20,8 +20,8 @@ type Config struct {
 	Roles   []*Role
 }
 
-// Parse config roles
-func (c *Config) Parse() error {
+// ParseRoles config
+func (c *Config) ParseRoles() error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
 		if r.Path == "" {
@@ -33,7 +33,8 @@ func (c *Config) Parse() error {
 		// if ok := r.Ignore(); ok {
 		// 	continue
 		// }
-		if err := r.LoadConfig(); err != nil {
+		cfgPath := filepath.Join(r.Path, ".dot.yml")
+		if err := r.LoadConfig(cfgPath); err != nil {
 			return err
 		}
 		if err := r.Parse(c.Target); err != nil {
@@ -50,7 +51,10 @@ func NewConfig(path string) (*Config, error) {
 	// if path == "" {}
 	cfgPath := FindConfig(path)
 	cfg, err := LoadConfig(cfgPath)
-	return &cfg, err
+	if err != nil {
+		return &cfg, fmt.Errorf("error loading config: %s", err)
+	}
+	return &cfg, nil
 }
 
 // FindConfig ...
@@ -61,7 +65,7 @@ func FindConfig(path string) string {
 // LoadConfig ...
 func LoadConfig(path string) (Config, error) {
 	cfg := Config{}
-	data, err := ReadFile(path)
+	data, err := ReadConfigFile(path)
 	if err != nil {
 		return cfg, err
 	}
@@ -84,8 +88,8 @@ func LoadConfig(path string) (Config, error) {
 	return cfg, err
 }
 
-// ReadFile ...
-func ReadFile(path string) (map[string]interface{}, error) {
+// ReadConfigFile ...
+func ReadConfigFile(path string) (map[string]interface{}, error) {
 	// fmt.Println("Loading config file", path)
 	var data map[string]interface{}
 	b, err := ioutil.ReadFile(path)
