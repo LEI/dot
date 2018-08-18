@@ -130,8 +130,8 @@ func (r *Repo) SetURL(url string) *Repo {
 
 // Exec repo command
 func (r *Repo) Exec(args ...string) (string, string, error) {
-	var stdout, stderr *bytes.Buffer // io.Writer
-	_, err := shell.Exec(nil, stdout, stderr, GitBin, args...)
+	var stdout, stderr bytes.Buffer
+	_, err := shell.Exec(nil, &stdout, &stderr, GitBin, args...)
 	return stdout.String(), stderr.String(), err
 }
 

@@ -62,6 +62,12 @@ func runRemove(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
+		// Package management
+		for _, p := range r.Pkgs {
+			if err := runTask(action, p); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

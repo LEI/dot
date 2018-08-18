@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -73,6 +72,7 @@ func Exec(env map[string]string, stdout, stderr io.Writer, cmd string, args ...s
 
 func run(env map[string]string, stdout, stderr io.Writer, cmd string, args ...string) (ran bool, code int, err error) {
 	c := exec.Command(cmd, args...)
+	// fmt.Println("run:", c)
 	c.Env = os.Environ()
 	for k, v := range env {
 		c.Env = append(c.Env, k+"="+v)
@@ -80,8 +80,8 @@ func run(env map[string]string, stdout, stderr io.Writer, cmd string, args ...st
 	c.Stderr = stderr
 	c.Stdout = stdout
 	c.Stdin = os.Stdin
-	log.Println("exec:", cmd, strings.Join(args, " "))
-	err = c.Run()
+	fmt.Println("exec:", cmd, strings.Join(args, " "))
+	err = c.Run() // FIXME: stdout, stderr *bytes.Buffer
 	return cmdRan(err), ExitStatus(err), err
 }
 

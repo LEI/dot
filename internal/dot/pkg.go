@@ -3,6 +3,8 @@ package dot
 import (
 	"fmt"
 	"strings"
+
+	"github.com/LEI/dot/internal/pkg"
 )
 
 // Pkg task
@@ -40,10 +42,12 @@ func (p *Pkg) Status() error {
 
 // Do task
 func (p *Pkg) Do() error {
-	return fmt.Errorf("not implemented")
+	// TODO OS, Action
+	return pkg.Install(p.Type, p.Name, p.Args...)
 }
 
 // Undo task
 func (p *Pkg) Undo() error {
-	return fmt.Errorf("not implemented")
+	// TODO OS, Action
+	return pkg.Install(p.Type, p.Name, p.Args...)
 }

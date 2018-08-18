@@ -21,6 +21,7 @@ type DotOptions struct {
 	Target     string
 	ConfigFile string
 	RoleDir    string
+	RoleFile   string
 	RoleFilter []string
 	DryRun     bool
 	Force      bool
@@ -71,8 +72,13 @@ func init() {
 	// Roles directory
 	envRoleDir := os.Getenv("DOT_ROLE_DIR")
 	if envRoleDir == "" {
-		envRoleDir = os.ExpandEnv("$HOME/.dot")
+		// envRoleDir = os.ExpandEnv("$HOME/.dot")
 		envRoleDir = ".dot"
+	}
+	// Roles config name
+	envRoleFile := os.Getenv("DOT_ROLE_FILE")
+	if envRoleFile == "" {
+		envRoleFile = ".dot.yml"
 	}
 
 	f := cmdRoot.PersistentFlags()
@@ -80,6 +86,7 @@ func init() {
 	f.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
 	f.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "main configuration `DOT_FILE`")
 	f.StringVarP(&dotOpts.RoleDir, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
+	f.StringVarP(&dotOpts.RoleFile, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
 	f.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
 	f.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
 	f.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
@@ -89,6 +96,9 @@ func init() {
 	// f.BoolVar(&dotOpts.NoCache, "no-cache", false, "do not use a local cache")
 	// f.BoolVar(&dotOpts.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
 	// f.StringSliceVarP(&dotOpts.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
+
+	f.MarkHidden("role-dir")
+	f.MarkHidden("role-file")
 }
 
 // // checkErrno returns nil when err is set to syscall.Errno(0), since this is no
@@ -208,14 +218,18 @@ func OpenConfig(opts DotOptions) (*dot.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cfg.Source == "" {
+	// Note: default flag values will always override config
+	if opts.Source != "" {
 		cfg.Source = opts.Source
 	}
-	if cfg.Target == "" {
+	if opts.Target != "" {
 		cfg.Target = opts.Target
 	}
-	if cfg.DirName == "" {
-		cfg.DirName = ".dot"
+	if opts.RoleDir != "" {
+		cfg.SetDir(opts.RoleDir)
+	}
+	if opts.RoleFile != "" {
+		cfg.SetRoleFile(opts.RoleFile)
 	}
 	// s := repository.New(be)
 

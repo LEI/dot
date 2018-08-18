@@ -1,5 +1,7 @@
 package dot
 
+import "os"
+
 // Tasker interface
 type Tasker interface {
 	String() string
@@ -19,4 +21,10 @@ type Task struct {
 // IsOk status
 func IsOk(err error) bool {
 	return err == ErrAlreadyExist
+}
+
+// exists checks if a file is present
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
 }
