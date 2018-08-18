@@ -25,14 +25,15 @@ func init() {
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
-	v := version
+	ver := version
 	if commit != "" {
-		v = fmt.Sprintf("%s (%s)", v, commit)
+		ver = fmt.Sprintf("%s (%s)", ver, commit)
 	}
+	// Add info (OS, arch and time)
 	info := fmt.Sprintf("%v/%v", runtime.GOOS, runtime.GOARCH)
-	if dotOpts.Verbose > 0 {
+	if dotOpts.verbosity >= 2 {
 		info += " at " + timestamp
 	}
 	fmt.Printf("%s %s compiled with %v on %s\n",
-		binary, v, runtime.Version(), info)
+		binary, ver, runtime.Version(), info)
 }

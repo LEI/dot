@@ -15,6 +15,9 @@ import (
 )
 
 var (
+	// DryRun mode
+	DryRun bool
+
 	// Upgrade pacakges
 	Upgrade bool
 
@@ -272,7 +275,7 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	// Package manager action
 	act, ok := m.Acts[strings.ToLower(a)]
 	if !ok {
-		return []string{}, fmt.Errorf("unknown pkg action: %s", a)
+		return []string{}, fmt.Errorf("invalid pkg action: %s", a)
 	}
 	var action string
 	switch A := act.(type) {
@@ -382,21 +385,21 @@ func Remove(manager, name string, opts ...string) error {
 	return Exec("remove", manager, name, opts...)
 }
 
-// Exec ...
-func Exec(action, manager, name string, opts ...string) error {
+// Build ...
+func Build(action, manager, name string, opts ...string) (string, []string, error) {
 	m, err := NewPm(manager)
 	if err != nil {
-		return err
+		return m.Bin, []string{}, err
 	}
 	pkgs := strings.Split(name, " ")
 	opts = append(pkgs, opts...)
 	opts, err = m.Build(action, opts...)
 	if err != nil {
-		return err
+		return m.Bin, opts, err
 	}
 	bin, opts, err := getBin(m, opts)
 	if err != nil {
-		return err
+		return bin, opts, err
 	}
 	for k, v := range m.Env {
 		o := os.Getenv(k)
@@ -407,23 +410,31 @@ func Exec(action, manager, name string, opts ...string) error {
 	}
 	if !m.done && m.Init != nil {
 		if err := m.Init(); err != nil {
-			return err
+			return bin, opts, err
 		}
 		m.done = true
+	}
+	return bin, opts, nil
+}
+
+// Exec ...
+func Exec(action, manager, name string, opts ...string) error {
+	bin, opts, err := Build(action, manager, name, opts...)
+	if err != nil {
+		return err
 	}
 	return execute(bin, opts...)
 }
 
 func execute(name string, args ...string) error {
 	fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
-	// if DryRun {
-	// 	return nil
-	// }
-	// cmd := exec.Command(name, args...)
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-	// return cmd.Run()
-	return nil
+	if DryRun {
+		return nil
+	}
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func getBin(m *Pm, opts []string) (string, []string, error) {

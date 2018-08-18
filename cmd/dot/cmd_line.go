@@ -19,6 +19,7 @@ The "line" task installs or removes lines.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunTask,
 	RunE:              runLine,
 }
 

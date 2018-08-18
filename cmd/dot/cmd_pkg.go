@@ -19,6 +19,7 @@ The "pkg" task installs or removes packages.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunTask,
 	RunE:              runPkg,
 }
 

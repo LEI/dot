@@ -22,6 +22,7 @@ The "remove" command removes roles by executing their tasks.
 `,
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
+	PreRunE:           preRunRemove,
 	RunE:              runRemove,
 }
 
@@ -32,10 +33,16 @@ func init() {
 	// flags.BoolVarP(&removeOptions.Empty, "remove-empty", "", false, "remove empty directories and empty files")
 }
 
+func preRunRemove(cmd *cobra.Command, args []string) error {
+	return nil
+}
+
 func runRemove(cmd *cobra.Command, args []string) error {
 	action := "remove"
 	for _, r := range globalConfig.Roles {
-		fmt.Printf("## Removing %s...\n", r.Name)
+		if dotOpts.verbosity >= 1 {
+			fmt.Printf("## Removing %s...\n", r.Name)
+		}
 		for _, c := range r.Files {
 			if err := runTask(action, c); err != nil {
 				return err
