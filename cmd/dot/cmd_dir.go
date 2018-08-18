@@ -25,7 +25,10 @@ The "dir" task installs or removes directories.
 
 func init() {
 	cmdInstall.AddCommand(cmdDir)
-	cmdRemove.AddCommand(cmdDir)
+
+	cmdRmDir := &cobra.Command{}
+	*cmdRmDir = *cmdDir
+	cmdRemove.AddCommand(cmdRmDir)
 
 	// flags := cmdDir.Flags()
 }

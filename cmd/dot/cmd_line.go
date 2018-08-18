@@ -24,7 +24,10 @@ The "line" task installs or removes lines.
 
 func init() {
 	cmdInstall.AddCommand(cmdLine)
-	cmdRemove.AddCommand(cmdLine)
+
+	cmdRmLine := &cobra.Command{}
+	*cmdRmLine = *cmdLine
+	cmdRemove.AddCommand(cmdRmLine)
 
 	// flags := cmdLine.Flags()
 }
