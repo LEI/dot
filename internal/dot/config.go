@@ -13,8 +13,11 @@ import (
 )
 
 var (
-	decodeErrorUnused      = true // TODO false if opts.Force
-	decodeWeaklyTypedInput = true
+	// DecodeErrorUnused mapstructure decode option
+	DecodeErrorUnused = true // TODO false if opts.Force
+
+	// DecodeWeaklyTypedInput mapstructure decode option
+	DecodeWeaklyTypedInput = true
 )
 
 // Config struct
@@ -95,8 +98,8 @@ func LoadConfig(path string) (Config, error) {
 	// fmt.Printf("md: %+v\n", md)
 	dc := &mapstructure.DecoderConfig{
 		// DecodeHook:       ...,
-		ErrorUnused:      decodeErrorUnused,
-		WeaklyTypedInput: decodeWeaklyTypedInput,
+		ErrorUnused:      DecodeErrorUnused,
+		WeaklyTypedInput: DecodeWeaklyTypedInput,
 		Result:           &cfg,
 	}
 	decoder, err := mapstructure.NewDecoder(dc)

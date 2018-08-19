@@ -81,8 +81,8 @@ func NewRole(path string) (*Role, error) {
 	}
 	dc := &mapstructure.DecoderConfig{
 		DecodeHook:       roleDecodeHook,
-		ErrorUnused:      decodeErrorUnused,
-		WeaklyTypedInput: decodeWeaklyTypedInput,
+		ErrorUnused:      DecodeErrorUnused,
+		WeaklyTypedInput: DecodeWeaklyTypedInput,
 		Result:           &rc,
 	}
 	decoder, err := mapstructure.NewDecoder(dc)
