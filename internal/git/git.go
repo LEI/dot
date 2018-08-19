@@ -9,9 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LEI/dot/cli/config/tasks"
 	"github.com/LEI/dot/internal/shell"
-	"github.com/LEI/dot/system"
 )
 
 const (
@@ -22,8 +20,17 @@ var (
 	// // ErrDirtyRepo ...
 	// ErrDirtyRepo = fmt.Errorf("dirty repository")
 
-	// Force ...
+	// DryRun flag
+	DryRun bool
+
+	// Force ignores dirty repo
 	Force bool
+
+	// Quiet flag
+	Quiet bool
+
+	// Verbose level
+	Verbose int
 
 	// GitBin path
 	GitBin = "git"
@@ -175,10 +182,10 @@ func (r *Repo) Clone() error {
 	if cloneDepth > 0 {
 		args = append(args, "--depth", strconv.Itoa(cloneDepth))
 	}
-	if tasks.Verbose == 0 {
+	if Quiet {
 		args = append(args, "--quiet")
 	}
-	// if tasks.Verbose > 0 {
+	// if Verbose > 0 {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
 	// status := r.ExecStatus(args...)
@@ -198,10 +205,10 @@ func (r *Repo) Clone() error {
 	// 	return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, err)
 	// 	// return fmt.Errorf(stderr)
 	// }
-	// if stderr != "" && tasks.Verbose > 0 {
+	// if stderr != "" && Verbose > 0 {
 	// 	fmt.Fprintln(Stderr, stderr)
 	// }
-	// if stdout != "" && tasks.Verbose > 0 {
+	// if stdout != "" && Verbose > 0 {
 	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
 	// }
 	return nil
@@ -213,13 +220,13 @@ func (r *Repo) Pull() error {
 	if r.Dir != "" {
 		args = append([]string{"-C", r.Dir}, args...)
 	}
-	if system.DryRun {
+	if DryRun {
 		args = append(args, "--dry-run")
 	}
-	if tasks.Verbose == 0 {
+	if Quiet {
 		args = append(args, "--quiet")
 	}
-	// if tasks.Verbose > 0 {
+	// if Verbose > 0 {
 	// 	fmt.Println("git pull", r.Remote, r.Branch)
 	// }
 	// status := r.ExecStatus(args...)
@@ -246,10 +253,10 @@ func (r *Repo) Pull() error {
 	// 	// return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stderr)
 	// 	return err
 	// }
-	// if stderr != "" { // && tasks.Verbose > 0 {
+	// if stderr != "" { // && Verbose > 0 {
 	// 	fmt.Fprintln(Stderr, stderr)
 	// }
-	// if stdout != "" && tasks.Verbose > 0 {
+	// if stdout != "" && Verbose > 0 {
 	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
 	// }
 	return nil
