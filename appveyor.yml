@@ -8,7 +8,7 @@ init:
   - go env
 
 environment:
-  CGO_ENABLED: 0
+  # CGO_ENABLED: 0 # Required (1) for go test -race
   GOPATH: C:\GOPATH\
   # DOT_BUILD_TAGS:
 
