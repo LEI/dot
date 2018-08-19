@@ -9,6 +9,8 @@ import (
 // Options for the install command.
 type installOptions struct {
 	sync bool
+
+	pkg bool
 }
 
 var installOpts installOptions
@@ -29,12 +31,13 @@ The "install" command installs roles by executing their tasks.
 func init() {
 	cmdRoot.AddCommand(cmdInstall)
 
-	f := cmdInstall.PersistentFlags()
-	f.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
+	pflags := cmdInstall.PersistentFlags()
+	pflags.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
 
-	// flags := cmdInstall.Flags()
-	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
+	flags := cmdInstall.Flags()
 	// flags.BoolVarP(&installOpts.force, "force", "f", false, "ignore uncommitted changes")
+	flags.BoolVarP(&installOpts.pkg, "packages", "P", false, "manage system packages")
+	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
 }
 
 func preRunInstall(cmd *cobra.Command, args []string) error {
@@ -61,9 +64,11 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			}
 		}
 		// Package management
-		for _, p := range r.Pkgs {
-			if err := runTask(action, p); err != nil {
-				return err
+		if installOpts.pkg {
+			for _, p := range r.Pkgs {
+				if err := runTask(action, p); err != nil {
+					return err
+				}
 			}
 		}
 		// Remove directories first

@@ -136,7 +136,7 @@ func persistentPreRunDot(c *cobra.Command, args []string) error {
 		return err
 	}
 	dotConfig = cfg
-	roles := []*dot.Role{}
+	roles := dotConfig.Roles[:0] // []*dot.Role{}
 	// Filter roles by platform
 	for _, r := range dotConfig.Roles {
 		if len(r.OS) > 0 && !ostype.Has(r.OS...) {

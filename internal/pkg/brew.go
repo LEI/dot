@@ -23,11 +23,7 @@ var brew = &Pm{
 		},
 		"remove": "uninstall",
 	},
-	Opts: []*Opt{
-		{
-			Args: []string{"--quiet"},
-		},
-	},
+	Opts: []string{"--quiet"},
 	Env: map[string]string{
 		// "HOMEBREW_NO_ANALYTICS": "1",
 		"HOMEBREW_NO_AUTO_UPDATE": "1",
