@@ -30,7 +30,7 @@ func (p *Pkg) Type() string {
 func (p *Pkg) DoString() string {
 	bin, opts, err := pkg.Init(p.Manager, "install", p.Name, p.Args...)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""
 	}
 	return fmt.Sprintf("%s %s", bin, strings.Join(opts, " "))
@@ -40,7 +40,7 @@ func (p *Pkg) DoString() string {
 func (p *Pkg) UndoString() string {
 	bin, opts, err := pkg.Init(p.Manager, "remove", p.Name, p.Args...)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "err pkg undo: %s\n", err)
 		return ""
 	}
 	return fmt.Sprintf("%s %s", bin, strings.Join(opts, " "))
@@ -68,7 +68,9 @@ func (p *Pkg) Do() error {
 			return err
 		}
 	}
+	fmt.Println("pkg.Install", p.Manager, p.Name, p.Args)
 	err := pkg.Install(p.Manager, p.Name, p.Args...)
+	fmt.Println(p.Name, "=======>", err)
 	switch err {
 	// case nil:
 	case pkg.ErrExist:
