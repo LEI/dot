@@ -273,7 +273,7 @@ func build(env map[string]string, args ...string) error {
 		"-tags", buildTags(),
 	}...)
 	a = append(a, args...)
-	return sh.RunWith(env, goexe, args...)
+	return sh.RunWith(env, goexe, a...)
 }
 
 func Clean() error {
