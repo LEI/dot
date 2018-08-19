@@ -187,7 +187,7 @@ func executable(bin string) bool {
 }
 
 // Has ...
-func Has(manager, name string, opts ...string) (bool, error) {
+func Has(manager, pkg string, opts ...string) (bool, error) {
 	m, err := NewPm(manager)
 	if err != nil {
 		return false, err
@@ -195,11 +195,11 @@ func Has(manager, name string, opts ...string) (bool, error) {
 	if m.Has == nil {
 		return false, ErrUnknown
 	}
-	return m.Has(name)
+	return m.Has(pkg)
 }
 
 // Install ...
-func Install(manager, name string, opts ...string) error {
+func Install(manager, pkg string, opts ...string) error {
 	// fmt.Printf("%s %s\n", cmd.Bin, strings.Join(cmdArgs, " "))
 	// stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
 	// str := strings.TrimRight(stdout, "\n")
@@ -210,17 +210,17 @@ func Install(manager, name string, opts ...string) error {
 	// if status != 0 {
 	// 	return str, fmt.Errorf(stderr)
 	// }
-	return execute(manager, "install", name, opts...)
+	return execute(manager, "install", pkg, opts...)
 }
 
 // Remove ...
-func Remove(manager, name string, opts ...string) error {
-	return execute(manager, "remove", name, opts...)
+func Remove(manager, pkg string, opts ...string) error {
+	return execute(manager, "remove", pkg, opts...)
 }
 
 // Exec ...
-func execute(manager, action, name string, opts ...string) error {
-	bin, opts, err := Init(manager, action, name, opts...)
+func execute(manager, action, pkg string, opts ...string) error {
+	bin, opts, err := Init(manager, action, pkg, opts...)
 	if err != nil {
 		return err
 	}
@@ -237,7 +237,7 @@ func execute(manager, action, name string, opts ...string) error {
 		os.Setenv(k, v)
 	}
 	if action == "install" && m.Has != nil {
-		ok, err := m.Has(name)
+		ok, err := m.Has(pkg)
 		if err != nil {
 			return err
 		}
@@ -248,8 +248,8 @@ func execute(manager, action, name string, opts ...string) error {
 	return execManagerCommand(m, bin, opts...)
 }
 
-func execManagerCommand(m *Pm, name string, args ...string) error {
-	// fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
+func execManagerCommand(m *Pm, bin string, args ...string) error {
+	// fmt.Printf("$ %s %s\n", bin, strings.Join(args, " "))
 	if DryRun {
 		if len(m.DryRun) == 0 {
 			return nil
@@ -257,7 +257,7 @@ func execManagerCommand(m *Pm, name string, args ...string) error {
 		// Append check mode options and run
 		args = append(args, m.DryRun...)
 	}
-	cmd := exec.Command(name, args...)
+	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -275,15 +275,12 @@ func execCommand(name string, args ...string) error {
 }
 
 // Init can return ErrExist if the package is already installed
-func Init(manager, action, name string, opts ...string) (string, []string, error) {
+func Init(manager, action, pkg string, opts ...string) (string, []string, error) {
 	m, err := NewPm(manager)
 	if err != nil {
 		return "", []string{}, err
 	}
-	// TODO forbid opts in name and/or multiple package names
-	pkgs := strings.Split(name, " ")
-	name = pkgs[0]
-	opts = append(pkgs, opts...)
+	opts = append([]string{pkg}, opts...)
 	opts, err = m.BuildOptions(action, opts...)
 	if err != nil {
 		return m.Bin, opts, err

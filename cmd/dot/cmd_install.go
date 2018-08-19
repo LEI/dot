@@ -33,9 +33,9 @@ func init() {
 
 	pflags := cmdInstall.PersistentFlags()
 	pflags.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
+	// pflags.BoolVarP(&installOpts.noSync, "no-sync", "", false, "ignore uncommitted changes")
 
 	flags := cmdInstall.Flags()
-	// flags.BoolVarP(&installOpts.force, "force", "f", false, "ignore uncommitted changes")
 	flags.BoolVarP(&installOpts.pkg, "packages", "P", false, "manage system packages")
 	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
 }

@@ -96,7 +96,7 @@ func runDot(cmd *cobra.Command, args []string) error {
 }
 
 func persistentPreRunDot(c *cobra.Command, args []string) error {
-	// set package options
+	dot.DecodeErrorUnused = !dotOpts.Force
 	pkg.DryRun = dotOpts.DryRun
 	// pkg.Update = true
 

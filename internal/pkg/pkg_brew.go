@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"os"
 	"os/exec"
 )
 
@@ -33,10 +32,11 @@ var brew = &Pm{
 		return execCommand("brew", "update", "--quiet")
 	},
 	Has: func(name string) (bool, error) {
+		// fmt.Printf("brew ls --versions '%s'\n", name)
 		cmd := exec.Command("brew", "ls", "--versions", name)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
 		err := cmd.Run()
 		return err == nil, err
 	},
@@ -47,4 +47,13 @@ var brewCask = &Pm{
 	Sub:     []string{"cask"},
 	Install: "install",
 	Remove:  "uninstall",
+	Has: func(name string) (bool, error) {
+		// fmt.Printf("brew cask ls --versions '%s'\n", name)
+		cmd := exec.Command("brew", "cask", "ls", "--versions", name)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
+		err := cmd.Run()
+		return err == nil, err
+	},
 }
