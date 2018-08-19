@@ -22,6 +22,7 @@ var pacman = &Pm{
 		"--sysupgrade", // -u
 	},
 	RemoveOpts: []string{
+		"--recursive", // -s
 		// "--unneeded",
 	},
 	// {

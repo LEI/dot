@@ -88,6 +88,7 @@ func (l *Link) Undo() error {
 func linkExists(src, dst string) (bool, error) {
 	if !exists(src) {
 		return false, fmt.Errorf("%s: no such file or directory (to link %s)", src, dst)
+		// return false, &os.PathError{Op: "source link", Path: src, Err: ErrNotExist}
 	}
 	if !exists(dst) {
 		// Stop here if the target does not exist
@@ -99,6 +100,7 @@ func linkExists(src, dst string) (bool, error) {
 	}
 	if !isSymlink(fi) {
 		return false, fmt.Errorf("%s: not a symlink", dst)
+		// return false, &os.PathError{Op: "target link", Path: src, Err: fmt.Errorf("not a symlink")}
 	}
 	real, err := os.Readlink(dst)
 	if err != nil {
