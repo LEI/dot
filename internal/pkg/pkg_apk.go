@@ -20,9 +20,9 @@ var apk = &Pm{
 		"--update",
 		// "--upgrade",
 	},
-	Has: func(name string) (bool, error) {
-		c1 := exec.Command("apk", "search", "--exact", name)
-		c2 := exec.Command("grep", "-q", name)
+	Has: func(pkgs []string) (bool, error) {
+		c1 := exec.Command("apk", append([]string{"search", "--exact"}, pkgs...)...)
+		c2 := exec.Command("grep", append([]string{"-q"}, pkgs...)...)
 
 		c2.Stdin, _ = c1.StdoutPipe()
 		c2.Stdout = os.Stdout

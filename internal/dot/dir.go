@@ -94,6 +94,7 @@ func (d *Dir) Undo() error {
 	}
 	if !ok {
 		return &TaskError{"undo dir", d, ErrNotEmpty}
+		// return &os.PathError{Op: "dir", Path: d.Path, Err: ErrNotEmpty}
 	}
 	// TODO dirOpts.empty
 	if err := os.Remove(d.Path); err != nil {

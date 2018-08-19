@@ -56,8 +56,8 @@ type Pm struct {
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
 	Env  map[string]string
-	Init func() error               // Install or prepare bin
-	Has  func(string) (bool, error) // Search install package
+	Init func() error                 // Install or prepare bin
+	Has  func([]string) (bool, error) // Search local packages
 	done bool
 }
 
@@ -77,8 +77,8 @@ func NewPm(name string) (*Pm, error) {
 }
 
 // BuildOptions constructs the command arguments.
-func (m *Pm) BuildOptions(a string, in ...string) ([]string, error) {
-	opts := []string{}
+func (m *Pm) BuildOptions(a string, pkgs []string, opts ...string) ([]string, error) {
+	s := []string{}
 
 	// // General manager options
 	// if len(m.Opts) == 0 && !ostype.Has("alpine") {
@@ -87,30 +87,31 @@ func (m *Pm) BuildOptions(a string, in ...string) ([]string, error) {
 
 	// Sub command and general options
 	if len(m.Sub) > 0 {
-		opts = append(opts, m.Sub...)
+		s = append(s, m.Sub...)
 	}
 
 	// Package manager action
-	action, err := m.GetAction(a, in[0], in[1:]...)
+	action, err := m.GetAction(a, pkgs...)
 	if err != nil {
-		return opts, err
+		return s, err
 	}
-	opts = append(opts, action)
+	s = append(s, action)
 	// Insert common and action specific options
-	opts = append(opts, m.Opts...)
+	s = append(s, m.Opts...)
 	switch a {
 	case "install":
-		opts = append(opts, m.InstallOpts...)
+		s = append(s, m.InstallOpts...)
 	case "remove":
-		opts = append(opts, m.RemoveOpts...)
+		s = append(s, m.RemoveOpts...)
 	}
 	// Append package name and extra options
-	opts = append(opts, in...)
-	return opts, nil
+	s = append(s, pkgs...)
+	s = append(s, opts...)
+	return s, nil
 }
 
 // GetAction constructs the manager command for a given package.
-func (m *Pm) GetAction(name, pkgName string, pkgOpts ...string) (string, error) {
+func (m *Pm) GetAction(name string, input ...string) (string, error) {
 	action := strings.ToLower(name)
 	var i interface{}
 	switch action {
@@ -129,8 +130,15 @@ func (m *Pm) GetAction(name, pkgName string, pkgOpts ...string) (string, error) 
 	case string:
 		action = a
 	// case []string:
-	case func(*Pm, string, ...string) string:
-		action = a(m, pkgName, pkgOpts...)
+	case func(*Pm, ...string) string:
+		pkgs := []string{}
+		for _, s := range input {
+			if !strings.HasPrefix(s, "-") {
+				pkgs = append(pkgs, s)
+			}
+		}
+		// if len(pkgs) == 0 { ... }
+		action = a(m, pkgs...)
 	default:
 		return action, fmt.Errorf("%s: unknown pkg manager", a)
 	}
@@ -187,7 +195,7 @@ func executable(bin string) bool {
 }
 
 // Has ...
-func Has(manager, pkg string, opts ...string) (bool, error) {
+func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 	m, err := NewPm(manager)
 	if err != nil {
 		return false, err
@@ -195,11 +203,11 @@ func Has(manager, pkg string, opts ...string) (bool, error) {
 	if m.Has == nil {
 		return false, ErrUnknown
 	}
-	return m.Has(pkg)
+	return m.Has(pkgs)
 }
 
 // Install ...
-func Install(manager, pkg string, opts ...string) error {
+func Install(manager string, pkgs []string, opts ...string) error {
 	// fmt.Printf("%s %s\n", cmd.Bin, strings.Join(cmdArgs, " "))
 	// stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
 	// str := strings.TrimRight(stdout, "\n")
@@ -210,17 +218,17 @@ func Install(manager, pkg string, opts ...string) error {
 	// if status != 0 {
 	// 	return str, fmt.Errorf(stderr)
 	// }
-	return execute(manager, "install", pkg, opts...)
+	return execute(manager, "install", pkgs, opts...)
 }
 
 // Remove ...
-func Remove(manager, pkg string, opts ...string) error {
-	return execute(manager, "remove", pkg, opts...)
+func Remove(manager string, pkgs []string, opts ...string) error {
+	return execute(manager, "remove", pkgs, opts...)
 }
 
 // Exec ...
-func execute(manager, action, pkg string, opts ...string) error {
-	bin, opts, err := Init(manager, action, pkg, opts...)
+func execute(manager, action string, pkgs []string, opts ...string) error {
+	bin, opts, err := Init(manager, action, pkgs, opts...)
 	if err != nil {
 		return err
 	}
@@ -237,7 +245,7 @@ func execute(manager, action, pkg string, opts ...string) error {
 		os.Setenv(k, v)
 	}
 	if action == "install" && m.Has != nil {
-		ok, err := m.Has(pkg)
+		ok, err := m.Has(pkgs)
 		if err != nil {
 			return err
 		}
@@ -275,13 +283,15 @@ func execCommand(name string, args ...string) error {
 }
 
 // Init can return ErrExist if the package is already installed
-func Init(manager, action, pkg string, opts ...string) (string, []string, error) {
+func Init(manager, action string, pkgs []string, opts ...string) (string, []string, error) {
 	m, err := NewPm(manager)
 	if err != nil {
 		return "", []string{}, err
 	}
-	opts = append([]string{pkg}, opts...)
-	opts, err = m.BuildOptions(action, opts...)
+	// input := strings.Split(name, " ")
+	// if len(input) == 0 { ... }
+	opts = append(pkgs, opts...)
+	opts, err = m.BuildOptions(action, pkgs, opts...)
 	if err != nil {
 		return m.Bin, opts, err
 	}

@@ -117,41 +117,6 @@ func (t *Task) CheckIf() error {
 	return nil
 }
 
-// IsExist unwraps task error
-func IsExist(err error) bool {
-	if err == nil {
-		return false
-	}
-	// if terr, ok := err.(*TaskError); ok {
-	// 	err = terr
-	// 	// if terr.Task err == ErrNotEmpty {}
-	// }
-	return err == ErrAlreadyExist
-}
-
-// IsNotExist error
-func IsNotExist(err error) bool {
-	return !IsExist(err)
-}
-
-// IsSkip error
-func IsSkip(err error) bool {
-	if err == nil {
-		return false
-	}
-	terr, ok := err.(*TaskError)
-	if ok {
-		// terr.Op == "undo dir"
-		if terr.Err == ErrNotEmpty {
-			// Skip rm empty directory
-			err = ErrSkip
-		} else {
-			err = terr.Err
-		}
-	}
-	return err == ErrSkip
-}
-
 // exists checks if a file is present
 func exists(path string) bool {
 	_, err := os.Stat(path)

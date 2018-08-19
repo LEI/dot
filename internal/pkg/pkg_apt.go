@@ -20,10 +20,9 @@ var aptGet = &Pm{
 		"--quiet",
 		"--quiet",
 	},
-	Has: func(name string) (bool, error) {
+	Has: func(pkgs []string) (bool, error) {
 		// dpkg-query -l "$package" | grep -q ^.i
-
-		c1 := exec.Command("dpkg-query", "-Wf'${db:Status-abbrev}'", name)
+		c1 := exec.Command("dpkg-query", append([]string{"-Wf'${db:Status-abbrev}'"}, pkgs...)...)
 		c2 := exec.Command("grep", "-q", "^i")
 
 		c2.Stdin, _ = c1.StdoutPipe()
