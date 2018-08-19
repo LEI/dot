@@ -5,25 +5,25 @@ import (
 	"os/exec"
 )
 
+// TODO: Brewfile
+
 // https://docs.brew.sh/Manpage
 var brew = &Pm{
 	Bin: "brew",
-	Acts: map[string]interface{}{
-		"install": func(m *Pm, name string, opts ...string) string {
-			// TODO filter strings.HasPrefix(opts, "-")?
-			// opts := []string{"ls", "--versions", name}
-			// err := exec.Command("brew", opts...).Run()
-			if Upgrade {
-				ok, err := m.Has(name)
-				if err == nil && ok {
-					return "upgrade"
-				}
+	Install: func(m *Pm, name string, opts ...string) string {
+		// TODO filter strings.HasPrefix(opts, "-")?
+		// opts := []string{"ls", "--versions", name}
+		// err := exec.Command("brew", opts...).Run()
+		if Upgrade {
+			ok, err := m.Has(name)
+			if err == nil && ok {
+				return "upgrade"
 			}
-			return "install"
-		},
-		"remove": "uninstall",
+		}
+		return "install"
 	},
-	Opts: []string{"--quiet"},
+	Remove: "uninstall",
+	Opts:   []string{"--quiet"},
 	Env: map[string]string{
 		// "HOMEBREW_NO_ANALYTICS": "1",
 		"HOMEBREW_NO_AUTO_UPDATE": "1",
@@ -43,10 +43,8 @@ var brew = &Pm{
 }
 
 var brewCask = &Pm{
-	Bin: "brew",
-	Sub: []string{"cask"},
-	Acts: map[string]interface{}{
-		"install": "install",
-		"remove":  "uninstall",
-	},
+	Bin:     "brew",
+	Sub:     []string{"cask"},
+	Install: "install",
+	Remove:  "uninstall",
 }

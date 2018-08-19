@@ -5,6 +5,19 @@ import (
 	"os"
 )
 
+// // LinkError type
+// type LinkError struct {
+// 	// taskError
+// 	Action string
+// 	Path   string
+// 	Err    error
+// 	// skip   bool
+// }
+
+// func (e *LinkError) Error() string {
+// 	return e.Action + " " + e.Path + ": " + e.Err.Error()
+// }
+
 // Link task
 type Link struct {
 	Task   `mapstructure:",squash"` // Action, If, OS
@@ -41,10 +54,12 @@ func (l *Link) Status() error {
 // Do task
 func (l *Link) Do() error {
 	if err := l.Status(); err != nil {
-		if err == ErrAlreadyExist {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
 			return nil
+		default:
+			return err
 		}
-		return err
 	}
 	return os.Symlink(l.Source, l.Target)
 }
@@ -52,7 +67,12 @@ func (l *Link) Do() error {
 // Undo task
 func (l *Link) Undo() error {
 	if err := l.Status(); err != nil {
-		if err != ErrAlreadyExist {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
 			return err
 		}
 	}

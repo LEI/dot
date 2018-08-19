@@ -39,10 +39,12 @@ func (t *Template) Status() error {
 // Do task
 func (t *Template) Do() error {
 	if err := t.Status(); err != nil {
-		if err == ErrAlreadyExist {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
 			return nil
+		default:
+			return err
 		}
-		return err
 	}
 	fmt.Println("todo", t)
 	return nil
@@ -50,7 +52,16 @@ func (t *Template) Do() error {
 
 // Undo task
 func (t *Template) Undo() error {
-	fmt.Println("toundo", t)
+	if err := t.Status(); err != nil {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
+			return err
+		}
+	}
 	return nil
 	// return os.Remove(t.Target)
 }

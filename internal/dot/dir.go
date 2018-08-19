@@ -1,15 +1,31 @@
 package dot
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 )
 
-// DirError type
-type DirError struct {
-	taskError
-}
+var (
+	// ErrDirNotEmpty ...
+	ErrDirNotEmpty = errors.New("directory not empty")
+
+	defaultDirMode os.FileMode = 0755
+)
+
+// // DirError type
+// type DirError struct {
+// 	// taskError
+// 	Action string
+// 	Path   string
+// 	Err    error
+// 	skip   bool
+// }
+
+// func (e *DirError) Error() string {
+// 	return e.Action + " " + e.Path + ": " + e.Err.Error()
+// }
 
 // Dir task
 type Dir struct {
@@ -48,37 +64,51 @@ func (d *Dir) Status() error {
 
 // Do task
 func (d *Dir) Do() error {
+	// if err := d.Status(); err != nil {
+	// 	if err == ErrAlreadyExist {
+	// 		return nil
+	// 	}
+	// 	return err
+	// }
 	if err := d.Status(); err != nil {
-		if err == ErrAlreadyExist {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
 			return nil
+		default:
+			return err
 		}
-		return err
 	}
-	if err := os.MkdirAll(d.Path, 0755); err != nil {
-		return err
-	}
-	return nil
+	// if err := os.MkdirAll(d.Path, defaultDirMode); err != nil {
+	// 	return err
+	// }
+	// return nil
+	return os.MkdirAll(d.Path, defaultDirMode)
 }
 
 // Undo task
 func (d *Dir) Undo() error {
-	err := d.Status()
-	if err != nil && err != ErrAlreadyExist {
+	if err := d.Status(); err != nil {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
+			return err
+		}
 	}
 	// if err := d.Status(); err != ErrAlreadyExist {
 	// 	return err
 	// }
-	if err == ErrAlreadyExist {
-		ok, err := dirIsEmpty(d.Path)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			fmt.Fprintf(os.Stderr, "%s: directory not empty\n", d.Path)
-			return ErrSkip
-		}
-		// TODO dirOpts.empty
+	ok, err := dirIsEmpty(d.Path)
+	if err != nil {
+		return err // &DirError{"remove", d.Path, err}
 	}
+	if !ok {
+		// return &taskError{Detail: d, Format: "", Message: ""}
+		return ErrSkip // &DirError{"remove", d.Path, ErrDirNotEmpty, true}
+	}
+	// TODO dirOpts.empty
 	return os.Remove(d.Path)
 }
 

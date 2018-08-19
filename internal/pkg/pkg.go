@@ -43,14 +43,15 @@ var (
 
 // Pm package manager
 type Pm struct {
-	Sudo        bool                   // Prefix with sudo if not root
-	Bin         string                 // Package manager binary path
-	Sub         []string               // Sub command and general options
-	Acts        map[string]interface{} // Command actions map
-	DryRun      []string               // Check mode, do not run if absent
-	Opts        []string               // Common pkg manager options
-	InstallOpts []string               // Install pkg manager options
-	RemoveOpts  []string               // Remove pkg manager options
+	Sudo        bool        // Prefix Bin with sudo if not root
+	Bin         string      // Path to package manager binary
+	Sub         []string    // Sub command and main options
+	Install     interface{} // Install command name
+	Remove      interface{} // Remove command name
+	DryRun      []string    // Check mode, do not run if absent
+	Opts        []string    // Common pkg manager options
+	InstallOpts []string    // Install pkg manager options
+	RemoveOpts  []string    // Remove pkg manager options
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
@@ -75,8 +76,8 @@ func NewPm(name string) (*Pm, error) {
 	return m, nil
 }
 
-// Build command arguments
-func (m *Pm) Build(a string, in ...string) ([]string, error) {
+// BuildOptions constructs the command arguments.
+func (m *Pm) BuildOptions(a string, in ...string) ([]string, error) {
 	opts := []string{}
 
 	// // General manager options
@@ -90,23 +91,9 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	}
 
 	// Package manager action
-	a = strings.ToLower(a)
-	act, ok := m.Acts[a]
-	if !ok {
-		return []string{}, fmt.Errorf("invalid pkg action: %s", a)
-	}
-	var action string
-	switch A := act.(type) {
-	case string:
-		action = A
-	// case []string:
-	case func(*Pm, string, ...string) string:
-		action = A(m, in[0], in[1:]...)
-	default:
-		return opts, fmt.Errorf("%s: unknown pkg manager", A)
-	}
-	if action == "" {
-		return opts, fmt.Errorf("empty action %+v", m)
+	action, err := m.GetAction(a, in[0], in[1:]...)
+	if err != nil {
+		return opts, err
 	}
 	opts = append(opts, action)
 	// Insert common and action specific options
@@ -120,6 +107,37 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	// Append package name and extra options
 	opts = append(opts, in...)
 	return opts, nil
+}
+
+// GetAction constructs the manager command for a given package.
+func (m *Pm) GetAction(name, pkgName string, pkgOpts ...string) (string, error) {
+	action := strings.ToLower(name)
+	var i interface{}
+	switch action {
+	case "install":
+		i = m.Install
+	case "remove":
+		i = m.Remove
+	default:
+		return action, fmt.Errorf("invalid pkg action: %s", action)
+	}
+	// act, ok := m.Acts[a]
+	// if !ok {
+	// 	return []string{}, fmt.Errorf("invalid pkg action: %s", a)
+	// }
+	switch a := i.(type) {
+	case string:
+		action = a
+	// case []string:
+	case func(*Pm, string, ...string) string:
+		action = a(m, pkgName, pkgOpts...)
+	default:
+		return action, fmt.Errorf("%s: unknown pkg manager", a)
+	}
+	if action == "" {
+		return action, fmt.Errorf("empty action %+v", m)
+	}
+	return action, nil
 }
 
 // func init() {
@@ -266,7 +284,7 @@ func Init(manager, action, name string, opts ...string) (string, []string, error
 	pkgs := strings.Split(name, " ")
 	name = pkgs[0]
 	opts = append(pkgs, opts...)
-	opts, err = m.Build(action, opts...)
+	opts, err = m.BuildOptions(action, opts...)
 	if err != nil {
 		return m.Bin, opts, err
 	}
