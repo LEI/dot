@@ -1,45 +1,11 @@
 package dot
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"text/template"
 
 	"github.com/LEI/dot/internal/ostype"
 )
-
-// taskError type
-type taskError struct {
-	Code    string // ErrorCode
-	Detail  interface{}
-	Format  string
-	Message string
-	// Err error
-}
-
-// Code is used as a prefix
-// If Format and Detail are given, use it as a template for Message format
-// If only Format is given, apply it to Message
-// Otherwise just use Message
-func (e *taskError) Error() string {
-	msg := e.Message
-	if e.Format != "" && e.Detail == nil {
-		msg = fmt.Sprintf(e.Format, e.Message)
-	} else if e.Format != "" { // e.Detail != nil
-		t, err := template.New("err" + e.Code).Parse(e.Format)
-		if err == nil {
-			var tpl bytes.Buffer
-			if err := t.Execute(&tpl, e.Detail); err == nil {
-				msg = fmt.Sprintf(tpl.String(), e.Message)
-			}
-		}
-	}
-	if e.Code == "" {
-		e.Code = "task error"
-	}
-	return fmt.Sprintf("%s: %s", e.Code, msg)
-}
 
 // Tasker interface
 type Tasker interface {
