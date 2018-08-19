@@ -24,6 +24,11 @@ func (h *Hook) String() string {
 	return fmt.Sprintf("%s", s)
 }
 
+// Type task name
+func (h *Hook) Type() string {
+	return "cmd"
+}
+
 // DoString string
 func (h *Hook) DoString() string {
 	s := h.String()

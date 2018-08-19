@@ -21,6 +21,11 @@ func (p *Pkg) String() string {
 	return p.Name // fmt.Sprintf("%s %s", p.Name, p.Args)
 }
 
+// Type task name
+func (p *Pkg) Type() string {
+	return "pkg"
+}
+
 // DoString string
 func (p *Pkg) DoString() string {
 	bin, opts, err := pkg.Init(p.Manager, "install", p.Name, p.Args...)

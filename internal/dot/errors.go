@@ -1,5 +1,7 @@
 package dot
 
+// https://golang.org/src/os/error.go
+
 import "errors"
 
 var (
