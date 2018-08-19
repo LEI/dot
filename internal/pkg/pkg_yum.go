@@ -17,11 +17,11 @@ var yum = &Pm{
 	Has: func(name string) (bool, error) {
 		// sudo yum info
 		// yum -C list installed
-		cmd := exec.Command("rpm", "-q", name)
+		cmd := exec.Command("rpm", "-q", name) // --quiet
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
 		err := cmd.Run()
-		return err == nil, err
+		return err == nil, nil
 	},
 }
