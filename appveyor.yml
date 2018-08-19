@@ -15,14 +15,16 @@ environment:
 clone_folder: C:\GOPATH\src\github.com\LEI\dot
 
 install:
+  - choco install docker-compose
   # - gem install asciidoctor
   # - pip install docutils
-  # - go get github.com/magefile/mage
-  - make mage
+  - go get github.com/magefile/mage
 
 build_script:
   # - mage vendor testRace
-  - mage -v # check
+  - mage -v # vendor check install
   # - hugo -s docs/
   # - hugo --renderToMemory -s docs/
   - dot --version
+  # - dot ls
+  - OS=windows mage -v docker
