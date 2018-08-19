@@ -103,5 +103,10 @@ func IsSkip(err error) bool {
 	// 		err = e.Err
 	// 	}
 	// }
-	return err == ErrSkip
+	switch err {
+	case ErrNotEmpty, ErrSkip:
+		return true
+	default:
+		return false
+	}
 }

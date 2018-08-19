@@ -110,6 +110,7 @@ func (l *Line) Undo() error {
 	}
 	if index < 0 {
 		return fmt.Errorf("%s: line '%v' not found", l.Target, l.Data)
+		// return &os.PathError{Op: "line", Path: l.Target, Err: ErrNotExist}
 	}
 	// Remove line
 	lines = append(lines[:index], lines[index+1:]...)
