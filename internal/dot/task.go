@@ -1,6 +1,7 @@
 package dot
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/LEI/dot/internal/ostype"
@@ -34,14 +35,15 @@ type Task struct {
 // Check conditions
 func (t *Task) Check(action string) error {
 	if err := t.CheckAction(action); err != nil {
+		fmt.Println("> Skip "+action, t, err)
 		return err
 	}
 	if err := t.CheckIf(); err != nil {
-		// fmt.Println("> Skip If", err)
+		fmt.Println("> Skip If", t, err)
 		return err
 	}
 	if err := t.CheckOS(); err != nil {
-		// fmt.Println("> Skip OS", err)
+		fmt.Println("> Skip OS", t, err)
 		return err
 	}
 	return nil
