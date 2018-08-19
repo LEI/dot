@@ -21,8 +21,8 @@ var (
 	ErrSkip = errors.New("skip task")
 )
 
-// TaskError ...
-type TaskError struct {
+// OpError ...
+type OpError struct {
 	Op   string
 	Task Tasker
 	Err  error
@@ -32,7 +32,7 @@ type TaskError struct {
 	// Message string
 }
 
-func (e *TaskError) Error() string {
+func (e *OpError) Error() string {
 	return e.Op + " " + e.Task.String() + ": " + e.Err.Error()
 	// return fmt.Sprintf("%s %s: %s", e.Op, e.Task.String(), e.Err.Error())
 }
@@ -41,7 +41,7 @@ func (e *TaskError) Error() string {
 // // If Format and Detail are given, use it as a template for Message format
 // // If only Format is given, apply it to Message
 // // Otherwise just use Message
-// func (e *TaskError) Error() string {
+// func (e *FmtError) Error() string {
 // 	msg := e.Message
 // 	if e.Format != "" && e.Detail == nil {
 // 		msg = fmt.Sprintf(e.Format, e.Message)
@@ -65,7 +65,7 @@ func IsExist(err error) bool {
 	if err == nil {
 		return false
 	}
-	// if terr, ok := err.(*TaskError); ok {
+	// if terr, ok := err.(*OpError); ok {
 	// 	err = terr
 	// 	// if terr.Task err == ErrNotEmpty {}
 	// }
@@ -91,14 +91,14 @@ func IsSkip(err error) bool {
 	// 		err = terr.Err
 	// 	}
 	// }
-	if terr, ok := err.(*TaskError); ok && terr.Err != nil {
+	if terr, ok := err.(*OpError); ok && terr.Err != nil {
 		err = terr.Err
 	}
 	if perr, ok := err.(*os.PathError); ok && perr.Err != nil {
 		err = perr.Err
 	}
 	// switch e := err.(type) {
-	// case *os.PathError, *TaskError:
+	// case *os.PathError, *OpError:
 	// 	if e.Err != nil {
 	// 		err = e.Err
 	// 	}

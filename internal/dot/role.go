@@ -546,7 +546,7 @@ func checkTasks(s []Tasker) error {
 			}
 			c++
 		}
-		// terr, ok := err.(*TaskError)
+		// terr, ok := err.(*OpError)
 		// if ok {
 		// 	err = terr.Err
 		// }

@@ -72,7 +72,7 @@ func (t *Task) CheckOS() error {
 	}
 	ok := ostype.Has(t.OS...)
 	if !ok {
-		return ErrSkip // &TaskError{"check os", t, ErrSkip}
+		return ErrSkip // &OpError{"check os", t, ErrSkip}
 	}
 	return nil
 }
@@ -91,7 +91,7 @@ func (t *Task) CheckIf() error {
 	// 	"hasOS": ostype.Has,
 	// }
 	if len(t.If) > 0 {
-		return ErrSkip // &TaskError{"check if", t, ErrSkip}
+		return ErrSkip // &OpError{"check if", t, ErrSkip}
 	}
 	// https://golang.org/pkg/text/template/#hdr-Functions
 	// for _, cond := range t.If {

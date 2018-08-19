@@ -38,7 +38,7 @@ func (d *Dir) UndoString() string {
 // Status check task
 func (d *Dir) Status() error {
 	if dirExists(d.Path) {
-		return ErrAlreadyExist // &TaskError{"check dir", d, ErrAlreadyExist}
+		return ErrAlreadyExist // &OpError{"check dir", d, ErrAlreadyExist}
 	}
 	// fi, err := os.Stat(d.Path)
 	// if err != nil && os.IsExist(err) {
@@ -53,7 +53,7 @@ func (d *Dir) Status() error {
 // Do task
 func (d *Dir) Do() error {
 	if err := d.Status(); err != nil {
-		// terr, ok := err.(*TaskError)
+		// terr, ok := err.(*OpError)
 		// if !ok {
 		// 	return err
 		// }
@@ -66,7 +66,7 @@ func (d *Dir) Do() error {
 		}
 	}
 	if err := os.MkdirAll(d.Path, defaultDirMode); err != nil {
-		return err // &TaskError{"mkdir", d, err}
+		return err // &OpError{"mkdir", d, err}
 	}
 	return nil
 }
@@ -74,7 +74,7 @@ func (d *Dir) Do() error {
 // Undo task
 func (d *Dir) Undo() error {
 	if err := d.Status(); err != nil {
-		// terr, ok := err.(*TaskError)
+		// terr, ok := err.(*OpError)
 		// if !ok {
 		// 	return err
 		// }
@@ -93,12 +93,12 @@ func (d *Dir) Undo() error {
 		return err // &DirError{"remove", d.Path, err}
 	}
 	if !ok {
-		// return &TaskError{"undo dir", d, ErrNotEmpty}
+		// return &OpError{"undo dir", d, ErrNotEmpty}
 		return &os.PathError{Op: "rmdir", Path: d.Path, Err: ErrNotEmpty}
 	}
 	// TODO dirOpts.empty
 	if err := os.Remove(d.Path); err != nil {
-		return err // &TaskError{"rmdir", d, err}
+		return err // &OpError{"rmdir", d, err}
 	}
 	return nil
 }
