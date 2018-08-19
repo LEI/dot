@@ -68,6 +68,20 @@ func (c *Config) ParseRoles() error {
 	return nil
 }
 
+// FilterRoles by name
+func (c *Config) FilterRoles(names []string) {
+	tmp := c.Roles[:0]
+	for _, r := range c.Roles {
+		for _, s := range names {
+			if s == r.Name {
+				tmp = append(tmp, r)
+				break
+			}
+		}
+	}
+	c.Roles = tmp
+}
+
 // NewConfig ...
 func NewConfig(path string) (*Config, error) {
 	// if path == "" {}
