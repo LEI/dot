@@ -7,13 +7,9 @@ var yum = &Pm{
 		"install": "install",
 		"remove":  "remove",
 	},
-	Opts: []*Opt{
-		{
-			Args: []string{
-				"--assumeyes",
-				// "--error=0",
-				"--quiet",
-			},
-		},
+	Opts: []string{
+		"--assumeyes",
+		// "--error=0",
+		"--quiet",
 	},
 }

@@ -14,26 +14,16 @@ var aptGet = &Pm{
 		"install": "install",
 		"remove":  "remove",
 	},
-	Opts: []*Opt{
-		{
-			// Args: []string{"-qqy"},
-			Args: []string{
-				"--assume-yes",
-				"--no-install-recommends",
-				"--no-install-suggests",
-				"--quiet",
-				"--quiet",
-			},
-		},
+	Opts: []string{
+		// -qqy
+		"--assume-yes",
+		"--no-install-recommends",
+		"--no-install-suggests",
+		"--quiet",
+		"--quiet",
 	},
 	Has: func(name string) (bool, error) {
 		// dpkg-query -l "$package" | grep -q ^.i
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
-		// err := cmd.Run()
-		// dpkg-query: no packages found matching tree
-		// return err == nil, nil // err
 
 		c1 := exec.Command("dpkg-query", "-Wf'${db:Status-abbrev}'", name)
 		c2 := exec.Command("grep", "-q", "^i")

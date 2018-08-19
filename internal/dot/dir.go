@@ -69,7 +69,7 @@ func (d *Dir) Undo() error {
 			return err
 		}
 		if !ok {
-			fmt.Fprintf(os.Stderr, "%s: directory not empty", d.Path)
+			fmt.Fprintf(os.Stderr, "%s: directory not empty\n", d.Path)
 			return ErrSkip
 		}
 		// TODO dirOpts.empty

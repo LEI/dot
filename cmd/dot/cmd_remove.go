@@ -9,6 +9,7 @@ import (
 // Options for the remove command.
 type removeOptions struct {
 	// empty bool
+	pkg bool
 }
 
 var removeOpts removeOptions
@@ -29,8 +30,9 @@ The "remove" command removes roles by executing their tasks.
 func init() {
 	cmdRoot.AddCommand(cmdRemove)
 
-	// flags := cmdRemove.Flags()
-	// flags.BoolVarP(&removeOptions.Empty, "remove-empty", "", false, "remove empty directories and empty files")
+	flags := cmdRemove.Flags()
+	// flags.BoolVarP(&removeOptions.empty, "remove-empty", "", false, "remove empty directories and empty files")
+	flags.BoolVarP(&removeOpts.pkg, "packages", "P", false, "manage system packages")
 }
 
 func preRunRemove(cmd *cobra.Command, args []string) error {
@@ -78,9 +80,11 @@ func runRemove(cmd *cobra.Command, args []string) error {
 			}
 		}
 		// Package management
-		for _, p := range r.Pkgs {
-			if err := runTask(action, p); err != nil {
-				return err
+		if removeOpts.pkg {
+			for _, p := range r.Pkgs {
+				if err := runTask(action, p); err != nil {
+					return err
+				}
 			}
 		}
 		// Post remove hooks

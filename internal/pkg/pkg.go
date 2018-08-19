@@ -10,7 +10,7 @@ import (
 	// "text/template"
 
 	// "github.com/LEI/dot/cli/config/tasks"
-	"github.com/LEI/dot/cli/config/types"
+
 	"github.com/LEI/dot/internal/ostype"
 )
 
@@ -43,11 +43,13 @@ var (
 
 // Pm package manager
 type Pm struct {
-	Sudo bool
-	Bin  string                 // Package manager binary path
-	Sub  []string               // Sub commands
-	Acts map[string]interface{} // Command actions map
-	Opts []*Opt                 // General pkg manager options
+	Sudo        bool
+	Bin         string                 // Package manager binary path
+	Sub         []string               // Sub commands
+	Acts        map[string]interface{} // Command actions map
+	Opts        []string               // Common pkg manager options
+	InstallOpts []string               // Install pkg manager options
+	RemoveOpts  []string               // Remove pkg manager options
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
@@ -55,13 +57,6 @@ type Pm struct {
 	Init func() error               // Install or prepare bin
 	Has  func(string) (bool, error) // Search install package
 	done bool
-}
-
-// Opt ...
-type Opt struct {
-	Args        interface{} // *parsers.Slice
-	types.HasOS             // `mapstructure:",squash"`
-	types.HasIf             // `mapstructure:",squash"`
 }
 
 // NewPm ...
@@ -79,6 +74,7 @@ func NewPm(name string) (*Pm, error) {
 	return m, nil
 }
 
+/*
 // Add ...
 func (m *Pm) Add(opt *Opt) ([]string, error) {
 	args := []string{}
@@ -135,6 +131,7 @@ func (m *Pm) Add(opt *Opt) ([]string, error) {
 	// return args, err
 	return args, nil
 }
+*/
 
 // Build command arguments
 func (m *Pm) Build(a string, in ...string) ([]string, error) {
@@ -151,7 +148,8 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	}
 
 	// Package manager action
-	act, ok := m.Acts[strings.ToLower(a)]
+	a = strings.ToLower(a)
+	act, ok := m.Acts[a]
 	if !ok {
 		return []string{}, fmt.Errorf("invalid pkg action: %s", a)
 	}
@@ -171,15 +169,22 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	opts = append(opts, action)
 
 	// Action options
-	for _, a := range m.Opts {
-		add, err := m.Add(a)
-		if err != nil {
-			return opts, err
-		}
-		if len(add) > 0 {
-			opts = append(opts, add...)
-		}
+	opts = append(opts, m.Opts...)
+	switch a {
+	case "install":
+		opts = append(opts, m.InstallOpts...)
+	case "remove":
+		opts = append(opts, m.RemoveOpts...)
 	}
+	// for _, a := range m.Opts {
+	// 	add, err := m.Add(a)
+	// 	if err != nil {
+	// 		return opts, err
+	// 	}
+	// 	if len(add) > 0 {
+	// 		opts = append(opts, add...)
+	// 	}
+	// }
 
 	// Insert package names and extra options
 	opts = append(opts, in...)
