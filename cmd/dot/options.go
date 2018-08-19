@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/LEI/dot/internal/dot"
+	"github.com/docker/docker/pkg/homedir"
 )
 
 var (
@@ -13,6 +14,7 @@ var (
 	version   = "compiled manually"
 	commit    string
 	timestamp string
+	homeDir   = homedir.Get()
 )
 
 // DotOptions hold all global options for restic.
@@ -57,22 +59,22 @@ var dotOpts = DotOptions{
 func init() {
 	source := os.Getenv("DOT_SOURCE")
 	if source == "" {
-		source = os.Getenv("HOME")
+		source = homeDir
 	}
 	target := os.Getenv("DOT_TARGET")
 	if target == "" {
-		target = os.Getenv("HOME")
+		target = homeDir
 	}
 	// Dotfile
 	envCfgFile := os.Getenv("DOT_FILE")
 	if envCfgFile == "" {
-		// envCfgFile = os.ExpandEnv("$HOME/.dotrc.yml")
+		// envCfgFile = filepath.Join(homeDir, ".dotrc.yml")
 		envCfgFile = ".dotrc.yml"
 	}
 	// Roles directory
 	envRoleDir := os.Getenv("DOT_ROLE_DIR")
 	if envRoleDir == "" {
-		// envRoleDir = os.ExpandEnv("$HOME/.dot")
+		// envRoleDir = filepath.Join(homeDir, ".dot")
 		envRoleDir = ".dot"
 	}
 	// Roles config name

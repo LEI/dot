@@ -12,10 +12,10 @@ import (
 	"github.com/LEI/dot/cli/config/tasks"
 	cliflags "github.com/LEI/dot/cli/flags"
 	"github.com/LEI/dot/internal/git"
-	"github.com/LEI/dot/internal/homedir"
 	"github.com/LEI/dot/internal/ostype"
 	"github.com/LEI/dot/internal/prompt"
 	"github.com/LEI/dot/system"
+	"github.com/docker/docker/pkg/homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

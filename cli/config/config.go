@@ -6,7 +6,7 @@ import (
 
 	// "path/filepath"
 
-	"github.com/LEI/dot/internal/homedir"
+	"github.com/docker/docker/pkg/homedir"
 	"github.com/spf13/viper"
 )
 
