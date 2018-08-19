@@ -21,7 +21,7 @@ install:
   - go get github.com/magefile/mage
 
 build_script:
-  - mage vendor testRace
+  - mage vendor # testRace
   - mage -v check
   - mage install
   # - hugo -s docs/
