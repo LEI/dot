@@ -68,9 +68,9 @@ func (p *Pkg) Do() error {
 			return err
 		}
 	}
-	fmt.Println("pkg.Install", p.Manager, p.Name, p.Args)
+	// fmt.Println("pkg.Install", p.Manager, p.Name, p.Args)
 	err := pkg.Install(p.Manager, p.Name, p.Args...)
-	fmt.Println(p.Name, "=======>", err)
+	// fmt.Println(p.Name, "=======>", err)
 	switch err {
 	// case nil:
 	case pkg.ErrExist:

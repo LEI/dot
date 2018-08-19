@@ -11,6 +11,7 @@ environment:
   # CGO_ENABLED: 0 # Required (1) for go test -race
   GOPATH: C:\GOPATH\
   # DOT_BUILD_TAGS:
+  OS: windows
 
 # clones and cd's to path
 clone_folder: C:\GOPATH\src\github.com\LEI\dot
@@ -29,4 +30,5 @@ build_script:
   - dot --version
   # - dot ls
   - choco install docker-compose
-  - OS=windows mage -v docker
+  - mage -v docker
+  - dot --install --packages --verbose
