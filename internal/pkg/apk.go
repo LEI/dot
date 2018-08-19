@@ -14,11 +14,11 @@ var apk = &Pm{
 		"install": "add",
 		"remove":  "del",
 	},
+	DryRun: []string{"--simulate"},
 	Opts: []string{
 		"--no-cache",
 		"--no-progress",
 		"--quiet",
-		// --simulate (if DryRun)
 		"--update",
 		// "--upgrade",
 	},
