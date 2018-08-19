@@ -38,7 +38,7 @@ func runTask(action string, i interface{}) error {
 }
 
 func doTask(t dot.Tasker) error {
-	if err := t.Check(); err != nil {
+	if err := t.Check("install"); err != nil {
 		return err
 	}
 	err := t.Status()
@@ -66,8 +66,8 @@ func doTask(t dot.Tasker) error {
 }
 
 func undoTask(t dot.Tasker) error {
-	if !t.CheckAction("remove") {
-		return dot.ErrSkip // &dot.TaskError{Op: "remove", Task: t, Err: dot.ErrSkip}
+	if err := t.Check("remove"); err != nil {
+		return err
 	}
 	err := t.Status()
 	ok := dot.IsExist(err)

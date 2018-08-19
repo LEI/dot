@@ -11,16 +11,17 @@ import (
 type Tasker interface {
 	String() string
 	Type() string
+	Check(string) error
+	CheckAction(string) error
+	CheckIf() error
+	CheckOS() error
+	// GetOS() []string
 	DoString() string
 	UndoString() string
 	Status() error
 	// Sync() error
 	Do() error
 	Undo() error
-	CheckAction(string) bool
-	CheckIf() error
-	CheckOS() error
-	// GetOS() []string
 }
 
 // Task struct
