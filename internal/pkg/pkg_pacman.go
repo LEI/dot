@@ -29,10 +29,10 @@ var pacman = &Pm{
 	// 	// If:   []string{"{{eq .Verbose 0}}"},
 	// 	HasIf: types.HasIf{If: []string{"{{eq .Verbose 0}}"}},
 	// },
-	Has: func(name string) (bool, error) {
+	Has: func(pkgs []string) (bool, error) {
 		//fmt.Printf("pacman -Qqi %s\n", name)
 		// Search locally installed packages
-		cmd := exec.Command("pacman", "-Qqi", "--noconfirm", name)
+		cmd := exec.Command("pacman", append([]string{"-Qqi", "--noconfirm"}, pkgs...)...)
 		//cmd.Stdout = os.Stdout
 		//cmd.Stderr = os.Stderr
 		//cmd.Stdin = os.Stdin
@@ -42,7 +42,7 @@ var pacman = &Pm{
 		}
 		// Search installed groups
 		//fmt.Printf("pacman -Qqg %s\n", name)
-		cmd = exec.Command("pacman", "-Qqg", "--noconfirm", name)
+		cmd = exec.Command("pacman", append([]string{"-Qqg", "--noconfirm"}, pkgs...)...)
 		//cmd.Stdout = os.Stdout
 		//cmd.Stderr = os.Stderr
 		//cmd.Stdin = os.Stdin
@@ -65,10 +65,10 @@ var yaourt = &Pm{
 		"--noconfirm",
 		// "--sysupgrade", // -u
 	},
-	Has: func(name string) (bool, error) {
+	Has: func(pkgs []string) (bool, error) {
 		//fmt.Printf("> yaourt -Qqi %s\n", name)
 		// Search locally installed packages
-		cmd := exec.Command("yaourt", "-Qqi", "--noconfirm", name)
+		cmd := exec.Command("yaourt", append([]string{"-Qqi", "--noconfirm"}, pkgs...)...)
 		//cmd.Stdout = os.Stdout
 		//cmd.Stderr = os.Stderr
 		//cmd.Stdin = os.Stdin

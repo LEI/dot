@@ -5,7 +5,7 @@ import (
 
 	"github.com/LEI/dot/cli/config/types"
 	// "github.com/LEI/dot/system"
-	"github.com/LEI/dot/internal/pkg"
+
 	// "github.com/LEI/dot/pkg/ostype"
 	"github.com/mitchellh/mapstructure"
 )
@@ -41,15 +41,16 @@ func (p *Package) Install() error {
 	if !p.CheckOS() { // len(p.OS) > 0 && !ostype.Has(p.OS...) {
 		return ErrSkip // fmt.Errorf("package %s: only for %s", p.Name, p.OS)
 	}
-	// str := fmt.Sprintf("pkg install %s %s", p.Name, p.Opts)
-	if !p.ShouldInstall() {
-		// if Verbose > 0 {
-		// 	fmt.Fprintf(Stdout, "# %s\n", str)
-		// }
-		return ErrSkip
-	}
-	// fmt.Fprintf(Stdout, "$ %s\n", str)
-	return pkg.Install(p.Type, p.Name, p.Opts...)
+	// // str := fmt.Sprintf("pkg install %s %s", p.Name, p.Opts)
+	// if !p.ShouldInstall() {
+	// 	// if Verbose > 0 {
+	// 	// 	fmt.Fprintf(Stdout, "# %s\n", str)
+	// 	// }
+	// 	return ErrSkip
+	// }
+	// // fmt.Fprintf(Stdout, "$ %s\n", str)
+	// return pkg.Install(p.Type, p.Name, p.Opts...)
+	return nil
 }
 
 // Remove package task
@@ -57,15 +58,16 @@ func (p *Package) Remove() error {
 	if !p.CheckOS() { // len(p.OS) > 0 && !ostype.Has(p.OS...) {
 		return ErrSkip // fmt.Errorf("package %s: only for %s", p.Name, p.OS)
 	}
-	// str := fmt.Sprintf("pkg remove %s %s", p.Name, p.Opts)
-	if !p.ShouldRemove() {
-		// if Verbose > 0 {
-		// 	fmt.Fprintf(Stdout, "# %s\n", str)
-		// }
-		return ErrSkip
-	}
-	// fmt.Fprintf(Stdout, "$ %s\n", str)
-	return pkg.Remove(p.Type, p.Name, p.Opts...)
+	// // str := fmt.Sprintf("pkg remove %s %s", p.Name, p.Opts)
+	// if !p.ShouldRemove() {
+	// 	// if Verbose > 0 {
+	// 	// 	fmt.Fprintf(Stdout, "# %s\n", str)
+	// 	// }
+	// 	return ErrSkip
+	// }
+	// // fmt.Fprintf(Stdout, "$ %s\n", str)
+	// return pkg.Remove(p.Type, p.Name, p.Opts...)
+	return nil
 }
 
 // Packages task slice

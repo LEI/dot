@@ -102,7 +102,7 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 		case reflect.TypeOf((*Dir)(nil)):
 			i = &Dir{Path: val}
 		case reflect.TypeOf((*Pkg)(nil)):
-			i = &Pkg{Name: val}
+			i = &Pkg{Name: []string{val}}
 		case reflect.TypeOf((*Link)(nil)):
 			i = &Link{Source: val}
 		case reflect.TypeOf((*Tpl)(nil)):

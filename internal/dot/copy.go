@@ -93,23 +93,14 @@ func (c *Copy) Undo() error {
 // copyExists returns true if the file source and target have the same content.
 func copyExists(src, dst string) (bool, error) {
 	if !exists(src) {
-		// return ErrIsNotExist
-		return false, fmt.Errorf("%s: no such file to copy to %s", src, dst)
+		// fmt.Errorf("%s: no such file to copy to %s", src, dst)
+		return false, &os.PathError{Op: "copy", Path: src, Err: ErrNotExist}
 	}
 	if !exists(dst) {
 		// Stop here if the target does not exist
 		return false, nil
 	}
-	a, err := ioutil.ReadFile(src)
-	if err != nil {
-		return false, err
-	}
-	b, err := ioutil.ReadFile(dst)
-	if err != nil {
-		return false, err
-	}
-	ok := bytes.Compare(a, b) == 0
-	return ok, nil
+	return fileCompare(src, dst)
 }
 
 // fileExists returns true if the name exists and is a not a directory.
@@ -124,4 +115,17 @@ func fileExists(name string) bool {
 		return false
 	}
 	return !fi.IsDir()
+}
+
+// fileCompare TODO read in chunks
+func fileCompare(p1, p2 string) (bool, error) {
+	a, err := ioutil.ReadFile(p1)
+	if err != nil {
+		return false, err
+	}
+	b, err := ioutil.ReadFile(p2)
+	if err != nil {
+		return false, err
+	}
+	return bytes.Compare(a, b) == 0, nil
 }

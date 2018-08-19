@@ -9,12 +9,11 @@ import (
 // https://docs.brew.sh/Manpage
 var brew = &Pm{
 	Bin: "brew",
-	Install: func(m *Pm, name string, opts ...string) string {
-		// TODO filter strings.HasPrefix(opts, "-")?
+	Install: func(m *Pm, pkgs ...string) string {
 		// opts := []string{"ls", "--versions", name}
 		// err := exec.Command("brew", opts...).Run()
 		if Upgrade {
-			ok, err := m.Has(name)
+			ok, err := m.Has(pkgs)
 			if err == nil && ok {
 				return "upgrade"
 			}
@@ -31,9 +30,9 @@ var brew = &Pm{
 	Init: func() error {
 		return execCommand("brew", "update", "--quiet")
 	},
-	Has: func(name string) (bool, error) {
+	Has: func(pkgs []string) (bool, error) {
 		// fmt.Printf("brew ls --versions '%s'\n", name)
-		cmd := exec.Command("brew", "ls", "--versions", name)
+		cmd := exec.Command("brew", append([]string{"ls", "--versions"}, pkgs...)...)
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
@@ -47,9 +46,9 @@ var brewCask = &Pm{
 	Sub:     []string{"cask"},
 	Install: "install",
 	Remove:  "uninstall",
-	Has: func(name string) (bool, error) {
+	Has: func(pkgs []string) (bool, error) {
 		// fmt.Printf("brew cask ls --versions '%s'\n", name)
-		cmd := exec.Command("brew", "cask", "ls", "--versions", name)
+		cmd := exec.Command("brew", append([]string{"cask", "ls", "--versions"}, pkgs...)...)
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin

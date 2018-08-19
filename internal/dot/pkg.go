@@ -11,14 +11,14 @@ import (
 // Pkg task
 type Pkg struct {
 	Task    `mapstructure:",squash"` // Action, If, OS
-	Name    string
+	Name    []string
 	Args    []string
 	Manager string `mapstructure:"type"`
 }
 
 func (p *Pkg) String() string {
 	// return fmt.Sprintf("%s %s %s %s %s", p.Manager, p.Action, p.Name, p.Args, p.OS)
-	return p.Name // fmt.Sprintf("%s %s", p.Name, p.Args)
+	return strings.Join(p.Name, " ") // fmt.Sprintf("%s %s", p.Name, p.Args)
 }
 
 // Type task name

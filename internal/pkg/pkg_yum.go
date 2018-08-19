@@ -14,10 +14,10 @@ var yum = &Pm{
 		// "--error=0",
 		"--quiet",
 	},
-	Has: func(name string) (bool, error) {
+	Has: func(pkgs []string) (bool, error) {
 		// sudo yum info
 		// yum -C list installed
-		cmd := exec.Command("rpm", "-q", name) // --quiet
+		cmd := exec.Command("rpm", append([]string{"-q"}, pkgs...)...) // --quiet
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin

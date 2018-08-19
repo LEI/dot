@@ -2,7 +2,10 @@ package dot
 
 // https://golang.org/src/os/error.go
 
-import "errors"
+import (
+	"errors"
+	"os"
+)
 
 var (
 	// ErrAlreadyExist ...
@@ -10,6 +13,9 @@ var (
 
 	// ErrNotEmpty ...
 	ErrNotEmpty = errors.New("not empty")
+
+	// ErrNotExist ...
+	ErrNotExist = errors.New("does not exists")
 
 	// ErrSkip ...
 	ErrSkip = errors.New("skip task")
@@ -53,3 +59,49 @@ func (e *TaskError) Error() string {
 // 	}
 // 	return fmt.Sprintf("%s: %s", e.Code, msg)
 // }
+
+// IsExist unwraps task error
+func IsExist(err error) bool {
+	if err == nil {
+		return false
+	}
+	// if terr, ok := err.(*TaskError); ok {
+	// 	err = terr
+	// 	// if terr.Task err == ErrNotEmpty {}
+	// }
+	return err == ErrAlreadyExist
+}
+
+// IsNotExist error
+func IsNotExist(err error) bool {
+	return !IsExist(err)
+}
+
+// IsSkip error
+func IsSkip(err error) bool {
+	if err == nil {
+		return false
+	}
+	// if ok {
+	// 	// terr.Op == "undo dir"
+	// 	if terr.Err == ErrNotEmpty {
+	// 		// Skip rm empty directory
+	// 		err = ErrSkip
+	// 	} else {
+	// 		err = terr.Err
+	// 	}
+	// }
+	if terr, ok := err.(*TaskError); ok && terr.Err != nil {
+		err = terr.Err
+	}
+	if perr, ok := err.(*os.PathError); ok && perr.Err != nil {
+		err = perr.Err
+	}
+	// switch e := err.(type) {
+	// case *os.PathError, *TaskError:
+	// 	if e.Err != nil {
+	// 		err = e.Err
+	// 	}
+	// }
+	return err == ErrSkip
+}
