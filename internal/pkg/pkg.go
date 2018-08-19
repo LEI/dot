@@ -78,6 +78,7 @@ func NewPm(name string) (*Pm, error) {
 
 // BuildOptions constructs the command arguments.
 func (m *Pm) BuildOptions(a string, pkgs []string, opts ...string) ([]string, error) {
+	a = strings.ToLower(a)
 	s := []string{}
 
 	// // General manager options
@@ -89,7 +90,6 @@ func (m *Pm) BuildOptions(a string, pkgs []string, opts ...string) ([]string, er
 	if len(m.Sub) > 0 {
 		s = append(s, m.Sub...)
 	}
-
 	// Package manager action
 	action, err := m.GetAction(a, pkgs...)
 	if err != nil {
@@ -112,15 +112,14 @@ func (m *Pm) BuildOptions(a string, pkgs []string, opts ...string) ([]string, er
 
 // GetAction constructs the manager command for a given package.
 func (m *Pm) GetAction(name string, input ...string) (string, error) {
-	action := strings.ToLower(name)
 	var i interface{}
-	switch action {
+	switch name {
 	case "install":
 		i = m.Install
 	case "remove":
 		i = m.Remove
 	default:
-		return action, fmt.Errorf("invalid pkg action: %s", action)
+		return name, fmt.Errorf("invalid pkg action: %s", name)
 	}
 	// act, ok := m.Acts[a]
 	// if !ok {
@@ -128,24 +127,31 @@ func (m *Pm) GetAction(name string, input ...string) (string, error) {
 	// }
 	switch a := i.(type) {
 	case string:
-		action = a
+		name = a
 	// case []string:
 	case func(*Pm, ...string) string:
-		pkgs := []string{}
-		for _, s := range input {
-			if !strings.HasPrefix(s, "-") {
-				pkgs = append(pkgs, s)
-			}
+		pkgs := pkgOnly(input)
+		if len(pkgs) == 0 {
+			return name, fmt.Errorf("empty name %+v", input)
 		}
-		// if len(pkgs) == 0 { ... }
-		action = a(m, pkgs...)
+		name = a(m, pkgs...)
 	default:
-		return action, fmt.Errorf("%s: unknown pkg manager", a)
+		return name, fmt.Errorf("%s: unknown pkg manager", a)
 	}
-	if action == "" {
-		return action, fmt.Errorf("empty action %+v", m)
+	if name == "" {
+		return name, fmt.Errorf("empty action for package manager %+v", m)
 	}
-	return action, nil
+	return name, nil
+}
+
+func pkgOnly(input []string) []string {
+	pkgs := []string{}
+	for _, s := range input {
+		if !strings.HasPrefix(s, "-") {
+			pkgs = append(pkgs, s)
+		}
+	}
+	return pkgs
 }
 
 // func init() {
