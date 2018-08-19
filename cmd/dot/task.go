@@ -90,11 +90,12 @@ func undoTask(t dot.Tasker) error {
 		fmt.Fprintln(os.Stderr, "warning: empty task string")
 	}
 	if !ok {
-		fmt.Println("# TODO AskConfirmation")
 		if str != "" && dotOpts.verbosity >= 2 {
 			fmt.Printf("# %s\n", str)
 		}
+		// if !prompt.AskConfirmation("Proceed to execute?") {
 		return nil
+		// }
 	}
 	if str != "" && dotOpts.verbosity >= 1 {
 		fmt.Printf("$ %s\n", str)

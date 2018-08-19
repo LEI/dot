@@ -47,10 +47,12 @@ func (l *Line) Status() error {
 // Do task
 func (l *Line) Do() error {
 	if err := l.Status(); err != nil {
-		if err == ErrAlreadyExist {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
 			return nil
+		default:
+			return err
 		}
-		return err
 	}
 	var err error
 	lines := []string{}
@@ -72,6 +74,16 @@ func (l *Line) Do() error {
 
 // Undo task
 func (l *Line) Undo() error {
+	if err := l.Status(); err != nil {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
+			return err
+		}
+	}
 	if err := l.Status(); err != nil {
 		if err != ErrAlreadyExist {
 			return err

@@ -8,12 +8,10 @@ import (
 
 // https://manpages.debian.org/stretch/apt/apt-get.8.en.html
 var aptGet = &Pm{
-	Sudo: true,
-	Bin:  "apt-get",
-	Acts: map[string]interface{}{
-		"install": "install",
-		"remove":  "remove",
-	},
+	Sudo:    true,
+	Bin:     "apt-get",
+	Install: "install",
+	Remove:  "remove",
 	Opts: []string{
 		// -qqy
 		"--assume-yes",

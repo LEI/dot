@@ -8,13 +8,11 @@ import (
 
 // https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management
 var apk = &Pm{
-	Sudo: true,
-	Bin:  "apk",
-	Acts: map[string]interface{}{
-		"install": "add",
-		"remove":  "del",
-	},
-	DryRun: []string{"--simulate"},
+	Sudo:    true,
+	Bin:     "apk",
+	Install: "add",
+	Remove:  "del",
+	DryRun:  []string{"--simulate"},
 	Opts: []string{
 		"--no-cache",
 		"--no-progress",

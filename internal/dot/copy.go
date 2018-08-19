@@ -44,10 +44,12 @@ func (c *Copy) Status() error {
 // Do task
 func (c *Copy) Do() error {
 	if err := c.Status(); err != nil {
-		if err == ErrAlreadyExist {
+		switch err {
+		case ErrAlreadyExist, ErrSkip:
 			return nil
+		default:
+			return err
 		}
-		return err
 	}
 	in, err := os.Open(c.Source)
 	if err != nil {
@@ -71,7 +73,12 @@ func (c *Copy) Do() error {
 // Undo task
 func (c *Copy) Undo() error {
 	if err := c.Status(); err != nil {
-		if err != ErrAlreadyExist {
+		switch err {
+		case ErrSkip:
+			return nil
+		case ErrAlreadyExist:
+			// continue
+		default:
 			return err
 		}
 	}

@@ -6,13 +6,11 @@ import (
 
 // https://www.archlinux.org/pacman/pacman.8.html
 var pacman = &Pm{
-	Sudo: true,
-	Bin:  "pacman",
-	Acts: map[string]interface{}{
-		"install": "--sync",   // -S
-		"remove":  "--remove", // -R
-	},
-	DryRun: []string{"--print"},
+	Sudo:    true,
+	Bin:     "pacman",
+	Install: "--sync",   // -S
+	Remove:  "--remove", // -R
+	DryRun:  []string{"--print"},
 	Opts: []string{
 		"--noconfirm",
 		"--noprogressbar",
@@ -59,12 +57,10 @@ var pacman = &Pm{
 
 // https://archlinux.fr/man/yaourt.8.html
 var yaourt = &Pm{
-	Sudo: false,
-	Bin:  "yaourt",
-	Acts: map[string]interface{}{
-		"install": "--sync",   // -S
-		"remove":  "--remove", // -R
-	},
+	Sudo:    false,
+	Bin:     "yaourt",
+	Install: "--sync",   // -S
+	Remove:  "--remove", // -R
 	Opts: []string{
 		"--noconfirm",
 		// "--sysupgrade", // -u
