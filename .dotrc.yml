@@ -75,4 +75,4 @@ roles:
 
   - name: rust
     url: "https://github.com/LEI/dot-rust"
-    os: ["!alpine", "!darwin"]
+    os: ["!alpine"]
