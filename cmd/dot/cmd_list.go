@@ -84,15 +84,11 @@ func runList(cmd *cobra.Command, args []string) error {
 			fmt.Println(r) // equivalent to format {{.}}
 			continue
 		}
-		t, err := template.New(r.Name).Parse(listOpts.format)
+		str, err := templateString(r.Name, listOpts.format, r)
 		if err != nil {
 			return err
 		}
-		var tpl bytes.Buffer
-		if err := t.Execute(&tpl, r); err != nil {
-			return err
-		}
-		fmt.Println(tpl.String())
+		fmt.Println(str)
 	}
 
 	// // extract any specific directories to walk
@@ -192,4 +188,16 @@ func runList(cmd *cobra.Command, args []string) error {
 	// 	}
 	// }
 	return nil
+}
+
+func templateString(name, format string, data interface{}) (string, error) {
+	t, err := template.New(name).Parse(format)
+	if err != nil {
+		return "", err
+	}
+	var tpl bytes.Buffer
+	if err := t.Execute(&tpl, data); err != nil {
+		return "", err
+	}
+	return tpl.String(), nil
 }

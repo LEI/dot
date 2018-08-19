@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+// DirError type
+type DirError struct {
+	taskError
+}
+
 // Dir task
 type Dir struct {
 	Task `mapstructure:",squash"` // Action, If, OS

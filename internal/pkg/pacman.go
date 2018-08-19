@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"os"
 	"os/exec"
 )
 
@@ -13,15 +12,19 @@ var pacman = &Pm{
 		"install": "--sync",   // -S
 		"remove":  "--remove", // -R
 	},
+	DryRun: []string{"--print"},
 	Opts: []string{
 		"--noconfirm",
 		"--noprogressbar",
+	},
+	InstallOpts: []string{
+		"--needed",
 		"--quiet",
 		"--refresh",    // -y
 		"--sysupgrade", // -u
 	},
-	InstallOpts: []string{
-		"--needed",
+	RemoveOpts: []string{
+		// "--unneeded",
 	},
 	// {
 	// 	Args: []string{"--quiet"},
@@ -32,9 +35,9 @@ var pacman = &Pm{
 		//fmt.Printf("pacman -Qqi %s\n", name)
 		// Search locally installed packages
 		cmd := exec.Command("pacman", "-Qqi", "--noconfirm", name)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+		//cmd.Stdout = os.Stdout
+		//cmd.Stderr = os.Stderr
+		//cmd.Stdin = os.Stdin
 		err := cmd.Run()
 		if err == nil {
 			return true, nil
@@ -70,9 +73,9 @@ var yaourt = &Pm{
 		//fmt.Printf("> yaourt -Qqi %s\n", name)
 		// Search locally installed packages
 		cmd := exec.Command("yaourt", "-Qqi", "--noconfirm", name)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+		//cmd.Stdout = os.Stdout
+		//cmd.Stderr = os.Stderr
+		//cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
 			// fmt.Fprintf(os.Stderr, "%s\n", err)
 			return false, nil

@@ -43,10 +43,11 @@ var (
 
 // Pm package manager
 type Pm struct {
-	Sudo        bool
+	Sudo        bool                   // Prefix with sudo if not root
 	Bin         string                 // Package manager binary path
-	Sub         []string               // Sub commands
+	Sub         []string               // Sub command and general options
 	Acts        map[string]interface{} // Command actions map
+	DryRun      []string               // Check mode, do not run if absent
 	Opts        []string               // Common pkg manager options
 	InstallOpts []string               // Install pkg manager options
 	RemoveOpts  []string               // Remove pkg manager options
@@ -74,65 +75,6 @@ func NewPm(name string) (*Pm, error) {
 	return m, nil
 }
 
-/*
-// Add ...
-func (m *Pm) Add(opt *Opt) ([]string, error) {
-	args := []string{}
-	// Check platform
-	if !opt.CheckOS() {
-		// continue
-		return args, nil
-	}
-	if !opt.CheckIf() {
-		// continue
-		return args, nil
-	}
-	// Check condition template
-	// pkgVarsMap := map[string]interface{}{
-	// 	// "DryRun":  DryRun,
-	// 	// "Verbose": Verbose,
-	// 	// "OS":      OS,
-	// }
-	// pkgFuncMap := template.FuncMap{
-	// 	// "hasOS": HasOSType,
-	// }
-	// for _, cond := range opt.If {
-	// 	str, err := TemplateData(cmd.Bin, cond, pkgVarsMap, pkgFuncMap)
-	// 	if err != nil {
-	// 		return args, err
-	// 	}
-	// 	stdout, stderr, status := ExecCommand(Shell, "-c", str)
-	// 	stdout = strings.TrimRight(stdout, "\n")
-	// 	stderr = strings.TrimRight(stderr, "\n")
-	// 	// if stdout != "" {
-	// 	// 	fmt.Printf("stdout: %s\n", stdout)
-	// 	// }
-	// 	if stderr != "" {
-	// 		fmt.Fprintf(os.Stderr, "stderr: %s\n", stderr)
-	// 	}
-	// 	if status != 0 {
-	// 		// continue
-	// 		return args, nil
-	// 	}
-	// }
-	// optArgs, err := tasks.NewSlice(opt.Args)
-	// if err != nil {
-	// 	return args, err
-	// }
-	// args = append(args, *optArgs...)
-	switch o := opt.Args.(type) {
-	case string:
-		args = append(args, o)
-	case []string:
-		args = append(args, o...)
-	default:
-		return args, fmt.Errorf("todo: opt args %+v", opt)
-	}
-	// return args, err
-	return args, nil
-}
-*/
-
 // Build command arguments
 func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	opts := []string{}
@@ -142,7 +84,7 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	// 	m.Opts = append(m.Opts, &Opt{Args: []string{"--noconfirm"}})
 	// }
 
-	// Sub command
+	// Sub command and general options
 	if len(m.Sub) > 0 {
 		opts = append(opts, m.Sub...)
 	}
@@ -167,8 +109,7 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 		return opts, fmt.Errorf("empty action %+v", m)
 	}
 	opts = append(opts, action)
-
-	// Action options
+	// Insert common and action specific options
 	opts = append(opts, m.Opts...)
 	switch a {
 	case "install":
@@ -176,29 +117,8 @@ func (m *Pm) Build(a string, in ...string) ([]string, error) {
 	case "remove":
 		opts = append(opts, m.RemoveOpts...)
 	}
-	// for _, a := range m.Opts {
-	// 	add, err := m.Add(a)
-	// 	if err != nil {
-	// 		return opts, err
-	// 	}
-	// 	if len(add) > 0 {
-	// 		opts = append(opts, add...)
-	// 	}
-	// }
-
-	// Insert package names and extra options
+	// Append package name and extra options
 	opts = append(opts, in...)
-
-	// After action
-	// for _, a := range m.ActOpts {
-	// 	add, err := m.Add(a)
-	// 	if err != nil {
-	// 		return opts, err
-	// 	}
-	// 	if len(add) > 0 {
-	// 		opts = append(opts, add...)
-	// 	}
-	// }
 	return opts, nil
 }
 
@@ -307,7 +227,22 @@ func execute(manager, action, name string, opts ...string) error {
 			return ErrExist
 		}
 	}
-	return execCommand(bin, opts...)
+	return execManagerCommand(m, bin, opts...)
+}
+
+func execManagerCommand(m *Pm, name string, args ...string) error {
+	// fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
+	if DryRun {
+		if len(m.DryRun) == 0 {
+			return nil
+		}
+		// Append check mode options and run
+		args = append(args, m.DryRun...)
+	}
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func execCommand(name string, args ...string) error {
