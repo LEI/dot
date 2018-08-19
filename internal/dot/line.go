@@ -22,6 +22,11 @@ func (l *Line) String() string {
 	return fmt.Sprintf("%s:%s", l.Target, l.Data)
 }
 
+// Type task name
+func (l *Line) Type() string {
+	return "line" // in file
+}
+
 // DoString string
 func (l *Line) DoString() string {
 	return fmt.Sprintf("echo '%s' >> %s", l.Data, l.Target)

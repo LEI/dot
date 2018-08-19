@@ -19,6 +19,11 @@ func (c *Copy) String() string {
 	return fmt.Sprintf("%s:%s", c.Source, c.Target)
 }
 
+// Type task name
+func (c *Copy) Type() string {
+	return "copy"
+}
+
 // DoString string
 func (c *Copy) DoString() string {
 	return fmt.Sprintf("cp %s %s", c.Source, c.Target)

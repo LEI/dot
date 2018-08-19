@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
@@ -26,11 +25,10 @@ func runTask(action string, i interface{}) error {
 	t := i.(dot.Tasker)
 	switch action {
 	case "install":
-		if err := doTask(t); err != nil && err != dot.ErrSkip {
-			return err
+		if err := doTask(t); err != nil && !dot.IsSkip(err) {
 		}
 	case "remove":
-		if err := undoTask(t); err != nil && err != dot.ErrSkip {
+		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
 			return err
 		}
 	default:
@@ -40,27 +38,18 @@ func runTask(action string, i interface{}) error {
 }
 
 func doTask(t dot.Tasker) error {
-	if !t.IsAction("install") {
-		fmt.Println("> Skip action")
-		return dot.ErrSkip
-	}
-	if err := t.CheckIf(); err != nil {
-		fmt.Println("> Skip If", err)
-		return err
-	}
-	if err := t.CheckOS(); err != nil {
-		// fmt.Println("> Skip OS", err)
+	if err := t.Check(); err != nil {
 		return err
 	}
 	err := t.Status()
-	ok := dot.IsOk(err)
+	ok := dot.IsExist(err)
 	if !ok && err != nil {
 		return err
 	}
 	str := t.DoString()
-	if str == "" {
-		fmt.Fprintln(os.Stderr, "warning: empty task string")
-	}
+	// if str == "" {
+	// 	fmt.Fprintln(os.Stderr, "warning: empty task string")
+	// }
 	if ok {
 		if str != "" && dotOpts.verbosity >= 2 {
 			fmt.Printf("# %s\n", str)
@@ -77,18 +66,18 @@ func doTask(t dot.Tasker) error {
 }
 
 func undoTask(t dot.Tasker) error {
-	if !t.IsAction("remove") {
-		return dot.ErrSkip
+	if !t.CheckAction("remove") {
+		return dot.ErrSkip // &dot.TaskError{Op: "remove", Task: t, Err: dot.ErrSkip}
 	}
 	err := t.Status()
-	ok := dot.IsOk(err)
+	ok := dot.IsExist(err)
 	if !ok && err != nil {
 		return err
 	}
 	str := t.UndoString()
-	if str == "" {
-		fmt.Fprintln(os.Stderr, "warning: empty task string")
-	}
+	// if str == "" {
+	// 	fmt.Fprintln(os.Stderr, "warning: empty task string")
+	// }
 	if !ok {
 		if str != "" && dotOpts.verbosity >= 2 {
 			fmt.Printf("# %s\n", str)

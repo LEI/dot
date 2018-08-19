@@ -54,11 +54,11 @@ type Role struct {
 	Deps []string `mapstructure:"dependencies"`
 	Pkgs []*Pkg   `mapstructure:"pkg"`
 
-	Dirs  []*Dir      `mapstructure:"dir"`
-	Files []*Copy     `mapstructure:"copy"`
-	Links []*Link     `mapstructure:"link"`
-	Tpls  []*Template `mapstructure:"template"`
-	Lines []*Line     `mapstructure:"line"`
+	Dirs  []*Dir  `mapstructure:"dir"`
+	Files []*Copy `mapstructure:"copy"`
+	Links []*Link `mapstructure:"link"`
+	Tpls  []*Tpl  `mapstructure:"template"`
+	Lines []*Line `mapstructure:"line"`
 
 	Install     []*Hook
 	PostInstall []*Hook `mapstructure:"post_install"`
@@ -105,10 +105,10 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 			i = &Pkg{Name: val}
 		case reflect.TypeOf((*Link)(nil)):
 			i = &Link{Source: val}
-		case reflect.TypeOf((*Template)(nil)):
-			i = &Template{Source: val}
+		case reflect.TypeOf((*Tpl)(nil)):
+			i = &Tpl{Source: val}
 		case reflect.TypeOf((*Line)(nil)):
-			i = &Template{Source: val}
+			i = &Tpl{Source: val}
 		}
 	case map[interface{}]interface{}:
 		switch t {
@@ -353,7 +353,7 @@ func (r *Role) ParseLinks(target string) error {
 
 // ParseTpls tasks
 func (r *Role) ParseTpls(target string) error {
-	templates := []*Template{}
+	templates := []*Tpl{}
 	for _, t := range r.Tpls {
 		t.Source = os.ExpandEnv(t.Source)
 		t.Target = os.ExpandEnv(t.Target)
@@ -506,6 +506,11 @@ func hasMeta(path string) bool {
 	return strings.ContainsAny(path, magicChars)
 }
 
+// StatusPkgs ...
+func (r *Role) StatusPkgs() error {
+	return checkTasks(r.taskPkgs())
+}
+
 // StatusDirs ...
 func (r *Role) StatusDirs() error {
 	return checkTasks(r.taskDirs())
@@ -531,19 +536,29 @@ func (r *Role) StatusLines() error {
 	return checkTasks(r.taskLines())
 }
 
+// Check all tasks are installed
 func checkTasks(s []Tasker) error {
-	ok := 0 // make([]bool, len(r.Tpls))
+	c := 0
 	for _, t := range s {
-		err := t.Status()
-		switch err {
-		case nil:
-		case ErrAlreadyExist:
-			ok++ // [i] = true
-		default:
-			return err
+		if err := t.Status(); err != nil {
+			if !IsExist(err) {
+				return err
+			}
+			c++
 		}
+		// terr, ok := err.(*TaskError)
+		// if ok {
+		// 	err = terr.Err
+		// }
+		// switch err {
+		// case nil:
+		// case ErrAlreadyExist:
+		// 	c++ // [i] = true
+		// default:
+		// 	return err
+		// }
 	}
-	if ok == len(s) {
+	if c == len(s) {
 		return ErrAlreadyExist
 	}
 	return nil
@@ -552,7 +567,7 @@ func checkTasks(s []Tasker) error {
 // Ok returns true if already installed
 func (r *Role) Ok() bool {
 	err := r.Status()
-	ok := IsOk(err)
+	ok := IsExist(err)
 	if err != nil && !ok {
 		fmt.Fprintf(os.Stderr, "warning while checking %s role status: %s\n", r.Name, err)
 	}
@@ -562,27 +577,39 @@ func (r *Role) Ok() bool {
 // Status of role tasks
 func (r *Role) Status() error {
 	// err != nil || err != ErrAlreadyExist
-	// if err != nil && !IsOk(err) {
+	// if err != nil && !IsExist(err) {
 	// 	return err
 	// } else if err == nil {
 	// 	return nil
 	// }
-	if err := r.StatusDirs(); !IsOk(err) {
+	if err := r.StatusPkgs(); !IsExist(err) {
 		return err
 	}
-	if err := r.StatusFiles(); !IsOk(err) {
+	if err := r.StatusDirs(); !IsExist(err) {
 		return err
 	}
-	if err := r.StatusLinks(); !IsOk(err) {
+	if err := r.StatusFiles(); !IsExist(err) {
 		return err
 	}
-	if err := r.StatusTpls(); !IsOk(err) {
+	if err := r.StatusLinks(); !IsExist(err) {
 		return err
 	}
-	if err := r.StatusLines(); !IsOk(err) {
+	if err := r.StatusTpls(); !IsExist(err) {
+		return err
+	}
+	if err := r.StatusLines(); !IsExist(err) {
 		return err
 	}
 	return ErrAlreadyExist
+}
+
+// taskPkgs ...
+func (r *Role) taskPkgs() []Tasker {
+	s := make([]Tasker, len(r.Pkgs))
+	for i := range r.Pkgs {
+		s[i] = r.Pkgs[i]
+	}
+	return s
 }
 
 // taskDirs ...

@@ -29,6 +29,11 @@ func (l *Link) String() string {
 	return fmt.Sprintf("%s:%s", l.Source, l.Target)
 }
 
+// Type task name
+func (l *Link) Type() string {
+	return "link" // symbolic
+}
+
 // DoString string
 func (l *Link) DoString() string {
 	return fmt.Sprintf("ln -s %s %s", l.Source, l.Target)

@@ -1,9 +1,10 @@
 // +build mage
+
+package main
+
 // https://github.com/gohugoio/hugo/blob/master/magefile.go
 // https://github.com/restic/restic/blob/master/build.go
 // https://github.com/oxequa/realize
-
-package main
 
 import (
 	"errors"
@@ -38,8 +39,8 @@ var (
 	goexe = "go"
 
 	dockerCompose = RunVCmd("docker-compose")
-	testRun       = sh.RunCmd(goexe, "test")
-	testRunV      = RunVCmd(goexe, "test")
+	goTest        = sh.RunCmd(goexe, "test")
+	goTestV       = RunVCmd(goexe, "test")
 )
 
 func init() {
@@ -85,7 +86,7 @@ func Check() {
 
 // func test(args ...string) error {
 // 	args = append([]string{"-tags", buildTags()}, args...)
-// 	return testRun(args...)
+// 	return goTest(args...)
 // }
 
 // func testV(args ...string) error {
@@ -93,7 +94,7 @@ func Check() {
 // 	if mg.Verbose() {
 // 		args = append([]string{"-v"}, args...)
 // 	}
-// 	return testRunV(args...)
+// 	return goTestV(args...)
 // }
 
 // Run go tests
@@ -102,13 +103,13 @@ func Test() error {
 	// if mg.Verbose() {
 	// 	verbose = "-v"
 	// }
-	// return testRun(verbose, "./...")
-	return testRun("-v", "./...")
+	// return goTest(verbose, "./...")
+	return goTest("-v", "./...")
 }
 
 // Run go tests with race detector
 func TestRace() error {
-	return testRun("-v", "-race", "./...")
+	return goTest("-v", "-race", "./...")
 }
 
 // Run test coverage
@@ -126,7 +127,7 @@ func Coverage() error {
 	if mg.Verbose() {
 		verbose = "-v"
 	}
-	return testRunV(verbose, "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
+	return goTestV(verbose, "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
 }
 
 // Run go vet

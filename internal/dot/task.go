@@ -9,14 +9,15 @@ import (
 
 // Tasker interface
 type Tasker interface {
-	IsAction(string) bool
 	String() string
+	Type() string
 	DoString() string
 	UndoString() string
 	Status() error
 	// Sync() error
 	Do() error
 	Undo() error
+	CheckAction(string) bool
 	CheckIf() error
 	CheckOS() error
 	// GetOS() []string
@@ -30,25 +31,33 @@ type Task struct {
 	OS    []string `mapstructure:",omitempty"`
 }
 
-// IsAction task
-func (t *Task) IsAction(state string) bool {
+// Check conditions
+func (t *Task) Check(action string) error {
+	if err := t.CheckAction(action); err != nil {
+		return err
+	}
+	if err := t.CheckIf(); err != nil {
+		fmt.Println("> Skip If", err)
+		return err
+	}
+	if err := t.CheckOS(); err != nil {
+		fmt.Println("> Skip OS", err)
+		return err
+	}
+	return nil
+}
+
+// CheckAction task
+func (t *Task) CheckAction(name string) error {
 	if len(t.State) == 0 {
 		// FIXME: detect if Task.State is ignored
 		// e.g. private Task.state or just omitted
-		return true
+		return nil
 	}
-	return t.State == state
-}
-
-// IsOk status
-func IsOk(err error) bool {
-	return err == ErrAlreadyExist
-}
-
-// exists checks if a file is present
-func exists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil || os.IsExist(err)
+	if t.State != name {
+		return ErrSkip
+	}
+	return nil
 }
 
 // // GetOS ...
@@ -63,7 +72,7 @@ func (t *Task) CheckOS() error {
 	}
 	ok := ostype.Has(t.OS...)
 	if !ok {
-		return ErrSkip
+		return ErrSkip // &TaskError{"check os", t, ErrSkip}
 	}
 	return nil
 }
@@ -82,8 +91,7 @@ func (t *Task) CheckIf() error {
 	// 	"hasOS": ostype.Has,
 	// }
 	if len(t.If) > 0 {
-		fmt.Println("TODO (skip) If:", t.If)
-		return ErrSkip
+		return ErrSkip // &TaskError{"check if", t, ErrSkip}
 	}
 	// https://golang.org/pkg/text/template/#hdr-Functions
 	// for _, cond := range t.If {
@@ -106,4 +114,45 @@ func (t *Task) CheckIf() error {
 	// 	}
 	// }
 	return nil
+}
+
+// IsExist unwraps task error
+func IsExist(err error) bool {
+	if err == nil {
+		return false
+	}
+	// if terr, ok := err.(*TaskError); ok {
+	// 	err = terr
+	// 	// if terr.Task err == ErrNotEmpty {}
+	// }
+	return err == ErrAlreadyExist
+}
+
+// IsNotExist error
+func IsNotExist(err error) bool {
+	return !IsExist(err)
+}
+
+// IsSkip error
+func IsSkip(err error) bool {
+	if err == nil {
+		return false
+	}
+	terr, ok := err.(*TaskError)
+	if ok {
+		// terr.Op == "undo dir"
+		if terr.Err == ErrNotEmpty {
+			// Skip rm empty directory
+			err = ErrSkip
+		} else {
+			err = terr.Err
+		}
+	}
+	return err == ErrSkip
+}
+
+// exists checks if a file is present
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
 }
