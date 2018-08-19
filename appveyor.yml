@@ -8,6 +8,7 @@ init:
   - go env
 
 environment:
+  CGO_ENABLED: 0
   GOPATH: C:\GOPATH\
   # DOT_BUILD_TAGS:
 
@@ -15,16 +16,17 @@ environment:
 clone_folder: C:\GOPATH\src\github.com\LEI\dot
 
 install:
-  - choco install docker-compose
   # - gem install asciidoctor
   # - pip install docutils
   - go get github.com/magefile/mage
 
 build_script:
-  # - mage vendor testRace
-  - mage -v # vendor check install
+  - mage vendor testRace
+  - mage -v check
+  - mage install
   # - hugo -s docs/
   # - hugo --renderToMemory -s docs/
   - dot --version
   # - dot ls
+  - choco install docker-compose
   - OS=windows mage -v docker
