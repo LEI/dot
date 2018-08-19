@@ -1,31 +1,14 @@
 package dot
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 )
 
 var (
-	// ErrDirNotEmpty ...
-	ErrDirNotEmpty = errors.New("directory not empty")
-
 	defaultDirMode os.FileMode = 0755
 )
-
-// // DirError type
-// type DirError struct {
-// 	// taskError
-// 	Action string
-// 	Path   string
-// 	Err    error
-// 	skip   bool
-// }
-
-// func (e *DirError) Error() string {
-// 	return e.Action + " " + e.Path + ": " + e.Err.Error()
-// }
 
 // Dir task
 type Dir struct {
@@ -50,7 +33,7 @@ func (d *Dir) UndoString() string {
 // Status check task
 func (d *Dir) Status() error {
 	if dirExists(d.Path) {
-		return ErrAlreadyExist
+		return &TaskError{"check dir", d, ErrAlreadyExist}
 	}
 	// fi, err := os.Stat(d.Path)
 	// if err != nil && os.IsExist(err) {
@@ -64,52 +47,52 @@ func (d *Dir) Status() error {
 
 // Do task
 func (d *Dir) Do() error {
-	// if err := d.Status(); err != nil {
-	// 	if err == ErrAlreadyExist {
-	// 		return nil
-	// 	}
-	// 	return err
-	// }
 	if err := d.Status(); err != nil {
-		switch err {
+		terr, ok := err.(*TaskError)
+		if !ok {
+			return err
+		}
+		switch terr {
 		case ErrAlreadyExist, ErrSkip:
 			return nil
 		default:
 			return err
 		}
 	}
-	// if err := os.MkdirAll(d.Path, defaultDirMode); err != nil {
-	// 	return err
-	// }
-	// return nil
-	return os.MkdirAll(d.Path, defaultDirMode)
+	if err := os.MkdirAll(d.Path, defaultDirMode); err != nil {
+		return &TaskError{"mkdir", d, err}
+	}
+	return nil
 }
 
 // Undo task
 func (d *Dir) Undo() error {
 	if err := d.Status(); err != nil {
-		switch err {
+		terr, ok := err.(*TaskError)
+		if !ok {
+			return err
+		}
+		switch terr {
+		case ErrAlreadyExist:
+		// continue
 		case ErrSkip:
 			return nil
-		case ErrAlreadyExist:
-			// continue
 		default:
 			return err
 		}
 	}
-	// if err := d.Status(); err != ErrAlreadyExist {
-	// 	return err
-	// }
 	ok, err := dirIsEmpty(d.Path)
 	if err != nil {
 		return err // &DirError{"remove", d.Path, err}
 	}
 	if !ok {
-		// return &taskError{Detail: d, Format: "", Message: ""}
-		return ErrSkip // &DirError{"remove", d.Path, ErrDirNotEmpty, true}
+		return &TaskError{"undo dir", d, ErrNotEmpty}
 	}
 	// TODO dirOpts.empty
-	return os.Remove(d.Path)
+	if err := os.Remove(d.Path); err != nil {
+		return &TaskError{"rmdir", d, err}
+	}
+	return nil
 }
 
 // dirExists returns true if the name exists and is a directory.
