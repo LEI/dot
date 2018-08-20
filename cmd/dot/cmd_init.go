@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -50,5 +52,5 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Verbosef("the repository. Losing your password means that your data is\n")
 	// Verbosef("irrecoverably lost.\n")
 
-	return nil
+	return fmt.Errorf("not implemented")
 }

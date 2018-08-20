@@ -31,6 +31,7 @@ var (
 		"apk":     apk,
 		"apt-get": aptGet,
 		"brew":    brew,
+		"choco":   choco,
 		"cask":    brewCask,
 		"pacman":  pacman,
 		"yaourt":  yaourt,
@@ -205,11 +206,14 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if m == nil {
+		return false, fmt.Errorf(manager, "nil pkg manager", manager)
+	}
+	fmt.Println("Has?", m, pkgs)
 	if m.Has == nil {
 		return false, nil
 		// ErrUnknown = fmt.Errorf("unable to determine if package is present")
 	}
-	fmt.Println("Has?", m, pkgs)
 	return m.Has(pkgs)
 }
 
