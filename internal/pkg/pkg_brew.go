@@ -37,7 +37,7 @@ var brew = &Pm{
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
 		err := cmd.Run()
-		return err == nil, err
+		return err == nil, nil // err
 	},
 }
 
@@ -53,6 +53,6 @@ var brewCask = &Pm{
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
 		err := cmd.Run()
-		return err == nil, err
+		return err == nil, nil // err
 	},
 }
