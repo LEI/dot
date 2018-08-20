@@ -167,7 +167,15 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 		// Stop here if the target does not exist
 		return false, nil
 	}
+
 	// TODO compare file contents
+	content, err := parseTpl(src, data)
+	if err != nil {
+		return false, err
+	}
+	fmt.Println("TEMPLATE EXISTS, DIFF:")
+	printDiff(dst, content)
+
 	return true, nil
 }
 
