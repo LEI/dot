@@ -23,17 +23,17 @@ func preRunTask(cmd *cobra.Command, args []string) error {
 
 func runTask(action string, i interface{}) error {
 	t := i.(dot.Tasker)
-	act := action + " " + t.Type() // Task Error
+	// act := action + " " + t.Type()
 	switch action {
 	case "install":
 		if err := doTask(t); err != nil && !dot.IsSkip(err) {
 			// act := t.DoString()
-			return fmt.Errorf("%s: %s", act, err)
+			return err // fmt.Errorf("%s: %s", act, err)
 		}
 	case "remove":
 		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
 			// act := t.UndoString()
-			return fmt.Errorf("%s: %s", act, err)
+			return err // fmt.Errorf("%s: %s", act, err)
 		}
 	default:
 		return fmt.Errorf("%s: unknown action", action)
