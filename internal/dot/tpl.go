@@ -83,7 +83,7 @@ func (t *Tpl) Status() error {
 	if err != nil {
 		return err
 	}
-	exists, err := templateExists(t.Source, t.Target, data)
+	exists, err := tplExists(t.Source, t.Target, data)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (t *Tpl) Data() (map[string]interface{}, error) {
 }
 
 // templateExists returns true if the template is the same.
-func templateExists(src, dst string, data map[string]interface{}) (bool, error) {
+func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 	if !exists(src) {
 		return false, fmt.Errorf("%s: no such file or directory (to tpl %s)", src, dst)
 	}
