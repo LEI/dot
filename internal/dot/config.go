@@ -117,7 +117,7 @@ func ReadConfigFile(path string) (map[string]interface{}, error) {
 	if err != nil {
 		return data, err
 	}
-	// fmt.Println("Loaded config file", path)
+	fmt.Println("## Loaded config file", path)
 	cfgType := detectType(path)
 	switch cfgType {
 	case "toml":
