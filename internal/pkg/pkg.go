@@ -306,7 +306,7 @@ func Init(manager, action string, pkgs []string, opts ...string) (string, []stri
 	if err != nil {
 		return "", []string{}, err
 	}
-	// input := strings.Split(name, " ")
+	// input := strings.Fields(name)
 	// if len(input) == 0 { ... }
 	//opts = append(pkgs, opts...)
 	opts, err = m.BuildOptions(action, pkgs, opts...)
