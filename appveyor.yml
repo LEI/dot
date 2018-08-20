@@ -27,8 +27,6 @@ build_script:
   - mage vendor # testRace
   - mage -v check
   - mage install
-  # - hugo -s docs/
-  # - hugo --renderToMemory -s docs/
   - dot --version
   - dot ls
   # - OS=windows mage -v docker
