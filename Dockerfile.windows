@@ -102,3 +102,5 @@ WORKDIR C:\go\src\github.com\LEI\dot
 
 # Copy the sources into the container
 COPY . .
+
+RUN go get github.com/LEI/dot/cmd/dot

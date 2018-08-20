@@ -1,6 +1,6 @@
 # https://github.com/gohugoio/hugo/blob/master/appveyor.yml
 
-image: Visual Studio 2017
+# image: Visual Studio 2017
 
 init:
   - set PATH=%PATH%;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%GOPATH%\bin
@@ -17,8 +17,9 @@ environment:
 clone_folder: C:\GOPATH\src\github.com\LEI\dot
 
 install:
-  - choco --help
-  - choco install docker-compose
+  - choco install --help
+  # - DryRun: --noop / --what-if
+  - choco install --yes --no-progress docker-compose
   # - gem install asciidoctor
   # - pip install docutils
   - go get github.com/magefile/mage
