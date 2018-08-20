@@ -24,9 +24,6 @@ var (
 	// ErrExist ...
 	ErrExist = fmt.Errorf("package already present")
 
-	// ErrUnknown ...
-	// ErrUnknown = fmt.Errorf("unable to determine if package is present")
-
 	// Manager pkg
 	Manager *Pm
 
@@ -209,7 +206,8 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 		return false, err
 	}
 	if m.Has == nil {
-		return false, nil // ErrUnknown
+		return false, nil
+		// ErrUnknown = fmt.Errorf("unable to determine if package is present")
 	}
 	return m.Has(pkgs)
 }
