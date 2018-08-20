@@ -28,7 +28,7 @@ build_script:
   - dot --version
   - dot ls
   - dot sync --verbose
-  - dot install --packages --verbose
+  - dot install --verbose || dot install --packages --verbose
   - mage windows
   # - choco install --yes --no-progress docker-compose
   # - OS=windows mage -v docker

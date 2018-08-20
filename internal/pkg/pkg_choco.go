@@ -2,7 +2,7 @@ package pkg
 
 // https://github.com/chocolatey/choco/wiki/CommandsReference
 var choco = &Pm{
-	Sudo:    true,
+	// Sudo:    false,
 	Bin:     "choco",
 	Install: "install",
 	Remove:  "uninstall",
