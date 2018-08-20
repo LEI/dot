@@ -31,9 +31,9 @@ services:
       - DOT=$$GOPATH/src/github.com/LEI/dot
     # image: LEI/dot-$OS
 
-# HNS failed with error : The parameter is incorrect.
-# Get-NetNat | Remove-NetNat
-networks:
-  default:
-    external:
-      name: nat
+# # HNS failed with error : The parameter is incorrect.
+# # Get-NetNat | Remove-NetNat
+# networks:
+#   default:
+#     external:
+#       name: nat
