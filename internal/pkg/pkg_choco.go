@@ -1,7 +1,8 @@
 package pkg
 
-// https://github.com/chocolatey/choco/wiki/CommandsInstall
-// https://github.com/chocolatey/choco/wiki/CommandsUninstall
+import "os/exec"
+
+// https://github.com/chocolatey/choco/wiki/CommandsReference
 var choco = &Pm{
 	Sudo:    true,
 	Bin:     "choco",
@@ -17,6 +18,12 @@ var choco = &Pm{
 	// 	return nil
 	// },
 	Has: func(pkgs []string) (bool, error) {
-		return false, nil
+		// choco info
+		cmd := exec.Command("choco", append([]string{"search", "--exact"}, pkgs...)...)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
+		err := cmd.Run()
+		return err == nil, nil
 	},
 }
