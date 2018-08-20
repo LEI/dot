@@ -164,11 +164,13 @@ func Detect() (m *Pm) {
 	case "darwin":
 		m = managers["brew"]
 	case "linux":
-		switch true {
+		switch {
 		case executable("apk"):
 			m = managers["apk"]
 		case executable("apt-get"):
 			m = managers["apt-get"]
+		case runtime.GOOS == "windows": // executable("choco"):
+			m = managers["choco"]
 		case executable("pacman"):
 			m = managers["pacman"]
 		case executable("yum"):
