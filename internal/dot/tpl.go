@@ -1,5 +1,7 @@
 package dot
 
+// https://github.com/LEI/dot/blob/go-flags/dotfile/template.go
+
 import (
 	"bytes"
 	"fmt"
