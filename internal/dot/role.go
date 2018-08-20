@@ -93,6 +93,7 @@ func NewRole(path string) (*Role, error) {
 	return rc.Role, err
 }
 
+// https://github.com/ernesto-jimenez/gogen/tree/master/cmd/gounmarshalmap
 func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
 	switch val := i.(type) {
 	case string:
