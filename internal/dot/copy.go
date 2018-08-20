@@ -36,11 +36,11 @@ func (c *Copy) UndoString() string {
 
 // Status check task
 func (c *Copy) Status() error {
-	ok, err := copyExists(c.Source, c.Target)
+	exists, err := copyExists(c.Source, c.Target)
 	if err != nil {
 		return err
 	}
-	if ok {
+	if exists {
 		return ErrAlreadyExist
 	}
 	return nil

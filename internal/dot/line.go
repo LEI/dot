@@ -39,11 +39,11 @@ func (l *Line) UndoString() string {
 
 // Status check task
 func (l *Line) Status() error {
-	ok, err := lineExists(l.Target, l.Data)
+	exists, err := lineExists(l.Target, l.Data)
 	if err != nil {
 		return err
 	}
-	if ok {
+	if exists {
 		return ErrAlreadyExist
 	}
 	return nil

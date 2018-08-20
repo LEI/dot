@@ -1,6 +1,7 @@
 package dot
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/LEI/dot/internal/ostype"
@@ -11,7 +12,7 @@ type Tasker interface {
 	String() string
 	Type() string
 	Check(string) error
-	CheckAction(string) error
+	CheckAct() error
 	CheckIf() error
 	CheckOS() error
 	// GetOS() []string
@@ -29,11 +30,14 @@ type Task struct {
 	Action string   `mapstructure:",omitempty"` // install, remove
 	If     []string `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
+
+	current string // current action
 }
 
 // Check conditions
 func (t *Task) Check(action string) error {
-	if err := t.CheckAction(action); err != nil {
+	t.current = action
+	if err := t.CheckAction(); err != nil {
 		// fmt.Println("> Skip "+action, t, err)
 		return err
 	}
@@ -49,13 +53,16 @@ func (t *Task) Check(action string) error {
 }
 
 // CheckAction task
-func (t *Task) CheckAction(name string) error {
+func (t *Task) CheckAction() error {
+	if len(t.current) == 0 {
+		return fmt.Errorf("unable to check empty action")
+	}
 	if len(t.Action) == 0 {
 		// FIXME: detect if Task.Action is ignored
 		// e.g. private Task.state or just omitted
 		return nil
 	}
-	if t.Action != name {
+	if t.Action != t.current {
 		return ErrSkip
 	}
 	return nil

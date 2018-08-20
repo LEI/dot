@@ -88,11 +88,11 @@ func (d *Dir) Undo() error {
 			return err
 		}
 	}
-	ok, err := dirIsEmpty(d.Path)
+	exists, err := dirIsEmpty(d.Path)
 	if err != nil {
 		return err // &DirError{"remove", d.Path, err}
 	}
-	if !ok {
+	if !exists {
 		// return &OpError{"undo dir", d, ErrNotEmpty}
 		return &os.PathError{Op: "rmdir", Path: d.Path, Err: ErrNotEmpty}
 	}

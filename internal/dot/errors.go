@@ -8,14 +8,20 @@ import (
 )
 
 var (
-	// ErrAlreadyExist ...
+	// ErrAlreadyExist used when task is installed
 	ErrAlreadyExist = errors.New("already exists")
-
-	// ErrNotEmpty ...
-	ErrNotEmpty = errors.New("not empty")
 
 	// ErrNotExist ...
 	ErrNotExist = errors.New("does not exists")
+
+	// ErrFileExist ...
+	ErrFileExist = errors.New("file exists")
+
+	// ErrLinkExist ...
+	ErrLinkExist = errors.New("link exists")
+
+	// ErrNotEmpty ...
+	ErrNotEmpty = errors.New("not empty")
 
 	// ErrSkip ...
 	ErrSkip = errors.New("skip task")
@@ -69,7 +75,14 @@ func IsExist(err error) bool {
 	// 	err = terr
 	// 	// if terr.Task err == ErrNotEmpty {}
 	// }
-	return err == ErrAlreadyExist
+	switch err {
+	case ErrAlreadyExist:
+		return true
+	// case ErrFileExist, ErrLinkExist:
+	// 	return true
+	default:
+		return false
+	}
 }
 
 // IsNotExist error
@@ -105,6 +118,8 @@ func IsSkip(err error) bool {
 	// }
 	switch err {
 	case ErrNotEmpty, ErrSkip:
+		return true
+	case ErrFileExist, ErrLinkExist:
 		return true
 	default:
 		return false
