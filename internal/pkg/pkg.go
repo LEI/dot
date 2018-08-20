@@ -249,10 +249,13 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	}
 	for k, v := range m.Env {
 		o := os.Getenv(k)
-		if o != v {
-			defer os.Setenv(k, o)
+		if o == v {
+			continue
 		}
-		os.Setenv(k, v)
+		defer os.Setenv(k, o)
+		if err := os.Setenv(k, v); err != nil {
+			return err
+		}
 	}
 	if action == "install" && m.Has != nil {
 		ok, err := m.Has(m, pkgs)

@@ -22,9 +22,9 @@ var choco = &Pm{
 	// 	return nil
 	// },
 	Has: func(m *Pm, pkgs []string) (bool, error) {
-		// choco info
-		fmt.Printf("$ choco search --exact %s\n", pkgs)
-		opts := []string{"search", "--exact"}
+		fmt.Printf("$ choco info %s\n", pkgs)
+		// opts := []string{"search", "--exact", "--local-only"}
+		opts := []string{"info", "--local-only"}
 		opts = append(opts, m.Opts...)
 		opts = append(opts, pkgs...)
 		cmd := exec.Command(m.Bin, opts...)
