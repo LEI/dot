@@ -44,6 +44,7 @@ func doTask(t dot.Tasker) error {
 	err := t.Status()
 	ok := dot.IsExist(err)
 	if !ok && err != nil {
+
 		return err
 	}
 	str := t.DoString()

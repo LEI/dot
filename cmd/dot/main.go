@@ -140,11 +140,21 @@ func setupGlobalConfig(cfg *dot.Config) error {
 	}
 	// Filter roles by name
 	if len(dotOpts.RoleFilter) > 0 {
-		cfg.FilterRoles(dotOpts.RoleFilter)
+		roles = filterRoles(roles, dotOpts.RoleFilter)
+		// tmp := roles[:0] // []*dot.Role{}
+		// for _, r := range roles {
+		// 	for _, s := range dotOpts.RoleFilter {
+		// 		if s == r.Name {
+		// 			tmp = append(tmp, r)
+		// 			break
+		// 		}
+		// 	}
+		// }
+		// roles = tmp
 	}
 	if len(roles) == 0 {
 		msg := "nothing to do"
-		msg += fmt.Sprintf(" with %d roles", len(cfg.Roles))
+		msg += fmt.Sprintf(" with %d roles", len(roles))
 		if len(dotOpts.RoleFilter) > 0 {
 			msg += fmt.Sprintf(" and filter %s", dotOpts.RoleFilter)
 		}
@@ -156,6 +166,20 @@ func setupGlobalConfig(cfg *dot.Config) error {
 	}
 	dotConfig = cfg
 	return nil
+}
+
+// filterRoles by name
+func filterRoles(roles []*dot.Role, names []string) []*dot.Role {
+	res := roles[:0]
+	for _, r := range roles {
+		for _, s := range names {
+			if s == r.Name {
+				res = append(res, r)
+				break
+			}
+		}
+	}
+	return res
 }
 
 func main() {

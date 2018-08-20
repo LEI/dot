@@ -278,7 +278,7 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 }
 
 func execCommand(name string, args ...string) error {
-	// fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
+	fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
 	if DryRun {
 		return nil
 	}

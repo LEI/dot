@@ -398,22 +398,17 @@ func testDockerOS(list ...string) error {
 	if err := buildDist("linux", goarch); err != nil {
 		return err
 	}
-	for _, platform := range list {
-		if platform != "windows" {
-			continue
-		}
-		if err := buildDist("windows", goarch); err != nil {
-			return err
-		}
-		break
-	}
+	// for _, platform := range list {
+	// 	if platform != "windows" {
+	// 		continue
+	// 	}
+	// 	if err := buildDist("windows", goarch); err != nil {
+	// 		return err
+	// 	}
+	// 	break
+	// }
 	defer os.Setenv("OS", envOS)
 	for _, platform := range list {
-		if platform == "windows" {
-			if err := buildDist("windows", goarch); err != nil {
-				return err
-			}
-		}
 		os.Setenv("OS", platform)
 		if err := testDockerCompose("test_os", "test_os"); err != nil {
 			return err

@@ -26,9 +26,9 @@ type Tasker interface {
 // Task struct
 type Task struct {
 	Tasker
-	State string   `mapstructure:"action,omitempty"` // install, remove
-	If    []string `mapstructure:",omitempty"`
-	OS    []string `mapstructure:",omitempty"`
+	Action string   `mapstructure:",omitempty"` // install, remove
+	If     []string `mapstructure:",omitempty"`
+	OS     []string `mapstructure:",omitempty"`
 }
 
 // Check conditions
@@ -50,12 +50,12 @@ func (t *Task) Check(action string) error {
 
 // CheckAction task
 func (t *Task) CheckAction(name string) error {
-	if len(t.State) == 0 {
-		// FIXME: detect if Task.State is ignored
+	if len(t.Action) == 0 {
+		// FIXME: detect if Task.Action is ignored
 		// e.g. private Task.state or just omitted
 		return nil
 	}
-	if t.State != name {
+	if t.Action != name {
 		return ErrSkip
 	}
 	return nil

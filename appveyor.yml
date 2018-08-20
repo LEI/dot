@@ -28,7 +28,7 @@ build_script:
   # - hugo -s docs/
   # - hugo --renderToMemory -s docs/
   - dot --version
-  # - dot ls
+  - dot ls
   - choco install docker-compose
   - mage -v docker
   - dot --install --packages --verbose
