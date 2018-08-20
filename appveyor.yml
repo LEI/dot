@@ -29,6 +29,7 @@ build_script:
   - mage install
   - dot --version
   - dot ls
+  - dot sync --verbose
   - dot install --packages --verbose
   - mage windows
   # - OS=windows mage -v docker
