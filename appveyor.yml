@@ -31,7 +31,8 @@ build_script:
   - mage vendor # testRace
   - mage -v check
   - mage install
-  - echo %USERPROFILE% # - $null > C:\home\.dotnc
+  # - echo %USERPROFILE%
+  - $null > C:\Users\appveyor
   - dot --version
   - dot ls
   - dot sync --verbose
