@@ -26,6 +26,10 @@ matrix:
 #     # - $GOPATH/src/github.com/LEI/dot/dist
 #     - $GOPATH/src/github.com/LEI/dot/vendor
 
+branches:
+  only:
+  - master
+
 stages:
   - build
   - test

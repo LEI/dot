@@ -48,7 +48,7 @@ func (l *Link) UndoString() string {
 func (l *Link) Status() error {
 	ok, err := linkExists(l.Source, l.Target)
 	if err != nil {
-		return nil
+		return err
 	}
 	if ok {
 		return ErrAlreadyExist
@@ -95,7 +95,6 @@ func linkExists(src, dst string) (bool, error) {
 		return false, nil
 	}
 	fi, err := os.Lstat(dst)
-	fmt.Printf("os.Lstat(dst) = '%v' %+v\n", fi != nil, err)
 	if err != nil {
 		return false, err
 	}
@@ -104,7 +103,6 @@ func linkExists(src, dst string) (bool, error) {
 		// return false, &os.PathError{Op: "target link", Path: src, Err: fmt.Errorf("not a symlink")}
 	}
 	real, err := os.Readlink(dst)
-	fmt.Printf("os.Readlink(dst) = '%s' %+v\n", real, err)
 	if err != nil {
 		return false, err
 	}
