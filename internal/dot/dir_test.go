@@ -1,7 +1,6 @@
 package dot
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -64,7 +63,7 @@ func TestDoDir(t *testing.T) {
 			// if err := d.Check(); err != nil {
 			// 	t.Fatal(err)
 			// }
-			fmt.Println(d.DoString())
+			// fmt.Println(d.DoString())
 			if err := d.Do(); err != nil {
 				t.Fatal(err)
 			}
@@ -111,7 +110,7 @@ func TestUndoDir(t *testing.T) {
 			// if err := d.Check(); err != nil {
 			// 	t.Fatal(err)
 			// }
-			fmt.Println(d.UndoString())
+			// fmt.Println(d.UndoString())
 			if err := d.Undo(); err != nil {
 				t.Fatal(err)
 			}
