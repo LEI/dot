@@ -32,7 +32,7 @@ build_script:
   - mage -v check
   - mage install
   # - echo %USERPROFILE%
-  - $null > C:\Users\appveyor\.dotnc
+  - touch C:\Users\appveyor\.dotnc
   - dot --version
   - dot ls
   - dot sync --verbose
