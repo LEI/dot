@@ -112,12 +112,12 @@ func LoadConfig(path string) (Config, error) {
 
 // ReadConfigFile ...
 func ReadConfigFile(path string) (map[string]interface{}, error) {
-	// fmt.Println("Loading config file", path)
 	var data map[string]interface{}
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return data, err
 	}
+	// fmt.Println("Loaded config file", path)
 	cfgType := detectType(path)
 	switch cfgType {
 	case "toml":

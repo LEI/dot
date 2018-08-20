@@ -54,8 +54,8 @@ type Pm struct {
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
 	Env  map[string]string
-	Init func() error                 // Install or prepare bin
-	Has  func([]string) (bool, error) // Search local packages
+	Init func() error                      // Install or prepare bin
+	Has  func(*Pm, []string) (bool, error) // Search local packages
 	done bool
 }
 
@@ -209,12 +209,11 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 	if m == nil {
 		return false, fmt.Errorf(manager, "nil pkg manager", manager)
 	}
-	fmt.Println("Has?", m, pkgs)
 	if m.Has == nil {
 		return false, nil
 		// ErrUnknown = fmt.Errorf("unable to determine if package is present")
 	}
-	return m.Has(pkgs)
+	return m.Has(m, pkgs)
 }
 
 // Install ...
@@ -256,7 +255,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 		os.Setenv(k, v)
 	}
 	if action == "install" && m.Has != nil {
-		ok, err := m.Has(pkgs)
+		ok, err := m.Has(m, pkgs)
 		if err != nil {
 			return err
 		}
