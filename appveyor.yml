@@ -11,7 +11,7 @@ environment:
   # CGO_ENABLED: 0 # Required (1) for go test -race
   GOPATH: C:\GOPATH\
   # DOT_BUILD_TAGS:
-  OS: windows
+  # OS: windows
 
 # clones and cd's to path
 clone_folder: C:\GOPATH\src\github.com\LEI\dot
@@ -30,8 +30,12 @@ build_script:
   - mage install
   - dot --version
   - dot ls
-  # - OS=windows mage -v docker
-  - mage windows
-  - docker-compose build test_os
-  - docker-compose up test_os
   - dot --install --packages --verbose
+  - mage windows
+  # - OS=windows mage -v docker
+  # - docker-compose build test_os
+  # - docker-compose up test_os
+
+# artifacts:
+#   - path: .\dist\windows_amd64\dot
+#     name: "Dot Windows binary"

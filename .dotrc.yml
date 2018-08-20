@@ -50,17 +50,6 @@ roles:
     os: ["darwin"]
     dependencies: ["gpg"]
 
-  - name: usql
-    url: "https://github.com/LEI/dot-usql"
-    os: ["darwin"]
-
-  - name: micro
-    url: "https://github.com/LEI/dot-micro"
-    os: ["darwin"]
-
-  - name: htop
-    url: "https://github.com/LEI/dot-htop"
-
   - name: node
     url: "https://github.com/LEI/dot-node"
 
@@ -76,3 +65,14 @@ roles:
   - name: rust
     url: "https://github.com/LEI/dot-rust"
     os: ["!alpine"]
+
+  - name: micro
+    url: "https://github.com/LEI/dot-micro"
+    os: ["darwin"]
+
+  - name: htop
+    url: "https://github.com/LEI/dot-htop"
+
+  - name: usql
+    url: "https://github.com/LEI/dot-usql"
+    os: ["darwin"]
