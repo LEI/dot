@@ -17,6 +17,8 @@ import (
 )
 
 var (
+	defaultTemplateExt = "tpl"
+
 	tplFuncMap = template.FuncMap{
 		// https://github.com/hashicorp/consul-template/blob/de2ebf4/template_functions.go#L727-L901
 		"add": func(a, b int) int {
@@ -55,6 +57,7 @@ type Tpl struct {
 	Task        `mapstructure:",squash"` // Action, If, OS
 	Source      string
 	Target      string
+	Ext         string // Template extenstion (default: tpl)
 	Env         map[string]string
 	Vars        map[string]interface{}
 	IncludeVars string `mapstructure:"include_vars"`
@@ -67,6 +70,17 @@ func (t *Tpl) String() string {
 // Type task name
 func (t *Tpl) Type() string {
 	return "tpl" // template
+}
+
+// Prepare template task
+func (t *Tpl) Prepare() error {
+	if t.Ext == "" {
+		t.Ext = defaultTemplateExt
+	}
+	if t.Target != "" && t.Ext != "" && strings.HasSuffix(t.Target, "."+t.Ext) {
+		t.Target = strings.TrimSuffix(t.Target, "."+t.Ext)
+	}
+	return nil
 }
 
 // DoString string

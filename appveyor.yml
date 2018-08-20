@@ -1,6 +1,12 @@
 # https://github.com/gohugoio/hugo/blob/master/appveyor.yml
+# https://github.com/joefitzgerald/go-plus/blob/master/appveyor.yml<Paste>
+# https://blog.markvincze.com/setting-up-an-appveyor-pipeline-for-golang/
 
 image: Visual Studio 2017
+
+# version: 1.0.0.{build}
+
+platform: x64
 
 branches:
   only:
@@ -33,6 +39,7 @@ build_script:
   - mage install
   # - echo %USERPROFILE%
   - touch C:\Users\appveyor\.dotnc
+  # - mv C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
   - dot --version
   - dot ls
   - dot sync --verbose

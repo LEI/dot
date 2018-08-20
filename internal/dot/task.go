@@ -11,7 +11,8 @@ import (
 type Tasker interface {
 	String() string
 	Type() string
-	Check(string) error
+	SetAction(string)
+	Check() error
 	CheckAct() error
 	CheckIf() error
 	CheckOS() error
@@ -31,12 +32,16 @@ type Task struct {
 	If     []string `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
 
-	current string // current action
+	current string // Current action name
+}
+
+// SetAction name
+func (t *Task) SetAction(name string) {
+	t.current = name
 }
 
 // Check conditions
-func (t *Task) Check(action string) error {
-	t.current = action
+func (t *Task) Check() error {
 	if err := t.CheckAction(); err != nil {
 		// fmt.Println("> Skip "+action, t, err)
 		return err
