@@ -1,11 +1,5 @@
 package pkg
 
-import (
-	"fmt"
-	"os"
-	"os/exec"
-)
-
 // https://github.com/chocolatey/choco/wiki/CommandsReference
 var choco = &Pm{
 	Sudo:    true,
@@ -23,15 +17,16 @@ var choco = &Pm{
 	// },
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// opts := []string{"info", "--local-only"}
-		opts := []string{"search", "--exact", "--local-only"}
-		opts = append(opts, m.Opts...)
-		opts = append(opts, pkgs...)
-		fmt.Println(m.Bin, opts)
-		cmd := exec.Command(m.Bin, opts...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
-		err := cmd.Run()
-		return err == nil, nil
+		return false, nil // TODO grep -q - Chocolatey vX.X.X
+		// opts := []string{"search", "--exact", "--local-only"}
+		// opts = append(opts, m.Opts...)
+		// opts = append(opts, pkgs...)
+		// fmt.Println(m.Bin, opts)
+		// cmd := exec.Command(m.Bin, opts...)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
+		// err := cmd.Run()
+		// return err == nil, nil
 	},
 }
