@@ -8,7 +8,7 @@ import (
 type templateOptions struct {
 }
 
-var templateOpts templateOptions
+var tplOpts templateOptions
 
 var cmdTpl = &cobra.Command{
 	Use:     "template [flags]",

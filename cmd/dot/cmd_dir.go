@@ -12,8 +12,8 @@ type dirOptions struct {
 var dirOpts dirOptions
 
 var cmdDir = &cobra.Command{
-	Use:     "dir [flags]",
-	Aliases: []string{"d"},
+	Use:     "directory [flags]",
+	Aliases: []string{"d", "dir"},
 	Short:   "Dir managed files",
 	Long: `
 The "dir" task installs or removes directories.

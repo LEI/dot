@@ -5,10 +5,10 @@ import (
 )
 
 // Options for the pkg command.
-type pkgOptions struct {
+type packageOptions struct {
 }
 
-var pkgOpts pkgOptions
+var pkgOpts packageOptions
 
 var cmdPkg = &cobra.Command{
 	Use:     "pkg [flags]",
