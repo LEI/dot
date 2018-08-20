@@ -8,11 +8,17 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/docker/docker/pkg/homedir"
 )
 
 // AskConfirmation ...
 func AskConfirmation(s string) (ret bool) {
+	if noConfirm() {
+		return true
+	}
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		// fmt.Printf("%s [y/n]: ", s)
@@ -34,4 +40,14 @@ func AskConfirmation(s string) (ret bool) {
 	// FIXME: no new line if enter is pressed before the last fmt.Printf
 	// fmt.Printf("\n")
 	return
+}
+
+func noConfirm() bool {
+	ncfile := filepath.Join(homedir.Get(), ".dotnc")
+	_, err := os.Stat(ncfile)
+	exists := err == nil || os.IsExist(err)
+	if exists {
+		fmt.Fprintln(os.Stderr, "(Confirmation disabled because ~/.dotnc exists)")
+	}
+	return exists
 }

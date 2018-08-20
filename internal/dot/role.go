@@ -567,11 +567,11 @@ func checkTasks(s []Tasker) error {
 // Ok returns true if already installed
 func (r *Role) Ok() bool {
 	err := r.Status()
-	ok := IsExist(err)
-	if err != nil && !ok {
+	exists := IsExist(err)
+	if err != nil && !exists {
 		fmt.Fprintf(os.Stderr, "warning while checking %s role status: %s\n", r.Name, err)
 	}
-	return ok // err == nil || err == ErrAlreadyExist
+	return exists // err == nil || err == ErrAlreadyExist
 }
 
 // Status of role tasks

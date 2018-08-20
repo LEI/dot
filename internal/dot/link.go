@@ -3,6 +3,8 @@ package dot
 import (
 	"fmt"
 	"os"
+
+	"github.com/LEI/dot/internal/prompt"
 )
 
 // // LinkError type
@@ -46,11 +48,35 @@ func (l *Link) UndoString() string {
 
 // Status check task
 func (l *Link) Status() error {
-	ok, err := linkExists(l.Source, l.Target)
+	exists, err := linkExists(l.Source, l.Target)
 	if err != nil {
-		return err
+		perr, ok := err.(*os.PathError)
+		// if ok {
+		// 	return perr
+		// }
+		// return err
+		if !ok {
+			return err
+		}
+		switch perr.Err {
+		case ErrFileExist, ErrLinkExist:
+			if l.current != "install" {
+				fmt.Println("Skip", l.current, l.Target, "("+perr.Err.Error()+")")
+				return ErrSkip
+			}
+			// Confirm override
+			if prompt.AskConfirmation("Remove existing " + l.Target + "?") {
+				if err := os.Remove(l.Target); err != nil {
+					return err
+				}
+				return nil
+			}
+			// if err := os.Remove(); e
+			return perr // .Err
+		}
+		return perr
 	}
-	if ok {
+	if exists {
 		return ErrAlreadyExist
 	}
 	return nil
@@ -62,6 +88,14 @@ func (l *Link) Do() error {
 		switch err {
 		case ErrAlreadyExist, ErrSkip:
 			return nil
+		// case ErrFileExist, ErrLinkExist:
+		// 	// Confirm override
+		// 	if !prompt.AskConfirmation("Remove existing " + l.Target + "?") {
+		// 		return ErrSkip
+		// 	}
+		// 	if rmerr := os.Remove(l.Target); rmerr != nil {
+		// 		return rmerr
+		// 	}
 		default:
 			return err
 		}
@@ -99,18 +133,19 @@ func linkExists(src, dst string) (bool, error) {
 		return false, err
 	}
 	if !isSymlink(fi) {
-		return false, fmt.Errorf("%s: not a symlink", dst)
-		// return false, &os.PathError{Op: "target link", Path: src, Err: fmt.Errorf("not a symlink")}
+		// return false, fmt.Errorf("%s: not a symlink", dst)
+		return false, &os.PathError{Op: "target link", Path: src, Err: ErrFileExist}
 	}
 	real, err := os.Readlink(dst)
 	if err != nil {
 		return false, err
 	}
 	if real == "" {
-		return false, fmt.Errorf("%s: unable to read symlink", dst)
+		return false, fmt.Errorf("%s: unable to read symlink real target", dst)
 	}
 	if real != src {
-		return false, fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
+		// return false, fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
+		return false, &os.PathError{Op: "target link (real: " + real + ")", Path: src, Err: ErrLinkExist}
 	}
 	return true, nil
 }

@@ -48,11 +48,11 @@ func (p *Pkg) UndoString() string {
 
 // Status check task
 func (p *Pkg) Status() error {
-	ok, err := pkg.Has(p.Manager, p.Name, p.Args...)
+	exists, err := pkg.Has(p.Manager, p.Name, p.Args...)
 	if err != nil {
 		return err
 	}
-	if ok {
+	if exists {
 		return ErrAlreadyExist
 	}
 	return nil
