@@ -92,6 +92,9 @@ func linkExists(src, dst string) (bool, error) {
 	}
 	if !exists(dst) {
 		// Stop here if the target does not exist
+
+		fmt.Println("no linkExists dst:", dst)
+
 		return false, nil
 	}
 	fi, err := os.Lstat(dst)
