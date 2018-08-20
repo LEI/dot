@@ -45,7 +45,7 @@ func init() {
 
 	flags := cmdRoot.Flags()
 	flags.BoolVarP(&flagVersion, "version", "V", flagVersion, "Print short version information")
-	flags.BoolVarP(&flagRelease, "release", "", flagRelease, "Print OS types")
+	flags.BoolVarP(&flagRelease, "release", "", flagRelease, "Print parsed release information and OS types")
 
 	// cmdRoot.SetVersionTemplate("dot version {{.Version}}\n")
 }
