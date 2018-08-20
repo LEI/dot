@@ -313,7 +313,7 @@ func constantsLDFlags() string {
 func buildTags() string {
 	bd := defaultBuildTags
 	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
-		for _, et := range strings.Split(envTags, " ") {
+		for _, et := range strings.Fields(envTags) {
 			bd = append(bd, et)
 		}
 	}

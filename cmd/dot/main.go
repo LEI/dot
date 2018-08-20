@@ -12,7 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var flagVersion bool
+var (
+	flagVersion bool
+	flagRelease bool
+)
 
 var dotConfig *dot.Config = &dot.Config{}
 
@@ -42,6 +45,7 @@ func init() {
 
 	flags := cmdRoot.Flags()
 	flags.BoolVarP(&flagVersion, "version", "V", flagVersion, "Print short version information")
+	flags.BoolVarP(&flagRelease, "release", "", flagRelease, "Print OS types")
 
 	// cmdRoot.SetVersionTemplate("dot version {{.Version}}\n")
 }
@@ -107,6 +111,11 @@ func runDot(cmd *cobra.Command, args []string) error {
 		// 	str += fmt.Sprintf(" (%s)", commit)
 		// }
 		fmt.Println(str)
+		return nil
+	}
+	if flagRelease {
+		ostypes := ostype.Get()
+		fmt.Printf("%s", ostypes)
 		return nil
 	}
 	// if err := cmd.Usage(); err != nil {
