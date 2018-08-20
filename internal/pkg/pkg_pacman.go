@@ -30,7 +30,7 @@ var pacman = &Pm{
 	// 	// If:   []string{"{{eq .Verbose 0}}"},
 	// 	HasIf: types.HasIf{If: []string{"{{eq .Verbose 0}}"}},
 	// },
-	Has: func(pkgs []string) (bool, error) {
+	Has: func(m *Pm, pkgs []string) (bool, error) {
 		//fmt.Printf("pacman -Qqi %s\n", name)
 		// Search locally installed packages
 		cmd := exec.Command("pacman", append([]string{"-Qqi", "--noconfirm"}, pkgs...)...)
@@ -66,7 +66,7 @@ var yaourt = &Pm{
 		"--noconfirm",
 		// "--sysupgrade", // -u
 	},
-	Has: func(pkgs []string) (bool, error) {
+	Has: func(m *Pm, pkgs []string) (bool, error) {
 		//fmt.Printf("> yaourt -Qqi %s\n", name)
 		// Search locally installed packages
 		cmd := exec.Command("yaourt", append([]string{"-Qqi", "--noconfirm"}, pkgs...)...)

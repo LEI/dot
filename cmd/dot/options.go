@@ -7,6 +7,7 @@ import (
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/docker/docker/pkg/homedir"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -99,8 +100,19 @@ func init() {
 	// f.BoolVar(&dotOpts.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
 	// f.StringSliceVarP(&dotOpts.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
 
-	f.MarkHidden("role-dir")
-	f.MarkHidden("role-file")
+	hidden := []string{"role-dir", "role-file"}
+	if err := markHidden(f, hidden); err != nil {
+		panic(err)
+	}
+}
+
+func markHidden(f *pflag.FlagSet, in []string) error {
+	for _, n := range in {
+		if err := f.MarkHidden(n); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // // checkErrno returns nil when err is set to syscall.Errno(0), since this is no

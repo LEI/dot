@@ -13,7 +13,7 @@ var brew = &Pm{
 		// opts := []string{"ls", "--versions", name}
 		// err := exec.Command("brew", opts...).Run()
 		if Upgrade {
-			ok, err := m.Has(pkgs)
+			ok, err := m.Has(m, pkgs)
 			if err == nil && ok {
 				return "upgrade"
 			}
@@ -30,7 +30,7 @@ var brew = &Pm{
 	Init: func() error {
 		return execCommand("brew", "update", "--quiet")
 	},
-	Has: func(pkgs []string) (bool, error) {
+	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// fmt.Printf("brew ls --versions %s\n", pkgs)
 		cmd := exec.Command("brew", append([]string{"ls", "--versions"}, pkgs...)...)
 		// cmd.Stdout = os.Stdout
@@ -46,7 +46,7 @@ var brewCask = &Pm{
 	Sub:     []string{"cask"},
 	Install: "install",
 	Remove:  "uninstall",
-	Has: func(pkgs []string) (bool, error) {
+	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// fmt.Printf("brew cask ls --versions %s\n", pkgs)
 		cmd := exec.Command("brew", append([]string{"cask", "ls", "--versions"}, pkgs...)...)
 		// cmd.Stdout = os.Stdout

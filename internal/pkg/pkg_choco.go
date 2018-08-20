@@ -1,6 +1,10 @@
 package pkg
 
-import "os/exec"
+import (
+	"fmt"
+	"os"
+	"os/exec"
+)
 
 // https://github.com/chocolatey/choco/wiki/CommandsReference
 var choco = &Pm{
@@ -17,12 +21,16 @@ var choco = &Pm{
 	// 	// https://chocolatey.org/docs/installation
 	// 	return nil
 	// },
-	Has: func(pkgs []string) (bool, error) {
+	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// choco info
-		cmd := exec.Command("choco", append([]string{"search", "--exact"}, pkgs...)...)
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
+		fmt.Printf("$ choco search --exact %s\n", pkgs)
+		opts := []string{"search", "--exact"}
+		opts = append(opts, m.Opts...)
+		opts = append(opts, pkgs...)
+		cmd := exec.Command(m.Bin, opts...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
 		err := cmd.Run()
 		return err == nil, nil
 	},

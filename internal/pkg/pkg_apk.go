@@ -20,7 +20,7 @@ var apk = &Pm{
 		"--update",
 		// "--upgrade",
 	},
-	Has: func(pkgs []string) (bool, error) {
+	Has: func(m *Pm, pkgs []string) (bool, error) {
 		c1 := exec.Command("apk", append([]string{"search", "--exact"}, pkgs...)...)
 		c2 := exec.Command("grep", append([]string{"-q"}, pkgs...)...)
 
