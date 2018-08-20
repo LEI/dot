@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -38,8 +37,10 @@ var choco = &Pm{
 			return false, err
 		}
 		out := buf.String()
-		c := len(strings.Split(out, "\n"))
-		fmt.Println("?", out, "?", c)
-		return c > 1, nil
+		lines := strings.Split(out, "\n")
+		if len(lines) != 3 || lines[2] != "0 packages installed.\n" {
+			return false, nil
+		}
+		return true, nil
 	},
 }
