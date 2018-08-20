@@ -17,7 +17,6 @@ environment:
 clone_folder: C:\GOPATH\src\github.com\LEI\dot
 
 install:
-  - choco install --help
   # - DryRun: --noop / --what-if
   - choco install --yes --no-progress docker-compose
   # - gem install asciidoctor
@@ -30,7 +29,7 @@ build_script:
   - mage install
   - dot --version
   - dot ls
-  - dot --install --packages --verbose
+  - dot install --packages --verbose
   - mage windows
   # - OS=windows mage -v docker
   # - docker-compose build test_os
