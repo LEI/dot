@@ -169,8 +169,6 @@ func Detect() (m *Pm) {
 			m = managers["apk"]
 		case executable("apt-get"):
 			m = managers["apt-get"]
-		case runtime.GOOS == "windows": // executable("choco"):
-			m = managers["choco"]
 		case executable("pacman"):
 			m = managers["pacman"]
 		case executable("yum"):
@@ -179,6 +177,8 @@ func Detect() (m *Pm) {
 			fmt.Fprintf(os.Stderr, "no package manager for OS: %s", ostype.List)
 			os.Exit(1)
 		}
+	case "windows": // executable("choco"):
+		m = managers["choco"]
 	default:
 		fmt.Fprintf(os.Stderr, "no package manager for OS %s", runtime.GOOS)
 		os.Exit(1)
