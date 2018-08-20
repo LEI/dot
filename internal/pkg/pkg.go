@@ -169,6 +169,11 @@ func Detect() (m *Pm) {
 			m = managers["apt-get"]
 		case executable("pacman"):
 			m = managers["pacman"]
+		case executable("packages"):
+			// termux android
+			m = managers["apt"]
+			m.Bin = "packages"
+			m.Sudo = false
 		case executable("yum"):
 			m = managers["yum"]
 		default:
