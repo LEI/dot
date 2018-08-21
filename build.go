@@ -59,6 +59,13 @@ var (
 		"fmt":      Fmt,
 		"install":  Install,
 		"build":    Build,
+		"darwin":   Darwin,
+		"Linux":    Linux,
+		"Windows":  Windows,
+		"Docker":   Docker,
+		"DockerOS": DockerOS,
+		"Release":  Release,
+		"Snapshot": Snapshot,
 	}
 
 	targetList = []Target{}
@@ -70,7 +77,7 @@ var usageFormat = `Usage: %s [flags] [target...]
 `
 
 func init() {
-	flag.Usage = usage
+	flag.Usage = printUsage
 
 	// buildFlag = flag.Bool("build", true, "build main binary")
 	// testFlag = flag.String("test", "./...", "test packages")
@@ -80,8 +87,8 @@ func init() {
 	flag.BoolVar(&versionFlag, "V", versionFlag, "print version")
 }
 
-// Usage of the flags
-func usage() {
+// printUsage of the flags
+func printUsage() {
 	_, binary := filepath.Split(os.Args[0])
 	fmt.Fprintf(flag.CommandLine.Output(), usageFormat, binary)
 	flag.PrintDefaults()
@@ -91,11 +98,12 @@ func usage() {
 // Execute build command
 func execute() error {
 	if len(os.Args) == 1 {
-		usage()
+		printUsage()
+		printTargets()
 		return nil
 	}
 	// Parse targets
-	tl, err := parse()
+	ts, err := parse()
 	if err != nil {
 		return err
 	}
@@ -109,20 +117,51 @@ func execute() error {
 		fmt.Printf(versionFormat, version())
 		return nil
 	}
-	for _, t := range tl {
-		if verboseFlag {
-			fmt.Printf("Running target: %s", t.Name)
-		}
-		if err := t.Func(); err != nil {
+	return serial(ts...)
+}
+
+// serial targets
+func serial(ts ...Target) error {
+	for _, t := range ts {
+		if err := execTarget(t); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+// // serialFuncExit
+// func serialFuncExit(tf ...TargetFunc) {
+// 	if err := serialFunc(tf...); err != nil {
+// 		fmt.Fprintf(os.Stderr, "%s\n", err)
+// 		os.Exit(1)
+// 	}
+// }
+
+// serialFunc targets
+func serialFunc(fs ...TargetFunc) error {
+	for _, f := range fs {
+		if err := f(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Execute target
+func execTarget(t Target) error {
+	if verboseFlag {
+		fmt.Printf("Running target: %s\n", t.Name)
+	}
+	if err := t.Func(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Parse arguments (targets) and command flags
 func parse() ([]Target, error) {
-	tl := []Target{}
+	ts := []Target{}
 	// args := os.Args[1:]
 	args := make([]string, len(os.Args)) // os.Args[1:]
 	copy(args, os.Args)
@@ -148,18 +187,21 @@ func parse() ([]Target, error) {
 		}
 		if j < 0 {
 			// return fmt.Errorf("unable to find target %s", a)
-			usage()
-			return tl, fmt.Errorf(
-				"%s: invalid arguments",
-				strings.Join(args, " "),
-			)
+			printUsage()
+			printTargets()
+			return ts, fmt.Errorf("%s: invalid target", a)
+			// return ts, fmt.Errorf(
+			// 	"%s: invalid target in args '%s'",
+			// 	a,
+			// 	strings.Join(args[1:], " "),
+			// )
 		}
 		t := targetList[j]
 		// t, ok := funcMap[a]
 		// if !ok {
 		// 	// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
-		// 	usage()
-		// 	return tl, fmt.Errorf(
+		// 	printUsage()
+		// 	return ts, fmt.Errorf(
 		// 		"%s: invalid arguments",
 		// 		strings.Join(args, " "),
 		// 	)
@@ -167,10 +209,10 @@ func parse() ([]Target, error) {
 		// Remove target from arguments once registered
 		os.Args = append(os.Args[:i-diff], os.Args[i+1-diff:]...)
 		// Append target to queue
-		tl = append(tl, t)
+		ts = append(ts, t)
 	}
 	flag.Parse()
-	return tl, nil
+	return ts, nil
 }
 
 // Vendor install dependencies specified in Gopkg.toml
@@ -195,19 +237,7 @@ func getDep() error {
 
 // Check run tests and linters
 func Check() error {
-	if err := Test(); err != nil {
-		return err
-	}
-	if err := Vet(); err != nil {
-		return err
-	}
-	if err := Lint(); err != nil {
-		return err
-	}
-	if err := Fmt(); err != nil {
-		return err
-	}
-	return nil
+	return serialFunc(Test, Vet, Lint, Fmt)
 }
 
 // Test run go tests
@@ -389,6 +419,21 @@ func Build() error {
 	return nil
 }
 
+// Darwin build binary for macOS
+func Darwin() error {
+	return buildPlatform("darwin", "amd64")
+}
+
+// Linux build binary for Linux
+func Linux() error {
+	return buildPlatform("linux", "amd64")
+}
+
+// Windows build binary for Windows
+func Windows() error {
+	return buildPlatform("windows", "amd64")
+}
+
 // Run go build for a given platform
 func buildPlatform(goos, goarch string) error {
 	output := "dist/" + goos + "_" + goarch + "/dot"
@@ -535,7 +580,7 @@ func executable(name string) bool {
 
 func printTargets() {
 	const padding = 1
-	// fmt.Println("Targets:")
+	fmt.Println("Targets:")
 	w := &tabwriter.Writer{}
 	w.Init(os.Stdout, 0, 8, 3, '\t', 0)
 	for _, t := range targetList {
@@ -603,6 +648,118 @@ func parseDoc() (map[string]string, error) {
 		m[name] = docStr
 	}
 	return m, nil
+}
+
+// Docker build container based on OS env var (default: debian)
+func Docker() error {
+	// mg.SerialDeps(Vendor, Check)
+	envOS, ok := os.LookupEnv("OS")
+	if !ok {
+		// Build from golang if OS is undefined
+		return testDockerCompose("base", "test")
+		// return fmt.Errorf("OS is undefined")
+	}
+	if envOS == "" {
+		return fmt.Errorf("OS is empty")
+	}
+	return testDockerOS(envOS)
+	// if err := testDockerCompose("test_os", "test_os"); err != nil {
+	// 	return err
+	// }
+	// return nil
+}
+
+// DockerOS build all OS containers
+func DockerOS() error {
+	return testDockerOS()
+}
+
+var platforms = []string{
+	"alpine",
+	"archlinux",
+	"centos",
+	"debian",
+}
+
+// Docker compose OS
+func testDockerOS(list ...string) error {
+	if len(list) == 0 {
+		list = platforms
+	}
+	envOS, _ := os.LookupEnv("OS")
+	// mg.Deps(Linux) // Snapshot
+	goarch := "amd64"
+	if err := buildPlatform("linux", goarch); err != nil {
+		return err
+	}
+	// for _, platform := range list {
+	// 	if platform != "windows" {
+	// 		continue
+	// 	}
+	// 	if err := buildPlatform("windows", goarch); err != nil {
+	// 		return err
+	// 	}
+	// 	break
+	// }
+	defer os.Setenv("OS", envOS)
+	for _, platform := range list {
+		os.Setenv("OS", platform)
+		if err := testDockerCompose("test_os", "test_os"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// var docker = sh.RunCmd("docker")
+func testDockerCompose(build, test string) error {
+	if err := run("docker-compose", "build", build); err != nil {
+		return err
+	}
+	if err := run("docker-compose", "run", test); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Release releases with goreleaser
+func Release() error {
+	getGoreleaser()
+	return run("goreleaser", "--rm-dist")
+}
+
+func getGoreleaser() error {
+	if executable("goreleaser") {
+		return nil
+	}
+	if runtime.GOOS == "darwin" {
+		return run("brew", "install", "goreleaser/tap/goreleaser")
+	}
+	if err := serialFunc(getDep); err != nil {
+		return err
+	}
+	repo := "github.com/goreleaser/goreleaser"
+	installCmd := "dep ensure -vendor-only && make setup build"
+	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+	if err := run("go", "get", "-d", repo); err != nil {
+		return err
+	}
+	if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+installCmd); err != nil {
+		return err
+	}
+	return run("go", "install", repo)
+}
+
+// Snapshot creates a snapshot release
+func Snapshot() error {
+	if err := serialFunc(getGoreleaser); err != nil {
+		return err
+	}
+	args := []string{"--rm-dist", "--snapshot"}
+	if debug := os.Getenv("DEBUG"); debug == "1" {
+		args = append(args, "--debug")
+	}
+	return run("goreleaser", args...)
 }
 
 func init() {
