@@ -264,7 +264,7 @@ func asyncFunc(fs ...TargetFunc) error {
 				errs <- err
 				return
 			}
-			close(errs) // errs <- nil
+			errs <- nil // close(errs)
 		}(f)
 	}
 	select {
