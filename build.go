@@ -612,6 +612,7 @@ func getPackage(path string, files []string) (*ast.Package, error) {
 	// for _, f := range files {
 	// 	fm[f] = true
 	// }
+	// filename, _, ok := runtime.Caller(1)
 	filter := func(f os.FileInfo) bool {
 		return f.Name() == "build.go" // fm[f.Name()]
 	}
