@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -43,40 +44,43 @@ var (
 	namespace   = "github.com/LEI/dot"         // subdir of GOPATH
 	mainPackage = "github.com/LEI/dot/cmd/dot" // package name for the main package
 
-	listFlag    bool
-	testFlag    bool
+	listFlag bool
+	// testFlag    bool
 	verboseFlag bool
 	versionFlag bool
 
 	// docMap map[string]string
 	funcMap = map[string]TargetFunc{
-		"vendor":   Vendor,
-		"dep":      getDep,
-		"check":    Check,
-		"test":     Test,
-		"testrace": TestRace,
-		"coverage": Coverage,
-		"vet":      Vet,
-		"lint":     Lint,
-		"fmt":      Fmt,
-		"install":  Install,
-		"build":    Build,
-		"darwin":   Darwin,
-		"linux":    Linux,
-		"windows":  Windows,
-		"clean":    Clean,
-		"docker":   Docker,
-		"dockeros": DockerOS,
-		"release":  Release,
-		"snapshot": Snapshot,
+		"vendor":        Vendor,
+		"dep":           dep,
+		"check":         Check,
+		"test":          Test,
+		"testrace":      TestRace,
+		"coverage":      Coverage,
+		"vet":           Vet,
+		"lint":          Lint,
+		"fmt":           Fmt,
+		"install":       Install,
+		"build":         Build,
+		"build:darwin":  Build_Darwin,
+		"build:linux":   Build_Linux,
+		"build:windows": Build_Windows,
+		"clean":         Clean,
+		"docker":        Docker,
+		"dockeros":      DockerOS,
+		"goreleaser":    goreleaser,
+		"release":       Release,
+		"snapshot":      Snapshot,
 	}
 
 	targetList = []Target{}
 
-	versionFormat = "Dot version %s\n"
+	versionFormat = "dot version %s build script\n"
 )
 
-var usageFormat = `Usage: %s [flags] [target...]
+var usageFormat = `
+Usage: %s [flags] [target...]
+
 `
 
 func init() {
@@ -85,9 +89,9 @@ func init() {
 	// buildFlag = flag.Bool("build", true, "build main binary")
 	// testFlag = flag.String("test", "./...", "test packages")
 	flag.BoolVar(&listFlag, "l", listFlag, "list targets")
-	flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
+	// flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
 	flag.BoolVar(&verboseFlag, "v", verboseFlag, "verbose mode")
-	flag.BoolVar(&versionFlag, "V", versionFlag, "print version")
+	flag.BoolVar(&versionFlag, "version", versionFlag, "print version")
 }
 
 // printUsage of the flags
@@ -99,11 +103,16 @@ func printUsage() {
 	// os.Exit(0)
 }
 
+func fullUsage() {
+	printUsage()
+	fmt.Printf("\nTargets:\n\n")
+	printTargets()
+}
+
 // Execute build command
 func execute() error {
 	if len(os.Args) == 1 {
-		printUsage()
-		printTargets()
+		fullUsage()
 		return nil
 	}
 	// Parse targets
@@ -111,12 +120,14 @@ func execute() error {
 	if err != nil {
 		return err
 	}
+	// numFlags := 0
 	switch {
 	case listFlag:
+		fmt.Printf("Targets:\n\n")
 		printTargets()
 		return nil
-	case testFlag:
-		return testV() // run("go", "test", "./...")
+	// case testFlag:
+	// 	return testV() // run("go", "test", "./...")
 	case versionFlag:
 		fmt.Printf(versionFormat, version())
 		return nil
@@ -189,27 +200,30 @@ func parse() ([]Target, error) {
 				break
 			}
 		}
-		if j < 0 {
-			// return fmt.Errorf("unable to find target %s", a)
-			printUsage()
-			printTargets()
-			return ts, fmt.Errorf("%s: invalid target", a)
+		var t Target
+		if j >= 0 {
+			t = targetList[j]
+		} else {
+			f, ok := funcMap[a]
+			if !ok {
+				// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
+				fullUsage()
+				return ts, fmt.Errorf("unable to find target %s", a)
+				// return ts, fmt.Errorf(
+				// 	"%s: invalid arguments",
+				// 	strings.Join(args, " "),
+				// )
+			}
+			t = Target{
+				Name: a,
+				Func: f,
+			}
 			// return ts, fmt.Errorf(
 			// 	"%s: invalid target in args '%s'",
 			// 	a,
 			// 	strings.Join(args[1:], " "),
 			// )
 		}
-		t := targetList[j]
-		// t, ok := funcMap[a]
-		// if !ok {
-		// 	// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
-		// 	printUsage()
-		// 	return ts, fmt.Errorf(
-		// 		"%s: invalid arguments",
-		// 		strings.Join(args, " "),
-		// 	)
-		// }
 		// Remove target from arguments once registered
 		os.Args = append(os.Args[:i-diff], os.Args[i+1-diff:]...)
 		// Append target to queue
@@ -219,17 +233,18 @@ func parse() ([]Target, error) {
 	return ts, nil
 }
 
-// Vendor install dependencies specified in Gopkg.toml
+// Vendor run dep ensure to install dependencies specified in Gopkg.toml
 func Vendor() error {
-	if err := getDep(); err != nil {
+	if err := dep(); err != nil {
 		return err
 	}
 	return run("dep", "ensure")
 }
 
-// Install go dep
-func getDep() error {
+// Dep install go dep
+func dep() error {
 	if executable("dep") {
+		// Nothing to be done for 'dep'
 		return nil
 	}
 	if runtime.GOOS == "darwin" {
@@ -245,7 +260,7 @@ func Check() error {
 		// Go 1.8 doesn't play along with go test ./... and /vendor.
 		// We could fix that, but that would take time.
 		fmt.Printf("Skip Check on %s\n", runtime.Version())
-		return
+		return nil
 	}
 	return serialFunc(Test, Vet, Lint, Fmt)
 }
@@ -327,6 +342,9 @@ func Lint() error {
 
 // Fmt run gofmt as a linter
 func Fmt() error {
+	if !isGoLatest() {
+		return nil
+	}
 	// gofmt -l -s . | grep -v ^vendor/
 	// if !executable("goimports") {
 	// 	if err := run("go", "get", "golang.org/x/tools/cmd/goimports"); err != nil {
@@ -373,7 +391,7 @@ var pkgPrefixLen = len(namespace)
 
 // List packages
 func findPackages() ([]string, error) {
-	// if err := getDep(); err != nil {
+	// if err := dep(); err != nil {
 	// 	return []string{}, err
 	// }
 	s, err := runOutput("go", "list", "./...")
@@ -429,18 +447,18 @@ func Build() error {
 	return nil
 }
 
-// Darwin build binary for macOS
-func Darwin() error {
+// Build_Darwin build binary for macOS
+func Build_Darwin() error {
 	return buildPlatform("darwin", "amd64")
 }
 
-// Linux build binary for Linux
-func Linux() error {
+// Build_Linux build binary for Linux
+func Build_Linux() error {
 	return buildPlatform("linux", "amd64")
 }
 
-// Windows build binary for Windows
-func Windows() error {
+// Build_Windows build binary for Windows
+func Build_Windows() error {
 	return buildPlatform("windows", "amd64")
 }
 
@@ -467,9 +485,9 @@ func buildPlatform(goos, goarch string) error {
 func ldflags() string {
 	cs := map[string]string{
 		// "main.packageName": mainPackage,
-		"main.version":   version(),
-		"main.commit":    gitCommit(),
-		"main.timestamp": time.Now().Format("2006-01-02T15:04:05Z0700"),
+		"main.version": version(),
+		"main.commit":  gitCommit(),
+		"main.date":    time.Now().Format("2006-01-02T15:04:05Z0700"),
 	}
 	l := make([]string, 0, len(cs))
 	for k, v := range cs {
@@ -590,9 +608,9 @@ func executable(name string) bool {
 
 func printTargets() {
 	const padding = 1
-	fmt.Println("Targets:")
 	w := &tabwriter.Writer{}
 	w.Init(os.Stdout, 0, 8, 3, '\t', 0)
+	// w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 	for _, t := range targetList {
 		name := t.Name
 		desc := t.Doc
@@ -602,6 +620,7 @@ func printTargets() {
 				desc = strings.TrimPrefix(desc, parts[0])
 			}
 		}
+		name = strings.Replace(name, "_", ":", 1)
 		fmt.Fprintf(w, "  %s\t%s\n", name, desc)
 	}
 	w.Flush()
@@ -619,9 +638,13 @@ func getPackage(path string, files []string) (*ast.Package, error) {
 	// for _, f := range files {
 	// 	fm[f] = true
 	// }
-	// filename, _, ok := runtime.Caller(1)
+	_, file, _, ok := runtime.Caller(1) // file = "build.go"
+	if !ok || file == "" {
+		return nil, fmt.Errorf("invalid program file name %s", file)
+	}
+	filename := filepath.Base(file)
 	filter := func(f os.FileInfo) bool {
-		return f.Name() == "build.go" // fm[f.Name()]
+		return f.Name() == filename // fm[f.Name()]
 	}
 	pkgs, err := parser.ParseDir(fset, path, filter, parser.ParseComments)
 	if err != nil {
@@ -735,18 +758,20 @@ func testDockerCompose(build, test string) error {
 
 // Release releases with goreleaser
 func Release() error {
-	getGoreleaser()
+	if err := goreleaser(); err != nil {
+		return err
+	}
 	return run("goreleaser", "--rm-dist")
 }
 
-func getGoreleaser() error {
+func goreleaser() error {
 	if executable("goreleaser") {
 		return nil
 	}
 	if runtime.GOOS == "darwin" {
 		return run("brew", "install", "goreleaser/tap/goreleaser")
 	}
-	if err := serialFunc(getDep); err != nil {
+	if err := dep(); err != nil {
 		return err
 	}
 	repo := "github.com/goreleaser/goreleaser"
@@ -763,7 +788,7 @@ func getGoreleaser() error {
 
 // Snapshot creates a snapshot release
 func Snapshot() error {
-	if err := serialFunc(getGoreleaser); err != nil {
+	if err := goreleaser(); err != nil {
 		return err
 	}
 	args := []string{"--rm-dist", "--snapshot"}
@@ -771,6 +796,27 @@ func Snapshot() error {
 		args = append(args, "--debug")
 	}
 	return run("goreleaser", args...)
+}
+
+// https://github.com/hashicorp/go-version
+func isGoLatest() bool {
+	// return strings.Contains(runtime.Version(), "1.10")
+	ver := runtime.Version()
+	ver = strings.TrimPrefix(ver, "go")
+	parts := strings.SplitN(ver, ".", 3)
+	if len(parts) != 3 {
+		panic("fatal: invalid go version " + ver)
+	}
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		panic(err)
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		panic(err)
+	}
+	// patch := strconv.Atoi(parts[2])
+	return major >= 1 && minor >= 10
 }
 
 func init() {
