@@ -159,6 +159,11 @@ func pkgOnly(input []string) []string {
 // Detect default package manager
 func Detect() (m *Pm) {
 	switch runtime.GOOS {
+	case "android":
+		// termux packages
+		m = managers["apt"]
+		m.Bin = "packages"
+		m.Sudo = false
 	case "darwin":
 		m = managers["brew"]
 	case "linux":
@@ -169,11 +174,6 @@ func Detect() (m *Pm) {
 			m = managers["apt-get"]
 		case executable("pacman"):
 			m = managers["pacman"]
-		case executable("packages"):
-			// termux android
-			m = managers["apt"]
-			m.Bin = "packages"
-			m.Sudo = false
 		case executable("yum"):
 			m = managers["yum"]
 		default:
