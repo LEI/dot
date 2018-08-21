@@ -29,8 +29,6 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-# RUN make mage vendor install
-RUN make mage
-RUN mage
+RUN go run build.go vendor install
 
 RUN cp .dotrc.yml $HOME/

@@ -1,8 +1,8 @@
 # Gopkg.toml
 # https://golang.github.io/dep/docs/Gopkg.toml.html
 
-# required = ["github.com/magefile/mage/mage"]
-# ignored = []
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
 
 # [[constraint]]
 #   name = "github.com/user/project"
