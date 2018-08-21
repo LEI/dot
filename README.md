@@ -8,6 +8,4 @@
 
     go get github.com/LEI/dot
     cd $GOPATH/src/github.com/LEI/dot
-    make mage
-    mage vendor
-    mage install
+    go run build.go vendor install
