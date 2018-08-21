@@ -32,7 +32,7 @@ func runVersion(cmd *cobra.Command, args []string) {
 	// Add info (OS, arch and time)
 	info := fmt.Sprintf("%v/%v", runtime.GOOS, runtime.GOARCH)
 	if dotOpts.verbosity >= 2 {
-		info += " at " + timestamp
+		info += " at " + date
 	}
 	fmt.Printf("%s %s compiled with %v on %s\n",
 		binary, ver, runtime.Version(), info)

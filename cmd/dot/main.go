@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/LEI/dot/internal/dot"
@@ -13,8 +14,14 @@ import (
 )
 
 var (
+	// Root command options
 	flagVersion bool
 	flagRelease bool
+
+	// Extra environment variables
+	extraEnv = map[string]string{
+		"OS": runtime.GOOS,
+	}
 )
 
 var dotConfig *dot.Config = &dot.Config{}
@@ -192,6 +199,18 @@ func filterRoles(roles []*dot.Role, names []string) []*dot.Role {
 }
 
 func main() {
+	// Setup execution environment
+	for k, v := range extraEnv {
+		o := os.Getenv(k)
+		if o == v {
+			continue
+		}
+		defer os.Setenv(k, o)
+		if err := os.Setenv(k, v); err != nil {
+			panic(err)
+		}
+	}
+
 	// debug.Log("main %#v", os.Args)
 	// debug.Log("restic %s compiled with %v on %v/%v",
 	// 	version, runtime.Version(), runtime.GOOS, runtime.GOARCH)

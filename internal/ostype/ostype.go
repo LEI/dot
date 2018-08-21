@@ -43,9 +43,6 @@ import (
 )
 
 var (
-	// OS ...
-	OS = runtime.GOOS
-
 	// List stores the list of OS types
 	List []string
 
@@ -95,7 +92,7 @@ func NewRelease() *Release {
 
 // Get OS types: name, release, family, distrib...
 func Get() []string {
-	types := []string{OS}
+	types := []string{runtime.GOOS}
 	release := NewRelease()
 	name := strings.ToLower(release.Name)
 	id := strings.ToLower(release.ID)
