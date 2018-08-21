@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-// Target ..
+// Target ...
 type Target struct {
 	Name string
 	Func TargetFunc
@@ -254,22 +254,28 @@ func serialFunc(fs ...TargetFunc) error {
 	return nil
 }
 
-// // asyncFunc targets
-// func asyncFunc(fs ...TargetFunc) error {
-// 	errs := make(chan error)
-// 	for _, f := range fs {
-// 		go func(f TargetFunc) {
-// 			if err := f(); err != nil {
-// 				errs <- err
-// 				return
-// 			}
-// 			close(errs)
-// 			// errs <- nil
-// 		}(f)
-// 	}
-// 	todo := <-errs
-// 	return nil
-// }
+// asyncFunc targets
+func asyncFunc(fs ...TargetFunc) error {
+	// done := make(chan bool, 1)
+	errs := make(chan error, len(fs))
+	for _, f := range fs {
+		go func(f TargetFunc) {
+			if err := f(); err != nil {
+				errs <- err
+				return
+			}
+			close(errs) // errs <- nil
+		}(f)
+	}
+	select {
+	case err := <-errs:
+		if err != nil {
+			// fmt.Printf("async error: %s", err)
+			return err
+		}
+	}
+	return nil
+}
 
 // Execute target
 func execTarget(t Target) error {
@@ -370,8 +376,8 @@ func Check() error {
 		fmt.Printf("Skip Check on %s\n", runtime.Version())
 		return nil
 	}
-	return serialFunc(Test, Vet, Lint, Fmt)
-	// return asyncFunc(Test, Vet, Lint, Fmt)
+	// return serialFunc(Test, Vet, Lint, Fmt)
+	return asyncFunc(Test, Vet, Lint, Fmt)
 }
 
 // Test run go tests
