@@ -134,23 +134,6 @@ func showTargets(output io.Writer) {
 	w.Flush()
 }
 
-// -- string Value
-type stringValue string
-
-func newStringValue(val string, p *string) *stringValue {
-	*p = val
-	return (*stringValue)(p)
-}
-
-func (s *stringValue) Set(val string) error {
-	*s = stringValue(val)
-	return nil
-}
-
-func (s *stringValue) Get() interface{} { return string(*s) }
-
-func (s *stringValue) String() string { return string(*s) }
-
 // PrintDefaults prints, to standard error unless configured otherwise, the
 // default values of all defined command-line flags in the set.
 func printDefaults() {
@@ -174,15 +157,14 @@ func printDefaults() {
 		s += "\t "
 		s += strings.Replace(usage, "\n", "\n    \t", -1)
 
-		// if !isZeroValue(f, f.DefValue) {
-		// 	if _, ok := f.Value.(*stringValue); ok {
-		// 		// put quotes on the value
-		// 		s += fmt.Sprintf(" (default %q)", f.DefValue)
-		// 	} else {
-		// 		s += fmt.Sprintf(" (default %v)", f.DefValue)
-		// 	}
-		// }
-		// fmt.Fprint(output, s, "\n")
+		if !isZeroValue(f, f.DefValue) {
+			// if _, ok := f.Value.(*stringValue); ok {
+			// 	// put quotes on the value
+			// 	s += fmt.Sprintf(" (default %q)", f.DefValue)
+			// } else {
+			s += fmt.Sprintf(" (default: %v)", f.DefValue)
+			// }
+		}
 		fmt.Fprintf(w, "%s\n", s)
 	})
 	w.Flush()
@@ -226,17 +208,20 @@ func execute() error {
 	if err != nil {
 		return err
 	}
-	// numFlags := 0
+	// if listFlag && versionFlag {
+	// 	return errors.New("-l and -version cannot be specified at the same time")
+	// }
 	switch {
+	case versionFlag:
+		// Print program version and exit
+		fmt.Printf(versionFormat, version())
+		return nil
 	case listFlag:
 		fmt.Printf("Targets:\n")
 		showTargets(os.Stdout)
 		return nil
-	// case testFlag:
-	// 	return testV() // run("go", "test", "./...")
-	case versionFlag:
-		fmt.Printf(versionFormat, version())
-		return nil
+		// case testFlag:
+		// 	return testV()
 	}
 	return serial(ts...)
 }
@@ -772,10 +757,10 @@ func Docker() error {
 	if !ok {
 		// Build from golang if OS is undefined
 		return testDockerCompose("base", "test")
-		// return fmt.Errorf("OS is undefined")
+		// return errors.New("OS is undefined")
 	}
 	if envOS == "" {
-		return fmt.Errorf("OS is empty")
+		return errors.New("OS is empty")
 	}
 	return testDockerOS(envOS)
 	// if err := testDockerCompose("test_os", "test_os"); err != nil {
