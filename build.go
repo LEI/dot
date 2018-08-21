@@ -1,4 +1,4 @@
-// +build build
+// +build ignore
 
 package main
 
@@ -62,12 +62,13 @@ var (
 		"install":  Install,
 		"build":    Build,
 		"darwin":   Darwin,
-		"Linux":    Linux,
-		"Windows":  Windows,
-		"Docker":   Docker,
-		"DockerOS": DockerOS,
-		"Release":  Release,
-		"Snapshot": Snapshot,
+		"linux":    Linux,
+		"windows":  Windows,
+		"clean":    Clean,
+		"docker":   Docker,
+		"dockeros": DockerOS,
+		"release":  Release,
+		"snapshot": Snapshot,
 	}
 
 	targetList = []Target{}
@@ -444,6 +445,7 @@ func buildPlatform(goos, goarch string) error {
 		"-ldflags", ldflags(),
 		"-tags", buildTags(),
 		"-o", output,
+		mainPackage,
 	}
 	env := map[string]string{
 		"CGO_ENABLED": "0",
@@ -475,18 +477,16 @@ func gitCommit() string {
 	// runOutput("git", "rev-parse", "--short", "HEAD")
 	// cmd := exec.Command("git", "describe",
 	// 	"--long", "--tags", "--dirty", "--always")
-	out, err := runOutput("git", "rev-parse", "--short", "HEAD")
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	cmd.Stderr = os.Stderr
+	out, err := cmd.Output()
 	if err != nil {
 		if verboseFlag {
 			fmt.Fprintf(os.Stderr, "git returned error: %v\n", err)
 		}
 		return ""
 	}
-	version := strings.TrimSpace(string(out))
-	if verboseFlag {
-		fmt.Printf("git version is %s\n", version)
-	}
-	return version
+	return strings.TrimSpace(string(out))
 }
 
 // version returns the version string from the file VERSION
@@ -519,7 +519,8 @@ func buildTags() string {
 	return strings.Join(bd, " ")
 }
 
-func clean() error {
+// Clean remove dist directory
+func Clean() error {
 	if _, err := os.Stat("dist"); err != nil && os.IsNotExist(err) {
 		return err
 	}
