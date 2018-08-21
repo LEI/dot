@@ -8,8 +8,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/LEI/dot/internal/shell"
 )
 
 const (
@@ -36,42 +34,39 @@ var (
 	GitBin = "git"
 
 	// Stdout ...
-	Stdout io.Writer
+	Stdout io.Writer = os.Stdout
 	// Stderr ...
-	Stderr io.Writer
+	Stderr io.Writer = os.Stderr
 
 	cloneDepth    = 1
 	defaultBranch = "master"
 	defaultRemote = "origin"
 	repoFmt       = "https://github.com/%s.git"
-
-	git               = shell.RunCmd("git")
-	gitCombinedOutput = shell.CombinedOutputCmd("git")
 )
 
 func init() {
 	if err := checkGitVersion(); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-	Stdout = os.Stdout
-	Stdout = os.Stderr
+	// Stdout = os.Stdout
+	// Stdout = os.Stderr
 }
 
 func checkGitVersion() error {
-	// out, err := gitCombinedOutput("--version")
 	cmd := exec.Command("git", "--version")
 	buf, err := cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
 	out := string(buf)
-	ver := strings.TrimPrefix(out, "git version ")
-	// fmt.Println("GIT_VERSION", ver)
-	// if ver == "" {
+	out = strings.TrimPrefix(out, "git version ")
+	out = strings.TrimSuffix(out, "\n")
+	// fmt.Println("GIT_VERSION", out)
+	// if out == "" {
 	// 	return fmt.Errorf("%s: unable to parse git version", str)
 	// }
-	parts := strings.Split(ver, ".")
+	parts := strings.Split(out, ".")
 	major, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return err
@@ -139,11 +134,21 @@ func (r *Repo) SetURL(url string) *Repo {
 // 	return shell.Run(GitBin, args...)
 // }
 
-// Exec repo command
+// Exec git command
 func (r *Repo) Exec(args ...string) (string, string, error) {
 	var stdout, stderr bytes.Buffer
-	_, err := shell.Exec(nil, &stdout, &stderr, GitBin, args...)
-	return stdout.String(), stderr.String(), err
+	// _, err := shell.Exec(nil, &stdout, &stderr, GitBin, args...)
+	cmd := exec.Command(GitBin, args...)
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	cmd.Stdin = os.Stdin
+	if Verbose > 0 {
+		fmt.Fprintln(Stdout, "exec:", GitBin, strings.Join(args, " "))
+	}
+	err := cmd.Run()
+	outstr := strings.TrimSuffix(stdout.String(), "\n")
+	errstr := strings.TrimSuffix(stderr.String(), "\n")
+	return outstr, errstr, err
 }
 
 // Status repo
@@ -192,25 +197,17 @@ func (r *Repo) Clone() error {
 	// if status != 0 {
 	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
 	// }
-	err := git(args...)
-	// out, err := git(args...)
-	// if out != "" {
-	// 	fmt.Printf("%s", out)
-	// }
+	stdout, stderr, err := r.Exec(args...)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, err)
+		// return fmt.Errorf(stderr)
 	}
-	// stdout, stderr, err := r.Exec(args...)
-	// if err != nil {
-	// 	return fmt.Errorf("Unable to clone %s in %s:\n%s", r.URL, r.Dir, err)
-	// 	// return fmt.Errorf(stderr)
-	// }
-	// if stderr != "" && Verbose > 0 {
-	// 	fmt.Fprintln(Stderr, stderr)
-	// }
-	// if stdout != "" && Verbose > 0 {
-	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
-	// }
+	if stderr != "" && Verbose > 0 {
+		fmt.Fprintln(Stderr, stderr)
+	}
+	if stdout != "" && Verbose > 0 {
+		fmt.Fprintln(Stdout, stdout)
+	}
 	return nil
 }
 
@@ -233,15 +230,18 @@ func (r *Repo) Pull() error {
 	// if status != 0 {
 	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
 	// }
-	out, err := gitCombinedOutput(args...)
+	stderr, stdout, err := r.Exec(args...)
 	if err != nil {
-		if Force && strings.HasPrefix(out, "fatal: unable to access") {
+		if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
 			return nil
 		}
 		return err
 	}
-	if out != "" {
-		fmt.Fprintln(Stdout, out)
+	if stderr != "" && Verbose > 0 {
+		fmt.Fprintln(Stderr, stderr)
+	}
+	if stdout != "" && Verbose > 0 {
+		fmt.Fprintln(Stdout, stdout)
 	}
 	// stdout, stderr, err := r.Exec(args...)
 	// if err != nil {
