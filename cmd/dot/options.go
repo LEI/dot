@@ -11,11 +11,14 @@ import (
 )
 
 var (
-	binary    = "dot" // _, binary = filepath.Split(os.Args[0])
-	version   = "compiled manually"
-	commit    string
-	timestamp string
-	homeDir   = homedir.Get()
+	binary = "dot" // _, binary = filepath.Split(os.Args[0])
+
+	// LDFlags
+	version = "compiled manually"
+	commit  string
+	date    string
+
+	homeDir = homedir.Get()
 )
 
 // DotOptions hold all global options for restic.

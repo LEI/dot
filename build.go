@@ -10,18 +10,21 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
 )
 
-// Target ..
+// Target ...
 type Target struct {
 	Name string
 	Func TargetFunc
@@ -43,82 +46,182 @@ var (
 	namespace   = "github.com/LEI/dot"         // subdir of GOPATH
 	mainPackage = "github.com/LEI/dot/cmd/dot" // package name for the main package
 
-	listFlag    bool
-	testFlag    bool
+	constants = map[string]string{
+		// "main.packageName": mainPackage,
+		"main.version": version(),
+		"main.commit":  gitCommit(),
+		"main.date":    time.Now().Format("2006-01-02T15:04:05Z0700"),
+	}
+
+	buildTagsEnv = "DOT_BUILD_TAGS"
+
+	listFlag bool
+	// testFlag    bool
 	verboseFlag bool
 	versionFlag bool
 
 	// docMap map[string]string
 	funcMap = map[string]TargetFunc{
-		"vendor":   Vendor,
-		"dep":      getDep,
-		"check":    Check,
-		"test":     Test,
-		"testrace": TestRace,
-		"coverage": Coverage,
-		"vet":      Vet,
-		"lint":     Lint,
-		"fmt":      Fmt,
-		"install":  Install,
-		"build":    Build,
-		"darwin":   Darwin,
-		"linux":    Linux,
-		"windows":  Windows,
-		"clean":    Clean,
-		"docker":   Docker,
-		"dockeros": DockerOS,
-		"release":  Release,
-		"snapshot": Snapshot,
+		"vendor":        Vendor,
+		"dep":           dep,
+		"check":         Check,
+		"test":          Test,
+		"testrace":      TestRace,
+		"coverage":      Coverage,
+		"vet":           Vet,
+		"lint":          Lint,
+		"fmt":           Fmt,
+		"install":       Install,
+		"build":         Build,
+		"build:darwin":  Build_Darwin,
+		"build:linux":   Build_Linux,
+		"build:windows": Build_Windows,
+		"clean":         Clean,
+		"docker":        Docker,
+		"dockeros":      DockerOS,
+		"goreleaser":    goreleaser,
+		"release":       Release,
+		"snapshot":      Snapshot,
 	}
 
 	targetList = []Target{}
 
-	versionFormat = "Dot version %s\n"
+	usageFormat   = "Usage: %s [OPTIONS] TARGET...]\n"
+	versionFormat = "dot version %s build script\n"
 )
 
-var usageFormat = `Usage: %s [flags] [target...]
-`
-
 func init() {
-	flag.Usage = printUsage
+	flag.Usage = usage
 
 	// buildFlag = flag.Bool("build", true, "build main binary")
 	// testFlag = flag.String("test", "./...", "test packages")
 	flag.BoolVar(&listFlag, "l", listFlag, "list targets")
-	flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
+	// flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
 	flag.BoolVar(&verboseFlag, "v", verboseFlag, "verbose mode")
-	flag.BoolVar(&versionFlag, "V", versionFlag, "print version")
+	flag.BoolVar(&versionFlag, "version", versionFlag, "print version")
 }
 
-// printUsage of the flags
-func printUsage() {
-	_, binary := filepath.Split(os.Args[0])
-	fmt.Fprintf(flag.CommandLine.Output(), usageFormat, binary)
-	flag.PrintDefaults()
+func usage() {
+	showUsage(os.Stdout)
+	fmt.Printf("\nOptions:\n")
+	printDefaults()
 	// os.Exit(0)
+}
+
+// showUsage prints a description of the flags
+func showUsage(output io.Writer) {
+	_, binary := filepath.Split(os.Args[0])
+	// output := flag.CommandLine.Output()
+	fmt.Fprintf(output, usageFormat, binary)
+}
+
+// showTargets prints a list of the build actions
+func showTargets(output io.Writer) {
+	const padding = 1
+	w := tabwriter.NewWriter(output, 0, 0, 1, ' ', 0)
+	for _, t := range targetList {
+		name := t.Name
+		desc := t.Doc
+		if desc != "" { // strings.SplitN(desc, " ", 2)
+			parts := strings.Fields(desc)
+			if strings.ToLower(parts[0]) == name {
+				desc = strings.TrimPrefix(desc, parts[0])
+			}
+		}
+		name = strings.Replace(name, "_", ":", 1)
+		fmt.Fprintf(w, "  %s\t%s\n", name, desc)
+	}
+	w.Flush()
+}
+
+// PrintDefaults prints, to standard error unless configured otherwise, the
+// default values of all defined command-line flags in the set.
+func printDefaults() {
+	output := os.Stderr // flag.CommandLine.Output()
+	w := tabwriter.NewWriter(output, 0, 0, 1, ' ', 0)
+	flag.VisitAll(func(f *flag.Flag) {
+		s := fmt.Sprintf("  -%s", f.Name) // Two spaces before -; see next two comments.
+		name, usage := flag.UnquoteUsage(f)
+		if len(name) > 0 {
+			s += " " + name
+		}
+		// // Boolean flags of one ASCII letter are so common we
+		// // treat them specially, putting their usage on the same line.
+		// if len(s) <= 4 { // space, space, '-', 'x'.
+		// 	s += "\t"
+		// } else {
+		// 	// Four spaces before the tab triggers good alignment
+		// 	// for both 4- and 8-space tab stops.
+		// 	s += "\n    \t"
+		// }
+		s += "\t "
+		s += strings.Replace(usage, "\n", "\n    \t", -1)
+
+		if !isZeroValue(f, f.DefValue) {
+			// if _, ok := f.Value.(*stringValue); ok {
+			// 	// put quotes on the value
+			// 	s += fmt.Sprintf(" (default %q)", f.DefValue)
+			// } else {
+			s += fmt.Sprintf(" (default: %v)", f.DefValue)
+			// }
+		}
+		fmt.Fprintf(w, "%s\n", s)
+	})
+	w.Flush()
+}
+
+// isZeroValue guesses whether the string represents the zero
+// value for a flag. It is not accurate but in practice works OK.
+func isZeroValue(f *flag.Flag, value string) bool {
+	// Build a zero value of the flag's Value type, and see if the
+	// result of calling its String method equals the value passed in.
+	// This works unless the Value type is itself an interface type.
+	typ := reflect.TypeOf(f.Value)
+	var z reflect.Value
+	if typ.Kind() == reflect.Ptr {
+		z = reflect.New(typ.Elem())
+	} else {
+		z = reflect.Zero(typ)
+	}
+	if value == z.Interface().(flag.Value).String() {
+		return true
+	}
+
+	switch value {
+	case "false", "", "0":
+		return true
+	}
+	return false
 }
 
 // Execute build command
 func execute() error {
-	if len(os.Args) == 1 {
-		printUsage()
-		printTargets()
-		return nil
+	// Default target when no args are provided
+	if len(os.Args[1:]) == 0 {
+		usage() // showUsage(os.Stderr)
+		// fmt.Printf("\nTargets:\n")
+		// showTargets(os.Stdout)
+		os.Exit(2) // return nil
 	}
 	// Parse targets
 	ts, err := parse()
 	if err != nil {
 		return err
 	}
+	// if listFlag && versionFlag {
+	// 	return errors.New("-l and -version cannot be specified at the same time")
+	// }
 	switch {
-	case listFlag:
-		printTargets()
-		return nil
-	case testFlag:
-		return testV() // run("go", "test", "./...")
 	case versionFlag:
+		// Print program version and exit
 		fmt.Printf(versionFormat, version())
 		return nil
+	case listFlag:
+		fmt.Printf("Targets:\n")
+		showTargets(os.Stdout)
+		return nil
+		// case testFlag:
+		// 	return testV()
 	}
 	return serial(ts...)
 }
@@ -145,6 +248,29 @@ func serial(ts ...Target) error {
 func serialFunc(fs ...TargetFunc) error {
 	for _, f := range fs {
 		if err := f(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// asyncFunc targets
+func asyncFunc(fs ...TargetFunc) error {
+	// done := make(chan bool, 1)
+	errs := make(chan error, len(fs))
+	for _, f := range fs {
+		go func(f TargetFunc) {
+			if err := f(); err != nil {
+				errs <- err
+				return
+			}
+			errs <- nil // close(errs)
+		}(f)
+	}
+	select {
+	case err := <-errs:
+		if err != nil {
+			// fmt.Printf("async error: %s", err)
 			return err
 		}
 	}
@@ -188,27 +314,30 @@ func parse() ([]Target, error) {
 				break
 			}
 		}
-		if j < 0 {
-			// return fmt.Errorf("unable to find target %s", a)
-			printUsage()
-			printTargets()
-			return ts, fmt.Errorf("%s: invalid target", a)
+		var t Target
+		if j >= 0 {
+			t = targetList[j]
+		} else {
+			f, ok := funcMap[a]
+			if !ok {
+				// unable to find target
+				showUsage(os.Stderr) // usage()
+				return ts, fmt.Errorf("target not found: %s", a)
+				// return ts, fmt.Errorf(
+				// 	"%s: invalid arguments",
+				// 	strings.Join(args, " "),
+				// )
+			}
+			t = Target{
+				Name: a,
+				Func: f,
+			}
 			// return ts, fmt.Errorf(
 			// 	"%s: invalid target in args '%s'",
 			// 	a,
 			// 	strings.Join(args[1:], " "),
 			// )
 		}
-		t := targetList[j]
-		// t, ok := funcMap[a]
-		// if !ok {
-		// 	// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
-		// 	printUsage()
-		// 	return ts, fmt.Errorf(
-		// 		"%s: invalid arguments",
-		// 		strings.Join(args, " "),
-		// 	)
-		// }
 		// Remove target from arguments once registered
 		os.Args = append(os.Args[:i-diff], os.Args[i+1-diff:]...)
 		// Append target to queue
@@ -218,17 +347,18 @@ func parse() ([]Target, error) {
 	return ts, nil
 }
 
-// Vendor install dependencies specified in Gopkg.toml
+// Vendor run dep ensure to install dependencies specified in Gopkg.toml
 func Vendor() error {
-	if err := getDep(); err != nil {
+	if err := dep(); err != nil {
 		return err
 	}
 	return run("dep", "ensure")
 }
 
-// Install go dep
-func getDep() error {
+// Dep install go dep
+func dep() error {
 	if executable("dep") {
+		// Nothing to be done for 'dep'
 		return nil
 	}
 	if runtime.GOOS == "darwin" {
@@ -240,15 +370,23 @@ func getDep() error {
 
 // Check run tests and linters
 func Check() error {
-	return serialFunc(Test, Vet, Lint, Fmt)
+	if strings.Contains(runtime.Version(), "1.8") {
+		// Go 1.8 doesn't play along with go test ./... and /vendor.
+		// We could fix that, but that would take time.
+		fmt.Printf("Skip Check on %s\n", runtime.Version())
+		return nil
+	}
+	// return serialFunc(Test, Vet, Lint, Fmt)
+	return asyncFunc(Test, Vet, Lint, Fmt)
 }
 
 // Test run go tests
 func Test() error {
-	args := []string{"test", "./..."}
+	args := []string{"test"}
 	if verboseFlag {
 		args = append(args, "-v")
 	}
+	args = append(args, "./...")
 	return run("go", args...)
 }
 
@@ -277,10 +415,11 @@ func Coverage() error {
 
 // Vet run go vet
 func Vet() error {
-	args := []string{"vet", "./..."}
+	args := []string{"vet"}
 	if verboseFlag {
 		args = append(args, "-v")
 	}
+	args = append(args, "./...")
 	return run("go", args...)
 }
 
@@ -320,6 +459,9 @@ func Lint() error {
 
 // Fmt run gofmt as a linter
 func Fmt() error {
+	if !isGoLatest() {
+		return nil
+	}
 	// gofmt -l -s . | grep -v ^vendor/
 	// if !executable("goimports") {
 	// 	if err := run("go", "get", "golang.org/x/tools/cmd/goimports"); err != nil {
@@ -366,7 +508,7 @@ var pkgPrefixLen = len(namespace)
 
 // List packages
 func findPackages() ([]string, error) {
-	// if err := getDep(); err != nil {
+	// if err := dep(); err != nil {
 	// 	return []string{}, err
 	// }
 	s, err := runOutput("go", "list", "./...")
@@ -390,8 +532,8 @@ func findPackages() ([]string, error) {
 func Install() error {
 	args := []string{
 		"install",
-		"-ldflags", ldflags(),
-		"-tags", buildTags(),
+		"-ldflags", ldflags(constants),
+		"-tags", buildTags(buildTagsEnv),
 		mainPackage,
 	}
 	return run("go", args...)
@@ -410,8 +552,8 @@ func Build() error {
 	}
 	// args = append([]string{
 	// 	"build",
-	// 	"-ldflags", ldflags(),
-	// 	"-tags", buildTags(),
+	// 	"-ldflags", ldflags(constants),
+	// 	"-tags", buildTags(buildTagsEnv),
 	// }, args...)
 	// return run("go", args...)
 	for _, p := range platforms {
@@ -422,18 +564,18 @@ func Build() error {
 	return nil
 }
 
-// Darwin build binary for macOS
-func Darwin() error {
+// Build_Darwin build binary for macOS
+func Build_Darwin() error {
 	return buildPlatform("darwin", "amd64")
 }
 
-// Linux build binary for Linux
-func Linux() error {
+// Build_Linux build binary for Linux
+func Build_Linux() error {
 	return buildPlatform("linux", "amd64")
 }
 
-// Windows build binary for Windows
-func Windows() error {
+// Build_Windows build binary for Windows
+func Build_Windows() error {
 	return buildPlatform("windows", "amd64")
 }
 
@@ -442,8 +584,8 @@ func buildPlatform(goos, goarch string) error {
 	output := "dist/" + goos + "_" + goarch + "/dot"
 	args := []string{
 		"build",
-		"-ldflags", ldflags(),
-		"-tags", buildTags(),
+		"-ldflags", ldflags(constants),
+		"-tags", buildTags(buildTagsEnv),
 		"-o", output,
 		mainPackage,
 	}
@@ -456,14 +598,8 @@ func buildPlatform(goos, goarch string) error {
 	return runWith(env, "go", args...)
 }
 
-// Build LDFlags
-func ldflags() string {
-	cs := map[string]string{
-		// "main.packageName": mainPackage,
-		"main.version":   version(),
-		"main.commit":    gitCommit(),
-		"main.timestamp": time.Now().Format("2006-01-02T15:04:05Z0700"),
-	}
+// Build LDFlags with provided constants
+func ldflags(cs map[string]string) string {
 	l := make([]string, 0, len(cs))
 	for k, v := range cs {
 		l = append(l, fmt.Sprintf(`-X "%s=%s"`, k, v))
@@ -502,9 +638,10 @@ func version() string {
 	return strings.TrimSpace(string(buf))
 }
 
-func buildTags() string {
+// Parse build tags from environment variable
+func buildTags(s string) string {
 	bd := []string{} // defaultBuildTags
-	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
+	if envTags := os.Getenv(s); envTags != "" {
 		for _, et := range strings.Fields(envTags) {
 			bd = append(bd, et)
 		}
@@ -581,25 +718,6 @@ func executable(name string) bool {
 	return err == nil
 }
 
-func printTargets() {
-	const padding = 1
-	fmt.Println("Targets:")
-	w := &tabwriter.Writer{}
-	w.Init(os.Stdout, 0, 8, 3, '\t', 0)
-	for _, t := range targetList {
-		name := t.Name
-		desc := t.Doc
-		if desc != "" { // strings.SplitN(desc, " ", 2)
-			parts := strings.Fields(desc)
-			if strings.ToLower(parts[0]) == name {
-				desc = strings.TrimPrefix(desc, parts[0])
-			}
-		}
-		fmt.Fprintf(w, "  %s\t%s\n", name, desc)
-	}
-	w.Flush()
-}
-
 // func getFunctionName(i interface{}) string {
 // 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 // }
@@ -612,9 +730,13 @@ func getPackage(path string, files []string) (*ast.Package, error) {
 	// for _, f := range files {
 	// 	fm[f] = true
 	// }
-	// filename, _, ok := runtime.Caller(1)
+	_, file, _, ok := runtime.Caller(1) // file = "build.go"
+	if !ok || file == "" {
+		return nil, fmt.Errorf("invalid program file name %s", file)
+	}
+	filename := filepath.Base(file)
 	filter := func(f os.FileInfo) bool {
-		return f.Name() == "build.go" // fm[f.Name()]
+		return f.Name() == filename // fm[f.Name()]
 	}
 	pkgs, err := parser.ParseDir(fset, path, filter, parser.ParseComments)
 	if err != nil {
@@ -661,10 +783,10 @@ func Docker() error {
 	if !ok {
 		// Build from golang if OS is undefined
 		return testDockerCompose("base", "test")
-		// return fmt.Errorf("OS is undefined")
+		// return errors.New("OS is undefined")
 	}
 	if envOS == "" {
-		return fmt.Errorf("OS is empty")
+		return errors.New("OS is empty")
 	}
 	return testDockerOS(envOS)
 	// if err := testDockerCompose("test_os", "test_os"); err != nil {
@@ -728,18 +850,20 @@ func testDockerCompose(build, test string) error {
 
 // Release releases with goreleaser
 func Release() error {
-	getGoreleaser()
+	if err := goreleaser(); err != nil {
+		return err
+	}
 	return run("goreleaser", "--rm-dist")
 }
 
-func getGoreleaser() error {
+func goreleaser() error {
 	if executable("goreleaser") {
 		return nil
 	}
 	if runtime.GOOS == "darwin" {
 		return run("brew", "install", "goreleaser/tap/goreleaser")
 	}
-	if err := serialFunc(getDep); err != nil {
+	if err := dep(); err != nil {
 		return err
 	}
 	repo := "github.com/goreleaser/goreleaser"
@@ -756,7 +880,7 @@ func getGoreleaser() error {
 
 // Snapshot creates a snapshot release
 func Snapshot() error {
-	if err := serialFunc(getGoreleaser); err != nil {
+	if err := goreleaser(); err != nil {
 		return err
 	}
 	args := []string{"--rm-dist", "--snapshot"}
@@ -764,6 +888,27 @@ func Snapshot() error {
 		args = append(args, "--debug")
 	}
 	return run("goreleaser", args...)
+}
+
+// https://github.com/hashicorp/go-version
+func isGoLatest() bool {
+	// return strings.Contains(runtime.Version(), "1.10")
+	ver := runtime.Version()
+	ver = strings.TrimPrefix(ver, "go")
+	parts := strings.SplitN(ver, ".", 3)
+	if len(parts) < 2 {
+		panic("invalid go version " + ver)
+	}
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		panic(err)
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		panic(err)
+	}
+	// patch := strconv.Atoi(parts[2])
+	return major >= 1 && minor >= 10
 }
 
 func init() {

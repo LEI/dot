@@ -2,6 +2,11 @@
 # https://github.com/joefitzgerald/go-plus/blob/master/appveyor.yml<Paste>
 # https://blog.markvincze.com/setting-up-an-appveyor-pipeline-for-golang/
 
+# https://github.com/joaope/LocalAppVeyor
+# brew cask install dotnet dotnet-sdk
+# dotnet tool install -g localappveyor --version 0.5.0-alpha9
+# LocalAppVeyor lint --token ...
+
 image: Visual Studio 2017
 
 # version: 1.0.0.{build}
@@ -42,6 +47,7 @@ build_script:
   - dot ls
   - dot sync --verbose
   - dot install --packages --verbose
+  - dot install --dry-run --verbose # --packages
   - go run build.go build:windows
   # - choco install --yes --no-progress docker-compose
   # - OS=windows go run build.go -v docker
