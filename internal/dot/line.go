@@ -29,12 +29,12 @@ func (l *Line) Type() string {
 
 // DoString string
 func (l *Line) DoString() string {
-	return fmt.Sprintf("echo '%s' >> %s", l.Data, l.Target)
+	return fmt.Sprintf("echo '%s' >> %s", l.Data, tildify(l.Target))
 }
 
 // UndoString string
 func (l *Line) UndoString() string {
-	return fmt.Sprintf("sed -i '#^%s$#d' %s", l.Data, l.Target)
+	return fmt.Sprintf("sed -i '#^%s$#d' %s", l.Data, tildify(l.Target))
 }
 
 // Status check task

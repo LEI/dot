@@ -3,8 +3,11 @@ package dot
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/LEI/dot/internal/ostype"
+	"github.com/docker/docker/pkg/homedir"
 )
 
 // Tasker interface
@@ -34,6 +37,10 @@ type Task struct {
 
 	current string // Current action name
 }
+
+var (
+	homeDir = homedir.Get()
+)
 
 // SetAction name
 func (t *Task) SetAction(name string) {
@@ -127,6 +134,16 @@ func (t *Task) CheckIf() error {
 	// 	}
 	// }
 	return nil
+}
+
+func tildify(path string) string {
+	prefix := filepath.Join(homeDir)
+	// +string(os.PathSeparator)
+	if !strings.HasPrefix(path, prefix) {
+		return path
+	}
+	s := homedir.GetShortcutString()
+	return s + strings.TrimPrefix(path, prefix)
 }
 
 // exists checks if a file is present
