@@ -27,12 +27,12 @@ func (d *Dir) Type() string {
 
 // DoString string
 func (d *Dir) DoString() string {
-	return fmt.Sprintf("mkdir -p %s", d.Path)
+	return fmt.Sprintf("mkdir -p %s", tildify(d.Path))
 }
 
 // UndoString string
 func (d *Dir) UndoString() string {
-	return fmt.Sprintf("rmdir %s", d.Path)
+	return fmt.Sprintf("rmdir %s", tildify(d.Path))
 }
 
 // Status check task

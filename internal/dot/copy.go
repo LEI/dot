@@ -26,12 +26,12 @@ func (c *Copy) Type() string {
 
 // DoString string
 func (c *Copy) DoString() string {
-	return fmt.Sprintf("cp %s %s", c.Source, c.Target)
+	return fmt.Sprintf("cp %s %s", tildify(c.Source), tildify(c.Target))
 }
 
 // UndoString string
 func (c *Copy) UndoString() string {
-	return fmt.Sprintf("rm %s", c.Target)
+	return fmt.Sprintf("rm %s", tildify(c.Target))
 }
 
 // Status check task

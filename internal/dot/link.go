@@ -38,12 +38,12 @@ func (l *Link) Type() string {
 
 // DoString string
 func (l *Link) DoString() string {
-	return fmt.Sprintf("ln -s %s %s", l.Source, l.Target)
+	return fmt.Sprintf("ln -s %s %s", tildify(l.Source), tildify(l.Target))
 }
 
 // UndoString string
 func (l *Link) UndoString() string {
-	return fmt.Sprintf("rm %s", l.Target)
+	return fmt.Sprintf("rm %s", tildify(l.Target))
 }
 
 // Status check task

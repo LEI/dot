@@ -85,12 +85,12 @@ func (t *Tpl) Prepare() error {
 
 // DoString string
 func (t *Tpl) DoString() string {
-	return fmt.Sprintf("gotpl %s %s", t.Source, t.Target)
+	return fmt.Sprintf("gotpl %s %s", tildify(t.Source), tildify(t.Target))
 }
 
 // UndoString string
 func (t *Tpl) UndoString() string {
-	return fmt.Sprintf("rm %s", t.Target)
+	return fmt.Sprintf("rm %s", tildify(t.Target))
 }
 
 // Status check task
