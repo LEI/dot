@@ -42,7 +42,7 @@ build_script:
   - dot ls
   - dot sync --verbose
   - dot install --packages --verbose
-  - go run build.go windows
+  - go run build.go build:windows
   # - choco install --yes --no-progress docker-compose
   # - OS=windows go run build.go -v docker
   # - docker-compose build test_os
