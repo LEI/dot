@@ -199,9 +199,9 @@ func execute() error {
 	// Default target when no args are provided
 	if len(os.Args[1:]) == 0 {
 		usage() // showUsage(os.Stderr)
-		fmt.Printf("\nTargets:\n")
-		showTargets(os.Stdout)
-		return nil
+		// fmt.Printf("\nTargets:\n")
+		// showTargets(os.Stdout)
+		os.Exit(2) // return nil
 	}
 	// Parse targets
 	ts, err := parse()
@@ -254,6 +254,23 @@ func serialFunc(fs ...TargetFunc) error {
 	return nil
 }
 
+// // asyncFunc targets
+// func asyncFunc(fs ...TargetFunc) error {
+// 	errs := make(chan error)
+// 	for _, f := range fs {
+// 		go func(f TargetFunc) {
+// 			if err := f(); err != nil {
+// 				errs <- err
+// 				return
+// 			}
+// 			close(errs)
+// 			// errs <- nil
+// 		}(f)
+// 	}
+// 	todo := <-errs
+// 	return nil
+// }
+
 // Execute target
 func execTarget(t Target) error {
 	if verboseFlag {
@@ -297,9 +314,9 @@ func parse() ([]Target, error) {
 		} else {
 			f, ok := funcMap[a]
 			if !ok {
-				// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
+				// unable to find target
 				showUsage(os.Stderr) // usage()
-				return ts, fmt.Errorf("unable to find target %s", a)
+				return ts, fmt.Errorf("target not found: %s", a)
 				// return ts, fmt.Errorf(
 				// 	"%s: invalid arguments",
 				// 	strings.Join(args, " "),
@@ -354,14 +371,16 @@ func Check() error {
 		return nil
 	}
 	return serialFunc(Test, Vet, Lint, Fmt)
+	// return asyncFunc(Test, Vet, Lint, Fmt)
 }
 
 // Test run go tests
 func Test() error {
-	args := []string{"test", "./..."}
+	args := []string{"test"}
 	if verboseFlag {
 		args = append(args, "-v")
 	}
+	args = append(args, "./...")
 	return run("go", args...)
 }
 
@@ -390,10 +409,11 @@ func Coverage() error {
 
 // Vet run go vet
 func Vet() error {
-	args := []string{"vet", "./..."}
+	args := []string{"vet"}
 	if verboseFlag {
 		args = append(args, "-v")
 	}
+	args = append(args, "./...")
 	return run("go", args...)
 }
 
