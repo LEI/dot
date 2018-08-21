@@ -93,6 +93,7 @@ func init() {
 // printUsage of the flags
 func printUsage() {
 	_, binary := filepath.Split(os.Args[0])
+	// flag.CommandLine not available on go 1.8?
 	fmt.Fprintf(flag.CommandLine.Output(), usageFormat, binary)
 	flag.PrintDefaults()
 	// os.Exit(0)
@@ -240,6 +241,12 @@ func getDep() error {
 
 // Check run tests and linters
 func Check() error {
+	if strings.Contains(runtime.Version(), "1.8") {
+		// Go 1.8 doesn't play along with go test ./... and /vendor.
+		// We could fix that, but that would take time.
+		fmt.Printf("Skip Check on %s\n", runtime.Version())
+		return
+	}
 	return serialFunc(Test, Vet, Lint, Fmt)
 }
 
