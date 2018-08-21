@@ -4,14 +4,26 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/doc"
+	"go/parser"
+	"go/token"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"text/tabwriter"
 	"time"
 )
+
+// Target ...
+type Target struct {
+	Name string
+	Func targetFunc
+	Doc  string
+}
 
 type targetFunc func() error
 
@@ -20,22 +32,27 @@ var (
 	namespace   = "github.com/LEI/dot"         // subdir of GOPATH
 	mainPackage = "github.com/LEI/dot/cmd/dot" // package name for the main package
 
+	listFlag    bool
 	testFlag    bool
 	verboseFlag bool
 	versionFlag bool
 
-	targets = map[string]targetFunc{
-		"vendor":    vendor,
-		"dep":       getDep,
-		"check":     check,
-		"test":      goTest,
-		"test-race": goTestRace,
-		"coverage":  goCoverage,
-		"vet":       goVet,
-		"lint":      goLint,
-		"fmt":       goFmt,
-		"install":   install,
+	// docMap map[string]string
+	funcMap = map[string]targetFunc{
+		"vendor":   Vendor,
+		"dep":      getDep,
+		"check":    Check,
+		"test":     Test,
+		"testrace": TestRace,
+		"coverage": Coverage,
+		"vet":      Vet,
+		"lint":     Lint,
+		"fmt":      Fmt,
+		"install":  Install,
+		"build":    Build,
 	}
+
+	targetList = []Target{}
 
 	versionFormat = "Dot version %s\n"
 )
@@ -47,8 +64,8 @@ func init() {
 	flag.Usage = usage
 
 	// buildFlag = flag.Bool("build", true, "build main binary")
-	// listFlag = flag.Bool("l", false, "list targets")
 	// testFlag = flag.String("test", "./...", "test packages")
+	flag.BoolVar(&listFlag, "l", listFlag, "list targets")
 	flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
 	flag.BoolVar(&verboseFlag, "v", verboseFlag, "verbose mode")
 	flag.BoolVar(&versionFlag, "V", versionFlag, "print version")
@@ -68,84 +85,35 @@ func execute() error {
 		usage()
 		return nil
 	}
-	do, err := parseArgs()
+	// Parse targets
+	tl, err := parse()
 	if err != nil {
 		return err
 	}
-	// flag.Parse()
-	fmt.Println(testFlag, versionFlag, verboseFlag)
-	// if listFlag && testFlag {
-	// }
 	switch {
-	// case listFlag:
-	// 	return nil
+	case listFlag:
+		printTargets()
+		return nil
 	case testFlag:
-		return goTestV() // run("go", "test", "./...")
+		return testV() // run("go", "test", "./...")
 	case versionFlag:
 		fmt.Printf(versionFormat, version())
 		return nil
 	}
-	for _, f := range do {
-		if err := f(); err != nil {
+	for _, t := range tl {
+		if verboseFlag {
+			fmt.Printf("Running target: %s", t.Name)
+		}
+		if err := t.Func(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Run an external command.
-func run(name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, strings.Join(args, " "))
-	}
-	return cmd.Run()
-}
-
-func runWith(env map[string]string, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	cmd.Env = os.Environ()
-	for k, v := range env {
-		cmd.Env = append(cmd.Env, k+"="+v)
-	}
-	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, strings.Join(args, " "))
-	}
-	return cmd.Run()
-}
-
-func runOutput(name string, args ...string) (string, error) {
-	// buf := bytes.Buffer{}
-	cmd := exec.Command(name, args...)
-	// cmd.Stdout = &buf
-	// cmd.Stderr = os.Stderr
-	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, strings.Join(args, " "))
-	}
-	// if err := cmd.Run(); err != nil {
-	// 	return "", err
-	// }
-	// return buf.String(), nil
-	buf, err := cmd.Output()
-	s := strings.TrimSuffix(string(buf), "\n")
-	return s, err
-}
-
-// Check if a command is available.
-func executable(name string) bool {
-	err := run("command", "-v", name)
-	return err == nil
-}
-
-// Parse flags and target in arguments.
-func parseArgs() ([]targetFunc, error) {
-	do := []targetFunc{}
+// Parse arguments (targets) and command flags.
+func parse() ([]Target, error) {
+	tl := []Target{}
 	// args := os.Args[1:]
 	args := make([]string, len(os.Args)) // os.Args[1:]
 	copy(args, os.Args)
@@ -154,32 +122,50 @@ func parseArgs() ([]targetFunc, error) {
 			continue
 		}
 		diff := len(args) - len(os.Args)
+		// if diff < 0 {
+		// 	diff = 0
+		// }
 		// a := args[i]
 		if len(a) > 1 && strings.HasPrefix(a, "-") {
 			flag.Parse()
 			continue
 		}
-		t, ok := targets[a]
-		if !ok {
-			// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
+		j := -1
+		for k, t := range targetList {
+			if t.Name == a {
+				j = k
+				break
+			}
+		}
+		if j < 0 {
+			// return fmt.Errorf("unable to find target %s", a)
 			usage()
-			return do, fmt.Errorf(
+			return tl, fmt.Errorf(
 				"%s: invalid arguments",
 				strings.Join(args, " "),
 			)
 		}
+		t := targetList[j]
+		// t, ok := funcMap[a]
+		// if !ok {
+		// 	// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
+		// 	usage()
+		// 	return tl, fmt.Errorf(
+		// 		"%s: invalid arguments",
+		// 		strings.Join(args, " "),
+		// 	)
+		// }
 		// Remove target from arguments once registered
 		os.Args = append(os.Args[:i-diff], os.Args[i+1-diff:]...)
 		// Append target to queue
-		do = append(do, t)
+		tl = append(tl, t)
 	}
-	fmt.Println("PARSE", os.Args[1:])
 	flag.Parse()
-	return do, nil
+	return tl, nil
 }
 
-// Install dependencies specified in Gopkg.toml.
-func vendor() error {
+// Vendor install dependencies specified in Gopkg.toml.
+func Vendor() error {
 	if err := getDep(); err != nil {
 		return err
 	}
@@ -198,25 +184,25 @@ func getDep() error {
 	return run("go", "get", "-u", "github.com/golang/dep/cmd/dep")
 }
 
-// Run tests and linters.
-func check() error {
-	if err := goTest(); err != nil {
+// Check run tests and linters.
+func Check() error {
+	if err := Test(); err != nil {
 		return err
 	}
-	if err := goVet(); err != nil {
+	if err := Vet(); err != nil {
 		return err
 	}
-	if err := goLint(); err != nil {
+	if err := Lint(); err != nil {
 		return err
 	}
-	if err := goFmt(); err != nil {
+	if err := Fmt(); err != nil {
 		return err
 	}
 	return nil
 }
 
 // Run go tests.
-func goTest() error {
+func Test() error {
 	args := []string{"test", "./..."}
 	if verboseFlag {
 		args = append(args, "-v")
@@ -225,17 +211,17 @@ func goTest() error {
 }
 
 // Run verbose go tests.
-func goTestV() error {
+func testV() error {
 	return run("go", "test", "-v", "./...")
 }
 
 // Run go tests with race detector.
-func goTestRace() error {
+func TestRace() error {
 	return run("go", "test", "-v", "-race", "./...")
 }
 
 // Run test coverage.
-func goCoverage() error {
+func Coverage() error {
 	profile := os.Getenv("COVERPROFILE")
 	if profile == "" {
 		profile = "coverage.txt"
@@ -248,7 +234,7 @@ func goCoverage() error {
 }
 
 // Run go vet.
-func goVet() error {
+func Vet() error {
 	args := []string{"vet", "./..."}
 	if verboseFlag {
 		args = append(args, "-v")
@@ -257,7 +243,7 @@ func goVet() error {
 }
 
 // Run golint.
-func goLint() error {
+func Lint() error {
 	if !executable("golint") {
 		if err := run("go", "get", "golang.org/x/lint/golint"); err != nil {
 			return err
@@ -292,7 +278,7 @@ func goLint() error {
 
 // // Run gofmt as a linter.
 // // gofmt -l -s . | grep -v ^vendor/
-func goFmt() error {
+func Fmt() error {
 	// if !executable("goimports") {
 	// 	if err := run("go", "get", "golang.org/x/tools/cmd/goimports"); err != nil {
 	// 		return err
@@ -358,8 +344,8 @@ func findPackages() ([]string, error) {
 	return pkgs, nil
 }
 
-// Run go install.
-func install() error {
+// Install dot package.
+func Install() error {
 	args := []string{
 		"install",
 		"-ldflags", ldflags(),
@@ -367,6 +353,49 @@ func install() error {
 		mainPackage,
 	}
 	return run("go", args...)
+}
+
+// Build binaries for all platforms.
+func Build() error {
+	platforms := []struct {
+		os   string
+		arch string
+		// arm  string
+	}{
+		{"darwin", "amd64"},
+		{"linux", "amd64"},
+		{"windows", "amd64"},
+	}
+	// args = append([]string{
+	// 	"build",
+	// 	"-ldflags", ldflags(),
+	// 	"-tags", buildTags(),
+	// }, args...)
+	// return run("go", args...)
+	for _, p := range platforms {
+		if err := buildPlatform(p.os, p.arch); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Run go build for a given platform.
+func buildPlatform(goos, goarch string) error {
+	output := "dist/" + goos + "_" + goarch + "/dot"
+	args := []string{
+		"build",
+		"-ldflags", ldflags(),
+		"-tags", buildTags(),
+		"-o", output,
+	}
+	env := map[string]string{
+		"CGO_ENABLED": "0",
+		"GOOS":        goos,
+		"GOARCH":      goarch,
+		"GOARM":       "",
+	}
+	return runWith(env, "go", args...)
 }
 
 // Build LDFlags.
@@ -432,6 +461,148 @@ func buildTags() string {
 		bd[i] = strings.TrimSpace(bd[i])
 	}
 	return strings.Join(bd, " ")
+}
+
+func clean() error {
+	if _, err := os.Stat("dist"); err != nil && os.IsNotExist(err) {
+		return err
+	}
+	if verboseFlag {
+		fmt.Println("Removing dist...")
+	}
+	return os.RemoveAll("dist")
+}
+
+// Run an external command.
+func run(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	if verboseFlag {
+		fmt.Printf("exec: %s %s\n", name, strings.Join(args, " "))
+	}
+	return cmd.Run()
+}
+
+func runWith(env map[string]string, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	cmd.Env = os.Environ()
+	for k, v := range env {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
+	if verboseFlag {
+		fmt.Printf("exec: %s %s\n", name, strings.Join(args, " "))
+	}
+	return cmd.Run()
+}
+
+func runOutput(name string, args ...string) (string, error) {
+	// buf := bytes.Buffer{}
+	cmd := exec.Command(name, args...)
+	// cmd.Stdout = &buf
+	// cmd.Stderr = os.Stderr
+	if verboseFlag {
+		fmt.Printf("exec: %s %s\n", name, strings.Join(args, " "))
+	}
+	// if err := cmd.Run(); err != nil {
+	// 	return "", err
+	// }
+	// return buf.String(), nil
+	buf, err := cmd.Output()
+	s := strings.TrimSuffix(string(buf), "\n")
+	return s, err
+}
+
+// Check if a command is available.
+func executable(name string) bool {
+	cmd := exec.Command("command", "-v", name)
+	err := cmd.Run()
+	return err == nil
+}
+
+func printTargets() {
+	const padding = 1
+	fmt.Println("Targets:")
+	w := &tabwriter.Writer{}
+	w.Init(os.Stdout, 0, 8, 3, '\t', 0)
+	for _, t := range targetList {
+		fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Doc)
+	}
+	w.Flush()
+}
+
+// func getFunctionName(i interface{}) string {
+// 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+// }
+
+// getPackage
+// https://github.com/magefile/mage/blob/master/parse/parse.go
+func getPackage(path string, files []string) (*ast.Package, error) {
+	fset := token.NewFileSet()
+	// fm := make(map[string]bool, len(files))
+	// for _, f := range files {
+	// 	fm[f] = true
+	// }
+	filter := func(f os.FileInfo) bool {
+		return f.Name() == "build.go" // fm[f.Name()]
+	}
+	pkgs, err := parser.ParseDir(fset, path, filter, parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse directory: %v", err)
+	}
+	for name, pkg := range pkgs {
+		if !strings.HasSuffix(name, "_test") {
+			return pkg, nil
+		}
+	}
+	return nil, fmt.Errorf("no non-test packages found in %s", path)
+}
+
+func parseDoc() (map[string]string, error) {
+	m := map[string]string{}
+	pkg, err := getPackage(".", []string{"build.go"})
+	if err != nil {
+		return m, err
+	}
+	p := doc.New(pkg, "./", 0)
+	for _, f := range p.Funcs {
+		if f.Recv != "" {
+			// skip methods
+			continue
+		}
+		if !ast.IsExported(f.Name) {
+			// skip non-exported functions
+			continue
+		}
+		name := strings.ToLower(f.Name)
+		docStr := strings.TrimSpace(f.Doc)
+		if docStr != "" {
+			docStr = strings.Split(docStr, "\n")[0]
+		}
+		m[name] = docStr
+	}
+	return m, nil
+}
+
+func init() {
+	dm, err := parseDoc()
+	if err != nil {
+		// error while parsing doc
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	for name, docStr := range dm {
+		t := Target{
+			Name: name,
+			Func: funcMap[name],
+			Doc:  docStr,
+		}
+		targetList = append(targetList, t)
+	}
 }
 
 func main() {
