@@ -1,127 +1,5 @@
 package ostype
 
-import (
-	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"regexp"
-	"runtime"
-	"strconv"
-	"strings"
-
-	"gopkg.in/go-ini/ini.v1"
-)
-
-var (
-	// OS ...
-	OS = runtime.GOOS
-
-	// List of OS types
-	List []string
-
-	// Verbose ...
-	Verbose bool
-
-	release Release
-)
-
-func init() {
-	List = Get()
-	// fmt.Printf("OS types: %+v\n", List)
-}
-
-// Release ...
-type Release struct {
-	ID         string `ini:"ID"`
-	IDLike     string `ini:"ID_LIKE"`
-	Name       string `ini:"NAME"`
-	PrettyName string `ini:"PRETTY_NAME"`
-	Version    string `ini:"VERSION"`
-	VersionID  string `ini:"VERSION_ID"`
-	// HomeURL string `ini:"HOME_URL"`
-	// SupportURL string `ini:"SUPPORT_URL"`
-	// BugReportURL string `ini:"BUG_REPORT_URL"`
-	DistribID          string `ini:"DISTRIB_ID"`
-	DistribRelease     string `ini:"DISTRIB_RELEASE"`
-	DistribCodename    string `ini:"DISTRIB_CODENAME"`
-	DistribDescription string `ini:"DISTRIB_DESCRIPTION"`
-}
-
-// Get OS types: name, release, family, distrib...
-func Get() []string {
-	types := []string{OS}
-	r := parseRelease()
-	name := strings.ToLower(r.Name)
-	id := strings.ToLower(r.ID)
-	if name != "" && id != "" && isNum(id) {
-		types = append(types, name+id)
-	} else if id != "" {
-		types = append(types, id)
-	} else if name != "" {
-		types = append(types, name)
-	}
-	if r.IDLike != "" {
-		for _, id := range strings.Split(r.IDLike, " ") {
-			types = append(types, id)
-		}
-	}
-	if r.DistribCodename != "" {
-		types = append(types, r.DistribCodename)
-	}
-	types = append(types, parseEnvVar("OSTYPE")...)
-	return types
-}
-
-func isNum(v string) bool {
-	_, err := strconv.Atoi(v)
-	return err == nil
-}
-
-// Has OS type
-func Has(s ...string) bool {
-	return matches(s, List)
-}
-
-func matches(in []string, list []string) bool {
-	if len(in) == 0 {
-		return false
-	}
-	nn := 0
-	for _, pattern := range in {
-		negated := pattern[0] == '!'
-		if negated {
-			pattern = pattern[1:]
-		}
-		for _, str := range list {
-			matched, err := regexp.MatchString(pattern, str)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %s\n", pattern, err)
-				os.Exit(1)
-			}
-			if negated && matched {
-				// fmt.Println("NEGATED", pattern, str, in, list)
-				return false
-			}
-			if matched {
-				// fmt.Println("MATCHED", pattern, str, in, list)
-				return true
-			}
-		}
-		if negated {
-			nn++
-			// fmt.Println("MATCHED NEGATED", pattern, in, list)
-			// return true
-		}
-	}
-	if nn == len(in) { // && nn > 0
-		// fmt.Println("MATCHED NEGATED", in, list)
-		return true
-	}
-	// fmt.Println("NOMATCH", in, list)
-	return false
-}
-
 // /etc/os-release
 
 // PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
@@ -151,64 +29,98 @@ func matches(in []string, list []string) bool {
 // VERSION_ID="7"
 // PRETTY_NAME="CentOS Linux 7 (Core)"
 
-// Read release file as INI
-func parseRelease() Release {
-	pattern := "/etc/*-release"
-	paths, err := filepath.Glob(pattern)
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"strconv"
+	"strings"
+
+	"gopkg.in/go-ini/ini.v1"
+)
+
+var (
+	// OS ...
+	OS = runtime.GOOS
+
+	// List stores the list of OS types
+	List []string
+
+	// release *Release
+
+	// releasePattern is used to find release files
+	releasePattern = "/etc/*-release"
+)
+
+func init() {
+	List = Get()
+}
+
+// Release ...
+type Release struct {
+	ID         string `ini:"ID"`
+	IDLike     string `ini:"ID_LIKE"`
+	Name       string `ini:"NAME"`
+	PrettyName string `ini:"PRETTY_NAME"`
+	Version    string `ini:"VERSION"`
+	VersionID  string `ini:"VERSION_ID"`
+	// HomeURL string `ini:"HOME_URL"`
+	// SupportURL string `ini:"SUPPORT_URL"`
+	// BugReportURL string `ini:"BUG_REPORT_URL"`
+	DistribID          string `ini:"DISTRIB_ID"`
+	DistribRelease     string `ini:"DISTRIB_RELEASE"`
+	DistribCodename    string `ini:"DISTRIB_CODENAME"`
+	DistribDescription string `ini:"DISTRIB_DESCRIPTION"`
+}
+
+// NewRelease read release files as INI
+func NewRelease() *Release {
+	release := &Release{}
+	paths, err := filepath.Glob(releasePattern)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %s\n", pattern, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", releasePattern, err)
 		os.Exit(1)
 	}
 	for _, p := range paths {
 		if err := ini.MapTo(&release, p); err != nil {
 			// fmt.Fprintf(os.Stderr, "%s: %s\n", p, err)
-			continue
-			// return err
+			continue // return err
 		}
-		// cmd := exec.Command("cat", p)
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Run()
 	}
-	// for _, p := range paths {
-	// 	parser := flags.NewParser(&release, flags.IgnoreUnknown)
-	// 	ini := flags.NewIniParser(parser)
-	// 	// ini.ParseAsDefaults = true
-	// 	err := ini.ParseFile(p)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		// b, err := ioutil.ReadFile(p)
-	// 		// if err != nil {
-	// 		// 	fmt.Fprintf(os.Stderr, "Error while reading file %s: %s\n", p, err)
-	// 		// 	return release
-	// 		// }
-	// 		// str := string(b)
-	// 		// if str == "" {
-	// 		// 	fmt.Fprintf(os.Stderr, "Empty release file: %s\n", p)
-	// 		// 	return release
-	// 		// }
-	// 		// lines := strings.Split(str, "\n")
-	// 		// if len(lines) != 2 || lines[0] == "" {
-	// 		// 	fmt.Fprintf(os.Stderr, "Unexpected release file %s:---\n%s\n---\n", p, str)
-	// 		// 	return release
-	// 		// }
-	// 		// if release.PrettyName == "" {
-	// 		// 	release.PrettyName = lines[0]
-	// 		// }
-	// 		// if release.ID == "" {
-	// 		// 	release.ID = strings.Split(lines[0], " ")[0]
-	// 		// }
-	// 		continue
-	// 	}
-	// 	if Verbose > 1 {
-	// 		fmt.Printf("%s:\n%+v\n", p, release)
-	// 	}
-	// 	if Verbose > 2 {
-	// 		fmt.Println(p)
-	// 		execute("cat", p)
-	// 	}
-	// }
 	return release
+}
+
+// Get OS types: name, release, family, distrib...
+func Get() []string {
+	types := []string{OS}
+	release := NewRelease()
+	name := strings.ToLower(release.Name)
+	id := strings.ToLower(release.ID)
+	if name != "" && id != "" && isNum(id) {
+		types = append(types, name+id)
+	} else if id != "" {
+		types = append(types, id)
+	} else if name != "" {
+		types = append(types, name)
+	}
+	if release.IDLike != "" {
+		for _, id := range strings.Fields(release.IDLike) {
+			types = append(types, id)
+		}
+	}
+	if release.DistribCodename != "" {
+		types = append(types, release.DistribCodename)
+	}
+	types = append(types, parseEnvVar("OSTYPE")...)
+	return types
+}
+
+func isNum(v string) bool {
+	_, err := strconv.Atoi(v)
+	return err == nil
 }
 
 func parseEnvVar(name string) []string {
@@ -231,4 +143,50 @@ func parseEnvVar(name string) []string {
 		}
 	}
 	return types
+}
+
+// Has OS type
+func Has(s ...string) bool {
+	// ok, _ := matches(s, List)
+	// return ok
+	ok, err := matches(s, List)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %s\n", s, err)
+		os.Exit(1)
+	}
+	return ok
+}
+
+func matches(in []string, list []string) (bool, error) {
+	if len(in) == 0 {
+		return false, nil
+	}
+	nn := 0
+	for _, pattern := range in {
+		negated := pattern[0] == '!'
+		if negated {
+			pattern = pattern[1:]
+		}
+		for _, str := range list {
+			matched, err := regexp.MatchString(pattern, str)
+			if err != nil {
+				// pattern error
+				return false, err
+			}
+			if negated && matched {
+				return false, nil
+			}
+			if matched {
+				return true, nil
+			}
+		}
+		if negated {
+			nn++
+			// return true, nil
+		}
+	}
+	if nn == len(in) { // && nn > 0
+		return true, nil
+	}
+	return false, nil
 }

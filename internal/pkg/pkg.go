@@ -71,6 +71,9 @@ func NewPm(name string) (*Pm, error) {
 			return m, fmt.Errorf("%s: invalid package manager name", name)
 		}
 	}
+	if m == nil {
+		return m, fmt.Errorf("unable to detect package manager %s", name)
+	}
 	return m, nil
 }
 
@@ -181,7 +184,8 @@ func Detect() (m *Pm) {
 			os.Exit(1)
 		}
 	case "windows": // executable("choco"):
-		m = managers["choco"]
+		// m = managers["choco"]
+		return nil
 	default:
 		fmt.Fprintf(os.Stderr, "no package manager for OS %s", runtime.GOOS)
 		os.Exit(1)
@@ -212,7 +216,7 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 		return false, err
 	}
 	if m == nil {
-		return false, fmt.Errorf(manager, "nil pkg manager", manager)
+		return false, fmt.Errorf(manager, "no pkg manager", manager)
 	}
 	if m.Has == nil {
 		return false, nil
@@ -251,6 +255,9 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	m, err := NewPm(manager)
 	if err != nil {
 		return err
+	}
+	if m == nil {
+		return fmt.Errorf(manager, "no pkg manager", manager)
 	}
 	for k, v := range m.Env {
 		o := os.Getenv(k)
@@ -303,10 +310,10 @@ func execCommand(name string, args ...string) error {
 // Init can return ErrExist if the package is already installed
 func Init(manager, action string, pkgs []string, opts ...string) (string, []string, error) {
 	m, err := NewPm(manager)
-	if err != nil {
+	if err != nil || m == nil {
 		return "", []string{}, err
 	}
-	// input := strings.Split(name, " ")
+	// input := strings.Fields(name)
 	// if len(input) == 0 { ... }
 	//opts = append(pkgs, opts...)
 	opts, err = m.BuildOptions(action, pkgs, opts...)
