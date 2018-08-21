@@ -254,23 +254,24 @@ func serialFunc(fs ...TargetFunc) error {
 	return nil
 }
 
-// asyncFunc targets
-func asyncFunc(fs ...TargetFunc) error {
+// Async target funcs
+func funk(fs ...TargetFunc) error {
 	// done := make(chan bool, 1)
-	errs := make(chan error, len(fs))
+	length := len(fs)
+	errs := make(chan error, length)
 	for _, f := range fs {
 		go func(f TargetFunc) {
 			if err := f(); err != nil {
 				errs <- err
 				return
 			}
-			errs <- nil // close(errs)
+			errs <- nil
+			// close(errs)?
 		}(f)
 	}
-	select {
-	case err := <-errs:
-		if err != nil {
-			// fmt.Printf("async error: %s", err)
+	for i := 0; i < length; i++ {
+		if err := <-errs; err != nil {
+			fmt.Fprintf(os.Stderr, "failed: %d/%d\n", i+1, length)
 			return err
 		}
 	}
@@ -377,7 +378,7 @@ func Check() error {
 		return nil
 	}
 	// return serialFunc(Test, Vet, Lint, Fmt)
-	return asyncFunc(Test, Vet, Lint, Fmt)
+	return funk(Test, Vet, Lint, Fmt)
 }
 
 // Test run go tests
@@ -387,7 +388,15 @@ func Test() error {
 		args = append(args, "-v")
 	}
 	args = append(args, "./...")
-	return run("go", args...)
+	// return run("go", args...)
+	out, err := runOutput("go", args...)
+	if out != "" && (verboseFlag || err != nil) {
+		fmt.Println(out)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Run verbose go tests
