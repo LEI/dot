@@ -10,10 +10,12 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"sort"
 	"strconv"
@@ -43,6 +45,15 @@ var (
 	name        = "dot"                        // name of the program executable and directories
 	namespace   = "github.com/LEI/dot"         // subdir of GOPATH
 	mainPackage = "github.com/LEI/dot/cmd/dot" // package name for the main package
+
+	constants = map[string]string{
+		// "main.packageName": mainPackage,
+		"main.version": version(),
+		"main.commit":  gitCommit(),
+		"main.date":    time.Now().Format("2006-01-02T15:04:05Z0700"),
+	}
+
+	buildTagsEnv = "DOT_BUILD_TAGS"
 
 	listFlag bool
 	// testFlag    bool
@@ -75,16 +86,12 @@ var (
 
 	targetList = []Target{}
 
+	usageFormat   = "Usage: %s [OPTIONS] TARGET...]\n"
 	versionFormat = "dot version %s build script\n"
 )
 
-var usageFormat = `
-Usage: %s [flags] [target...]
-
-`
-
 func init() {
-	flag.Usage = printUsage
+	flag.Usage = usage
 
 	// buildFlag = flag.Bool("build", true, "build main binary")
 	// testFlag = flag.String("test", "./...", "test packages")
@@ -94,25 +101,124 @@ func init() {
 	flag.BoolVar(&versionFlag, "version", versionFlag, "print version")
 }
 
-// printUsage of the flags
-func printUsage() {
-	_, binary := filepath.Split(os.Args[0])
-	// flag.CommandLine not available on go 1.8?
-	fmt.Fprintf(flag.CommandLine.Output(), usageFormat, binary)
-	flag.PrintDefaults()
+func usage() {
+	showUsage(os.Stdout)
+	fmt.Printf("\nOptions:\n")
+	printDefaults()
 	// os.Exit(0)
 }
 
-func fullUsage() {
-	printUsage()
-	fmt.Printf("\nTargets:\n\n")
-	printTargets()
+// showUsage prints a description of the flags
+func showUsage(output io.Writer) {
+	_, binary := filepath.Split(os.Args[0])
+	// output := flag.CommandLine.Output()
+	fmt.Fprintf(output, usageFormat, binary)
+}
+
+// showTargets prints a list of the build actions
+func showTargets(output io.Writer) {
+	const padding = 1
+	w := tabwriter.NewWriter(output, 0, 0, 1, ' ', 0)
+	for _, t := range targetList {
+		name := t.Name
+		desc := t.Doc
+		if desc != "" { // strings.SplitN(desc, " ", 2)
+			parts := strings.Fields(desc)
+			if strings.ToLower(parts[0]) == name {
+				desc = strings.TrimPrefix(desc, parts[0])
+			}
+		}
+		name = strings.Replace(name, "_", ":", 1)
+		fmt.Fprintf(w, "  %s\t%s\n", name, desc)
+	}
+	w.Flush()
+}
+
+// -- string Value
+type stringValue string
+
+func newStringValue(val string, p *string) *stringValue {
+	*p = val
+	return (*stringValue)(p)
+}
+
+func (s *stringValue) Set(val string) error {
+	*s = stringValue(val)
+	return nil
+}
+
+func (s *stringValue) Get() interface{} { return string(*s) }
+
+func (s *stringValue) String() string { return string(*s) }
+
+// PrintDefaults prints, to standard error unless configured otherwise, the
+// default values of all defined command-line flags in the set.
+func printDefaults() {
+	output := os.Stderr // flag.CommandLine.Output()
+	w := tabwriter.NewWriter(output, 0, 0, 1, ' ', 0)
+	flag.VisitAll(func(f *flag.Flag) {
+		s := fmt.Sprintf("  -%s", f.Name) // Two spaces before -; see next two comments.
+		name, usage := flag.UnquoteUsage(f)
+		if len(name) > 0 {
+			s += " " + name
+		}
+		// // Boolean flags of one ASCII letter are so common we
+		// // treat them specially, putting their usage on the same line.
+		// if len(s) <= 4 { // space, space, '-', 'x'.
+		// 	s += "\t"
+		// } else {
+		// 	// Four spaces before the tab triggers good alignment
+		// 	// for both 4- and 8-space tab stops.
+		// 	s += "\n    \t"
+		// }
+		s += "\t "
+		s += strings.Replace(usage, "\n", "\n    \t", -1)
+
+		// if !isZeroValue(f, f.DefValue) {
+		// 	if _, ok := f.Value.(*stringValue); ok {
+		// 		// put quotes on the value
+		// 		s += fmt.Sprintf(" (default %q)", f.DefValue)
+		// 	} else {
+		// 		s += fmt.Sprintf(" (default %v)", f.DefValue)
+		// 	}
+		// }
+		// fmt.Fprint(output, s, "\n")
+		fmt.Fprintf(w, "%s\n", s)
+	})
+	w.Flush()
+}
+
+// isZeroValue guesses whether the string represents the zero
+// value for a flag. It is not accurate but in practice works OK.
+func isZeroValue(f *flag.Flag, value string) bool {
+	// Build a zero value of the flag's Value type, and see if the
+	// result of calling its String method equals the value passed in.
+	// This works unless the Value type is itself an interface type.
+	typ := reflect.TypeOf(f.Value)
+	var z reflect.Value
+	if typ.Kind() == reflect.Ptr {
+		z = reflect.New(typ.Elem())
+	} else {
+		z = reflect.Zero(typ)
+	}
+	if value == z.Interface().(flag.Value).String() {
+		return true
+	}
+
+	switch value {
+	case "false", "", "0":
+		return true
+	}
+	return false
 }
 
 // Execute build command
 func execute() error {
-	if len(os.Args) == 1 {
-		fullUsage()
+	// Default target when no args are provided
+	if len(os.Args[1:]) == 0 {
+		usage() // showUsage(os.Stderr)
+		fmt.Printf("\nTargets:\n")
+		showTargets(os.Stdout)
 		return nil
 	}
 	// Parse targets
@@ -123,8 +229,8 @@ func execute() error {
 	// numFlags := 0
 	switch {
 	case listFlag:
-		fmt.Printf("Targets:\n\n")
-		printTargets()
+		fmt.Printf("Targets:\n")
+		showTargets(os.Stdout)
 		return nil
 	// case testFlag:
 	// 	return testV() // run("go", "test", "./...")
@@ -207,7 +313,7 @@ func parse() ([]Target, error) {
 			f, ok := funcMap[a]
 			if !ok {
 				// fmt.Fprintf(os.Stderr, "Target not found: %s\n", a)
-				fullUsage()
+				showUsage(os.Stderr) // usage()
 				return ts, fmt.Errorf("unable to find target %s", a)
 				// return ts, fmt.Errorf(
 				// 	"%s: invalid arguments",
@@ -415,8 +521,8 @@ func findPackages() ([]string, error) {
 func Install() error {
 	args := []string{
 		"install",
-		"-ldflags", ldflags(),
-		"-tags", buildTags(),
+		"-ldflags", ldflags(constants),
+		"-tags", buildTags(buildTagsEnv),
 		mainPackage,
 	}
 	return run("go", args...)
@@ -435,8 +541,8 @@ func Build() error {
 	}
 	// args = append([]string{
 	// 	"build",
-	// 	"-ldflags", ldflags(),
-	// 	"-tags", buildTags(),
+	// 	"-ldflags", ldflags(constants),
+	// 	"-tags", buildTags(buildTagsEnv),
 	// }, args...)
 	// return run("go", args...)
 	for _, p := range platforms {
@@ -467,8 +573,8 @@ func buildPlatform(goos, goarch string) error {
 	output := "dist/" + goos + "_" + goarch + "/dot"
 	args := []string{
 		"build",
-		"-ldflags", ldflags(),
-		"-tags", buildTags(),
+		"-ldflags", ldflags(constants),
+		"-tags", buildTags(buildTagsEnv),
 		"-o", output,
 		mainPackage,
 	}
@@ -481,14 +587,8 @@ func buildPlatform(goos, goarch string) error {
 	return runWith(env, "go", args...)
 }
 
-// Build LDFlags
-func ldflags() string {
-	cs := map[string]string{
-		// "main.packageName": mainPackage,
-		"main.version": version(),
-		"main.commit":  gitCommit(),
-		"main.date":    time.Now().Format("2006-01-02T15:04:05Z0700"),
-	}
+// Build LDFlags with provided constants
+func ldflags(cs map[string]string) string {
 	l := make([]string, 0, len(cs))
 	for k, v := range cs {
 		l = append(l, fmt.Sprintf(`-X "%s=%s"`, k, v))
@@ -527,9 +627,10 @@ func version() string {
 	return strings.TrimSpace(string(buf))
 }
 
-func buildTags() string {
+// Parse build tags from environment variable
+func buildTags(s string) string {
 	bd := []string{} // defaultBuildTags
-	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
+	if envTags := os.Getenv(s); envTags != "" {
 		for _, et := range strings.Fields(envTags) {
 			bd = append(bd, et)
 		}
@@ -604,26 +705,6 @@ func executable(name string) bool {
 	cmd := exec.Command("command", "-v", name)
 	err := cmd.Run()
 	return err == nil
-}
-
-func printTargets() {
-	const padding = 1
-	w := &tabwriter.Writer{}
-	w.Init(os.Stdout, 0, 8, 3, '\t', 0)
-	// w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-	for _, t := range targetList {
-		name := t.Name
-		desc := t.Doc
-		if desc != "" { // strings.SplitN(desc, " ", 2)
-			parts := strings.Fields(desc)
-			if strings.ToLower(parts[0]) == name {
-				desc = strings.TrimPrefix(desc, parts[0])
-			}
-		}
-		name = strings.Replace(name, "_", ":", 1)
-		fmt.Fprintf(w, "  %s\t%s\n", name, desc)
-	}
-	w.Flush()
 }
 
 // func getFunctionName(i interface{}) string {
