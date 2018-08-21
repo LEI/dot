@@ -56,7 +56,7 @@ jobs:
     - &base
       stage: test
       script:
-        - go run build.go -v docker
+        - go run build.go -v vendor docker
       env: OS=debian
 
     - <<: *base
