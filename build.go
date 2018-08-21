@@ -13,19 +13,28 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"text/tabwriter"
 	"time"
 )
 
-// Target ...
+// Target ..
 type Target struct {
 	Name string
-	Func targetFunc
+	Func TargetFunc
 	Doc  string
 }
 
-type targetFunc func() error
+// NameSorter ...
+type NameSorter []Target
+
+func (a NameSorter) Len() int           { return len(a) }
+func (a NameSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a NameSorter) Less(i, j int) bool { return a[i].Name < a[j].Name }
+
+// TargetFunc ...
+type TargetFunc func() error
 
 var (
 	name        = "dot"                        // name of the program executable and directories
@@ -38,7 +47,7 @@ var (
 	versionFlag bool
 
 	// docMap map[string]string
-	funcMap = map[string]targetFunc{
+	funcMap = map[string]TargetFunc{
 		"vendor":   Vendor,
 		"dep":      getDep,
 		"check":    Check,
@@ -71,7 +80,7 @@ func init() {
 	flag.BoolVar(&versionFlag, "V", versionFlag, "print version")
 }
 
-// Usage of the flags.
+// Usage of the flags
 func usage() {
 	_, binary := filepath.Split(os.Args[0])
 	fmt.Fprintf(flag.CommandLine.Output(), usageFormat, binary)
@@ -79,7 +88,7 @@ func usage() {
 	// os.Exit(0)
 }
 
-// Execute build command.
+// Execute build command
 func execute() error {
 	if len(os.Args) == 1 {
 		usage()
@@ -111,7 +120,7 @@ func execute() error {
 	return nil
 }
 
-// Parse arguments (targets) and command flags.
+// Parse arguments (targets) and command flags
 func parse() ([]Target, error) {
 	tl := []Target{}
 	// args := os.Args[1:]
@@ -164,7 +173,7 @@ func parse() ([]Target, error) {
 	return tl, nil
 }
 
-// Vendor install dependencies specified in Gopkg.toml.
+// Vendor install dependencies specified in Gopkg.toml
 func Vendor() error {
 	if err := getDep(); err != nil {
 		return err
@@ -172,7 +181,7 @@ func Vendor() error {
 	return run("dep", "ensure")
 }
 
-// Install go dep.
+// Install go dep
 func getDep() error {
 	if executable("dep") {
 		return nil
@@ -184,7 +193,7 @@ func getDep() error {
 	return run("go", "get", "-u", "github.com/golang/dep/cmd/dep")
 }
 
-// Check run tests and linters.
+// Check run tests and linters
 func Check() error {
 	if err := Test(); err != nil {
 		return err
@@ -201,7 +210,7 @@ func Check() error {
 	return nil
 }
 
-// Run go tests.
+// Test run go tests
 func Test() error {
 	args := []string{"test", "./..."}
 	if verboseFlag {
@@ -210,17 +219,17 @@ func Test() error {
 	return run("go", args...)
 }
 
-// Run verbose go tests.
+// Run verbose go tests
 func testV() error {
 	return run("go", "test", "-v", "./...")
 }
 
-// Run go tests with race detector.
+// TestRace run go tests with race detector
 func TestRace() error {
 	return run("go", "test", "-v", "-race", "./...")
 }
 
-// Run test coverage.
+// Coverage run test coverage
 func Coverage() error {
 	profile := os.Getenv("COVERPROFILE")
 	if profile == "" {
@@ -233,7 +242,7 @@ func Coverage() error {
 	return run("go", "test", "-v", "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
 }
 
-// Run go vet.
+// Vet run go vet
 func Vet() error {
 	args := []string{"vet", "./..."}
 	if verboseFlag {
@@ -242,7 +251,7 @@ func Vet() error {
 	return run("go", args...)
 }
 
-// Run golint.
+// Lint run golint
 func Lint() error {
 	if !executable("golint") {
 		if err := run("go", "get", "golang.org/x/lint/golint"); err != nil {
@@ -256,7 +265,7 @@ func Lint() error {
 	failed := false
 	for _, pkg := range pkgs {
 		// We don't actually want to fail this target if we find golint errors,
-		// so we don't pass -set_exit_status, but we still print out any failures.
+		// so we don't pass -set_exit_status, but we still print out any failures
 		if verboseFlag {
 			fmt.Printf("exec: golint %s\n", pkg)
 		}
@@ -276,9 +285,9 @@ func Lint() error {
 	return nil
 }
 
-// // Run gofmt as a linter.
-// // gofmt -l -s . | grep -v ^vendor/
+// Fmt run gofmt as a linter
 func Fmt() error {
+	// gofmt -l -s . | grep -v ^vendor/
 	// if !executable("goimports") {
 	// 	if err := run("go", "get", "golang.org/x/tools/cmd/goimports"); err != nil {
 	// 		return err
@@ -298,7 +307,7 @@ func Fmt() error {
 		for _, f := range files {
 			// gofmt doesn't exit with non-zero when it finds unformatted code
 			// so we have to explicitly look for runOutput, and if we find any, we
-			// should fail this target.
+			// should fail this target
 			s, err := runOutput("gofmt", "-l", f)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: running gofmt on %q: %v\n", f, err)
@@ -322,7 +331,7 @@ func Fmt() error {
 
 var pkgPrefixLen = len(namespace)
 
-// List packages.
+// List packages
 func findPackages() ([]string, error) {
 	// if err := getDep(); err != nil {
 	// 	return []string{}, err
@@ -344,7 +353,7 @@ func findPackages() ([]string, error) {
 	return pkgs, nil
 }
 
-// Install dot package.
+// Install package with go install
 func Install() error {
 	args := []string{
 		"install",
@@ -355,7 +364,7 @@ func Install() error {
 	return run("go", args...)
 }
 
-// Build binaries for all platforms.
+// Build binaries for all platforms
 func Build() error {
 	platforms := []struct {
 		os   string
@@ -380,7 +389,7 @@ func Build() error {
 	return nil
 }
 
-// Run go build for a given platform.
+// Run go build for a given platform
 func buildPlatform(goos, goarch string) error {
 	output := "dist/" + goos + "_" + goarch + "/dot"
 	args := []string{
@@ -398,7 +407,7 @@ func buildPlatform(goos, goarch string) error {
 	return runWith(env, "go", args...)
 }
 
-// Build LDFlags.
+// Build LDFlags
 func ldflags() string {
 	cs := map[string]string{
 		// "main.packageName": mainPackage,
@@ -414,7 +423,7 @@ func ldflags() string {
 }
 
 // gitCommit returns a version string that identifies the currently
-// checked out git commit.
+// checked out git commit
 func gitCommit() string {
 	// runOutput("git", "rev-parse", "--short", "HEAD")
 	// cmd := exec.Command("git", "describe",
@@ -434,7 +443,7 @@ func gitCommit() string {
 }
 
 // version returns the version string from the file VERSION
-// in the current directory.
+// in the current directory
 func version() string {
 	buf, err := ioutil.ReadFile("VERSION")
 	if err != nil {
@@ -473,7 +482,7 @@ func clean() error {
 	return os.RemoveAll("dist")
 }
 
-// Run an external command.
+// Run an external command
 func run(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
@@ -517,7 +526,7 @@ func runOutput(name string, args ...string) (string, error) {
 	return s, err
 }
 
-// Check if a command is available.
+// Check if a command is available
 func executable(name string) bool {
 	cmd := exec.Command("command", "-v", name)
 	err := cmd.Run()
@@ -526,11 +535,19 @@ func executable(name string) bool {
 
 func printTargets() {
 	const padding = 1
-	fmt.Println("Targets:")
+	// fmt.Println("Targets:")
 	w := &tabwriter.Writer{}
 	w.Init(os.Stdout, 0, 8, 3, '\t', 0)
 	for _, t := range targetList {
-		fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Doc)
+		name := t.Name
+		desc := t.Doc
+		if desc != "" { // strings.SplitN(desc, " ", 2)
+			parts := strings.Fields(desc)
+			if strings.ToLower(parts[0]) == name {
+				desc = strings.TrimPrefix(desc, parts[0])
+			}
+		}
+		fmt.Fprintf(w, "  %s\t%s\n", name, desc)
 	}
 	w.Flush()
 }
@@ -603,6 +620,7 @@ func init() {
 		}
 		targetList = append(targetList, t)
 	}
+	sort.Sort(NameSorter(targetList))
 }
 
 func main() {
