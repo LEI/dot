@@ -548,8 +548,11 @@ func Install() error {
 		"install",
 		"-ldflags", ldflags(constants),
 		"-tags", buildTags(buildTagsEnv),
-		mainPackage,
 	}
+	if verboseFlag {
+		args = append(args, "-v")
+	}
+	args = append(args, mainPackage)
 	return run("go", args...)
 }
 
