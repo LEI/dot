@@ -15,6 +15,7 @@ import (
 
 	"github.com/LEI/dot/internal/env"
 	"github.com/pmezard/go-difflib/difflib"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var (
@@ -83,6 +84,26 @@ func (t *Tpl) Prepare() error {
 	}
 	if t.Target != "" && t.Ext != "" && strings.HasSuffix(t.Target, "."+t.Ext) {
 		t.Target = strings.TrimSuffix(t.Target, "."+t.Ext)
+	}
+	// done in ParseTpls
+	// if t.Vars == nil {
+	// 	t.Vars = map[string]interface{}{}
+	// }
+	// for k, v := range t.Env {
+	// 	// ...
+	// }
+	if t.IncludeVars != "" {
+		// Included variables override existing tpl.Vars keys
+		inclVars, err := includeVars(t.IncludeVars) // os.ExpandEnv?
+		if err != nil {
+			return err
+		}
+		for k, v := range inclVars {
+			// if val, ok := t.Vars[k]; !ok {
+			// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
+			// }
+			t.Vars[k] = v
+		}
 	}
 	return nil
 }
@@ -167,12 +188,12 @@ func (t *Tpl) Data() (map[string]interface{}, error) {
 		if err != nil {
 			return data, err
 		}
-		// fmt.Println("$ ENV", k, "=", v)
+		fmt.Printf("$ export %s=%q\n", k, ev)
 		data[k] = ev
 	}
 	// Extra variables (not string only)
 	for k, v := range t.Vars {
-		// fmt.Println("$ VAR", k, "=", v)
+		fmt.Printf("$ var %s -> %v\n", k, v)
 		data[k] = v
 	}
 	return data, nil
@@ -258,4 +279,21 @@ func tplDiff(src, dst, content string) (string, error) {
 		Context:  diffContextLines,
 	}
 	return difflib.GetUnifiedDiffString(diff)
+}
+
+func includeVars(file string) (vars map[string]interface{}, err error) {
+	if strings.HasPrefix(file, "~/") {
+		file = filepath.Join(homeDir, file[2:])
+	}
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return vars, nil
+		}
+		return vars, err
+	}
+	if err := yaml.Unmarshal(bytes, &vars); err != nil {
+		return vars, err
+	}
+	return vars, nil
 }

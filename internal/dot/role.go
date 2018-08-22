@@ -46,10 +46,10 @@ type Role struct {
 	URL  string
 	// Tasks []string
 
-	OS  []string
-	Env map[string]string
-	// Vars  types.Map
-	// IncludeVars types.IncludeMap
+	OS          []string
+	Env         map[string]string
+	Vars        map[string]interface{}
+	IncludeVars string
 
 	Deps []string `mapstructure:"dependencies"`
 	Pkgs []*Pkg   `mapstructure:"pkg"`
@@ -253,6 +253,18 @@ func (r *Role) LoadConfig() error {
 
 // Parse all role tasks
 func (r *Role) Parse(target string) error {
+	// if r.Vars == nil {
+	// 	r.Vars = map[string]interface{}{}
+	// }
+	if r.IncludeVars != "" {
+		inclVars, err := includeVars(r.IncludeVars)
+		if err != nil {
+			return err
+		}
+		for k, v := range inclVars {
+			r.Vars[k] = v
+		}
+	}
 	if err := r.ParseDirs(target); err != nil {
 		return err
 	}
@@ -380,6 +392,24 @@ func (r *Role) ParseTpls(target string) error {
 		}
 		if !filepath.IsAbs(t.Target) {
 			t.Target = filepath.Join(target, t.Target)
+		}
+		if t.Env == nil {
+			t.Env = map[string]string{}
+		}
+		for k, v := range r.Env {
+			_, ok := t.Env[k]
+			if !ok {
+				t.Env[k] = v
+			}
+		}
+		if t.Vars == nil {
+			t.Vars = map[string]interface{}{}
+		}
+		for k, v := range r.Vars {
+			_, ok := t.Vars[k]
+			if !ok {
+				t.Vars[k] = v
+			}
 		}
 		paths, err := preparePaths(target, t.Source, t.Target)
 		if err != nil {
