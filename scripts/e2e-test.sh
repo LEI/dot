@@ -21,7 +21,7 @@ main() {
 
   # for f in "$HOME"/.gitconfig; do run test -f "$f"; done
   run test -f "$HOME/.gitconfig"
-  # run test -f "$HOME/.gitconfig.local"
+  run test -f "$HOME/.gitconfig.local"
 
   run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
 

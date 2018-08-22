@@ -17,6 +17,7 @@ import (
 // AskConfirmation ...
 func AskConfirmation(s string) (ret bool) {
 	if noConfirm() {
+		fmt.Println(s)
 		return true
 	}
 	reader := bufio.NewReader(os.Stdin)
@@ -47,7 +48,7 @@ func noConfirm() bool {
 	_, err := os.Stat(ncfile)
 	exists := err == nil || os.IsExist(err)
 	if exists {
-		fmt.Fprintln(os.Stderr, "(Confirmation disabled because ~/.dotnc exists)")
+		fmt.Fprintln(os.Stderr, "[Confirmation disabled because ~/.dotnc exists]")
 	}
 	return exists
 }

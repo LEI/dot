@@ -13,6 +13,10 @@ dot:
 test:
 	$(RUN) -v test
 
+.PHONY: vendor
+vendor:
+	$(RUN) vendor -only
+
 # MAKEFLAGS += --silent
 ifndef VERBOSE
 .SILENT:
