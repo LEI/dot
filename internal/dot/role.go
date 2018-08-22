@@ -305,9 +305,6 @@ func (r *Role) ParseFiles(target string) error {
 		if !filepath.IsAbs(c.Target) {
 			c.Target = filepath.Join(target, c.Target)
 		}
-		// if err := c.Prepare(); err != nil {
-		// 	return err
-		// }
 		paths, err := preparePaths(target, c.Source, c.Target)
 		if err != nil {
 			return err
@@ -316,6 +313,9 @@ func (r *Role) ParseFiles(target string) error {
 			cc := *c
 			cc.Source = k
 			cc.Target = v
+			// if err := cc.Prepare(); err != nil {
+			// 	return err
+			// }
 			files = append(files, &cc)
 		}
 	}
@@ -343,9 +343,6 @@ func (r *Role) ParseLinks(target string) error {
 		if !filepath.IsAbs(l.Target) {
 			l.Target = filepath.Join(target, l.Target)
 		}
-		// if err := l.Prepare(); err != nil {
-		// 	return err
-		// }
 		paths, err := preparePaths(target, l.Source, l.Target)
 		if err != nil {
 			return err
@@ -354,6 +351,9 @@ func (r *Role) ParseLinks(target string) error {
 			ll := *l
 			ll.Source = k
 			ll.Target = v
+			// if err := ll.Prepare(); err != nil {
+			// 	return err
+			// }
 			links = append(links, &ll)
 		}
 	}
@@ -381,9 +381,6 @@ func (r *Role) ParseTpls(target string) error {
 		if !filepath.IsAbs(t.Target) {
 			t.Target = filepath.Join(target, t.Target)
 		}
-		if err := t.Prepare(); err != nil {
-			return err
-		}
 		paths, err := preparePaths(target, t.Source, t.Target)
 		if err != nil {
 			return err
@@ -392,6 +389,9 @@ func (r *Role) ParseTpls(target string) error {
 			tt := *t
 			tt.Source = k
 			tt.Target = v
+			if err := tt.Prepare(); err != nil {
+				return err
+			}
 			templates = append(templates, &tt)
 		}
 	}

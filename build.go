@@ -57,8 +57,9 @@ var (
 
 	listFlag bool
 	// testFlag    bool
-	verboseFlag bool
-	versionFlag bool
+	vendorOnlyFlag bool
+	verboseFlag    bool
+	versionFlag    bool
 
 	// docMap map[string]string
 	funcMap = map[string]TargetFunc{
@@ -97,6 +98,7 @@ func init() {
 	// testFlag = flag.String("test", "./...", "test packages")
 	flag.BoolVar(&listFlag, "l", listFlag, "list targets")
 	// flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
+	flag.BoolVar(&vendorOnlyFlag, "only", vendorOnlyFlag, "dep ensure -vendor-only")
 	flag.BoolVar(&verboseFlag, "v", verboseFlag, "verbose mode")
 	flag.BoolVar(&versionFlag, "version", versionFlag, "print version")
 }
@@ -358,7 +360,11 @@ func Vendor() error {
 	if runtime.GOOS == "android" {
 		env["DEPNOLOCK"] = "1"
 	}
-	return runWith(env, "dep", "ensure", "-vendor-only")
+	args := []string{"ensure"}
+	if vendorOnlyFlag {
+		args = append(args, "-vendor-only")
+	}
+	return runWith(env, "dep", "ensure")
 }
 
 // Dep install go dep

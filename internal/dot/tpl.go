@@ -14,10 +14,14 @@ import (
 	"unicode"
 
 	"github.com/LEI/dot/internal/env"
+	"github.com/pmezard/go-difflib/difflib"
 )
 
 var (
 	defaultTemplateExt = "tpl"
+
+	// Number of context lines in difflib output
+	diffContextLines = 3
 
 	tplFuncMap = template.FuncMap{
 		// https://github.com/hashicorp/consul-template/blob/de2ebf4/template_functions.go#L727-L901
@@ -183,15 +187,16 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 		// Stop here if the target does not exist
 		return false, nil
 	}
-
-	// TODO compare file contents
 	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
-	fmt.Println("TEMPLATE EXISTS, DIFF:")
-	printDiff(dst, content)
-
+	// TODO compare file content and ask confirmation
+	// printDiff(dst, content)
+	diff, err := tplDiff(src, dst, content)
+	if err == nil {
+		fmt.Println(strings.TrimSuffix(diff, "\n"))
+	}
 	return true, nil
 }
 
@@ -237,4 +242,20 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 // buildTplEnv ...
 func buildTplEnv(k, v string) (string, error) {
 	return buildTpl(k, v, env.GetAll())
+}
+
+func tplDiff(src, dst, content string) (string, error) {
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return "", err
+	}
+	original := string(b)
+	diff := difflib.UnifiedDiff{
+		A:        difflib.SplitLines(original),
+		B:        difflib.SplitLines(content),
+		FromFile: tildify(src), // "Original",
+		ToFile:   tildify(dst), // "Current",
+		Context:  diffContextLines,
+	}
+	return difflib.GetUnifiedDiffString(diff)
 }
