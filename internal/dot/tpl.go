@@ -14,10 +14,15 @@ import (
 	"unicode"
 
 	"github.com/LEI/dot/internal/env"
+	"github.com/pmezard/go-difflib/difflib"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var (
 	defaultTemplateExt = "tpl"
+
+	// Number of context lines in difflib output
+	diffContextLines = 3
 
 	tplFuncMap = template.FuncMap{
 		// https://github.com/hashicorp/consul-template/blob/de2ebf4/template_functions.go#L727-L901
@@ -79,6 +84,26 @@ func (t *Tpl) Prepare() error {
 	}
 	if t.Target != "" && t.Ext != "" && strings.HasSuffix(t.Target, "."+t.Ext) {
 		t.Target = strings.TrimSuffix(t.Target, "."+t.Ext)
+	}
+	// Already done in role ParseTpls
+	// if t.Vars == nil {
+	// 	t.Vars = map[string]interface{}{}
+	// }
+	// for k, v := range t.Env {
+	// 	// ...
+	// }
+	if t.IncludeVars != "" {
+		// Included variables override existing tpl.Vars keys
+		inclVars, err := includeVars(t.IncludeVars) // os.ExpandEnv?
+		if err != nil {
+			return err
+		}
+		for k, v := range inclVars {
+			// if val, ok := t.Vars[k]; !ok {
+			// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
+			// }
+			t.Vars[k] = v
+		}
 	}
 	return nil
 }
@@ -163,12 +188,12 @@ func (t *Tpl) Data() (map[string]interface{}, error) {
 		if err != nil {
 			return data, err
 		}
-		// fmt.Println("$ ENV", k, "=", v)
+		fmt.Printf("$ export %s=%q\n", k, ev)
 		data[k] = ev
 	}
 	// Extra variables (not string only)
 	for k, v := range t.Vars {
-		// fmt.Println("$ VAR", k, "=", v)
+		fmt.Printf("$ var %s -> %v\n", k, v)
 		data[k] = v
 	}
 	return data, nil
@@ -183,15 +208,16 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 		// Stop here if the target does not exist
 		return false, nil
 	}
-
-	// TODO compare file contents
 	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
-	fmt.Println("TEMPLATE EXISTS, DIFF:")
-	printDiff(dst, content)
-
+	// TODO compare file content and ask confirmation
+	// printDiff(dst, content)
+	diff, err := tplDiff(src, dst, content)
+	if err == nil {
+		fmt.Println(strings.TrimSuffix(diff, "\n"))
+	}
 	return true, nil
 }
 
@@ -237,4 +263,37 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 // buildTplEnv ...
 func buildTplEnv(k, v string) (string, error) {
 	return buildTpl(k, v, env.GetAll())
+}
+
+func tplDiff(src, dst, content string) (string, error) {
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return "", err
+	}
+	original := string(b)
+	diff := difflib.UnifiedDiff{
+		A:        difflib.SplitLines(original),
+		B:        difflib.SplitLines(content),
+		FromFile: tildify(src), // "Original",
+		ToFile:   tildify(dst), // "Current",
+		Context:  diffContextLines,
+	}
+	return difflib.GetUnifiedDiffString(diff)
+}
+
+func includeVars(file string) (vars map[string]interface{}, err error) {
+	if strings.HasPrefix(file, "~/") {
+		file = filepath.Join(homeDir, file[2:])
+	}
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return vars, nil
+		}
+		return vars, err
+	}
+	if err := yaml.Unmarshal(bytes, &vars); err != nil {
+		return vars, err
+	}
+	return vars, nil
 }

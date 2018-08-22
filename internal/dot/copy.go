@@ -127,5 +127,6 @@ func fileCompare(p1, p2 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return bytes.Compare(a, b) == 0, nil
+	return bytes.Equal(a, b), nil
+	// return bytes.Compare(a, b) == 0, nil
 }

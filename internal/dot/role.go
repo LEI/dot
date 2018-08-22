@@ -46,10 +46,10 @@ type Role struct {
 	URL  string
 	// Tasks []string
 
-	OS  []string
-	Env map[string]string
-	// Vars  types.Map
-	// IncludeVars types.IncludeMap
+	OS          []string
+	Env         map[string]string
+	Vars        map[string]interface{}
+	IncludeVars string
 
 	Deps []string `mapstructure:"dependencies"`
 	Pkgs []*Pkg   `mapstructure:"pkg"`
@@ -253,6 +253,18 @@ func (r *Role) LoadConfig() error {
 
 // Parse all role tasks
 func (r *Role) Parse(target string) error {
+	// if r.Vars == nil {
+	// 	r.Vars = map[string]interface{}{}
+	// }
+	if r.IncludeVars != "" {
+		inclVars, err := includeVars(r.IncludeVars)
+		if err != nil {
+			return err
+		}
+		for k, v := range inclVars {
+			r.Vars[k] = v
+		}
+	}
 	if err := r.ParseDirs(target); err != nil {
 		return err
 	}
@@ -305,9 +317,6 @@ func (r *Role) ParseFiles(target string) error {
 		if !filepath.IsAbs(c.Target) {
 			c.Target = filepath.Join(target, c.Target)
 		}
-		// if err := c.Prepare(); err != nil {
-		// 	return err
-		// }
 		paths, err := preparePaths(target, c.Source, c.Target)
 		if err != nil {
 			return err
@@ -316,6 +325,9 @@ func (r *Role) ParseFiles(target string) error {
 			cc := *c
 			cc.Source = k
 			cc.Target = v
+			// if err := cc.Prepare(); err != nil {
+			// 	return err
+			// }
 			files = append(files, &cc)
 		}
 	}
@@ -343,9 +355,6 @@ func (r *Role) ParseLinks(target string) error {
 		if !filepath.IsAbs(l.Target) {
 			l.Target = filepath.Join(target, l.Target)
 		}
-		// if err := l.Prepare(); err != nil {
-		// 	return err
-		// }
 		paths, err := preparePaths(target, l.Source, l.Target)
 		if err != nil {
 			return err
@@ -354,6 +363,9 @@ func (r *Role) ParseLinks(target string) error {
 			ll := *l
 			ll.Source = k
 			ll.Target = v
+			// if err := ll.Prepare(); err != nil {
+			// 	return err
+			// }
 			links = append(links, &ll)
 		}
 	}
@@ -381,8 +393,23 @@ func (r *Role) ParseTpls(target string) error {
 		if !filepath.IsAbs(t.Target) {
 			t.Target = filepath.Join(target, t.Target)
 		}
-		if err := t.Prepare(); err != nil {
-			return err
+		if t.Env == nil {
+			t.Env = map[string]string{}
+		}
+		for k, v := range r.Env {
+			_, ok := t.Env[k]
+			if !ok {
+				t.Env[k] = v
+			}
+		}
+		if t.Vars == nil {
+			t.Vars = map[string]interface{}{}
+		}
+		for k, v := range r.Vars {
+			_, ok := t.Vars[k]
+			if !ok {
+				t.Vars[k] = v
+			}
 		}
 		paths, err := preparePaths(target, t.Source, t.Target)
 		if err != nil {
@@ -392,6 +419,9 @@ func (r *Role) ParseTpls(target string) error {
 			tt := *t
 			tt.Source = k
 			tt.Target = v
+			if err := tt.Prepare(); err != nil {
+				return err
+			}
 			templates = append(templates, &tt)
 		}
 	}

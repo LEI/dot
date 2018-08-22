@@ -92,24 +92,25 @@ jobs:
       os: osx
       language: go
 
-    # - stage: deploy
-    #   addons:
-    #     apt:
-    #       packages:
-    #       - rpm
-    #       - snapd
-    #   env:
-    #     - PATH=/snap/bin:$PATH
-    #   before_deploy:
-    #     - sudo snap install snapcraft --classic
-    #   deploy:
-    #     provider: script
-    #     script: echo curl -sL https://git.io/goreleaser # | bash # scripts/release.sh
-    #     skip_cleanup: true
-    #     on:
-    #       repo: LEI/dot
-    #       tags: true
-    #       condition: $TRAVIS_OS_NAME = linux
+    - stage: deploy
+      addons:
+        apt:
+          packages:
+          - rpm
+          - snapd
+      env:
+        - PATH=/snap/bin:$PATH
+      before_deploy:
+        - sudo snap install snapcraft --classic
+      deploy:
+        provider: script
+        # script: curl -sL https://git.io/goreleaser | bash
+        script: go run build.go vendor -only release
+        skip_cleanup: true
+        on:
+          repo: LEI/dot
+          tags: true
+          condition: $TRAVIS_OS_NAME = linux
 
 notifications:
   email: false
