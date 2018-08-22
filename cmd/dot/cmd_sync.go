@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
 )
@@ -56,8 +54,6 @@ func init() {
 
 func runSync(cmd *cobra.Command, args []string) error {
 	// dotOpts.stdout
-	// fmt.Print(term.ClearEntireScreen())
-	fmt.Println("Syncing roles...")
 	length := len(dotConfig.Roles)
 	errs := make(chan error, length)
 	for i, r := range dotConfig.Roles {
@@ -66,9 +62,11 @@ func runSync(cmd *cobra.Command, args []string) error {
 		// w := io.MultiWriter(os.Stdout, &buf)
 		// git.Stdout = w
 		// git.Stderr = ?
+		// https://golang.org/pkg/os/exec/#Cmd.StdoutPipe
 		go func(i int, r *dot.Role) {
-			fmt.Printf("... Syncing %s (%d/%d) ...\n", r.Name, i+1, length)
-			// https://golang.org/pkg/os/exec/#Cmd.StdoutPipe
+			// n := fmt.Sprintf("%d/%d", i+1, length)
+			// fmt.Printf("Syncing %s (%s) ...\n", r.Name, n)
+
 			// Clone or pull git repository
 			if err := r.Sync(); err != nil {
 				errs <- err
@@ -84,7 +82,6 @@ func runSync(cmd *cobra.Command, args []string) error {
 			// fmt.Print(term.MoveUp(nl))
 			// fmt.Print(term.ClearScreenDown())
 			// fmt.Printf("--- Synced %s ---\n%v\n---\n", r.Name, nl)
-			fmt.Printf("--- Synced %s ---\n---\n", r.Name)
 			errs <- nil
 		}(i, r)
 	}
@@ -93,6 +90,5 @@ func runSync(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	fmt.Println("All done!")
 	return nil
 }
