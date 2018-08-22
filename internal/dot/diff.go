@@ -1,6 +1,29 @@
 package dot
 
 // "github.com/sergi/go-diff/diffmatchpatch"
+// "github.com/sourcegraph/go-diff"
+
+import (
+	"io/ioutil"
+
+	"github.com/pmezard/go-difflib/difflib"
+)
+
+func getDiff(src, dst, content string) (string, error) {
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return "", err
+	}
+	original := string(b)
+	diff := difflib.UnifiedDiff{
+		A:        difflib.SplitLines(original),
+		B:        difflib.SplitLines(content),
+		FromFile: tildify(src), // "Original",
+		ToFile:   tildify(dst), // "Current",
+		Context:  diffContextLines,
+	}
+	return difflib.GetUnifiedDiffString(diff)
+}
 
 func printDiff(s, content string) error {
 	// // stdout, stderr, status := ExecCommand("")

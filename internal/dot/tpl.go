@@ -14,7 +14,6 @@ import (
 	"unicode"
 
 	"github.com/LEI/dot/internal/env"
-	"github.com/pmezard/go-difflib/difflib"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -214,7 +213,7 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 	}
 	// TODO compare file content and ask confirmation
 	// printDiff(dst, content)
-	diff, err := tplDiff(src, dst, content)
+	diff, err := getDiff(src, dst, content)
 	if err == nil {
 		fmt.Println(strings.TrimSuffix(diff, "\n"))
 	}
@@ -263,22 +262,6 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 // buildTplEnv ...
 func buildTplEnv(k, v string) (string, error) {
 	return buildTpl(k, v, env.GetAll())
-}
-
-func tplDiff(src, dst, content string) (string, error) {
-	b, err := ioutil.ReadFile(dst)
-	if err != nil {
-		return "", err
-	}
-	original := string(b)
-	diff := difflib.UnifiedDiff{
-		A:        difflib.SplitLines(original),
-		B:        difflib.SplitLines(content),
-		FromFile: tildify(src), // "Original",
-		ToFile:   tildify(dst), // "Current",
-		Context:  diffContextLines,
-	}
-	return difflib.GetUnifiedDiffString(diff)
 }
 
 func includeVars(file string) (vars map[string]interface{}, err error) {
