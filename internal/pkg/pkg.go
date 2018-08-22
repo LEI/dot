@@ -31,9 +31,10 @@ var (
 		"apk":     apk,
 		"apt-get": aptGet,
 		"brew":    brew,
-		"choco":   choco,
 		"cask":    brewCask,
+		"choco":   choco,
 		"pacman":  pacman,
+		"termux":  termux,
 		"yaourt":  yaourt,
 		"yum":     yum,
 	}
@@ -60,16 +61,18 @@ type Pm struct {
 }
 
 // NewPm ...
-func NewPm(name string) (*Pm, error) {
-	m := &Pm{}
+func NewPm(name string) (m *Pm, err error) {
+	// m := &Pm{}
 	if name == "" {
-		m = Detect()
-	} else {
-		var ok bool
-		m, ok = managers[name]
-		if !ok {
-			return m, fmt.Errorf("%s: invalid package manager name", name)
+		name, err = Detect()
+		if err != nil {
+			return m, err
 		}
+	}
+	var ok bool
+	m, ok = managers[name]
+	if !ok {
+		return m, fmt.Errorf("%s: invalid package manager name", name)
 	}
 	if m == nil {
 		return m, fmt.Errorf("unable to detect package manager %s", name)
@@ -160,39 +163,29 @@ func pkgOnly(input []string) []string {
 // }
 
 // Detect default package manager
-func Detect() (m *Pm) {
+func Detect() (name string, err error) {
 	switch runtime.GOOS {
-	case "android":
-		// termux packages
-		m = managers["apt-get"]
-		m.Bin = "packages"
-		m.Sudo = false
+	case "android": // executable("packages"):
+		name = "termux"
 	case "darwin":
-		m = managers["brew"]
+		name = "brew"
 	case "linux":
 		switch {
 		case executable("apk"):
-			m = managers["apk"]
+			name = "apk"
 		case executable("apt-get"):
-			m = managers["apt-get"]
+			name = "apt-get"
 		case executable("pacman"):
-			m = managers["pacman"]
+			name = "pacman"
 		case executable("yum"):
-			m = managers["yum"]
-		default:
-			fmt.Fprintf(os.Stderr, "no package manager for OS: %s", ostype.List)
-			os.Exit(1)
+			name = "yum"
 		}
 	case "windows": // executable("choco"):
-		m = managers["choco"]
-		return nil
-	default:
-		fmt.Fprintf(os.Stderr, "no package manager for OS %s", runtime.GOOS)
-		os.Exit(1)
+		name = "choco"
 	}
-	// if m == nil {
-	// 	os.Exit(128)
-	// }
+	if name == "" {
+		return "", fmt.Errorf("no package manager for OS %s (%s)", runtime.GOOS, ostype.List)
+	}
 	return
 }
 

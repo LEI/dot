@@ -50,3 +50,11 @@ var aptGet = &Pm{
 		return true, nil
 	},
 }
+
+var termux = &Pm{}
+
+func init() {
+	*termux = *aptGet
+	termux.Sudo = false
+	termux.Bin = "packages"
+}
