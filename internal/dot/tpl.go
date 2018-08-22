@@ -85,7 +85,7 @@ func (t *Tpl) Prepare() error {
 	if t.Target != "" && t.Ext != "" && strings.HasSuffix(t.Target, "."+t.Ext) {
 		t.Target = strings.TrimSuffix(t.Target, "."+t.Ext)
 	}
-	// done in ParseTpls
+	// Already done in role ParseTpls
 	// if t.Vars == nil {
 	// 	t.Vars = map[string]interface{}{}
 	// }
