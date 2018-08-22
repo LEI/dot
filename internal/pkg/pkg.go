@@ -164,7 +164,7 @@ func Detect() (m *Pm) {
 	switch runtime.GOOS {
 	case "android":
 		// termux packages
-		m = managers["apt"]
+		m = managers["apt-get"]
 		m.Bin = "packages"
 		m.Sudo = false
 	case "darwin":
@@ -184,7 +184,7 @@ func Detect() (m *Pm) {
 			os.Exit(1)
 		}
 	case "windows": // executable("choco"):
-		// m = managers["choco"]
+		m = managers["choco"]
 		return nil
 	default:
 		fmt.Fprintf(os.Stderr, "no package manager for OS %s", runtime.GOOS)
