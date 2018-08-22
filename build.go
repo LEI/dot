@@ -344,6 +344,7 @@ func parse() ([]Target, error) {
 		// Append target to queue
 		ts = append(ts, t)
 	}
+	// Parse flag once targets are removed
 	flag.Parse()
 	return ts, nil
 }
@@ -353,7 +354,11 @@ func Vendor() error {
 	if err := dep(); err != nil {
 		return err
 	}
-	return run("dep", "ensure")
+	env := map[string]string{}
+	if runtime.GOOS == "android" {
+		env["DEPNOLOCK"] = "1"
+	}
+	return runWith(env, "dep", "ensure", "-vendor-only")
 }
 
 // Dep install go dep
@@ -876,12 +881,13 @@ func goreleaser() error {
 		return err
 	}
 	repo := "github.com/goreleaser/goreleaser"
-	installCmd := "dep ensure -vendor-only && make setup build"
 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	if err := run("go", "get", "-d", repo); err != nil {
 		return err
 	}
-	if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+installCmd); err != nil {
+	// Installation command
+	c := "dep ensure -vendor-only && make setup build"
+	if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
 		return err
 	}
 	return run("go", "install", repo)
