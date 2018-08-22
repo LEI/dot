@@ -12,3 +12,8 @@ dot:
 .PHONY: test
 test:
 	$(RUN) -v test
+
+# MAKEFLAGS += --silent
+ifndef VERBOSE
+.SILENT:
+endif
