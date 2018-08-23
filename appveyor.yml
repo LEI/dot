@@ -24,7 +24,7 @@ environment:
   CYG_CACHE: C:\cygwin64\var\cache\setup
   CYG_BASH: C:\cygwin64\bin\bash
   # CGO_ENABLED: 0 # Required (1) for go test -race
-  GOPATH: C:\gopath\
+  GOPATH: C:\go\
   # DOT_BUILD_TAGS:
   # OS: windows
 
@@ -41,7 +41,7 @@ init:
   - go env
 
 # clones and cd's to path
-clone_folder: C:\gopath\src\github.com\LEI\dot
+clone_folder: C:\go\src\github.com\LEI\dot
 
 # install:
 #   - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel'
@@ -52,7 +52,7 @@ clone_folder: C:\gopath\src\github.com\LEI\dot
 
 # before_build:
 #   # c:/ -> /cygdrive/c/
-#   - '%CYG_BASH% -lc "cp c:/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
+#   - '%CYG_BASH% -lc "cp c:/go/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
 #   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
 #   # - '%CYG_BASH% -lc "git config --local core.symlinks true"'
 #   # - '%CYG_BASH% -lc "git clean --force --quiet -x -d"'
@@ -63,13 +63,15 @@ build_script:
   # - '%CYG_BASH% -lc "./configure --enable-compile-warnings=error --enable-examples"'
   # - '%CYG_BASH% -lc "make distcheck VERBOSE=1 V=1"'
   # - echo %USERPROFILE%
+  - sh -c 'ls -la /cygdrive/c
+  - sh -c 'ls -la /cygdrive/c/cygwin64
 
   - touch C:\Users\appveyor\.dotnc
   # - '%CYG_BASH% -lc "touch $HOME/.dotnc"'
 
   - go run build.go vendor -only check install # testRace
   # - go run build.go vendor -only check build:windows
-  # - '%CYG_BASH% -lc "cp /cygdrive/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
+  # - '%CYG_BASH% -lc "cp /cygdrive/go/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
   # - '%CYG_BASH% -lc "ls -la /usr/local/bin"'
   # - '%CYG_BASH% -lc "dot --version"'
 
