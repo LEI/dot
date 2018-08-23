@@ -68,7 +68,7 @@ var aptCyg = &Pm{
 	// Opts: []string{},
 	Init: func() error {
 		fmt.Println("$ apt-cyg --version")
-		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version; echo $PATH")
+		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
