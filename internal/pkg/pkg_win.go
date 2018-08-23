@@ -58,15 +58,6 @@ var choco = &Pm{
 // --quiet-mode --no-shortcuts --upgrade-also --packages
 // --download --local-install --packages
 
-var cygwinSetup = []string{
-	// Install lynx
-	// "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages lynx",
-	// "/c/cygwin64/bin/cygcheck -dc cygwin",
-	// Install apt-cyg
-	"curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg",
-	"install apt-cyg /bin",
-}
-
 // https://github.com/transcode-open/apt-cyg
 var aptCyg = &Pm{
 	// Sudo:    false,
@@ -76,7 +67,7 @@ var aptCyg = &Pm{
 	// DryRun:  []string{},
 	// Opts: []string{},
 	Init: func() error {
-		cmd := exec.Command(shell.Get(), "-lc", "apt-cyg --version")
+		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version; which apt-cyg")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
