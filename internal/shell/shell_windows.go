@@ -4,7 +4,10 @@ package shell
 
 // %CYG_BASH% -lc ''
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 // Key returns the env var name for the user's shell.
 func Key() string {
@@ -13,7 +16,10 @@ func Key() string {
 
 // Get returns the shell to use.
 func Get() string {
-	return os.Getenv(Key())
+	k := os.Getenv(Key())
+	fmt.Println("SHELL GET", Key(), "=>", k)
+	return k
+	// return os.Getenv(Key())
 }
 
 // GetShortcutString returns the variable to use in the native shell.
