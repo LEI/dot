@@ -23,7 +23,7 @@ environment:
   CYG_CACHE: C:\cygwin64\var\cache\setup
   CYG_BASH: C:\cygwin64\bin\bash
   # CGO_ENABLED: 0 # Required (1) for go test -race
-  GOPATH: C:\GOPATH\
+  GOPATH: C:\gopath\
   # DOT_BUILD_TAGS:
   # OS: windows
 
