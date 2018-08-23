@@ -32,7 +32,6 @@ cache:
   - '%CYG_CACHE%'
 
 init:
-  - ls -la C:\cygwin64\bin
   - git config --global core.autocrlf input
   # - set PATH=%PATH:C:\MinGW\bin;=%
   # - C:\msys64\usr\bin\sh.exe --login /c/projects/dot/scripts/setup-win.sh
