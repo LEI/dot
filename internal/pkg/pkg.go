@@ -12,6 +12,7 @@ import (
 	// "github.com/LEI/dot/cli/config/tasks"
 
 	"github.com/LEI/dot/internal/ostype"
+	"github.com/LEI/dot/internal/shell"
 )
 
 var (
@@ -191,7 +192,7 @@ func Detect() (name string, err error) {
 
 func executable(bin string) bool {
 	c := fmt.Sprintf("command -v %s", bin)
-	cmd := exec.Command("sh", "-c", c)
+	cmd := exec.Command(shell.Get(), "-c", c)
 	// cmd.Stdout = os.Stdout
 	// cmd.Stderr = os.Stderr
 	// err := cmd.Run()

@@ -5,11 +5,17 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/LEI/dot/internal/shell"
 )
 
 var (
-	defaultExecShell = "sh"
+	defaultShell string
 )
+
+func init() {
+	defaultShell = shell.Get()
+}
 
 // Hook command to execute
 type Hook struct {
@@ -59,7 +65,7 @@ func (h *Hook) Do() error {
 		}
 	}
 	if h.Shell == "" {
-		h.Shell = defaultExecShell
+		h.Shell = defaultShell
 	}
 	// fmt.Println("EXEC:", h.Command)
 	cmd := exec.Command(h.Shell, []string{"-c", "set -e; " + h.Command}...)

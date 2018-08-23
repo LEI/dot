@@ -120,7 +120,7 @@ func (t *Task) CheckIf() error {
 	// 		fmt.Fprintf(os.Stderr, "err tpl: %s\n", err)
 	// 		continue
 	// 	}
-	// 	_, stdErr, status := executils.ExecuteBuf("sh", "-c", str)
+	// 	_, stdErr, status := executils.ExecuteBuf(shell.Get(), "-c", str)
 	// 	// out := strings.TrimRight(string(stdOut), "\n")
 	// 	strErr := strings.TrimRight(string(stdErr), "\n")
 	// 	// if out != "" {

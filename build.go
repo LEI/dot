@@ -22,6 +22,8 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/LEI/dot/internal/shell"
 )
 
 // Target ...
@@ -896,7 +898,7 @@ func goreleaser() error {
 	}
 	// Installation command
 	c := "dep ensure -vendor-only && make setup build"
-	if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
+	if err := run(shell.Get(), "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
 		return err
 	}
 	return run("go", "install", repo)
