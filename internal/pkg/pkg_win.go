@@ -67,7 +67,8 @@ var aptCyg = &Pm{
 	// DryRun:  []string{},
 	// Opts: []string{},
 	Init: func() error {
-		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version; which apt-cyg")
+		fmt.Println("$ apt-cyg --version")
+		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version; echo $PATH")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
