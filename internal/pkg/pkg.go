@@ -260,7 +260,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	if m == nil {
 		return fmt.Errorf(manager, "no pkg manager", manager)
 	}
-	for k, v := range m.Env {
+	/*for k, v := range m.Env {
 		o := os.Getenv(k)
 		if o == v {
 			continue
@@ -269,7 +269,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 		if err := os.Setenv(k, v); err != nil {
 			return err
 		}
-	}
+	}*/
 	if action == "install" && m.Has != nil {
 		ok, err := m.Has(m, pkgs)
 		if err != nil {
