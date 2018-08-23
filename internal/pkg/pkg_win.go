@@ -77,15 +77,17 @@ var aptCyg = &Pm{
 		if err := cmd1.Run(); err != nil {
 			return err
 		}
-		c2 := "/c/cygwin64/bin/cygcheck -dc cygwin"
-		fmt.Println("$", c2)
-		cmd2 := exec.Command(shell.Get(), "-c", c2)
-		cmd2.Stdout = os.Stdout
-		cmd2.Stderr = os.Stderr
-		cmd2.Stdin = os.Stdin
-		if err := cmd1.Run(); err != nil {
-			return err
-		}
+
+		// c2 := "/c/cygwin64/bin/cygcheck -dc cygwin"
+		// fmt.Println("$", c2)
+		// cmd2 := exec.Command(shell.Get(), "-c", c2)
+		// cmd2.Stdout = os.Stdout
+		// cmd2.Stderr = os.Stderr
+		// cmd2.Stdin = os.Stdin
+		// if err := cmd1.Run(); err != nil {
+		// 	fmt.Fprintf(os.Stderr, "err: %s\n", err) // return err
+		// }
+
 		// c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
 		// fmt.Println("$", c1)
 		// cmd1 := exec.Command(shell.Get(), "-c", c1)
