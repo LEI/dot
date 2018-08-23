@@ -76,16 +76,12 @@ var aptCyg = &Pm{
 	// DryRun:  []string{},
 	// Opts: []string{},
 	Init: func() error {
-		// c := "if ! hash apt-cyg; then ...; fi"
-		for _, c := range cygwinSetup {
-			fmt.Println("$", c)
-			cmd := exec.Command(shell.Get(), "-lc", c)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			cmd.Stdin = os.Stdin
-			if err := cmd.Run(); err != nil {
-				return err
-			}
+		cmd := exec.Command(shell.Get(), "-lc", "apt-cyg --version")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("Please install apt-cyg and retry: %s", err)
 		}
 		return nil
 	},

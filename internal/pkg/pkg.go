@@ -325,12 +325,7 @@ func Init(manager, action string, pkgs []string, opts ...string) (string, []stri
 	if err != nil {
 		return bin, opts, err
 	}
-	// if !m.done && m.Init != nil {
-	// 	if err := m.Init(); err != nil {
-	// 		return bin, opts, err
-	// 	}
-	// 	m.done = true
-	// }
+	// m.Init()
 	return bin, opts, nil
 }
 
