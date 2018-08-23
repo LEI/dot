@@ -38,24 +38,21 @@ var (
 	// Stderr ...
 	Stderr io.Writer = os.Stderr
 
-	cloneDepth      = 1
-	defaultBranch   = "master"
-	defaultRemote   = "origin"
-	remoteURLFormat = "https://github.com/%s.git"
+	cloneDepth    = 1
+	defaultBranch = "master"
+	defaultRemote = "origin"
 )
 
 func init() {
+	// TODO check executable git before version
 	if err := checkGitVersion(); err != nil {
 		fmt.Fprintf(Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-	// Stdout = os.Stdout
-	// Stdout = os.Stderr
 }
 
 func checkGitVersion() error {
-	cmd := exec.Command("git", "--version")
-	buf, err := cmd.CombinedOutput()
+	buf, err := gitCombined("--version")
 	if err != nil {
 		return err
 	}
@@ -91,4 +88,11 @@ func git(args ...string) (string, string, error) {
 	outstr := strings.TrimSuffix(stdout.String(), "\n")
 	errstr := strings.TrimSuffix(stderr.String(), "\n")
 	return outstr, errstr, err
+}
+
+func gitCombined(args ...string) (string, error) {
+	cmd := exec.Command(GitBin, args...)
+	buf, err := cmd.CombinedOutput()
+	str := strings.TrimSuffix(string(buf), "\n")
+	return str, err
 }

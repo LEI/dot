@@ -177,6 +177,15 @@ func setupGlobalConfig(cfg *dot.Config) error {
 		return fmt.Errorf(msg)
 	}
 	cfg.Roles = roles
+	if cfg.Git.Scheme != "" {
+		git.Scheme = cfg.Git.Scheme
+	}
+	if cfg.Git.Host != "" {
+		git.Host = cfg.Git.Host
+	}
+	if cfg.Git.User.String() != "" {
+		git.User = cfg.Git.User
+	}
 	if err := cfg.ParseRoles(); err != nil {
 		return err
 	}

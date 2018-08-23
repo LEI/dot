@@ -1,15 +1,23 @@
 ---
+git:
+  host: github.com
+  # user: LEI
+  # scheme: https
 
 roles:
   - name: bash
-    url: "https://github.com/LEI/dot-bash"
+    url: LEI/dot-bash
 
-  - name: gpg
-    url: "https://github.com/LEI/dot-gpg"
+  - "gpg:LEI/dot-gpg"
 
   - name: git
     url: "https://github.com/LEI/dot-git"
     dependencies: ["gpg"]
+    # git:
+    #   host: gitlab.com
+    #   user:
+    #     username: lol
+    #   scheme: git
 
   - name: vim
     url: "https://github.com/LEI/dot-vim"
