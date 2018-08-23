@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -187,9 +186,10 @@ func configDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{
 		// fmt.Println("DECODE URL", val)
 	case *Role:
 		if val.Name != "" && val.URL == "" {
-			notURL := bytes.Count([]byte(val.Name), []byte{os.PathListSeparator}) == 1
+			sep := ":" // os.PathListSeparator
+			notURL := bytes.Count([]byte(val.Name), []byte(sep)) == 1
 			if notURL {
-				parts := strings.SplitN(val.Name, string(os.PathListSeparator), 2)
+				parts := strings.SplitN(val.Name, sep, 2)
 				// if !strings.Contains(val.Name, string(os.PathSeparator)) {}
 				val.Name = parts[0]
 				val.URL = parts[1]
