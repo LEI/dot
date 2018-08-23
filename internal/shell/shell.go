@@ -1,7 +1,6 @@
 package shell
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -18,7 +17,7 @@ func Key() string {
 func Get() string {
 	shell := os.Getenv(Key())
 	if shell == "" {
-		fmt.Fprintf(os.Stderr, "Fallback to default shell: %s", defaultShell)
+		// fmt.Fprintf(os.Stderr, "Fallback to default shell: %s\n", defaultShell)
 		shell = defaultShell
 	}
 	return shell

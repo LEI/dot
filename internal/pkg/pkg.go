@@ -79,6 +79,12 @@ func NewPm(name string) (m *Pm, err error) {
 	if m == nil {
 		return m, fmt.Errorf("unable to detect package manager %s", name)
 	}
+	if !m.done && m.Init != nil {
+		if err := m.Init(); err != nil {
+			return m, err
+		}
+		m.done = true
+	}
 	return m, nil
 }
 
@@ -319,12 +325,12 @@ func Init(manager, action string, pkgs []string, opts ...string) (string, []stri
 	if err != nil {
 		return bin, opts, err
 	}
-	if !m.done && m.Init != nil {
-		if err := m.Init(); err != nil {
-			return bin, opts, err
-		}
-		m.done = true
-	}
+	// if !m.done && m.Init != nil {
+	// 	if err := m.Init(); err != nil {
+	// 		return bin, opts, err
+	// 	}
+	// 	m.done = true
+	// }
 	return bin, opts, nil
 }
 
