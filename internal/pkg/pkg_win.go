@@ -68,7 +68,7 @@ var aptCyg = &Pm{
 	// Opts: []string{},
 	Init: func() error {
 		// Install lynx
-		c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
+		c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages lynx"
 		fmt.Println("$", c1)
 		cmd1 := exec.Command(shell.Get(), "-c", c1)
 		cmd1.Stdout = os.Stdout
@@ -98,7 +98,8 @@ var aptCyg = &Pm{
 		// 	return err
 		// }
 		// Install apt-cyg
-		c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
+		// c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
+		c := "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg; install apt-cyg /bin"
 		fmt.Println("$", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
 		cmd.Stdout = os.Stdout

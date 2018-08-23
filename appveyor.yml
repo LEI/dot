@@ -18,6 +18,9 @@ branches:
   only:
     - master
 
+skip_commits:
+  message: /.*\[skip appveyor\].*/
+
 environment:
   CYG_ROOT: C:\cygwin64
   CYG_MIRROR: http://cygwin.mirror.constant.com
