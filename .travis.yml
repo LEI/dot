@@ -30,6 +30,9 @@ branches:
   only:
   - master
 
+before_install:
+  - if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[skip travis]"; then exit 0; fi
+
 stages:
   - build
   - test

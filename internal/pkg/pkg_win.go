@@ -99,7 +99,7 @@ var aptCyg = &Pm{
 		// }
 		// Install apt-cyg
 		// c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
-		c := "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg; install apt-cyg /bin"
+		c := "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg; ls -la; install apt-cyg /bin; ls -la /bin"
 		fmt.Println("$", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
 		cmd.Stdout = os.Stdout
