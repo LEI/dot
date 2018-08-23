@@ -63,10 +63,13 @@ build_script:
   # - '%CYG_BASH% -lc "./configure --enable-compile-warnings=error --enable-examples"'
   # - '%CYG_BASH% -lc "make distcheck VERBOSE=1 V=1"'
   # - echo %USERPROFILE%
-  - sh -c 'ls -la /'
+  - echo %CYG_ROOT%
+  - ls %CYG_ROOT%
+  - sh -c 'echo $CYG_ROOT'
+  - sh -c 'echo %CYG_ROOT%'
   - sh -c 'ls -la /cygdrive'
   - sh -c 'ls -la /cygdrive/c'
-  - sh -c 'ls -la /cygdrive/c/cygwin64'
+  - sh -c 'ls -la %CYG_ROOT%'
 
   - touch C:\Users\appveyor\.dotnc
   # - '%CYG_BASH% -lc "touch $HOME/.dotnc"'
