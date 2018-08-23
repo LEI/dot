@@ -67,8 +67,8 @@ build_script:
   - ls %CYG_ROOT%
   # - sh -c 'echo $CYG_ROOT'
   # - sh -c 'echo %CYG_ROOT%'
-  - sh -c 'ls -la /'
-  - sh -c 'ls -la c:/'
+  - sh -c 'ls -la /c/'
+  - sh -c 'ls -la /c/cygwin64'
   - sh -c 'ls -la %CYG_ROOT%'
 
   - touch C:\Users\appveyor\.dotnc
