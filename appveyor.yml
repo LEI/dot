@@ -63,8 +63,7 @@ before_build:
   # - 'bash -lc "git clean --force --quiet -x -d"'
   # - 'bash -lc "git reset --hard"'
   - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
-  - 'bash -lc "install apt-cyg /bin"'
-  - 'bash -lc "apt-cyg --version"'
+  - 'bash -lc "install apt-cyg /usr/local/bin"'
   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
   # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
 
