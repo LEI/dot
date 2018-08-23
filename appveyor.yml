@@ -67,7 +67,7 @@ build_script:
   - '%CYG_BASH% -lc "touch $HOME/.dotnc"'
 
   - go run build.go vendor -only check install # testRace
-  - ls -la $HOME
+  - '%CYG_BASH% -lc "ls -la $HOME"'
   # - go run build.go vendor -only check build:windows
   # - '%CYG_BASH% -lc "cp /c/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
   # - '%CYG_BASH% -lc "ls -la /usr/local/bin"'
