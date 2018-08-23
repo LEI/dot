@@ -22,14 +22,18 @@ skip_commits:
   message: /.*\[skip appveyor\].*/
 
 environment:
-  CYG_ROOT: C:\cygwin64
   CYG_MIRROR: http://cygwin.mirror.constant.com
-  CYG_CACHE: C:\cygwin64\var\cache\setup
-  CYG_BASH: C:\cygwin64\bin\bash
   # CGO_ENABLED: 0 # Required (1) for go test -race
-  GOPATH: C:\gopath\
+  GOPATH: C:\gopath
   # DOT_BUILD_TAGS:
   # OS: windows
+  matrix:
+    # - CYG_ARCH: x86
+    #   CYG_ROOT: C:/cygwin
+    #   CYG_CACHE: C:/cygwin/var/cache/setup
+    - CYG_ARCH: x86_64
+      CYG_ROOT: C:/cygwin64
+      CYG_CACHE: C:/cygwin64/var/cache/setup
 
 cache:
   - '%CYG_CACHE%'
@@ -38,8 +42,8 @@ init:
   - git config --global core.autocrlf input
   # - set PATH=%PATH:C:\MinGW\bin;=%
   # - C:\msys64\usr\bin\sh.exe --login /c/projects/dot/scripts/setup-win.sh
-  # - set PATH=%PATH%;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%GOPATH%\bin
-  - set PATH=%PATH%;C:\cygwin64\bin;%GOPATH%\bin
+  # - C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin
+  - set PATH=%PATH%;%CYG_ROOT%\bin;%GOPATH%\bin
   - go version
   - go env
 
@@ -54,26 +58,28 @@ clone_folder: C:\gopath\src\github.com\LEI\dot
 #   # - go get ...
 
 # before_build:
-#   - '%CYG_BASH% -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
+#   - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
 #   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
-#   # - '%CYG_BASH% -lc "git config --local core.symlinks true"'
-#   # - '%CYG_BASH% -lc "git clean --force --quiet -x -d"'
-#   # - '%CYG_BASH% -lc "git reset --hard"'
+#   # - 'bash -lc "git config --local core.symlinks true"'
+#   # - 'bash -lc "git clean --force --quiet -x -d"'
+#   # - 'bash -lc "git reset --hard"'
 
 build_script:
-  # - '%CYG_BASH% -lc "./autogen.sh"'
-  # - '%CYG_BASH% -lc "./configure --enable-compile-warnings=error --enable-examples"'
-  # - '%CYG_BASH% -lc "make distcheck VERBOSE=1 V=1"'
+  # - 'bash -lc "./autogen.sh"'
+  # - 'bash -lc "./configure --enable-compile-warnings=error --enable-examples"'
+  # - 'bash -lc "make distcheck VERBOSE=1 V=1"'
   # - echo %USERPROFILE%
+  - 'bash -lc "echo $PATH"'
+  - 'bash -lc "echo %PATH%"'
 
   - touch C:\Users\appveyor\.dotnc
-  # - '%CYG_BASH% -lc "touch $HOME/.dotnc"'
+  # - 'bash -lc "touch $HOME/.dotnc"'
 
   - go run build.go vendor -only check install # testRace
   # - go run build.go vendor -only check build:windows
-  # - '%CYG_BASH% -lc "cp /c/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
-  # - '%CYG_BASH% -lc "ls -la /usr/local/bin"'
-  # - '%CYG_BASH% -lc "dot --version"'
+  # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
+  # - 'bash -lc "ls -la /usr/local/bin"'
+  # - 'bash -lc "dot --version"'
 
   - dot --release
   - dot sync --verbose
