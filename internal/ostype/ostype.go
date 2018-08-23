@@ -39,6 +39,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/LEI/dot/internal/shell"
 	"gopkg.in/go-ini/ini.v1"
 )
 
@@ -126,7 +127,7 @@ func parseEnvVar(name string) []string {
 		types = append(types, o)
 	} else { // !ok || s == ""
 		// fmt.Printf("%s='%s' (%v)\n", name, s, ok)
-		out, err := exec.Command("bash", "-c", "printf '%s' \"$"+name+"\"").Output()
+		out, err := exec.Command(shell.Get(), "-c", "printf '%s' \"$"+name+"\"").Output()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s error: %s\n", name, err)
 		}

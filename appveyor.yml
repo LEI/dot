@@ -66,13 +66,13 @@ build_script:
   - touch C:\Users\appveyor\.dotnc
   # - '%CYG_BASH% -lc "touch $HOME/.dotnc"'
 
-  # - go run build.go vendor -only check install # testRace
+  - go run build.go vendor -only check install # testRace
   # - go run build.go vendor -only check build:windows
   # - '%CYG_BASH% -lc "cp /cygdrive/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
   # - '%CYG_BASH% -lc "ls -la /usr/local/bin"'
   # - '%CYG_BASH% -lc "dot --version"'
 
-  - dot --version
+  - dot --release
   - dot sync --verbose
   - dot install --packages --verbose
 
