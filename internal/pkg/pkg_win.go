@@ -68,15 +68,31 @@ var aptCyg = &Pm{
 	// Opts: []string{},
 	Init: func() error {
 		// Install lynx
-		c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
-		fmt.Println("$", c1)
-		cmd1 := exec.Command(shell.Get(), "-c", c1)
+		fmt.Println("$ /c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx")
+		cmd1 := exec.Command("/c/cygwin64/setup-x86_64.exe", "--quiet-mode", "--no-shortcuts", "--upgrade-also", "--packages", "git,lynx")
 		cmd1.Stdout = os.Stdout
 		cmd1.Stderr = os.Stderr
 		cmd1.Stdin = os.Stdin
 		if err := cmd1.Run(); err != nil {
 			return err
 		}
+		fmt.Println("$ /c/cygwin64/bin/cygcheck -dc cygwin")
+		cmd2 := exec.Command("/c/cygwin64/bin/cygcheck", "-dc", "cygwin")
+		cmd2.Stdout = os.Stdout
+		cmd2.Stderr = os.Stderr
+		cmd2.Stdin = os.Stdin
+		if err := cmd1.Run(); err != nil {
+			return err
+		}
+		// c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
+		// fmt.Println("$", c1)
+		// cmd1 := exec.Command(shell.Get(), "-c", c1)
+		// cmd1.Stdout = os.Stdout
+		// cmd1.Stderr = os.Stderr
+		// cmd1.Stdin = os.Stdin
+		// if err := cmd1.Run(); err != nil {
+		// 	return err
+		// }
 		// Install apt-cyg
 		c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
 		fmt.Println("$", c)
