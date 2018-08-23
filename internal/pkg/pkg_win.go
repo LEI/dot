@@ -58,6 +58,15 @@ var choco = &Pm{
 // --quiet-mode --no-shortcuts --upgrade-also --packages
 // --download --local-install --packages
 
+var cygwinSetup = []string{
+	// Install lynx
+	// "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages lynx",
+	// "/c/cygwin64/bin/cygcheck -dc cygwin",
+	// Install apt-cyg
+	"curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg",
+	"install apt-cyg /bin",
+}
+
 // https://github.com/transcode-open/apt-cyg
 var aptCyg = &Pm{
 	// Sudo:    false,
@@ -67,45 +76,18 @@ var aptCyg = &Pm{
 	// DryRun:  []string{},
 	// Opts: []string{},
 	Init: func() error {
-		// Install lynx
-		c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages lynx"
-		fmt.Println("$", c1)
-		cmd1 := exec.Command(shell.Get(), "-c", c1)
-		cmd1.Stdout = os.Stdout
-		cmd1.Stderr = os.Stderr
-		cmd1.Stdin = os.Stdin
-		if err := cmd1.Run(); err != nil {
-			return err
+		// c := "if ! hash apt-cyg; then ...; fi"
+		for _, c := range cygwinSetup {
+			fmt.Println("$", c)
+			cmd := exec.Command(shell.Get(), "-lc", c)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			cmd.Stdin = os.Stdin
+			if err := cmd.Run(); err != nil {
+				return err
+			}
 		}
-
-		// c2 := "/c/cygwin64/bin/cygcheck -dc cygwin"
-		// fmt.Println("$", c2)
-		// cmd2 := exec.Command(shell.Get(), "-c", c2)
-		// cmd2.Stdout = os.Stdout
-		// cmd2.Stderr = os.Stderr
-		// cmd2.Stdin = os.Stdin
-		// if err := cmd1.Run(); err != nil {
-		// 	fmt.Fprintf(os.Stderr, "err: %s\n", err) // return err
-		// }
-
-		// c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
-		// fmt.Println("$", c1)
-		// cmd1 := exec.Command(shell.Get(), "-c", c1)
-		// cmd1.Stdout = os.Stdout
-		// cmd1.Stderr = os.Stderr
-		// cmd1.Stdin = os.Stdin
-		// if err := cmd1.Run(); err != nil {
-		// 	return err
-		// }
-		// Install apt-cyg
-		// c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
-		c := "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg; ls -la; install apt-cyg /bin; ls -la /bin"
-		fmt.Println("$", c)
-		cmd := exec.Command(shell.Get(), "-c", c)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
-		return cmd.Run()
+		return nil
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// cygcheck --list-package ...
