@@ -183,7 +183,7 @@ func Detect() (name string, err error) {
 			name = "yum"
 		}
 	case "windows": // executable("choco"):
-		name = "choco"
+		name = "apt-cyg" // "choco"
 	}
 	if name == "" {
 		return "", fmt.Errorf("no package manager for OS %s (%s)", runtime.GOOS, ostype.List)
