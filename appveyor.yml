@@ -60,9 +60,7 @@ clone_folder: C:\gopath\src\github.com\LEI\dot
 before_build:
   # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
   - 'bash -lc "cygcheck -dc cygwin"'
-  - 'bash -lc "curl --version"'
-  - 'bash -lc "wget --version"'
-  - 'bash -lc "wget rawgit.com/transcode-open/apt-cyg/master/apt-cyg"'
+  - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
   - 'bash -lc "install apt-cyg /bin"'
   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
   # - 'bash -lc "git config --local core.symlinks true"'
