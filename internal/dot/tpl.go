@@ -176,23 +176,31 @@ func (t *Tpl) Undo() error {
 func (t *Tpl) Data() (map[string]interface{}, error) {
 	data := make(map[string]interface{}, 0)
 	// Global environment variables
-	// and custom application baseEnv
-	for k, v := range env.GetAll() {
-		data[k] = v
-	}
-	// Specific role environment
+	e := env.GetAll() // map[string]string{}
+	// for k, v := range env.GetAll() {
+	// 	data[k] = v
+	// }
+	// Specific role environment variables (uppercase key)
 	for k, v := range t.Env {
-		// k = strings.ToTitle(k)
-		ev, err := buildTplEnv(k, v)
+		k = strings.ToUpper(k)
+		ev, err := buildTplEnv(k, v, e)
 		if err != nil {
 			return data, err
 		}
 		fmt.Printf("$ export %s=%q\n", k, ev)
-		data[k] = ev
+		data[k] = ev // e[k] = ev
 	}
-	// Extra variables (not string only)
+	// Extra variables (not only strings)
 	for k, v := range t.Vars {
-		fmt.Printf("$ var %s -> %v\n", k, v)
+		// if k == "Env" ...
+		if val, ok := v.(string); ok && val != "" {
+			ev, err := buildTplEnv(k, val, e)
+			if err != nil {
+				return data, err
+			}
+			v = ev
+		}
+		// fmt.Printf("# var %s = %+v\n", k, v)
 		data[k] = v
 	}
 	return data, nil
@@ -260,8 +268,14 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 }
 
 // buildTplEnv ...
-func buildTplEnv(k, v string) (string, error) {
-	return buildTpl(k, v, env.GetAll())
+func buildTplEnv(k, v string, envs ...map[string]string) (string, error) {
+	environ := env.GetAll()
+	for _, e := range envs {
+		for k, v := range e {
+			environ[k] = v
+		}
+	}
+	return buildTpl(k, v, environ)
 }
 
 func includeVars(file string) (vars map[string]interface{}, err error) {

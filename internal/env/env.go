@@ -36,7 +36,7 @@ func GetAll() map[string]string {
 	env := make(map[string]string, 0)
 	for _, i := range os.Environ() {
 		sep := strings.Index(i, "=")
-		k := i[0:sep]
+		k := strings.ToUpper(i[0:sep])
 		v := i[sep+1:]
 		if _, ok := env[k]; !ok {
 			env[k] = v

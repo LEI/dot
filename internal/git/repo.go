@@ -197,15 +197,15 @@ func (r *Repo) Pull() error {
 // ParseURL ...
 func ParseURL(u *url.URL, repo string) (*url.URL, error) {
 	if u.Scheme == "" && Scheme != "" {
-		fmt.Println("ParseURL", repo, "set Scheme", Scheme)
+		// fmt.Println("ParseURL", repo, "set Scheme", Scheme)
 		u.Scheme = Scheme
 	}
 	if u.Host == "" && Host != "" { // u.Opaque == ""
-		fmt.Println("ParseURL", repo, "set Host", Host)
+		// fmt.Println("ParseURL", repo, "set Host", Host)
 		u.Host = Host
 	}
 	if u.User.String() == "" && User != nil {
-		fmt.Println("ParseURL", repo, "set User", User.String())
+		// fmt.Println("ParseURL", repo, "set User", User.String())
 		u.User = User // url.User(username)
 	}
 	if repo != "" && !strings.HasSuffix(repo, ".git") {
