@@ -71,7 +71,8 @@ var aptCyg = &Pm{
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("Please install apt-cyg and retry: %s", err)
+			// Not in %PATH%
+			return err
 		}
 		return nil
 	},
