@@ -50,6 +50,7 @@ clone_folder: C:\gopath\src\github.com\LEI\dot
 #   # - go get ...
 
 before_build:
+  - '%CYG_BASH% -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
   # - '%CYG_BASH% -lc "git config --local core.symlinks true"'
   # - '%CYG_BASH% -lc "git clean --force --quiet -x -d"'
