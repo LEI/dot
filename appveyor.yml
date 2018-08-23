@@ -37,11 +37,11 @@ environment:
 cache:
   - '%CYG_CACHE%'
 
-# init:
-#     - git config --global core.autocrlf input
+init:
+    - git config --global core.autocrlf input
 
 # clones and cd's to path
-clone_folder: C:\GOPATH\src\github.com\LEI\dot
+clone_folder: C:\gopath\src\github.com\LEI\dot
 
 install:
   # - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel'
@@ -64,10 +64,13 @@ build_script:
   # - '%CYG_BASH% -lc "make distcheck VERBOSE=1 V=1"'
   - '%CYG_BASH% -lc "echo $PWD; echo $HOME; ls -la"'
   - echo %USERPROFILE%
-  - ls -la
+  - pwd
+  - echo %PWD%
 
   - go run build.go vendor check install # testRace
-  # - go run build.go build:windows
+  - ls -la C:/
+  - go run build.go build:windows
+  - ls -la
 
   - dot --version
   # - dot ls
