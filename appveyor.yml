@@ -69,8 +69,6 @@ build_script:
   # - 'bash -lc "./configure --enable-compile-warnings=error --enable-examples"'
   # - 'bash -lc "make distcheck VERBOSE=1 V=1"'
   # - echo %USERPROFILE%
-  - 'bash -lc "echo $PATH"'
-  - 'bash -lc "echo %PATH%"'
 
   - touch C:\Users\appveyor\.dotnc
   # - 'bash -lc "touch $HOME/.dotnc"'
