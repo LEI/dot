@@ -30,6 +30,7 @@ var (
 
 	managers = map[string]*Pm{
 		"apk":     apk,
+		"apt-cyg": aptCyg,
 		"apt-get": aptGet,
 		"brew":    brew,
 		"cask":    brewCask,
