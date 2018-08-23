@@ -17,13 +17,6 @@ branches:
   only:
     - master
 
-init:
-  # - set PATH=%PATH:C:\MinGW\bin;=%
-  # - C:\msys64\usr\bin\sh.exe --login /c/projects/dot/scripts/setup-win.sh
-  - set PATH=%PATH%;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%GOPATH%\bin
-  - go version
-  - go env
-
 environment:
   CYG_ROOT: C:\cygwin64
   CYG_MIRROR: http://cygwin.mirror.constant.com
@@ -39,6 +32,11 @@ cache:
 
 init:
     - git config --global core.autocrlf input
+  # - set PATH=%PATH:C:\MinGW\bin;=%
+  # - C:\msys64\usr\bin\sh.exe --login /c/projects/dot/scripts/setup-win.sh
+  - set PATH=%PATH%;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%GOPATH%\bin
+  - go version
+  - go env
 
 # clones and cd's to path
 clone_folder: C:\gopath\src\github.com\LEI\dot
