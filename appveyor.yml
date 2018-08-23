@@ -65,9 +65,11 @@ build_script:
   # - echo %USERPROFILE%
   - echo %CYG_ROOT%
   - ls %CYG_ROOT%
-  - sh -c 'echo $CYG_ROOT'
-  - sh -c 'echo %CYG_ROOT%'
-  - sh -c 'ls -la /cygdrive'
+  # - sh -c 'echo $CYG_ROOT'
+  # - sh -c 'echo %CYG_ROOT%'
+  - sh -c 'ls -la c:'
+  - sh -c 'ls -la C:cygdrive'
+  - sh -c 'ls -la C:/cygdrive'
   - sh -c 'ls -la /cygdrive/c'
   - sh -c 'ls -la %CYG_ROOT%'
 
