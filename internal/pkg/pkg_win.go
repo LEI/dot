@@ -8,8 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/LEI/dot/internal/shell"
 )
 
 // https://github.com/chocolatey/choco/wiki/CommandsReference
@@ -68,7 +66,7 @@ var aptCyg = &Pm{
 	// Opts: []string{},
 	Init: func() error {
 		fmt.Println("$ apt-cyg --version")
-		cmd := exec.Command(shell.Get(), "-c", "ls -la /usr/bin; apt-cyg --version")
+		cmd := exec.Command("apt-cyg", "--version")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
