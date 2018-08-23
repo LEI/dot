@@ -64,10 +64,10 @@ build_script:
   - pwd
   - echo %PWD%
 
-  - go run build.go vendor check install # testRace
-  - ls -la C:/
+  # - go run build.go vendor check install # testRace
   - go run build.go build:windows
-  - ls -la
+  - cp /c/gopath/src/github.com/LEI/dot /home/appveyor/bin/dot
+  - ls -la $HOME
 
   - dot --version
   # - dot ls
