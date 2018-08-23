@@ -65,7 +65,7 @@ before_build:
   - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
   # - 'bash -lc "apt-cyg --version"'
   - 'bash -lc "install apt-cyg /bin"'
-  - 'bash -lc "mkdir -p /usr/local/bin; ln -s /bin/apy-cyg /usr/local/bin/apt-cyg"'
+  - 'bash -lc "which apt-cyg"'
   - 'bash -lc "apt-cyg --version"'
   - 'bash -c "apt-cyg --version"'
   - 'sh -c "apt-cyg --version"'
