@@ -19,10 +19,10 @@ branches:
     - master
 
 environment:
-  # CYG_ROOT: C:\cygwin64
-  # CYG_MIRROR: http://cygwin.mirror.constant.com
-  # CYG_CACHE: C:\cygwin64\var\cache\setup
-  # CYG_BASH: C:\cygwin64\bin\bash
+  CYG_ROOT: C:\cygwin64
+  CYG_MIRROR: http://cygwin.mirror.constant.com
+  CYG_CACHE: C:\cygwin64\var\cache\setup
+  CYG_BASH: C:\cygwin64\bin\bash
   # CGO_ENABLED: 0 # Required (1) for go test -race
   GOPATH: C:\gopath\
   # DOT_BUILD_TAGS:
@@ -32,10 +32,12 @@ cache:
   - '%CYG_CACHE%'
 
 init:
+  - ls -la C:\cygwin64\bin
   - git config --global core.autocrlf input
   # - set PATH=%PATH:C:\MinGW\bin;=%
   # - C:\msys64\usr\bin\sh.exe --login /c/projects/dot/scripts/setup-win.sh
-  - set PATH=%PATH%;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%GOPATH%\bin
+  # - set PATH=%PATH%;C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%GOPATH%\bin
+  - set PATH=%PATH%;C:\cygwin64\bin;%GOPATH%\bin
   - go version
   - go env
 
