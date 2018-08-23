@@ -68,7 +68,7 @@ var aptCyg = &Pm{
 	// Opts: []string{},
 	Init: func() error {
 		// Install lynx
-		c1 := "j/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
+		c1 := "/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
 		fmt.Println("$", c1)
 		cmd1 := exec.Command(shell.Get(), "-c", c1)
 		cmd1.Stdout = os.Stdout
