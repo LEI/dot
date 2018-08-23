@@ -4,6 +4,7 @@ package pkg
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,7 +32,7 @@ var choco = &Pm{
 		opts := []string{"search", "--exact", "--local-only"}
 		opts = append(opts, m.Opts...)
 		opts = append(opts, pkgs...)
-		// fmt.Println(m.Bin, opts)
+		// fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
 		var buf bytes.Buffer
 		cmd := exec.Command(m.Bin, opts...)
 		cmd.Stdout = &buf
@@ -66,6 +67,7 @@ var aptCyg = &Pm{
 	// Opts: []string{},
 	Init: func() error {
 		c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
+		fmt.Println("$", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -77,6 +79,7 @@ var aptCyg = &Pm{
 		opts := []string{"show"}
 		// opts = append(opts, m.Opts...)
 		opts = append(opts, pkgs...)
+		fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
 		cmd := exec.Command(m.Bin, opts...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
