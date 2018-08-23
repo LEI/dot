@@ -59,14 +59,14 @@ build_script:
   # - '%CYG_BASH% -lc "./autogen.sh"'
   # - '%CYG_BASH% -lc "./configure --enable-compile-warnings=error --enable-examples"'
   # - '%CYG_BASH% -lc "make distcheck VERBOSE=1 V=1"'
-  - '%CYG_BASH% -lc "echo $PWD; echo $HOME; ls -la"'
-  - echo %USERPROFILE%
-  - pwd
-  - echo %PWD%
+  # - echo %USERPROFILE%
+  - '%CYG_BASH% -lc "echo $PATH"'
+  - echo %PATH%
 
   # - go run build.go vendor check install # testRace
-  - go run build.go build:windows
-  - cp /c/gopath/src/github.com/LEI/dot /home/appveyor/bin/dot
+  - go run build.go vendor build:windows
+  - cp /c/gopath/src/github.com/LEI/dot /usr/local/bin/dot
+  - ls -la /usr/local/bin
   - ls -la $HOME
 
   - dot --version
