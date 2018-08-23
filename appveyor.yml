@@ -58,14 +58,14 @@ clone_folder: C:\gopath\src\github.com\LEI\dot
 #   # - go get ...
 
 before_build:
-  # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
-  - 'bash -lc "cygcheck -dc cygwin"'
-  - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
-  - 'bash -lc "install apt-cyg /bin"'
-  # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
+  # - 'bash -lc "cygcheck -dc cygwin"'
   # - 'bash -lc "git config --local core.symlinks true"'
   # - 'bash -lc "git clean --force --quiet -x -d"'
   # - 'bash -lc "git reset --hard"'
+  - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
+  - 'bash -lc "install apt-cyg /bin"'
+  # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
+  # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
 
 build_script:
   # - 'bash -lc "./autogen.sh"'
@@ -83,8 +83,8 @@ build_script:
   # - 'bash -lc "dot --version"'
 
   - dot --release
-  - dot sync --verbose
-  - dot install --packages --verbose
+  - 'bash -lc "dot sync --verbose"'
+  - 'bash -lc "dot install --packages --verbose"'
 
   # - choco install --yes --no-progress docker-compose
   # - OS=windows go run build.go -v docker
