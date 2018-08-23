@@ -51,6 +51,7 @@ var choco = &Pm{
 	},
 }
 
+// https://github.com/mobile-shell/mosh/blob/master/appveyor.yml
 // C:\cygwin64\...
 // c:/cygwin64...
 // /cygdrive/c/cygwin64/setup-x86_64.exe
@@ -66,6 +67,17 @@ var aptCyg = &Pm{
 	// DryRun:  []string{},
 	// Opts: []string{},
 	Init: func() error {
+		// Install lynx
+		c1 := "/cygdrive/c/cygwin64/setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,lynx"
+		fmt.Println("$", c1)
+		cmd1 := exec.Command(shell.Get(), "-c", c1)
+		cmd1.Stdout = os.Stdout
+		cmd1.Stderr = os.Stderr
+		cmd1.Stdin = os.Stdin
+		if err := cmd1.Run(); err != nil {
+			return err
+		}
+		// Install apt-cyg
 		c := "if ! hash apt-cyg; then lynx -source rawgit.com/transcode-open/apt-cyg/master/apt-cyg > apt-cyg; install apt-cyg /bin; fi"
 		fmt.Println("$", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
