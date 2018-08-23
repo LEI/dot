@@ -52,6 +52,8 @@ install:
   # - go get ...
 
 before_build:
+  - touch C:\Users\appveyor\.dotnc
+  # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
   # - '%CYG_BASH% -lc "git config --local core.symlinks true"'
   # - '%CYG_BASH% -lc "git clean --force --quiet -x -d"'
   # - '%CYG_BASH% -lc "git reset --hard"'
@@ -60,20 +62,17 @@ build_script:
   # - '%CYG_BASH% -lc "./autogen.sh"'
   # - '%CYG_BASH% -lc "./configure --enable-compile-warnings=error --enable-examples"'
   # - '%CYG_BASH% -lc "make distcheck VERBOSE=1 V=1"'
-  - '%CYG_BASH% -lc "echo CYG!; echo $PWD"'
-  - '%CYG_BASH% -lc "git --version"'
-  - '%CYG_BASH% -lc "which git"'
-
-  # - go run build.go build:windows
+  - '%CYG_BASH% -lc "echo $PWD; echo $HOME; ls -la"'
+  - echo %USERPROFILE%
+  - ls -la
 
   - go run build.go vendor check install # testRace
-  # - echo %USERPROFILE%
-  - touch C:\Users\appveyor\.dotnc
-  # - mv C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
+  # - go run build.go build:windows
+
   - dot --version
-  - dot ls
-  - dot sync --verbose
-  - dot install --packages --verbose
+  # - dot ls
+  - '%CYG_BASH% -lc "dot sync --verbose"'
+  - '%CYG_BASH% -lc "dot install --packages --verbose"'
 
   # - choco install --yes --no-progress docker-compose
   # - OS=windows go run build.go -v docker
