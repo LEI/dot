@@ -18,6 +18,9 @@ func Key() string {
 func Get() string {
 	k := os.Getenv(Key())
 	fmt.Println("SHELL GET", Key(), "=>", k)
+	if k == "" {
+		fmt.Println("ENVIRON ->", os.Environ())
+	}
 	return k
 	// return os.Getenv(Key())
 }
