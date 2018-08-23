@@ -76,7 +76,7 @@ func diffPatchMatch(text1, text2 string) string {
 	patches := dmp.PatchMake(diffs)
 	str := dmp.PatchToText(patches)
 	// str = strings.Replace(str, "%0A", "", -1)
-	// str, _ = url.QueryUnescape(str)
+	// str, _ = url.PathUnescape(str) // url.QueryUnescape(str)
 	return str
 }
 */

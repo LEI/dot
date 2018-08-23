@@ -2,6 +2,7 @@ package dot
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,6 +12,11 @@ import (
 	"github.com/LEI/dot/internal/git"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
+)
+
+var (
+	gitHost string
+	gitUser string
 )
 
 // TODO flag
@@ -43,7 +49,9 @@ type RoleConfig struct {
 type Role struct {
 	Name string
 	Path string
-	URL  string
+	URL  string   // Git repository URL
+	Git  *url.URL // repo host and user
+	// Scheme string // Remote type: git (default), https, ssh
 	// Tasks []string
 
 	OS          []string
@@ -70,66 +78,6 @@ type Role struct {
 
 	// synced bool
 	configFile string
-}
-
-// NewRole from a config file path
-func NewRole(path string) (*Role, error) {
-	rc := &RoleConfig{}
-	data, err := ReadConfigFile(path)
-	if err != nil {
-		return rc.Role, err
-	}
-	dc := &mapstructure.DecoderConfig{
-		DecodeHook:       roleDecodeHook,
-		ErrorUnused:      DecodeErrorUnused,
-		WeaklyTypedInput: DecodeWeaklyTypedInput,
-		Result:           &rc,
-	}
-	decoder, err := mapstructure.NewDecoder(dc)
-	if err != nil {
-		return rc.Role, err
-	}
-	err = decoder.Decode(data)
-	return rc.Role, err
-}
-
-// https://github.com/ernesto-jimenez/gogen/tree/master/cmd/gounmarshalmap
-func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
-	switch val := i.(type) {
-	case string:
-		switch t {
-		case reflect.TypeOf((*Pkg)(nil)):
-			i = &Pkg{Name: []string{val}}
-		case reflect.TypeOf((*Dir)(nil)):
-			i = &Dir{Path: val}
-		case reflect.TypeOf((*Link)(nil)):
-			i = &Link{Source: val}
-		case reflect.TypeOf((*Tpl)(nil)):
-			i = &Tpl{Source: val}
-		case reflect.TypeOf((*Line)(nil)):
-			i = &Tpl{Source: val}
-		case reflect.TypeOf((*Hook)(nil)):
-			i = &Hook{Command: val}
-		}
-	case map[interface{}]interface{}:
-		switch t {
-		case reflect.TypeOf(([]*Line)(nil)):
-			i = decodeLines(val)
-		}
-	}
-	return i, nil
-}
-
-// Transform map[string]interface{} to []*Line
-func decodeLines(in map[interface{}]interface{}) []*Line {
-	lines := []*Line{}
-	for k, v := range in {
-		lines = append(lines, &Line{
-			Target: k.(string),
-			Data:   v.(string),
-		})
-	}
-	return lines
 }
 
 func (r *Role) String() string {
@@ -203,7 +151,11 @@ func formatTasks(prefix string, i interface{}) string {
 
 // Sync role repository
 func (r *Role) Sync() error {
-	repo, err := git.NewRepo(r.Path, r.URL)
+	// u, err := url.Parse(r.URL)
+	// if err != nil {
+	// 	return err
+	// }
+	repo, err := git.NewRepo(r.Git, r.URL, r.Path)
 	if err != nil {
 		return err
 	}
@@ -238,17 +190,83 @@ func (r *Role) SetConfigFile(name string) *Role {
 	return r
 }
 
-// LoadConfig file
-func (r *Role) LoadConfig() error {
+// Load role config
+func (r *Role) Load() error {
 	if r.configFile == "" {
 		return fmt.Errorf("role %s: empty config file path", r.Name)
 	}
-	role, err := NewRole(r.configFile)
+	role, err := LoadConfigFile(r.configFile)
 	if err != nil {
 		return fmt.Errorf("role %s: %s", r.Name, err)
 	}
-	// fmt.Printf("Merging role config %+v with original %+v\n", role, r)
-	return mergo.Merge(r, role)
+	// fmt.Printf("Merging role config:\n%+v\nwith original struct:\n%+v\n", role, r)
+	if err = mergo.Merge(r, role); err != nil {
+		return err
+	}
+	if r.Name == "" {
+		return fmt.Errorf("empty role name: %+v", r)
+	}
+	return nil
+}
+
+// LoadConfigFile role config from a file path
+func LoadConfigFile(path string) (*Role, error) {
+	rc := &RoleConfig{}
+	data, err := ReadConfigFile(path)
+	if err != nil {
+		return rc.Role, err
+	}
+	dc := &mapstructure.DecoderConfig{
+		DecodeHook:       roleDecodeHook,
+		ErrorUnused:      DecodeErrorUnused,
+		WeaklyTypedInput: DecodeWeaklyTypedInput,
+		Result:           &rc,
+	}
+	decoder, err := mapstructure.NewDecoder(dc)
+	if err != nil {
+		return rc.Role, err
+	}
+	err = decoder.Decode(data)
+	return rc.Role, err
+}
+
+// https://github.com/ernesto-jimenez/gogen/tree/master/cmd/gounmarshalmap
+func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
+	switch val := i.(type) {
+	case string:
+		switch t {
+		case reflect.TypeOf((*Pkg)(nil)):
+			i = &Pkg{Name: []string{val}}
+		case reflect.TypeOf((*Dir)(nil)):
+			i = &Dir{Path: val}
+		case reflect.TypeOf((*Link)(nil)):
+			i = &Link{Source: val}
+		case reflect.TypeOf((*Tpl)(nil)):
+			i = &Tpl{Source: val}
+		case reflect.TypeOf((*Line)(nil)):
+			i = &Tpl{Source: val}
+		case reflect.TypeOf((*Hook)(nil)):
+			i = &Hook{Command: val}
+		}
+	case map[interface{}]interface{}:
+		switch t {
+		case reflect.TypeOf(([]*Line)(nil)):
+			i = decodeLines(val)
+		}
+	}
+	return i, nil
+}
+
+// Transform map[string]interface{} to []*Line
+func decodeLines(in map[interface{}]interface{}) []*Line {
+	lines := []*Line{}
+	for k, v := range in {
+		lines = append(lines, &Line{
+			Target: k.(string),
+			Data:   v.(string),
+		})
+	}
+	return lines
 }
 
 // Parse all role tasks

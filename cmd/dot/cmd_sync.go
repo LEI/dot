@@ -73,7 +73,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 				return
 			}
 			// Parse config file (again)
-			if err := r.LoadConfig(); err != nil {
+			if err := r.Load(); err != nil {
 				errs <- err
 				return
 			}

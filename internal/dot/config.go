@@ -1,12 +1,17 @@
 package dot
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
+	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
+	"github.com/LEI/dot/internal/git"
 	"github.com/mitchellh/mapstructure"
 	toml "github.com/pelletier/go-toml"
 	"gopkg.in/yaml.v2"
@@ -25,19 +30,55 @@ type Config struct {
 	Source string
 	Target string
 	Roles  []*Role
+	Git    *url.URL
 
 	dirname  string // Role directory name
 	filename string // Role config file name
+	file     string // actual file used
 }
 
-// SetDir name
-func (c *Config) SetDir(name string) {
-	c.dirname = name
+// NewConfig ...
+func NewConfig(path, dirname string) (*Config, error) {
+	// if path == "" { ... }
+	cfg := &Config{
+		dirname: dirname,
+		file:    path,
+	}
+	if err := cfg.Load(); err != nil {
+		return cfg, fmt.Errorf("error loading config: %s", err)
+	}
+	return cfg, nil
 }
 
 // SetRoleFile name
 func (c *Config) SetRoleFile(name string) {
 	c.filename = name
+}
+
+// Load ...
+func (c *Config) Load() error {
+	c.file = FindConfig(c.file, c.dirname)
+	data, err := ReadConfigFile(c.file)
+	if err != nil {
+		return err
+	}
+	// var md mapstructure.Metadata
+	// if err := mapstructure.WeakDecodeMetadata(data, &c, &md); err != nil {
+	// 	return err
+	// }
+	// fmt.Printf("md: %+v\n", md)
+	dc := &mapstructure.DecoderConfig{
+		DecodeHook:       configDecodeHook,
+		ErrorUnused:      DecodeErrorUnused,
+		WeaklyTypedInput: DecodeWeaklyTypedInput,
+		Result:           &c,
+	}
+	decoder, err := mapstructure.NewDecoder(dc)
+	if err != nil {
+		return err
+	}
+	err = decoder.Decode(data)
+	return err
 }
 
 // ParseRoles config
@@ -53,9 +94,16 @@ func (c *Config) ParseRoles() error {
 		// if ok := r.Ignore(); ok {
 		// 	continue
 		// }
+
+		// if r.URL == "" { r.URL = r.Name }
+		// r.URL = git.ParseURL(r.Git.User, r.Git.Host, r.URL)
+
 		r.SetConfigFile(c.filename)
-		if exists(r.GetConfigFile()) {
-			if err := r.LoadConfig(); err != nil {
+		if f := r.GetConfigFile(); exists(f) {
+			if err := git.CheckRemote(r.Path, r.URL); err != nil {
+				return err
+			}
+			if err := r.Load(); err != nil {
 				return err
 			}
 		}
@@ -66,48 +114,6 @@ func (c *Config) ParseRoles() error {
 	}
 	c.Roles = roles
 	return nil
-}
-
-// NewConfig ...
-func NewConfig(path string) (*Config, error) {
-	// if path == "" {}
-	cfgPath := FindConfig(path)
-	cfg, err := LoadConfig(cfgPath)
-	if err != nil {
-		return &cfg, fmt.Errorf("error loading config: %s", err)
-	}
-	return &cfg, nil
-}
-
-// FindConfig ...
-func FindConfig(path string) string {
-	return path
-}
-
-// LoadConfig ...
-func LoadConfig(path string) (Config, error) {
-	cfg := Config{}
-	data, err := ReadConfigFile(path)
-	if err != nil {
-		return cfg, err
-	}
-	// var md mapstructure.Metadata
-	// if err := mapstructure.WeakDecodeMetadata(data, &cfg, &md); err != nil {
-	// 	return cfg, err
-	// }
-	// fmt.Printf("md: %+v\n", md)
-	dc := &mapstructure.DecoderConfig{
-		// DecodeHook:       ...,
-		ErrorUnused:      DecodeErrorUnused,
-		WeaklyTypedInput: DecodeWeaklyTypedInput,
-		Result:           &cfg,
-	}
-	decoder, err := mapstructure.NewDecoder(dc)
-	if err != nil {
-		return cfg, err
-	}
-	err = decoder.Decode(data)
-	return cfg, err
 }
 
 // ReadConfigFile ...
@@ -149,6 +155,48 @@ func detectType(path string) string {
 		fileType = "json"
 	}
 	return fileType
+}
+
+// FindConfig ...
+func FindConfig(path, dirname string) string {
+	// dirs := []string{".", homeDir}
+	// /etc/dot, $HOME/.dot/config, $HOME/.config/dot...
+	if filepath.IsAbs(path) {
+		return path
+	}
+	// Current working directory
+	if exists(path) {
+		return path
+	}
+	// Home directory
+	if rc := filepath.Join(homeDir, path); exists(rc) {
+		return rc
+	}
+	// path = strings.TrimPrefix(path, ".")
+	return filepath.Join(homeDir, dirname, "config")
+}
+
+func configDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
+	switch val := i.(type) {
+	case string:
+		switch t {
+		case reflect.TypeOf((*Role)(nil)):
+			i = &Role{Name: val}
+		}
+	case *url.URL:
+		// fmt.Println("DECODE URL", val)
+	case *Role:
+		if val.Name != "" && val.URL == "" {
+			notURL := bytes.Count([]byte(val.Name), []byte{os.PathListSeparator}) == 1
+			if notURL {
+				parts := strings.SplitN(val.Name, string(os.PathListSeparator), 2)
+				// if !strings.Contains(val.Name, string(os.PathSeparator)) {}
+				val.Name = parts[0]
+				val.URL = parts[1]
+			}
+		}
+	}
+	return i, nil
 }
 
 // func weaklyTypedHook(

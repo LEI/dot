@@ -23,16 +23,16 @@ var (
 
 // DotOptions hold all global options for restic.
 type DotOptions struct {
-	Source     string
-	Target     string
-	ConfigFile string
-	RoleDir    string
-	RoleFile   string
-	RoleFilter []string
-	DryRun     bool
-	Force      bool
-	Quiet      bool
-	Verbose    int
+	Source       string
+	Target       string
+	ConfigFile   string
+	RoleDirname  string
+	RoleFilename string
+	RoleFilter   []string
+	DryRun       bool
+	Force        bool
+	Quiet        bool
+	Verbose      int
 	// CacheDir     string
 	// NoCache      bool
 	// CleanupCache bool
@@ -91,8 +91,8 @@ func init() {
 	f.StringVarP(&dotOpts.Source, "source", "s", source, "`DOT_SOURCE` directory")
 	f.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
 	f.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "main configuration `DOT_FILE`")
-	f.StringVarP(&dotOpts.RoleDir, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
-	f.StringVarP(&dotOpts.RoleFile, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
+	f.StringVarP(&dotOpts.RoleDirname, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
+	f.StringVarP(&dotOpts.RoleFilename, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
 	f.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
 	f.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
 	f.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
@@ -228,10 +228,11 @@ func markHidden(f *pflag.FlagSet, in []string) error {
 // OpenConfig ...
 func OpenConfig(opts DotOptions) (*dot.Config, error) {
 	if opts.ConfigFile == "" {
+		// empty config file name or path
 		return nil, fmt.Errorf("Please specify config file location (-c)")
 	}
 
-	cfg, err := dot.NewConfig(opts.ConfigFile)
+	cfg, err := dot.NewConfig(opts.ConfigFile, opts.RoleDirname)
 	if err != nil {
 		return nil, err
 	}
@@ -242,11 +243,11 @@ func OpenConfig(opts DotOptions) (*dot.Config, error) {
 	if opts.Target != "" {
 		cfg.Target = opts.Target
 	}
-	if opts.RoleDir != "" {
-		cfg.SetDir(opts.RoleDir)
-	}
-	if opts.RoleFile != "" {
-		cfg.SetRoleFile(opts.RoleFile)
+	// if opts.RoleDirname != "" {
+	// 	cfg.SetDir(opts.RoleDirname)
+	// }
+	if opts.RoleFilename != "" {
+		cfg.SetRoleFile(opts.RoleFilename)
 	}
 	// s := repository.New(be)
 
