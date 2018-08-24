@@ -27,7 +27,7 @@ var brew = &Pm{
 		"HOMEBREW_NO_AUTO_UPDATE": "1",
 		// "HOMEBREW_NO_EMOJI": "1",
 	},
-	Init: func() error {
+	Init: func(m *Pm) error {
 		return execCommand("brew", "update", "--quiet")
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {

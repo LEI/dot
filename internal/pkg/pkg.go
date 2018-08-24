@@ -59,7 +59,7 @@ type Pm struct {
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
 	Env  map[string]string
-	Init func() error                      // Install or prepare bin
+	Init func(*Pm) error                   // Install manager or prepare bin
 	Has  func(*Pm, []string) (bool, error) // Search local packages
 	done bool
 }
@@ -82,6 +82,23 @@ func NewPm(name string) (m *Pm, err error) {
 		return m, fmt.Errorf("unable to detect package manager %s", name)
 	}
 	return m, nil
+}
+
+// Build can return ErrExist if the package is already installed
+func (m *Pm) Build(action string, pkgs []string, opts ...string) (string, []string, error) {
+	// input := strings.Fields(name)
+	// if len(input) == 0 { ... }
+	//opts = append(pkgs, opts...)
+	opts, err := m.BuildOptions(action, pkgs, opts...)
+	if err != nil {
+		return m.Bin, opts, err
+	}
+	bin, opts, err := getBin(m, opts)
+	if err != nil {
+		return bin, opts, err
+	}
+	// m.Init(m)
+	return bin, opts, nil
 }
 
 // BuildOptions constructs the command arguments.
@@ -244,17 +261,16 @@ func Remove(manager string, pkgs []string, opts ...string) error {
 
 // Exec ...
 func execute(manager, action string, pkgs []string, opts ...string) error {
-	bin, opts, err := Init(manager, action, pkgs, opts...)
-	if err != nil {
-		return err
-	}
-	// Get manager again to check package presence
 	m, err := NewPm(manager)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return fmt.Errorf(manager, "no pkg manager", manager)
+	}
+	bin, opts, err := m.Build(action, pkgs, opts...)
+	if err != nil {
+		return err
 	}
 	/*for k, v := range m.Env {
 		o := os.Getenv(k)
@@ -289,7 +305,7 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	}
 	// First run initialisation
 	if !m.done && m.Init != nil {
-		if err := m.Init(); err != nil {
+		if err := m.Init(m); err != nil {
 			return err
 		}
 		m.done = true
@@ -315,27 +331,6 @@ func execCommand(name string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
-}
-
-// Init can return ErrExist if the package is already installed
-func Init(manager, action string, pkgs []string, opts ...string) (string, []string, error) {
-	m, err := NewPm(manager)
-	if err != nil || m == nil {
-		return "", []string{}, err
-	}
-	// input := strings.Fields(name)
-	// if len(input) == 0 { ... }
-	//opts = append(pkgs, opts...)
-	opts, err = m.BuildOptions(action, pkgs, opts...)
-	if err != nil {
-		return m.Bin, opts, err
-	}
-	bin, opts, err := getBin(m, opts)
-	if err != nil {
-		return bin, opts, err
-	}
-	// m.Init()
-	return bin, opts, nil
 }
 
 func getBin(m *Pm, opts []string) (string, []string, error) {
