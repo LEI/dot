@@ -301,6 +301,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	return execManagerCommand(m, bin, opts...)
 }
 
+// TODO: return *exec.Cmd
 func execManagerCommand(m *Pm, bin string, args ...string) error {
 	// fmt.Printf("$ %s %s\n", bin, cli.FormatArgs(args))
 	if DryRun {
