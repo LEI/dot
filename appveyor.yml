@@ -58,7 +58,7 @@ install:
   # autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel
   # - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,wget'
   # - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --upgrade-also --site $CYG_MIRROR  --local-package-dir "%CYG_CACHE%" --packages git'
-  - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" --packages wget'
+  - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" --packages gawk,wget'
   #  > NUL 2>&1
   - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
   # - gem install asciidoctor
@@ -73,7 +73,7 @@ before_build:
   - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
   # - 'bash -lc "apt-cyg --version"'
   - 'bash -lc "install apt-cyg /bin"'
-  - 'bash -lc "ls -l /usr/bin/awk"'
+  - 'bash -lc "ls -l /usr/bin/*awk"'
   # c:\cygwin setup.exe -q -P wget,tar,qawk,bzip2,subversion,vim
   - 'bash -lc "apt-cyg install wget"'
   # - 'bash -lc "echo $PATH"'
