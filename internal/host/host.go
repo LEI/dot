@@ -1,4 +1,6 @@
-package ostype
+package host
+
+// https://github.com/shirou/gopsutil/blob/master/host/host.go
 
 // /etc/os-release
 
@@ -44,8 +46,8 @@ import (
 )
 
 var (
-	// List stores the list of OS types
-	List []string
+	// OSTypes stores the list of OS types
+	OSTypes []string
 
 	// release *Release
 
@@ -54,7 +56,7 @@ var (
 )
 
 func init() {
-	List = Get()
+	OSTypes = GetOSTypes()
 }
 
 // Release ...
@@ -74,7 +76,7 @@ type Release struct {
 	DistribDescription string `ini:"DISTRIB_DESCRIPTION"`
 }
 
-// NewRelease read release files as INI
+// NewRelease parses release files as INI.
 func NewRelease() *Release {
 	release := &Release{}
 	paths, err := filepath.Glob(releasePattern)
@@ -91,8 +93,8 @@ func NewRelease() *Release {
 	return release
 }
 
-// Get OS types: name, release, family, distrib...
-func Get() []string {
+// GetOSTypes types (name, release, family, distrib...).
+func GetOSTypes() []string {
 	types := []string{runtime.GOOS}
 	release := NewRelease()
 	name := strings.ToLower(release.Name)
@@ -143,11 +145,11 @@ func parseEnvVar(name string) []string {
 	return types
 }
 
-// Has OS type
-func Has(s ...string) bool {
-	// ok, _ := matches(s, List)
+// HasOS checks at least one given OS type matches current host.
+func HasOS(s ...string) bool {
+	// ok, _ := matches(s, OSTypes)
 	// return ok
-	ok, err := matches(s, List)
+	ok, err := matches(s, OSTypes)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %s\n", s, err)
 		os.Exit(1)

@@ -3,7 +3,6 @@ package dot
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/LEI/dot/internal/cli"
 	"github.com/LEI/dot/internal/pkg"
@@ -19,7 +18,8 @@ type Pkg struct {
 
 func (p *Pkg) String() string {
 	// return fmt.Sprintf("%s %s %s %s %s", p.Manager, p.Action, p.Name, p.Args, p.OS)
-	return strings.Join(p.Name, " ") // fmt.Sprintf("%s %s", p.Name, p.Args)
+	// fmt.Sprintf("%s %s", p.Name, p.Args)
+	return cli.FormatArgs(append(p.Name, p.Args...))
 }
 
 // Type task name

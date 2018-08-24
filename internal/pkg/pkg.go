@@ -12,7 +12,7 @@ import (
 	// "github.com/LEI/dot/cli/config/tasks"
 
 	"github.com/LEI/dot/internal/cli"
-	"github.com/LEI/dot/internal/ostype"
+	"github.com/LEI/dot/internal/host"
 	"github.com/LEI/dot/internal/shell"
 )
 
@@ -96,7 +96,7 @@ func (m *Pm) BuildOptions(a string, pkgs []string, opts ...string) ([]string, er
 	s := []string{}
 
 	// // General manager options
-	// if len(m.Opts) == 0 && !ostype.Has("alpine") {
+	// if len(m.Opts) == 0 && !host.HasOS("alpine") {
 	// 	m.Opts = append(m.Opts, &Opt{Args: []string{"--noconfirm"}})
 	// }
 
@@ -194,7 +194,7 @@ func Detect() (name string, err error) {
 		name = "apt-cyg" // "choco"
 	}
 	if name == "" {
-		return "", fmt.Errorf("no package manager for OS %s (%s)", runtime.GOOS, ostype.List)
+		return "", fmt.Errorf("no package manager for OS %s (%s)", runtime.GOOS, host.OSTypes)
 	}
 	return
 }
