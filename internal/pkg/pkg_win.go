@@ -72,12 +72,12 @@ var aptCyg = &Pm{
 		// fmt.Println("$ apt-cyg --version")
 		cmd := exec.Command(shell.Get(), "-lc", "apt-cyg --version")
 		// cmd := exec.Command("apt-cyg", "--version")
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
 			// Not in %PATH%
-			fmt.Printf("apt-cyg --version")
+			fmt.Printf("apt-cyg --version: error")
 			fmt.Fprintln(os.Stderr, err)
 			// return err
 		}
@@ -88,20 +88,18 @@ var aptCyg = &Pm{
 		opts := []string{"show"}
 		// opts = append(opts, m.Opts...)
 		opts = append(opts, pkgs...)
-		fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
-		cmd := exec.Command(m.Bin, opts...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+		err := execManagerCommand(m, m.Bin, opts...)
+		// cmd := exec.Command(shell.Get(), "-c", m.Bin + opts...)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
 		// if err := cmd.Run(); err != nil {
-		// 	return false, err
-		// }
-		// return true, nil
-		if err := cmd.Run(); err != nil {
-			// Not in %PATH%
-			fmt.Fprintf(os.Stderr, "apt-cyg --version: %s", err) // return err
-			return false, nil
+		if err != nil {
+			fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
+			fmt.Fprintln(os.Stderr, err)
+			return false, nil // err
 		}
+		// }
 		return true, nil
 		// err := cmd.Run()
 		// return err == nil, err
