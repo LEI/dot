@@ -127,7 +127,7 @@ func (r *Repo) Clone() error {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
 	if DryRun {
-		fmt.Printf("DRY-RUN: %s %s\n", GitBin, cli.FormatArgs(args))
+		fmt.Fprintf(Stderr, "DRY-RUN: %s %s\n", GitBin, cli.FormatArgs(args))
 		return nil
 	}
 	// status := r.ExecStatus(args...)

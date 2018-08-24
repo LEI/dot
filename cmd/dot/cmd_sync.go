@@ -1,7 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/LEI/dot/internal/dot"
+	"github.com/LEI/dot/internal/git"
 	"github.com/spf13/cobra"
 )
 
@@ -66,12 +72,15 @@ func runSync(cmd *cobra.Command, args []string) error {
 		go func(i int, r *dot.Role) {
 			// n := fmt.Sprintf("%d/%d", i+1, length)
 			// fmt.Printf("Syncing %s (%s) ...\n", r.Name, n)
-
+			buf := bytes.Buffer{}
+			git.Stdout = &buf
+			git.Stderr = &buf
 			// Clone or pull git repository
 			if err := r.Sync(); err != nil {
 				errs <- err
 				return
 			}
+			fmt.Printf("Sync %s:\n[%s]\n", r.Path, strings.TrimSuffix(buf.String(), "\n"))
 			// Parse config file (again)
 			if err := r.Load(); err != nil {
 				errs <- err
@@ -85,6 +94,8 @@ func runSync(cmd *cobra.Command, args []string) error {
 			errs <- nil
 		}(i, r)
 	}
+	git.Stdout = os.Stdout
+	git.Stderr = os.Stderr
 	for i := 0; i < length; i++ {
 		if err := <-errs; err != nil {
 			return err
