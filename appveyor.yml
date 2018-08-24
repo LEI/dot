@@ -18,6 +18,8 @@ branches:
   only:
     - master
 
+skip_non_tags: true
+
 skip_commits:
   message: /.*\[skip appveyor\].*/
 
