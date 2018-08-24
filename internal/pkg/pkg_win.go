@@ -73,7 +73,7 @@ var aptCyg = &Pm{
 		// cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
 			// Not in %PATH%
-			fmt.Fprintf(os.Stderr, "$ apt-cyg --version: %s", err) // return err
+			fmt.Fprintf(os.Stderr, "apt-cyg --version: %s", err) // return err
 		}
 		return nil
 	},

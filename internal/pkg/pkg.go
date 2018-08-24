@@ -219,7 +219,6 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 		return false, nil
 		// ErrUnknown = fmt.Errorf("unable to determine if package is present")
 	}
-	fmt.Println("???", pkgs)
 	return m.Has(m, pkgs)
 }
 
