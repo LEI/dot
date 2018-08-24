@@ -20,8 +20,14 @@ var aptGet = &Pm{
 		"--quiet",
 		"--quiet",
 	},
-	Init: func() error {
-		return execCommand("apt-get", "update", "--quiet")
+	Init: func(m *Pm) error {
+		opts := []string{"update", "--quiet"}
+		bin, opts, err := getBin(m, opts)
+		if err != nil {
+			return err
+		}
+		return execManagerCommand(m, bin, opts...)
+		// return execCommand("apt-get", "update", "--quiet")
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// dpkg-query -l "$package" | grep -q ^.i

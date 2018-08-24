@@ -29,7 +29,11 @@ func (p *Pkg) Type() string {
 
 // DoString string
 func (p *Pkg) DoString() string {
-	bin, opts, err := pkg.Init(p.Manager, "install", p.Name, p.Args...)
+	m, err := pkg.NewPm(p.Manager)
+	if err != nil {
+		return "<none>"
+	}
+	bin, opts, err := m.Build("install", p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""
@@ -39,7 +43,11 @@ func (p *Pkg) DoString() string {
 
 // UndoString string
 func (p *Pkg) UndoString() string {
-	bin, opts, err := pkg.Init(p.Manager, "remove", p.Name, p.Args...)
+	m, err := pkg.NewPm(p.Manager)
+	if err != nil {
+		return "<none>"
+	}
+	bin, opts, err := m.Build("remove", p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err pkg undo: %s\n", err)
 		return ""

@@ -21,7 +21,7 @@ var choco = &Pm{
 		"--no-progress",
 		"--yes", // --confirm
 	},
-	// Init: func() error {
+	// Init: func(m *Pm) error {
 	// 	// https://chocolatey.org/docs/installation
 	// 	return nil
 	// },
@@ -65,7 +65,7 @@ var aptCyg = &Pm{
 	Remove:  "remove",
 	// DryRun:  []string{},
 	// Opts: []string{},
-	Init: func() error {
+	Init: func(m *Pm) error {
 		// fmt.Println("$ apt-cyg --version")
 		cmd := exec.Command("apt-cyg", "--version")
 		// cmd.Stdout = os.Stdout
