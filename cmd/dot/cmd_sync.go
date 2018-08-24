@@ -1,10 +1,7 @@
 package main
 
 import (
-	"os"
-
 	"github.com/LEI/dot/internal/dot"
-	"github.com/LEI/dot/internal/git"
 	"github.com/spf13/cobra"
 )
 
@@ -91,8 +88,8 @@ func runSync(cmd *cobra.Command, args []string) error {
 			errs <- nil
 		}(i, r)
 	}
-	git.Stdout = os.Stdout
-	git.Stderr = os.Stderr
+	//git.Stdout = os.Stdout
+	//git.Stderr = os.Stderr
 	for i := 0; i < length; i++ {
 		if err := <-errs; err != nil {
 			return err
