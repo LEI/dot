@@ -45,16 +45,16 @@ var (
 
 // Pm package manager
 type Pm struct {
-	AllowFailure bool
-	Sudo         bool        // Prefix Bin with sudo if not root
-	Bin          string      // Path to package manager binary
-	Sub          []string    // Sub command and main options
-	Install      interface{} // Install command name
-	Remove       interface{} // Remove command name
-	Opts         []string    // Common pkg manager options
-	InstallOpts  []string    // Install pkg manager options
-	RemoveOpts   []string    // Remove pkg manager options
-	DryRunOpts   []string    // Check mode, do not run if absent
+	Shell       string
+	Sudo        bool        // Prefix Bin with sudo if not root
+	Bin         string      // Path to package manager binary
+	Sub         []string    // Sub command and main options
+	Install     interface{} // Install command name
+	Remove      interface{} // Remove command name
+	Opts        []string    // Common pkg manager options
+	InstallOpts []string    // Install pkg manager options
+	RemoveOpts  []string    // Remove pkg manager options
+	DryRunOpts  []string    // Check mode, do not run if absent
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
@@ -310,16 +310,24 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 		// Append check mode options and run
 		args = append(args, m.DryRunOpts...)
 	}
-	cmd := exec.Command(bin, args...)
+	var cmd *exec.Cmd
+	if m.Shell != "" {
+		s := shell.Get()
+		fmt.Println("Using shell:", s)
+		c := fmt.Sprintf("%s %s", bin, cli.FormatArgs(args))
+		cmd = exec.Command(s, "-c", c)
+	} else {
+		cmd = exec.Command(bin, args...)
+	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		if !m.AllowFailure {
-			return err
-		}
-		fmt.Fprintf(os.Stderr, "$ %s %s: %s", bin, cli.FormatArgs(args), err) // return err
-	}
-	return nil
+	// if err := cmd.Run(); err != nil {
+	// 	if !m.AllowFailure {
+	// 		return err
+	// 	}
+	// 	fmt.Fprintf(os.Stderr, "$ %s %s: %s", bin, cli.FormatArgs(args), err) // return err
+	// }
+	return cmd.Run()
 }
 
 func execCommand(name string, args ...string) error {
