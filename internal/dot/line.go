@@ -29,11 +29,6 @@ func (l *Line) String() string {
 	return s
 }
 
-// Type task name
-func (l *Line) Type() string {
-	return "line" // in file
-}
-
 // Status check task
 func (l *Line) Status() error {
 	exists, err := lineExists(l.Target, l.Data)

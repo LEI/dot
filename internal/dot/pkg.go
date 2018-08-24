@@ -30,11 +30,6 @@ func (p *Pkg) String() string {
 	return fmt.Sprintf("%s %s", bin, cli.FormatArgs(opts))
 }
 
-// Type task name
-func (p *Pkg) Type() string {
-	return "pkg"
-}
-
 // Status check task
 func (p *Pkg) Status() error {
 	exists, err := pkg.Has(p.Manager, p.Name, p.Args...)

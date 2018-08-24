@@ -38,11 +38,6 @@ func (l *Link) String() string {
 	return s
 }
 
-// Type task name
-func (l *Link) Type() string {
-	return "link" // symbolic
-}
-
 // Status check task
 func (l *Link) Status() error {
 	exists, err := linkExists(l.Source, l.Target)

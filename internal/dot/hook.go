@@ -39,11 +39,6 @@ func (h *Hook) String() string {
 	return s
 }
 
-// Type task name
-func (h *Hook) Type() string {
-	return "cmd"
-}
-
 // Status check task
 func (h *Hook) Status() error {
 	return nil

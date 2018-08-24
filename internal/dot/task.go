@@ -13,28 +13,26 @@ import (
 // Tasker interface
 type Tasker interface {
 	String() string
-	Type() string
-
-	SetAction(string)
-	GetAction() string
-	Check() error
-	CheckAction() error
-	CheckIf() error
-	CheckOS() error
-	// GetOS() []string
-
 	Status() error
 	// Sync() error
 	Do() error
 	Undo() error
+
+	// Already implemented
+	SetAction(string)
+	GetAction() string
+	CheckAction() error
+	CheckOS() error
+	CheckIf() error
+	Check() error
 }
 
 // Task struct
 type Task struct {
 	Tasker
 	Action string   `mapstructure:",omitempty"` // install, remove
-	If     []string `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
+	If     []string `mapstructure:",omitempty"`
 
 	running string // Current action name
 }
@@ -59,12 +57,12 @@ func (t *Task) Check() error {
 		// fmt.Println("> Skip "+action, t, err)
 		return err
 	}
-	if err := t.CheckIf(); err != nil {
-		// fmt.Println("> Skip If", t, err)
-		return err
-	}
 	if err := t.CheckOS(); err != nil {
 		// fmt.Println("> Skip OS", t, err)
+		return err
+	}
+	if err := t.CheckIf(); err != nil {
+		// fmt.Println("> Skip If", t, err)
 		return err
 	}
 	return nil
@@ -85,11 +83,6 @@ func (t *Task) CheckAction() error {
 	}
 	return nil
 }
-
-// // GetOS ...
-// func (t *Task) GetOS() []string {
-// 	return t.OS
-// }
 
 // CheckOS task
 func (t *Task) CheckOS() error {
