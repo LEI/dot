@@ -8,7 +8,7 @@ import (
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/LEI/dot/internal/git"
-	"github.com/LEI/dot/internal/ostype"
+	"github.com/LEI/dot/internal/host"
 	"github.com/LEI/dot/internal/pkg"
 	"github.com/spf13/cobra"
 )
@@ -121,7 +121,7 @@ func runDot(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	if flagRelease {
-		ostypes := ostype.Get()
+		ostypes := host.GetOSTypes()
 		fmt.Printf("%s", ostypes)
 		return nil
 	}
@@ -146,10 +146,30 @@ func setupGlobalOptions(opts *DotOptions) error {
 }
 
 func setupGlobalConfig(cfg *dot.Config) error {
+	if err := setupRoles(cfg); err != nil {
+		return err
+	}
+	if cfg.Git.Scheme != "" {
+		git.Scheme = cfg.Git.Scheme
+	}
+	if cfg.Git.Host != "" {
+		git.Host = cfg.Git.Host
+	}
+	if cfg.Git.User.String() != "" {
+		git.User = cfg.Git.User
+	}
+	if err := cfg.ParseRoles(); err != nil {
+		return err
+	}
+	dotConfig = cfg
+	return nil
+}
+
+func setupRoles(cfg *dot.Config) error {
 	roles := cfg.Roles[:0] // []*dot.Role{}
 	// Filter roles by platform
 	for _, r := range cfg.Roles {
-		if len(r.OS) > 0 && !ostype.Has(r.OS...) {
+		if len(r.OS) > 0 && !host.HasOS(r.OS...) {
 			continue
 		}
 		roles = append(roles, r)
@@ -177,19 +197,6 @@ func setupGlobalConfig(cfg *dot.Config) error {
 		return fmt.Errorf(msg)
 	}
 	cfg.Roles = roles
-	if cfg.Git.Scheme != "" {
-		git.Scheme = cfg.Git.Scheme
-	}
-	if cfg.Git.Host != "" {
-		git.Host = cfg.Git.Host
-	}
-	if cfg.Git.User.String() != "" {
-		git.User = cfg.Git.User
-	}
-	if err := cfg.ParseRoles(); err != nil {
-		return err
-	}
-	dotConfig = cfg
 	return nil
 }
 

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/LEI/dot/internal/ostype"
+	"github.com/LEI/dot/internal/host"
 	"github.com/docker/docker/pkg/homedir"
 )
 
@@ -90,7 +90,7 @@ func (t *Task) CheckOS() error {
 	if len(t.OS) == 0 {
 		return nil
 	}
-	ok := ostype.Has(t.OS...)
+	ok := host.HasOS(t.OS...)
 	if !ok {
 		return ErrSkip // &OpError{"check os", t, ErrSkip}
 	}
@@ -108,7 +108,7 @@ func (t *Task) CheckIf() error {
 	// 	// "OS":      runtime.GOOS,
 	// }
 	// funcMap := template.FuncMap{
-	// 	"hasOS": ostype.Has,
+	// 	"hasOS": host.HasOS,
 	// }
 	if len(t.If) > 0 {
 		return ErrSkip // &OpError{"check if", t, ErrSkip}

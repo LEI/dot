@@ -1,4 +1,4 @@
-package ostype
+package host
 
 import (
 	// "fmt"
@@ -35,8 +35,8 @@ var osTests = []struct {
 
 func TestHas(t *testing.T) {
 	for _, tt := range osTests {
-		List = []string{tt.os}
-		matched := Has(tt.in...)
+		OSTypes = []string{tt.os}
+		matched := HasOS(tt.in...)
 		if matched != tt.out {
 			t.Fatalf("%s should be %v with %+v", tt.os, tt.out, tt.in)
 		}
