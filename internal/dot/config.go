@@ -156,7 +156,9 @@ func detectType(path string) string {
 	return fileType
 }
 
-// FindConfig ...
+// FindConfig searches a given file name or path
+// relative to the home directory, or falls back
+// to ~/.dot/config
 func FindConfig(path, dirname string) string {
 	// dirs := []string{".", homeDir}
 	// /etc/dot, $HOME/.dot/config, $HOME/.config/dot...

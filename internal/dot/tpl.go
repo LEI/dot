@@ -90,18 +90,24 @@ func (t *Tpl) Prepare() error {
 	// for k, v := range t.Env {
 	// 	// ...
 	// }
-	if t.IncludeVars != "" {
-		// Included variables override existing tpl.Vars keys
-		inclVars, err := includeVars(t.IncludeVars) // os.ExpandEnv?
-		if err != nil {
-			return err
-		}
-		for k, v := range inclVars {
-			// if val, ok := t.Vars[k]; !ok {
-			// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
-			// }
-			t.Vars[k] = v
-		}
+	return t.ParseVars()
+}
+
+// ParseVars template
+func (t *Tpl) ParseVars() error {
+	if t.IncludeVars == "" {
+		return nil
+	}
+	// Included variables override existing tpl.Vars keys
+	inclVars, err := includeVars(t.IncludeVars) // os.ExpandEnv?
+	if err != nil {
+		return err
+	}
+	for k, v := range inclVars {
+		// if val, ok := t.Vars[k]; !ok {
+		// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
+		// }
+		t.Vars[k] = v
 	}
 	return nil
 }

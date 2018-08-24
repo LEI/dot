@@ -278,6 +278,9 @@ func (r *Role) Parse(target string) error {
 	if err := r.ParseVars(); err != nil {
 		return err
 	}
+	// if err := r.ParsePkgs(target); err != nil {
+	// 	return err
+	// }
 	if err := r.ParseDirs(target); err != nil {
 		return err
 	}
@@ -293,11 +296,17 @@ func (r *Role) Parse(target string) error {
 	if err := r.ParseLines(target); err != nil {
 		return err
 	}
+	// if err := r.ParseHooks(target); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
-// ParseVars tasks
+// ParseVars task
 func (r *Role) ParseVars() error {
+	// if r.Vars == nil {
+	// 	r.Vars = map[string]interface{}{}
+	// }
 	if r.IncludeVars != "" {
 		inclVars, err := includeVars(r.IncludeVars)
 		if err != nil {
@@ -307,6 +316,7 @@ func (r *Role) ParseVars() error {
 			r.Vars[k] = v
 		}
 	}
+	// TODO
 	return nil
 }
 
@@ -619,119 +629,117 @@ func (r *Role) Status() error {
 	if err := r.StatusLines(); !IsExist(err) {
 		return err
 	}
+	// StatusHooks() is not implemented
 	return ErrExist
 }
 
 // StatusPkgs ...
 func (r *Role) StatusPkgs() error {
-	return checkTasks(r.taskPkgs())
+	c := 0
+	for _, t := range r.Pkgs {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+		c++
+	}
+	if c == len(r.Pkgs) {
+		return ErrExist
+	}
+	return nil
 }
 
 // StatusDirs ...
 func (r *Role) StatusDirs() error {
-	return checkTasks(r.taskDirs())
+	c := 0
+	for _, t := range r.Dirs {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+		c++
+	}
+	if c == len(r.Dirs) {
+		return ErrExist
+	}
+	return nil
 }
 
 // StatusFiles ...
 func (r *Role) StatusFiles() error {
-	return checkTasks(r.taskFiles())
+	c := 0
+	for _, t := range r.Files {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+		c++
+	}
+	if c == len(r.Files) {
+		return ErrExist
+	}
+	return nil
 }
 
 // StatusLinks ...
 func (r *Role) StatusLinks() error {
-	return checkTasks(r.taskLinks())
+	c := 0
+	for _, t := range r.Links {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+		c++
+	}
+	if c == len(r.Links) {
+		return ErrExist
+	}
+	return nil
 }
 
 // StatusTpls ...
 func (r *Role) StatusTpls() error {
-	return checkTasks(r.taskTpls())
+	c := 0
+	for _, t := range r.Tpls {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+		c++
+	}
+	if c == len(r.Tpls) {
+		return ErrExist
+	}
+	return nil
 }
 
 // StatusLines ...
 func (r *Role) StatusLines() error {
-	return checkTasks(r.taskLines())
-}
-
-// taskPkgs ...
-func (r *Role) taskPkgs() []Tasker {
-	s := make([]Tasker, len(r.Pkgs))
-	for i := range r.Pkgs {
-		s[i] = r.Pkgs[i]
-	}
-	return s
-}
-
-// taskDirs ...
-func (r *Role) taskDirs() []Tasker {
-	s := make([]Tasker, len(r.Dirs))
-	dirs := []*Dir{}
-	fmt.Println(len(r.Dirs), len(dirs))
-	for i := range r.Dirs {
-		s[i] = r.Dirs[i]
-	}
-	return s
-}
-
-// taskFiles ...
-func (r *Role) taskFiles() []Tasker {
-	s := make([]Tasker, len(r.Files))
-	for i := range r.Files {
-		s[i] = r.Files[i]
-	}
-	return s
-}
-
-// taskLinks ...
-func (r *Role) taskLinks() []Tasker {
-	s := make([]Tasker, len(r.Links))
-	for i := range r.Links {
-		s[i] = r.Links[i]
-	}
-	return s
-}
-
-// taskTpls ...
-func (r *Role) taskTpls() []Tasker {
-	s := make([]Tasker, len(r.Tpls))
-	for i := range r.Tpls {
-		s[i] = r.Tpls[i]
-	}
-	return s
-}
-
-// taskLines ...
-func (r *Role) taskLines() []Tasker {
-	s := make([]Tasker, len(r.Lines))
-	for i := range r.Lines {
-		s[i] = r.Lines[i]
-	}
-	return s
-}
-
-// Check all tasks are installed
-func checkTasks(s []Tasker) error {
 	c := 0
-	for _, t := range s {
-		if err := t.Status(); err != nil {
-			if !IsExist(err) {
-				return err
-			}
-			c++
+	for _, t := range r.Lines {
+		if err := checkTask(t); err != nil {
+			return err
 		}
-		// terr, ok := err.(*OpError)
-		// if ok {
-		// 	err = terr.Err
-		// }
-		// switch err {
-		// case nil:
-		// case ErrExist:
-		// 	c++ // [i] = true
-		// default:
-		// 	return err
-		// }
+		c++
 	}
-	if c == len(s) {
+	if c == len(r.Lines) {
 		return ErrExist
 	}
+	return nil
+}
+
+// Check if a task is already executed
+func checkTask(t Tasker) error {
+	if err := t.Status(); err != nil {
+		if !IsExist(err) {
+			return err
+		}
+	}
+	// terr, ok := err.(*OpError)
+	// if ok {
+	// 	err = terr.Err
+	// }
+	// switch err {
+	// case nil:
+	// case ErrExist:
+	// 	c++ // [i] = true
+	// default:
+	// 	return err
+	// }
 	return nil
 }
