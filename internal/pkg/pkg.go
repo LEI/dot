@@ -51,10 +51,10 @@ type Pm struct {
 	Sub          []string    // Sub command and main options
 	Install      interface{} // Install command name
 	Remove       interface{} // Remove command name
-	DryRun       []string    // Check mode, do not run if absent
 	Opts         []string    // Common pkg manager options
 	InstallOpts  []string    // Install pkg manager options
 	RemoveOpts   []string    // Remove pkg manager options
+	DryRunOpts   []string    // Check mode, do not run if absent
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
@@ -282,6 +282,13 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 			return err
 		}
 	}*/
+	// First run initialisation
+	if !m.done && m.Init != nil {
+		if err := m.Init(m); err != nil {
+			return err
+		}
+		m.done = true
+	}
 	if action == "install" && m.Has != nil {
 		ok, err := m.Has(m, pkgs)
 		if err != nil {
@@ -297,18 +304,11 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 func execManagerCommand(m *Pm, bin string, args ...string) error {
 	// fmt.Printf("$ %s %s\n", bin, cli.FormatArgs(args))
 	if DryRun {
-		if len(m.DryRun) == 0 {
+		if len(m.DryRunOpts) == 0 {
 			return nil
 		}
 		// Append check mode options and run
-		args = append(args, m.DryRun...)
-	}
-	// First run initialisation
-	if !m.done && m.Init != nil {
-		if err := m.Init(m); err != nil {
-			return err
-		}
-		m.done = true
+		args = append(args, m.DryRunOpts...)
 	}
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout
@@ -337,6 +337,7 @@ func getBin(m *Pm, opts []string) (string, []string, error) {
 	bin := m.Bin
 	// Switch binary for sudo
 	if m.Sudo && bin != "sudo" && !isRoot() {
+		fmt.Println("BIN", bin, "OPTS", opts)
 		opts = append([]string{bin}, opts...)
 		bin = "sudo"
 	}
