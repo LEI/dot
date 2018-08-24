@@ -108,7 +108,7 @@ func (t *Tpl) Prepare() error {
 
 // Status check task
 func (t *Tpl) Status() error {
-	data, err := t.Data()
+	data, err := tplData(t)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (t *Tpl) Do() error {
 			return err
 		}
 	}
-	data, err := t.Data()
+	data, err := tplData(t)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (t *Tpl) Undo() error {
 }
 
 // Data ...
-func (t *Tpl) Data() (map[string]interface{}, error) {
+func tplData(t *Tpl) (map[string]interface{}, error) {
 	data := make(map[string]interface{}, 0)
 	// Global environment variables
 	e := env.GetAll() // map[string]string{}
