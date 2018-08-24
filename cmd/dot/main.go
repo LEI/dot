@@ -57,6 +57,21 @@ func init() {
 	// cmdRoot.SetVersionTemplate("dot version {{.Version}}\n")
 }
 
+func shouldLoadConfig(cmd *cobra.Command) bool {
+	// Conditions
+	not := []bool{
+		cmd.Name() == "version",
+		flagVersion,
+		flagRelease,
+	}
+	for _, n := range not {
+		if n {
+			return false
+		}
+	}
+	return true
+}
+
 func persistentPreRunDot(cmd *cobra.Command, args []string) error {
 	// set verbosity, default is one
 	dotOpts.verbosity = 1
@@ -82,7 +97,6 @@ func persistentPreRunDot(cmd *cobra.Command, args []string) error {
 	// }
 	// dotOpts.extended = opts
 	if !shouldLoadConfig(cmd) {
-		fmt.Println("skip cfg")
 		return nil
 	}
 	// pwd, err := resolvePassword(dotOpts, "RESTIC_PASSWORD")
@@ -110,21 +124,6 @@ func persistentPreRunDot(cmd *cobra.Command, args []string) error {
 	// }
 
 	return nil
-}
-
-func shouldLoadConfig(cmd *cobra.Command) bool {
-	// Conditions
-	not := []bool{
-		cmd.Name() == "version",
-		flagVersion,
-		flagRelease,
-	}
-	for _, n := range not {
-		if n {
-			return false
-		}
-	}
-	return true
 }
 
 func runDot(cmd *cobra.Command, args []string) error {

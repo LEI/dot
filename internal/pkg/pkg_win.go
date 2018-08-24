@@ -4,7 +4,6 @@ package pkg
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -70,18 +69,18 @@ var aptCyg = &Pm{
 	// DryRunOpts:  []string{},
 	Init: func(m *Pm) error {
 		// fmt.Println("$ apt-cyg --version")
-		cmd := exec.Command(shell.Get(), "-lc", "apt-cyg --version")
+		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version")
 		// cmd := exec.Command("apt-cyg", "--version")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
-		if err := cmd.Run(); err != nil {
-			// Not in %PATH%
-			fmt.Printf("apt-cyg --version: error")
-			fmt.Fprintln(os.Stderr, err)
-			// return err
-		}
-		return nil
+		// if err := cmd.Run(); err != nil {
+		// 	// Not in %PATH%
+		// 	fmt.Printf("apt-cyg --version: error")
+		// 	fmt.Fprintln(os.Stderr, err)
+		// 	// return err
+		// }
+		return cmd.Run()
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// cygcheck --list-package ...
@@ -94,14 +93,11 @@ var aptCyg = &Pm{
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
 		// if err := cmd.Run(); err != nil {
-		if err != nil {
-			fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
-			fmt.Fprintln(os.Stderr, err)
-			return false, nil // err
-		}
-		// }
-		return true, nil
-		// err := cmd.Run()
-		// return err == nil, err
+		// 	fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
+		// 	fmt.Fprintln(os.Stderr, err)
+		// 	return false, nil // err
+		// // }
+		// return true, nil
+		return err == nil, err
 	},
 }
