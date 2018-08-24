@@ -5,12 +5,12 @@ package dot
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 	"unicode"
 
 	"github.com/LEI/dot/internal/env"
@@ -19,9 +19,6 @@ import (
 
 var (
 	defaultTemplateExt = "tpl"
-
-	// Number of context lines in difflib output
-	diffContextLines = 3
 
 	tplFuncMap = template.FuncMap{
 		// https://github.com/hashicorp/consul-template/blob/de2ebf4/template_functions.go#L727-L901
@@ -128,7 +125,7 @@ func (t *Tpl) Status() error {
 		return err
 	}
 	if exists {
-		return ErrAlreadyExist
+		return ErrExist
 	}
 	return nil
 }
@@ -137,7 +134,7 @@ func (t *Tpl) Status() error {
 func (t *Tpl) Do() error {
 	if err := t.Status(); err != nil {
 		switch err {
-		case ErrAlreadyExist, ErrSkip:
+		case ErrExist, ErrSkip:
 			return nil
 		default:
 			return err
@@ -161,10 +158,10 @@ func (t *Tpl) Do() error {
 func (t *Tpl) Undo() error {
 	if err := t.Status(); err != nil {
 		switch err {
+		case ErrExist:
+			// continue
 		case ErrSkip:
 			return nil
-		case ErrAlreadyExist:
-			// continue
 		default:
 			return err
 		}
@@ -187,7 +184,7 @@ func (t *Tpl) Data() (map[string]interface{}, error) {
 		if err != nil {
 			return data, err
 		}
-		fmt.Printf("$ export %s=%q\n", k, ev)
+		// fmt.Printf("$ export %s=%q\n", k, ev)
 		data[k] = ev // e[k] = ev
 	}
 	// Extra variables (not only strings)
@@ -215,15 +212,31 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 		// Stop here if the target does not exist
 		return false, nil
 	}
+	// d, err := ioutil.ReadFile(src)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// fmt.Printf("%s:\n%s\n", src, string(d))
+	// os.Exit(3)
 	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
 	// TODO compare file content and ask confirmation
 	// printDiff(dst, content)
-	diff, err := getDiff(src, dst, content)
-	if err == nil {
-		fmt.Println(strings.TrimSuffix(diff, "\n"))
+
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return false, err
+	}
+	dstContent := string(b)
+	if content != dstContent {
+		diff, err := getDiff(dst, content)
+		if err != nil {
+			return false, err
+		}
+		fmt.Printf("--- %s\n+++ %s\n%s\n", src, dst, strings.TrimSuffix(diff, "\n"))
+		return false, ErrSkip
 	}
 	return true, nil
 }

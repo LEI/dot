@@ -58,7 +58,7 @@ func (h *Hook) Status() error {
 func (h *Hook) Do() error {
 	if err := h.Status(); err != nil {
 		switch err {
-		case ErrAlreadyExist, ErrSkip:
+		case ErrExist, ErrSkip:
 			return nil
 		default:
 			return err
@@ -79,10 +79,10 @@ func (h *Hook) Do() error {
 func (h *Hook) Undo() error {
 	if err := h.Status(); err != nil {
 		switch err {
+		case ErrExist:
+			// continue
 		case ErrSkip:
 			return nil
-		case ErrAlreadyExist:
-			// continue
 		default:
 			return err
 		}

@@ -1,6 +1,7 @@
 package dot
 
 // https://golang.org/src/os/error.go
+// https://github.com/golang/go/blob/master/src/os/error.go
 
 import (
 	"errors"
@@ -8,8 +9,8 @@ import (
 )
 
 var (
-	// ErrAlreadyExist used when task is installed
-	ErrAlreadyExist = errors.New("already exists")
+	// ErrExist used when task is installed
+	ErrExist = errors.New("already exists")
 
 	// ErrNotExist ...
 	ErrNotExist = errors.New("does not exists")
@@ -76,7 +77,7 @@ func IsExist(err error) bool {
 	// 	// if terr.Task err == ErrNotEmpty {}
 	// }
 	switch err {
-	case ErrAlreadyExist:
+	case ErrExist:
 		return true
 	// case ErrFileExist, ErrLinkExist:
 	// 	return true

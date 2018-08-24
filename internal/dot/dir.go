@@ -38,14 +38,14 @@ func (d *Dir) UndoString() string {
 // Status check task
 func (d *Dir) Status() error {
 	if dirExists(d.Path) {
-		return ErrAlreadyExist // &OpError{"check dir", d, ErrAlreadyExist}
+		return ErrExist // &OpError{"check dir", d, ErrExist}
 	}
 	// fi, err := os.Stat(d.Path)
 	// if err != nil && os.IsExist(err) {
 	// 	return err
 	// }
 	// if fi != nil && fi.IsDir() {
-	// 	return ErrAlreadyExist // fmt.Errorf("%s: directory exists", d.Path)
+	// 	return ErrExist // fmt.Errorf("%s: directory exists", d.Path)
 	// }
 	return nil
 }
@@ -59,7 +59,7 @@ func (d *Dir) Do() error {
 		// }
 		// switch terr {}
 		switch err {
-		case ErrAlreadyExist, ErrSkip:
+		case ErrExist, ErrSkip:
 			return nil
 		default:
 			return err
@@ -80,8 +80,8 @@ func (d *Dir) Undo() error {
 		// }
 		// switch terr {
 		switch err {
-		case ErrAlreadyExist:
-		// continue
+		case ErrExist:
+			// continue
 		case ErrSkip:
 			return nil
 		default:

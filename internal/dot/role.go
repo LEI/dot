@@ -415,9 +415,9 @@ func (r *Role) ParseTpls(target string) error {
 		if t.Env == nil {
 			t.Env = map[string]string{}
 		}
+		// Merge task env with global config env
 		for k, v := range r.Env {
-			_, ok := t.Env[k]
-			if !ok {
+			if _, ok := t.Env[k]; !ok {
 				t.Env[k] = v
 			}
 		}
@@ -617,39 +617,43 @@ func checkTasks(s []Tasker) error {
 		// }
 		// switch err {
 		// case nil:
-		// case ErrAlreadyExist:
+		// case ErrExist:
 		// 	c++ // [i] = true
 		// default:
 		// 	return err
 		// }
 	}
 	if c == len(s) {
-		return ErrAlreadyExist
+		return ErrExist
 	}
 	return nil
 }
 
-// Ok returns true if already installed
+// Ok returns true if the role already installed.
 func (r *Role) Ok() bool {
 	err := r.Status()
 	exists := IsExist(err)
 	if err != nil && !exists {
 		fmt.Fprintf(os.Stderr, "warning while checking %s role status: %s\n", r.Name, err)
 	}
-	return exists // err == nil || err == ErrAlreadyExist
+	return exists // err == nil || err == ErrExist
 }
 
-// Status of role tasks
+// Status reports the state of all tasks of the role,
+// failing at the first encountered.
 func (r *Role) Status() error {
-	// err != nil || err != ErrAlreadyExist
+	// err != nil || err != ErrExist
 	// if err != nil && !IsExist(err) {
 	// 	return err
 	// } else if err == nil {
 	// 	return nil
 	// }
+
+	/* // Skip packages check to speed up the listing
 	if err := r.StatusPkgs(); !IsExist(err) {
 		return err
-	}
+	} */
+
 	if err := r.StatusDirs(); !IsExist(err) {
 		return err
 	}
@@ -665,7 +669,7 @@ func (r *Role) Status() error {
 	if err := r.StatusLines(); !IsExist(err) {
 		return err
 	}
-	return ErrAlreadyExist
+	return ErrExist
 }
 
 // taskPkgs ...
@@ -679,36 +683,36 @@ func (r *Role) taskPkgs() []Tasker {
 
 // taskDirs ...
 func (r *Role) taskDirs() []Tasker {
-	s := make([]Tasker, len(r.Lines))
-	for i := range r.Lines {
-		s[i] = r.Lines[i]
+	s := make([]Tasker, len(r.Dirs))
+	for i := range r.Dirs {
+		s[i] = r.Dirs[i]
 	}
 	return s
 }
 
 // taskFiles ...
 func (r *Role) taskFiles() []Tasker {
-	s := make([]Tasker, len(r.Lines))
-	for i := range r.Lines {
-		s[i] = r.Lines[i]
+	s := make([]Tasker, len(r.Files))
+	for i := range r.Files {
+		s[i] = r.Files[i]
 	}
 	return s
 }
 
 // taskLinks ...
 func (r *Role) taskLinks() []Tasker {
-	s := make([]Tasker, len(r.Lines))
-	for i := range r.Lines {
-		s[i] = r.Lines[i]
+	s := make([]Tasker, len(r.Links))
+	for i := range r.Links {
+		s[i] = r.Links[i]
 	}
 	return s
 }
 
 // taskTpls ...
 func (r *Role) taskTpls() []Tasker {
-	s := make([]Tasker, len(r.Lines))
-	for i := range r.Lines {
-		s[i] = r.Lines[i]
+	s := make([]Tasker, len(r.Tpls))
+	for i := range r.Tpls {
+		s[i] = r.Tpls[i]
 	}
 	return s
 }

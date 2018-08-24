@@ -1,20 +1,45 @@
 package dot
 
-// "github.com/sergi/go-diff/diffmatchpatch"
-// "github.com/sourcegraph/go-diff"
-
 import (
-	"io/ioutil"
-
-	"github.com/pmezard/go-difflib/difflib"
+	"bytes"
+	"io"
+	"os"
+	"os/exec"
 )
 
+// "github.com/sourcegraph/go-diff"
+
+func getDiff(dst, content string) (string, error) {
+	// stdout, stderr, status := ExecCommand("")
+	diffCmd := exec.Command("diff", dst, "-")
+	// --side-by-side --suppress-common-lines
+	stdin, err := diffCmd.StdinPipe()
+	if err != nil {
+		return "", err
+	}
+	defer stdin.Close()
+	var buf bytes.Buffer
+	diffCmd.Stdout = &buf
+	diffCmd.Stderr = os.Stderr
+	if err := diffCmd.Start(); err != nil {
+		return buf.String(), err
+	}
+	io.WriteString(stdin, content)
+	// fmt.Println("WAIT")
+	stdin.Close()
+	diffCmd.Wait()
+	return buf.String(), nil
+}
+
+/* // github.com/pmezard/go-difflib/difflib
 func getDiff(src, dst, content string) (string, error) {
 	b, err := ioutil.ReadFile(dst)
 	if err != nil {
 		return "", err
 	}
 	original := string(b)
+	// Number of context lines in difflib output
+	diffContextLines := 3
 	diff := difflib.UnifiedDiff{
 		A:        difflib.SplitLines(original),
 		B:        difflib.SplitLines(content),
@@ -23,44 +48,9 @@ func getDiff(src, dst, content string) (string, error) {
 		Context:  diffContextLines,
 	}
 	return difflib.GetUnifiedDiffString(diff)
-}
+} */
 
-func printDiff(s, content string) error {
-	// // stdout, stderr, status := ExecCommand("")
-	// diffCmd := exec.Command("diff", s, "-")
-	// // --side-by-side --suppress-common-lines
-	// stdin, err := diffCmd.StdinPipe()
-	// if err != nil {
-	// 	return err
-	// }
-	// defer stdin.Close()
-	// diffCmd.Stdout = os.Stdout
-	// diffCmd.Stderr = os.Stderr
-	// fmt.Println("START DIFF", s)
-	// if err := diffCmd.Start(); err != nil {
-	// 	return err
-	// }
-	// io.WriteString(stdin, a)
-	// // fmt.Println("WAIT")
-	// stdin.Close()
-	// diffCmd.Wait()
-	// fmt.Println("END DIFF", s)
-
-	/*
-		b, err := ioutil.ReadFile(s)
-		if err != nil {
-			return err
-		}
-		newContent := string(b)
-		diffStr := diffPatchMatch(newContent, content)
-		// fmt.Printf("--- %[1]s\n+++ %[1]s\n%s\n", tildify(s), diffStr)
-		fmt.Printf("--- START DIFF %[1]s\n%s\n--- END DIFF %[1]s\n", tildify(s), diffStr)
-	*/
-
-	return nil
-}
-
-/*
+/* // github.com/sergi/go-diff/diffmatchpatch
 func diffPatchMatch(text1, text2 string) string {
 	dmp := diffmatchpatch.New()
 	// checkLines := false
@@ -78,5 +68,4 @@ func diffPatchMatch(text1, text2 string) string {
 	// str = strings.Replace(str, "%0A", "", -1)
 	// str, _ = url.PathUnescape(str) // url.QueryUnescape(str)
 	return str
-}
-*/
+} */

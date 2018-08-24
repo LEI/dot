@@ -41,7 +41,7 @@ func (c *Copy) Status() error {
 		return err
 	}
 	if exists {
-		return ErrAlreadyExist
+		return ErrExist
 	}
 	return nil
 }
@@ -50,7 +50,7 @@ func (c *Copy) Status() error {
 func (c *Copy) Do() error {
 	if err := c.Status(); err != nil {
 		switch err {
-		case ErrAlreadyExist, ErrSkip:
+		case ErrExist, ErrSkip:
 			return nil
 		default:
 			return err
@@ -79,10 +79,10 @@ func (c *Copy) Do() error {
 func (c *Copy) Undo() error {
 	if err := c.Status(); err != nil {
 		switch err {
+		case ErrExist:
+			// continue
 		case ErrSkip:
 			return nil
-		case ErrAlreadyExist:
-			// continue
 		default:
 			return err
 		}
