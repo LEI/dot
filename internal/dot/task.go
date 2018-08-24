@@ -14,14 +14,15 @@ import (
 type Tasker interface {
 	String() string
 	Type() string
+
 	SetAction(string)
+	GetAction() string
 	Check() error
-	CheckAct() error
+	CheckAction() error
 	CheckIf() error
 	CheckOS() error
 	// GetOS() []string
-	DoString() string
-	UndoString() string
+
 	Status() error
 	// Sync() error
 	Do() error
@@ -35,7 +36,7 @@ type Task struct {
 	If     []string `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
 
-	current string // Current action name
+	running string // Current action name
 }
 
 var (
@@ -44,7 +45,12 @@ var (
 
 // SetAction name
 func (t *Task) SetAction(name string) {
-	t.current = name
+	t.running = name
+}
+
+// GetAction name
+func (t *Task) GetAction() string {
+	return t.running
 }
 
 // Check conditions
@@ -66,7 +72,7 @@ func (t *Task) Check() error {
 
 // CheckAction task
 func (t *Task) CheckAction() error {
-	if len(t.current) == 0 {
+	if len(t.running) == 0 {
 		return fmt.Errorf("unable to check empty action")
 	}
 	if len(t.Action) == 0 {
@@ -74,7 +80,7 @@ func (t *Task) CheckAction() error {
 		// e.g. private Task.state or just omitted
 		return nil
 	}
-	if t.Action != t.current {
+	if t.Action != t.running {
 		return ErrSkip
 	}
 	return nil

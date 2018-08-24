@@ -26,27 +26,22 @@ type Hook struct {
 }
 
 func (h *Hook) String() string {
-	s := strings.TrimRight(h.Command, "\n")
-	return fmt.Sprintf("%s", s)
+	s := ""
+	switch h.GetAction() {
+	case "install":
+		s = strings.TrimRight(h.Command, "\n")
+		if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
+			s = fmt.Sprintf("(%s)", s)
+		}
+	case "remove":
+		// noop
+	}
+	return s
 }
 
 // Type task name
 func (h *Hook) Type() string {
 	return "cmd"
-}
-
-// DoString string
-func (h *Hook) DoString() string {
-	s := h.String()
-	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
-		s = fmt.Sprintf("(%s)", s)
-	}
-	return s
-}
-
-// UndoString string
-func (h *Hook) UndoString() string {
-	return "" // h.String()
 }
 
 // Status check task

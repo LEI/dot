@@ -65,7 +65,14 @@ type Tpl struct {
 }
 
 func (t *Tpl) String() string {
-	return fmt.Sprintf("%s:%s", t.Source, t.Target)
+	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
+	switch t.GetAction() {
+	case "install":
+		s = fmt.Sprintf("gotpl %s %s", tildify(t.Source), tildify(t.Target))
+	case "remove":
+		s = fmt.Sprintf("rm %s", tildify(t.Target))
+	}
+	return s
 }
 
 // Type task name
@@ -102,16 +109,6 @@ func (t *Tpl) Prepare() error {
 		}
 	}
 	return nil
-}
-
-// DoString string
-func (t *Tpl) DoString() string {
-	return fmt.Sprintf("gotpl %s %s", tildify(t.Source), tildify(t.Target))
-}
-
-// UndoString string
-func (t *Tpl) UndoString() string {
-	return fmt.Sprintf("rm %s", tildify(t.Target))
 }
 
 // Status check task

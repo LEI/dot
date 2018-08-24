@@ -17,23 +17,12 @@ type Pkg struct {
 }
 
 func (p *Pkg) String() string {
-	// return fmt.Sprintf("%s %s %s %s %s", p.Manager, p.Action, p.Name, p.Args, p.OS)
-	// fmt.Sprintf("%s %s", p.Name, p.Args)
-	return cli.FormatArgs(append(p.Name, p.Args...))
-}
-
-// Type task name
-func (p *Pkg) Type() string {
-	return "pkg"
-}
-
-// DoString string
-func (p *Pkg) DoString() string {
 	m, err := pkg.NewPm(p.Manager)
 	if err != nil {
 		return "<none>"
 	}
-	bin, opts, err := m.Build("install", p.Name, p.Args...)
+	a := p.GetAction()
+	bin, opts, err := m.Build(a, p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""
@@ -41,18 +30,9 @@ func (p *Pkg) DoString() string {
 	return fmt.Sprintf("%s %s", bin, cli.FormatArgs(opts))
 }
 
-// UndoString string
-func (p *Pkg) UndoString() string {
-	m, err := pkg.NewPm(p.Manager)
-	if err != nil {
-		return "<none>"
-	}
-	bin, opts, err := m.Build("remove", p.Name, p.Args...)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "err pkg undo: %s\n", err)
-		return ""
-	}
-	return fmt.Sprintf("%s %s", bin, cli.FormatArgs(opts))
+// Type task name
+func (p *Pkg) Type() string {
+	return "pkg"
 }
 
 // Status check task

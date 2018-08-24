@@ -28,22 +28,19 @@ type Link struct {
 }
 
 func (l *Link) String() string {
-	return fmt.Sprintf("%s:%s", l.Source, l.Target)
+	s := fmt.Sprintf("%s:%s", l.Source, l.Target)
+	switch l.GetAction() {
+	case "install":
+		s = fmt.Sprintf("ln -s %s %s", tildify(l.Source), tildify(l.Target))
+	case "remove":
+		s = fmt.Sprintf("rm %s", tildify(l.Target))
+	}
+	return s
 }
 
 // Type task name
 func (l *Link) Type() string {
 	return "link" // symbolic
-}
-
-// DoString string
-func (l *Link) DoString() string {
-	return fmt.Sprintf("ln -s %s %s", tildify(l.Source), tildify(l.Target))
-}
-
-// UndoString string
-func (l *Link) UndoString() string {
-	return fmt.Sprintf("rm %s", tildify(l.Target))
 }
 
 // Status check task
@@ -60,8 +57,8 @@ func (l *Link) Status() error {
 		}
 		switch perr.Err {
 		case ErrFileExist, ErrLinkExist:
-			if l.current != "install" {
-				fmt.Println("Skip", l.current, l.Target, "("+perr.Err.Error()+")")
+			if l.GetAction() != "install" {
+				fmt.Println("Skip", l.GetAction(), l.Target, "("+perr.Err.Error()+")")
 				return ErrSkip
 			}
 			// Confirm override
