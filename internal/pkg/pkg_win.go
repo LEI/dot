@@ -91,7 +91,13 @@ var aptCyg = &Pm{
 		// 	return false, err
 		// }
 		// return true, nil
-		err := cmd.Run()
-		return err == nil, err
+		if err := cmd.Run(); err != nil {
+			// Not in %PATH%
+			fmt.Fprintf(os.Stderr, "apt-cyg --version: %s", err) // return err
+			return false, nil
+		}
+		return true, nil
+		// err := cmd.Run()
+		// return err == nil, err
 	},
 }
