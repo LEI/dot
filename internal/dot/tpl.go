@@ -75,11 +75,6 @@ func (t *Tpl) String() string {
 	return s
 }
 
-// Type task name
-func (t *Tpl) Type() string {
-	return "tpl" // template
-}
-
 // Prepare template task
 func (t *Tpl) Prepare() error {
 	if t.Ext == "" {

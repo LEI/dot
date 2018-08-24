@@ -27,11 +27,6 @@ func (d *Dir) String() string {
 	return s // d.Path
 }
 
-// Type task name
-func (d *Dir) Type() string {
-	return "dir"
-}
-
 // Status check task
 func (d *Dir) Status() error {
 	if dirExists(d.Path) {

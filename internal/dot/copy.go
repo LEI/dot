@@ -26,11 +26,6 @@ func (c *Copy) String() string {
 	return s
 }
 
-// Type task name
-func (c *Copy) Type() string {
-	return "copy"
-}
-
 // Status check task
 func (c *Copy) Status() error {
 	exists, err := copyExists(c.Source, c.Target)
