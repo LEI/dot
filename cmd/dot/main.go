@@ -146,7 +146,7 @@ func setupGlobalOptions(opts *DotOptions) error {
 }
 
 func setupGlobalConfig(cfg *dot.Config) error {
-	if err := setupRoles(cfg); err != nil {
+	if err := setupConfigRoles(cfg); err != nil {
 		return err
 	}
 	if cfg.Git.Scheme != "" {
@@ -165,7 +165,7 @@ func setupGlobalConfig(cfg *dot.Config) error {
 	return nil
 }
 
-func setupRoles(cfg *dot.Config) error {
+func setupConfigRoles(cfg *dot.Config) error {
 	roles := cfg.Roles[:0] // []*dot.Role{}
 	// Filter roles by platform
 	for _, r := range cfg.Roles {
