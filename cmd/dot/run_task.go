@@ -27,7 +27,7 @@ func runTask(action string, i interface{}) error {
 	switch action {
 	case "install":
 		if err := doTask(t); err != nil && !dot.IsSkip(err) {
-			// act := t.DoString()
+			// act := t.String()
 			return err // fmt.Errorf("%s: %s", act, err)
 		}
 	case "remove":
@@ -51,7 +51,7 @@ func doTask(t dot.Tasker) error {
 	if !ok && err != nil {
 		return err
 	}
-	str := t.DoString()
+	str := t.String()
 	// if str == "" {
 	// 	fmt.Fprintln(os.Stderr, "warning: empty task string")
 	// }
@@ -80,7 +80,7 @@ func undoTask(t dot.Tasker) error {
 	if !ok && err != nil {
 		return err
 	}
-	str := t.UndoString()
+	str := t.String()
 	// if str == "" {
 	// 	fmt.Fprintln(os.Stderr, "warning: empty task string")
 	// }

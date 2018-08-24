@@ -17,22 +17,19 @@ type Dir struct {
 }
 
 func (d *Dir) String() string {
-	return d.Path
+	s := d.Path
+	switch d.GetAction() {
+	case "install":
+		s = fmt.Sprintf("mkdir -p %s", tildify(d.Path))
+	case "remove":
+		s = fmt.Sprintf("rmdir %s", tildify(d.Path))
+	}
+	return s // d.Path
 }
 
 // Type task name
 func (d *Dir) Type() string {
 	return "dir"
-}
-
-// DoString string
-func (d *Dir) DoString() string {
-	return fmt.Sprintf("mkdir -p %s", tildify(d.Path))
-}
-
-// UndoString string
-func (d *Dir) UndoString() string {
-	return fmt.Sprintf("rmdir %s", tildify(d.Path))
 }
 
 // Status check task

@@ -275,14 +275,8 @@ func (r *Role) Parse(target string) error {
 	// if r.Vars == nil {
 	// 	r.Vars = map[string]interface{}{}
 	// }
-	if r.IncludeVars != "" {
-		inclVars, err := includeVars(r.IncludeVars)
-		if err != nil {
-			return err
-		}
-		for k, v := range inclVars {
-			r.Vars[k] = v
-		}
+	if err := r.ParseVars(); err != nil {
+		return err
 	}
 	if err := r.ParseDirs(target); err != nil {
 		return err
@@ -298,6 +292,20 @@ func (r *Role) Parse(target string) error {
 	}
 	if err := r.ParseLines(target); err != nil {
 		return err
+	}
+	return nil
+}
+
+// ParseVars tasks
+func (r *Role) ParseVars() error {
+	if r.IncludeVars != "" {
+		inclVars, err := includeVars(r.IncludeVars)
+		if err != nil {
+			return err
+		}
+		for k, v := range inclVars {
+			r.Vars[k] = v
+		}
 	}
 	return nil
 }
@@ -571,64 +579,6 @@ func hasMeta(path string) bool {
 	return strings.ContainsAny(path, magicChars)
 }
 
-// StatusPkgs ...
-func (r *Role) StatusPkgs() error {
-	return checkTasks(r.taskPkgs())
-}
-
-// StatusDirs ...
-func (r *Role) StatusDirs() error {
-	return checkTasks(r.taskDirs())
-}
-
-// StatusFiles ...
-func (r *Role) StatusFiles() error {
-	return checkTasks(r.taskFiles())
-}
-
-// StatusLinks ...
-func (r *Role) StatusLinks() error {
-	return checkTasks(r.taskLinks())
-}
-
-// StatusTpls ...
-func (r *Role) StatusTpls() error {
-	return checkTasks(r.taskTpls())
-}
-
-// StatusLines ...
-func (r *Role) StatusLines() error {
-	return checkTasks(r.taskLines())
-}
-
-// Check all tasks are installed
-func checkTasks(s []Tasker) error {
-	c := 0
-	for _, t := range s {
-		if err := t.Status(); err != nil {
-			if !IsExist(err) {
-				return err
-			}
-			c++
-		}
-		// terr, ok := err.(*OpError)
-		// if ok {
-		// 	err = terr.Err
-		// }
-		// switch err {
-		// case nil:
-		// case ErrExist:
-		// 	c++ // [i] = true
-		// default:
-		// 	return err
-		// }
-	}
-	if c == len(s) {
-		return ErrExist
-	}
-	return nil
-}
-
 // Ok returns true if the role already installed.
 func (r *Role) Ok() bool {
 	err := r.Status()
@@ -672,6 +622,36 @@ func (r *Role) Status() error {
 	return ErrExist
 }
 
+// StatusPkgs ...
+func (r *Role) StatusPkgs() error {
+	return checkTasks(r.taskPkgs())
+}
+
+// StatusDirs ...
+func (r *Role) StatusDirs() error {
+	return checkTasks(r.taskDirs())
+}
+
+// StatusFiles ...
+func (r *Role) StatusFiles() error {
+	return checkTasks(r.taskFiles())
+}
+
+// StatusLinks ...
+func (r *Role) StatusLinks() error {
+	return checkTasks(r.taskLinks())
+}
+
+// StatusTpls ...
+func (r *Role) StatusTpls() error {
+	return checkTasks(r.taskTpls())
+}
+
+// StatusLines ...
+func (r *Role) StatusLines() error {
+	return checkTasks(r.taskLines())
+}
+
 // taskPkgs ...
 func (r *Role) taskPkgs() []Tasker {
 	s := make([]Tasker, len(r.Pkgs))
@@ -684,6 +664,8 @@ func (r *Role) taskPkgs() []Tasker {
 // taskDirs ...
 func (r *Role) taskDirs() []Tasker {
 	s := make([]Tasker, len(r.Dirs))
+	dirs := []*Dir{}
+	fmt.Println(len(r.Dirs), len(dirs))
 	for i := range r.Dirs {
 		s[i] = r.Dirs[i]
 	}
@@ -724,4 +706,32 @@ func (r *Role) taskLines() []Tasker {
 		s[i] = r.Lines[i]
 	}
 	return s
+}
+
+// Check all tasks are installed
+func checkTasks(s []Tasker) error {
+	c := 0
+	for _, t := range s {
+		if err := t.Status(); err != nil {
+			if !IsExist(err) {
+				return err
+			}
+			c++
+		}
+		// terr, ok := err.(*OpError)
+		// if ok {
+		// 	err = terr.Err
+		// }
+		// switch err {
+		// case nil:
+		// case ErrExist:
+		// 	c++ // [i] = true
+		// default:
+		// 	return err
+		// }
+	}
+	if c == len(s) {
+		return ErrExist
+	}
+	return nil
 }

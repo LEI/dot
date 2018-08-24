@@ -16,22 +16,19 @@ type Copy struct {
 }
 
 func (c *Copy) String() string {
-	return fmt.Sprintf("%s:%s", c.Source, c.Target)
+	s := fmt.Sprintf("%s:%s", c.Source, c.Target)
+	switch c.GetAction() {
+	case "install":
+		s = fmt.Sprintf("cp %s %s", tildify(c.Source), tildify(c.Target))
+	case "remove":
+		s = fmt.Sprintf("rm %s", tildify(c.Target))
+	}
+	return s
 }
 
 // Type task name
 func (c *Copy) Type() string {
 	return "copy"
-}
-
-// DoString string
-func (c *Copy) DoString() string {
-	return fmt.Sprintf("cp %s %s", tildify(c.Source), tildify(c.Target))
-}
-
-// UndoString string
-func (c *Copy) UndoString() string {
-	return fmt.Sprintf("rm %s", tildify(c.Target))
 }
 
 // Status check task
