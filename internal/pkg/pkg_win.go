@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/LEI/dot/internal/shell"
 )
 
 // https://github.com/chocolatey/choco/wiki/CommandsReference
@@ -58,7 +60,8 @@ var choco = &Pm{
 
 // https://github.com/transcode-open/apt-cyg
 var aptCyg = &Pm{
-	AllowFailure: true,
+	//AllowFailure: true,
+	Shell: shell.Get(),
 	// Sudo:    false,
 	Bin:     "apt-cyg",
 	Install: "install",
@@ -67,7 +70,8 @@ var aptCyg = &Pm{
 	// DryRunOpts:  []string{},
 	Init: func(m *Pm) error {
 		// fmt.Println("$ apt-cyg --version")
-		cmd := exec.Command("apt-cyg", "--version")
+		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version")
+		// cmd := exec.Command("apt-cyg", "--version")
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
