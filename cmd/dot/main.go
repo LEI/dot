@@ -81,7 +81,9 @@ func persistentPreRunDot(c *cobra.Command, args []string) error {
 	// 	return err
 	// }
 	// dotOpts.extended = opts
-	if c.Name() == "version" {
+	if c.Name() == "version" ||
+		flagVersion ||
+		flagRelease {
 		return nil
 	}
 	// pwd, err := resolvePassword(dotOpts, "RESTIC_PASSWORD")
@@ -155,7 +157,8 @@ func setupGlobalConfig(cfg *dot.Config) error {
 	if cfg.Git.Host != "" {
 		git.Host = cfg.Git.Host
 	}
-	if cfg.Git.User.String() != "" {
+	if cfg.Git.User != nil &&
+		cfg.Git.User.String() != "" {
 		git.User = cfg.Git.User
 	}
 	if err := cfg.ParseRoles(); err != nil {
