@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/LEI/dot/internal/cli"
 )
 
 var (
@@ -126,7 +128,7 @@ func (r *Repo) Clone() error {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
 	if DryRun {
-		fmt.Printf("DRY-RUN: %s %s\n", GitBin, strings.Join(args, " "))
+		fmt.Printf("DRY-RUN: %s %s\n", GitBin, cli.FormatArgs(args))
 		return nil
 	}
 	// status := r.ExecStatus(args...)

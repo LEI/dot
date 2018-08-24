@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/LEI/dot/internal/cli"
 	"github.com/LEI/dot/internal/pkg"
 )
 
@@ -33,7 +34,7 @@ func (p *Pkg) DoString() string {
 		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""
 	}
-	return fmt.Sprintf("%s %s", bin, strings.Join(opts, " "))
+	return fmt.Sprintf("%s %s", bin, cli.FormatArgs(opts))
 }
 
 // UndoString string
@@ -43,7 +44,7 @@ func (p *Pkg) UndoString() string {
 		fmt.Fprintf(os.Stderr, "err pkg undo: %s\n", err)
 		return ""
 	}
-	return fmt.Sprintf("%s %s", bin, strings.Join(opts, " "))
+	return fmt.Sprintf("%s %s", bin, cli.FormatArgs(opts))
 }
 
 // Status check task

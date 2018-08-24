@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/LEI/dot/internal/cli"
 )
 
 const (
@@ -82,7 +84,7 @@ func git(args ...string) (string, string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stdin = os.Stdin
 	if Verbose > 0 {
-		fmt.Fprintln(Stdout, "exec:", GitBin, strings.Join(args, " "))
+		fmt.Fprintln(Stdout, "exec:", GitBin, cli.FormatArgs(args))
 	}
 	err := cmd.Run()
 	outstr := strings.TrimSuffix(stdout.String(), "\n")
