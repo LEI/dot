@@ -52,12 +52,13 @@ init:
 # clones and cd's to path
 clone_folder: C:\gopath\src\github.com\LEI\dot
 
-# install:
-#   - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel'
-#   - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
-#   # - gem install asciidoctor
-#   # - pip install docutils
-#   # - go get ...
+install:
+  # autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel
+  - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,wget'
+  - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
+  # - gem install asciidoctor
+  # - pip install docutils
+  # - go get ...
 
 before_build:
   # - 'bash -lc "cygcheck -dc cygwin"'
@@ -67,6 +68,9 @@ before_build:
   - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
   # - 'bash -lc "apt-cyg --version"'
   - 'bash -lc "install apt-cyg /bin"'
+  - 'bash -lc "command -v apt-cyg"'
+  - 'bash -lc "which apt-cyg"'
+  - 'bash -lc "ln -s $(command -v apt-cyg) /usr/bin/apt-cyg"'
   - 'bash -lc "echo $PATH"'
   - echo %PATH%
   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
