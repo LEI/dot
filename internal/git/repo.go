@@ -33,17 +33,16 @@ type Repo struct {
 // NewRepo git
 func NewRepo(u *url.URL, repo, dir string) (*Repo, error) {
 	if u == nil {
-		u = &url.URL{
-			// Scheme     string
-			// Opaque     string    // encoded opaque data
-			// User       *Userinfo // username and password information
-			// Host       string    // host or host:port
-			// Path       string    // path (relative paths may omit leading slash)
-			// RawPath    string    // encoded path hint (see EscapedPath method)
-			// ForceQuery bool      // append a query ('?') even if RawQuery is empty
-			// RawQuery   string    // encoded query values, without '?'
-			// Fragment   string    // fragment for references, without '#'
-		}
+		u = &url.URL{}
+		// Scheme     string
+		// Opaque     string    // encoded opaque data
+		// User       *Userinfo // username and password information
+		// Host       string    // host or host:port
+		// Path       string    // path (relative paths may omit leading slash)
+		// RawPath    string    // encoded path hint (see EscapedPath method)
+		// ForceQuery bool      // append a query ('?') even if RawQuery is empty
+		// RawQuery   string    // encoded query values, without '?'
+		// Fragment   string    // fragment for references, without '#'
 	}
 	if dir == "" {
 		return nil, fmt.Errorf("missing repo dir")
@@ -206,7 +205,7 @@ func ParseURL(u *url.URL, repo string) (*url.URL, error) {
 		// fmt.Println("ParseURL", repo, "set Host", Host)
 		u.Host = Host
 	}
-	if u.User.String() == "" && User != nil {
+	if u.User != nil && u.User.String() == "" && User != nil {
 		// fmt.Println("ParseURL", repo, "set User", User.String())
 		u.User = User // url.User(username)
 	}
