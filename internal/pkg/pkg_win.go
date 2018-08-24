@@ -58,6 +58,7 @@ var choco = &Pm{
 
 // https://github.com/transcode-open/apt-cyg
 var aptCyg = &Pm{
+	AllowFailure: true,
 	// Sudo:    false,
 	Bin:     "apt-cyg",
 	Install: "install",
@@ -65,14 +66,14 @@ var aptCyg = &Pm{
 	// DryRun:  []string{},
 	// Opts: []string{},
 	Init: func() error {
-		fmt.Println("$ apt-cyg --version")
+		// fmt.Println("$ apt-cyg --version")
 		cmd := exec.Command("apt-cyg", "--version")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
 			// Not in %PATH%
-			return err
+			fmt.Fprintf(os.Stderr, "$ apt-cyg --version: %s", err) // return err
 		}
 		return nil
 	},

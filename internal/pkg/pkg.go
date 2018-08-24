@@ -11,6 +11,7 @@ import (
 
 	// "github.com/LEI/dot/cli/config/tasks"
 
+	"github.com/LEI/dot/internal/cli"
 	"github.com/LEI/dot/internal/ostype"
 	"github.com/LEI/dot/internal/shell"
 )
@@ -44,15 +45,16 @@ var (
 
 // Pm package manager
 type Pm struct {
-	Sudo        bool        // Prefix Bin with sudo if not root
-	Bin         string      // Path to package manager binary
-	Sub         []string    // Sub command and main options
-	Install     interface{} // Install command name
-	Remove      interface{} // Remove command name
-	DryRun      []string    // Check mode, do not run if absent
-	Opts        []string    // Common pkg manager options
-	InstallOpts []string    // Install pkg manager options
-	RemoveOpts  []string    // Remove pkg manager options
+	AllowFailure bool
+	Sudo         bool        // Prefix Bin with sudo if not root
+	Bin          string      // Path to package manager binary
+	Sub          []string    // Sub command and main options
+	Install      interface{} // Install command name
+	Remove       interface{} // Remove command name
+	DryRun       []string    // Check mode, do not run if absent
+	Opts         []string    // Common pkg manager options
+	InstallOpts  []string    // Install pkg manager options
+	RemoveOpts   []string    // Remove pkg manager options
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
@@ -228,7 +230,7 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 
 // Install ...
 func Install(manager string, pkgs []string, opts ...string) error {
-	// fmt.Printf("%s %s\n", cmd.Bin, strings.Join(cmdArgs, " "))
+	// fmt.Printf("%s %s\n", cmd.Bin, cli.FormatArgs(cmdArgs))
 	// stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
 	// str := strings.TrimRight(stdout, "\n")
 	// // Quickfix centos yum
@@ -283,7 +285,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 }
 
 func execManagerCommand(m *Pm, bin string, args ...string) error {
-	// fmt.Printf("$ %s %s\n", bin, strings.Join(args, " "))
+	// fmt.Printf("$ %s %s\n", bin, cli.FormatArgs(args))
 	if DryRun {
 		if len(m.DryRun) == 0 {
 			return nil
@@ -294,11 +296,17 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		if !m.AllowFailure {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "$ %s %s: %s", bin, cli.FormatArgs(args), err) // return err
+	}
+	return nil
 }
 
 func execCommand(name string, args ...string) error {
-	fmt.Printf("$ %s %s\n", name, strings.Join(args, " "))
+	fmt.Printf("$ %s %s\n", name, cli.FormatArgs(args))
 	if DryRun {
 		return nil
 	}
