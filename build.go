@@ -2,6 +2,8 @@
 
 package main
 
+// https://github.com/restic/restic/blob/master/build.go
+
 import (
 	"errors"
 	"flag"

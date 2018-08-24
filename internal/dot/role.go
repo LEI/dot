@@ -21,8 +21,9 @@ var (
 
 // TODO flag
 var ignoredFilePatterns = []string{
-	"*.json",
+	// "*.json",
 	"*.md",
+	"*.toml",
 	"*.yml",
 	".git",
 }
