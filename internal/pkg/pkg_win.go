@@ -70,14 +70,16 @@ var aptCyg = &Pm{
 	// DryRunOpts:  []string{},
 	Init: func(m *Pm) error {
 		// fmt.Println("$ apt-cyg --version")
-		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version")
+		cmd := exec.Command(shell.Get(), "-lc", "apt-cyg --version")
 		// cmd := exec.Command("apt-cyg", "--version")
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr
 		// cmd.Stdin = os.Stdin
 		if err := cmd.Run(); err != nil {
 			// Not in %PATH%
-			fmt.Fprintf(os.Stderr, "apt-cyg --version: %s", err) // return err
+			fmt.Printf("apt-cyg --version")
+			fmt.Fprintln(os.Stderr, err)
+			// return err
 		}
 		return nil
 	},
