@@ -16,11 +16,11 @@ var choco = &Pm{
 	Bin:     "choco",
 	Install: "install",
 	Remove:  "uninstall",
-	DryRun:  []string{"--noop"}, // --what-if
 	Opts: []string{
 		"--no-progress",
 		"--yes", // --confirm
 	},
+	DryRunOpts: []string{"--noop"}, // --what-if
 	// Init: func(m *Pm) error {
 	// 	// https://chocolatey.org/docs/installation
 	// 	return nil
@@ -63,8 +63,8 @@ var aptCyg = &Pm{
 	Bin:     "apt-cyg",
 	Install: "install",
 	Remove:  "remove",
-	// DryRun:  []string{},
 	// Opts: []string{},
+	// DryRunOpts:  []string{},
 	Init: func(m *Pm) error {
 		// fmt.Println("$ apt-cyg --version")
 		cmd := exec.Command("apt-cyg", "--version")

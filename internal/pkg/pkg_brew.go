@@ -28,7 +28,13 @@ var brew = &Pm{
 		// "HOMEBREW_NO_EMOJI": "1",
 	},
 	Init: func(m *Pm) error {
-		return execCommand("brew", "update", "--quiet")
+		opts := []string{"update", "--quiet"}
+		bin, opts, err := getBin(m, opts)
+		if err != nil {
+			return err
+		}
+		return execManagerCommand(m, bin, opts...)
+		// return execCommand("brew", "update", "--quiet")
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// fmt.Printf("brew ls --versions %s\n", pkgs)

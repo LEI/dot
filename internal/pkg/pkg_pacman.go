@@ -10,7 +10,6 @@ var pacman = &Pm{
 	Bin:     "pacman",
 	Install: "--sync",   // -S
 	Remove:  "--remove", // -R
-	DryRun:  []string{"--print"},
 	Opts: []string{
 		"--noconfirm",
 		"--noprogressbar",
@@ -25,6 +24,7 @@ var pacman = &Pm{
 		"--recursive", // -s
 		// "--unneeded",
 	},
+	DryRunOpts: []string{"--print"},
 	// {
 	// 	Args: []string{"--quiet"},
 	// 	// If:   []string{"{{eq .Verbose 0}}"},
