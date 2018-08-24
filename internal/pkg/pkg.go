@@ -81,12 +81,6 @@ func NewPm(name string) (m *Pm, err error) {
 	if m == nil {
 		return m, fmt.Errorf("unable to detect package manager %s", name)
 	}
-	if !m.done && m.Init != nil {
-		if err := m.Init(); err != nil {
-			return m, err
-		}
-		m.done = true
-	}
 	return m, nil
 }
 
@@ -225,6 +219,7 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 		return false, nil
 		// ErrUnknown = fmt.Errorf("unable to determine if package is present")
 	}
+	fmt.Println("???", pkgs)
 	return m.Has(m, pkgs)
 }
 
@@ -292,6 +287,13 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 		}
 		// Append check mode options and run
 		args = append(args, m.DryRun...)
+	}
+	// First run initialisation
+	if !m.done && m.Init != nil {
+		if err := m.Init(); err != nil {
+			return err
+		}
+		m.done = true
 	}
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout

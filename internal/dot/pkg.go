@@ -54,7 +54,7 @@ func (p *Pkg) Status() error {
 		return err
 	}
 	if exists {
-		return ErrAlreadyExist
+		return ErrExist
 	}
 	return nil
 }
@@ -63,7 +63,7 @@ func (p *Pkg) Status() error {
 func (p *Pkg) Do() error {
 	if err := p.Status(); err != nil {
 		switch err {
-		case ErrAlreadyExist, ErrSkip:
+		case ErrExist, ErrSkip:
 			return nil
 		default:
 			return err
@@ -75,7 +75,7 @@ func (p *Pkg) Do() error {
 	switch err {
 	// case nil:
 	case pkg.ErrExist:
-		return ErrAlreadyExist
+		return ErrExist
 	default:
 		return err
 	}
@@ -85,10 +85,10 @@ func (p *Pkg) Do() error {
 func (p *Pkg) Undo() error {
 	if err := p.Status(); err != nil {
 		switch err {
+		case ErrExist:
+			// continue
 		case ErrSkip:
 			return nil
-		case ErrAlreadyExist:
-			// continue
 		default:
 			return err
 		}
@@ -97,7 +97,7 @@ func (p *Pkg) Undo() error {
 	switch err {
 	// case nil:
 	case pkg.ErrExist:
-		return ErrAlreadyExist
+		return ErrExist
 	default:
 		return err
 	}

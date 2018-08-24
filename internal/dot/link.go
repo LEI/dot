@@ -77,7 +77,7 @@ func (l *Link) Status() error {
 		return perr
 	}
 	if exists {
-		return ErrAlreadyExist
+		return ErrExist
 	}
 	return nil
 }
@@ -86,7 +86,7 @@ func (l *Link) Status() error {
 func (l *Link) Do() error {
 	if err := l.Status(); err != nil {
 		switch err {
-		case ErrAlreadyExist, ErrSkip:
+		case ErrExist, ErrSkip:
 			return nil
 		// case ErrFileExist, ErrLinkExist:
 		// 	// Confirm override
@@ -107,10 +107,10 @@ func (l *Link) Do() error {
 func (l *Link) Undo() error {
 	if err := l.Status(); err != nil {
 		switch err {
+		case ErrExist:
+			// continue
 		case ErrSkip:
 			return nil
-		case ErrAlreadyExist:
-			// continue
 		default:
 			return err
 		}
