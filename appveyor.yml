@@ -76,8 +76,7 @@ before_build:
   - 'bash -lc "install apt-cyg /bin"'
   - 'bash -lc "ls -la /usr/bin"'
   - 'bash -lc "which wget"'
-  - 'bash -lc "wget --version"'
-  - 'bash -lc "apt-cyg search bash"'
+  # FIXME - 'bash -lc "wget --version"'
   # - 'bash -lc "echo $PATH"'
   # - echo %PATH%
   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
@@ -100,7 +99,8 @@ build_script:
 
   - dot --release
   - 'bash -lc "dot sync --verbose"'
-  - 'bash -lc "dot install --packages --verbose"'
+  # - 'bash -lc "dot install --packages --verbose"'
+  - 'bash -lc "dot install --verbose"'
 
   # - choco install --yes --no-progress docker-compose
   # - OS=windows go run build.go -v docker
