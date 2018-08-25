@@ -594,7 +594,7 @@ func (r *Role) Ok() bool {
 	err := r.Status()
 	exists := IsExist(err)
 	if err != nil && !exists {
-		fmt.Fprintf(os.Stderr, "%s: %s\n", r.Name, err)
+		fmt.Fprintf(os.Stderr, "%s task err: %s\n", r.Name, err)
 	}
 	return exists // err == nil || err == ErrExist
 }
