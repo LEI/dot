@@ -14,7 +14,8 @@ type listOptions struct {
 	quiet  bool
 	all    bool
 	format string
-	filter []string
+	// filter []string
+
 	// listLong bool
 	// host      string
 	// tags      restic.TagLists
@@ -24,7 +25,7 @@ type listOptions struct {
 
 var listOpts listOptions
 
-var defaultListFormat = "{{.Name}} {{.Ok}}"
+var defaultListFormat = "{{if .Ok}}OK{{else}}KO{{end}} {{.}}"
 
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]
@@ -46,7 +47,8 @@ func init() {
 	flags.BoolVarP(&listOpts.quiet, "quiet", "q", false, "Only show role names")
 	flags.BoolVarP(&listOpts.all, "all", "a", false, "Show all roles (default hides incompatible platforms)")
 	flags.StringVarP(&listOpts.format, "format", "", defaultListFormat, "Pretty-print roles using a Go template")
-	flags.StringSliceVarP(&listOpts.filter, "filter", "f", []string{}, "Filter task list")
+	// flags.StringSliceVarP(&listOpts.filter, "filter", "f", []string{}, "Filter task list")
+
 	// flags.BoolVarP(&listOpts.listLong, "long", "l", false, "use a long listing format showing size and mode")
 	// flags.StringVarP(&listOpts.host, "host", "H", "", "only consider snapshots for this `host`, when no snapshot ID is given")
 	// flags.Var(&listOpts.tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
@@ -55,15 +57,12 @@ func init() {
 }
 
 func preRunList(cmd *cobra.Command, args []string) error {
-	// if listOpts.quiet && listOpts.format != "" {
-	// 	return fmt.Errorf("--quiet and --format cannot be specified at the same time")
-	// }
-	// if listOpts.format == "" {
-	// 	listOpts.format = defaultListFormat
-	// }
-	if len(listOpts.filter) > 0 {
-		fmt.Fprintf(os.Stderr, "--filter not implemented\n")
+	if listOpts.quiet && listOpts.format != "" && listOpts.format != defaultListFormat {
+		return fmt.Errorf("--quiet and --format cannot be specified at the same time")
 	}
+	// if len(listOpts.filter) > 0 {
+	// 	fmt.Fprintf(os.Stderr, "--filter not implemented\n")
+	// }
 	return nil
 }
 
@@ -74,21 +73,26 @@ func runList(cmd *cobra.Command, args []string) error {
 	// if !listOpts.all {
 	// 	dotConfig.Roles.FilterOS()
 	// }
+	w := os.Stdout // tabwriter.NewWriter(os.Stdout, 8, 8, 8, ' ', 0)
 	for _, r := range dotConfig.Roles {
 		// fmt.Printf("%+v\n", r)
 		if listOpts.quiet {
-			fmt.Println(r.Name)
+			fmt.Fprintln(w, r.Name)
 			continue
 		}
-		if listOpts.format == "" {
-			fmt.Println(r) // equivalent to format {{.}}
-			continue
-		}
-		str, err := templateString(r.Name, listOpts.format, r)
+		format := listOpts.format
+		// if format == "" {
+		// 	if dotOpts.Verbose > 0 {
+		// 		format = "{{.}}"
+		// 	} else {
+		// 		format = defaultListFormat
+		// 	}
+		// }
+		str, err := templateString(r.Name, format, r)
 		if err != nil {
 			return err
 		}
-		fmt.Println(str)
+		fmt.Fprintln(w, str)
 	}
 
 	// // extract any specific directories to walk
