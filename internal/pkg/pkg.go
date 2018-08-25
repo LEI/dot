@@ -211,16 +211,12 @@ func Detect() (name string, err error) {
 	return
 }
 
-func executable(bin string) bool {
-	c := fmt.Sprintf("command -v %s", bin)
-	cmd := exec.Command(shell.Get(), "-c", c)
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-	// err := cmd.Run()
-	out, err := cmd.CombinedOutput()
-	// if err != nil {
-	// 	return false
-	// }
+func executable(name string) bool {
+	// c := fmt.Sprintf("command -v %s", name)
+	// cmd := exec.Command(shell.Get(), "-c", c)
+	// out, err := cmd.CombinedOutput()
+	// return err == nil && len(out) > 0
+	out, err := exec.LookPath(name)
 	return err == nil && len(out) > 0
 }
 

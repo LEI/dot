@@ -54,33 +54,31 @@ init:
 # clones and cd's to path
 clone_folder: C:\gopath\src\github.com\LEI\dot
 
-install:
-  # autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel
-  # - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,wget'
-  # - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --upgrade-also --site $CYG_MIRROR  --local-package-dir "%CYG_CACHE%" --packages git'
-  - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" --packages gawk,git,wget'
-  #  > NUL 2>&1
-  - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
-  # - gem install asciidoctor
-  # - pip install docutils
-  # - go get ...
+# install:
+#   # autoconf,autogen,automake,cygwin-devel,git,gcc-core,gcc-g++,libncurses-devel,libprotobuf-devel,make,openssh,openssl-devel,perl,perl_pods,pkg-config,tmux,zlib-devel
+#   # - '%CYG_ROOT%\setup-x86_64.exe --quiet-mode --no-shortcuts --upgrade-also --packages git,wget'
+#   # - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --upgrade-also --site $CYG_MIRROR  --local-package-dir "%CYG_CACHE%" --packages git'
+#   - '%CYG_ROOT%\%CYG_SETUP% --quiet-mode --no-shortcuts --only-site --root "%CYG_ROOT%" --site "%CYG_MIRROR%" --local-package-dir "%CYG_CACHE%" --packages gawk,git,wget'
+#   #  > NUL 2>&1
+#   - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
+#   # - gem install asciidoctor
+#   # - pip install docutils
+#   # - go get ...
 
-before_build:
-  # - 'bash -lc "cygcheck -dc cygwin"'
-  # - 'bash -lc "git config --local core.symlinks true"'
-  # - 'bash -lc "git clean --force --quiet -x -d"'
-  # - 'bash -lc "git reset --hard"'
-  # - c:\cygwin setup.exe -q -P wget,tar,qawk,bzip2,subversion,vim
-  - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
-  # - 'bash -lc "apt-cyg --version"'
-  - 'bash -lc "install apt-cyg /bin"'
-  - 'bash -lc "ls -la /usr/bin"'
-  - 'bash -lc "which wget"'
-  # FIXME - 'bash -lc "wget --version"'
-  # - 'bash -lc "echo $PATH"'
-  # - echo %PATH%
-  # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
-  # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
+# before_build:
+#   # - 'bash -lc "cygcheck -dc cygwin"'
+#   # - 'bash -lc "git config --local core.symlinks true"'
+#   # - 'bash -lc "git clean --force --quiet -x -d"'
+#   # - 'bash -lc "git reset --hard"'
+#   # - c:\cygwin setup.exe -q -P wget,tar,qawk,bzip2,subversion,vim
+#   - 'bash -lc "curl -sSL https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg -o apt-cyg"'
+#   # - 'bash -lc "apt-cyg --version"'
+#   - 'bash -lc "install apt-cyg /bin"'
+#   - 'bash -lc "wget --version"' # FIXME
+#   # - 'bash -lc "echo $PATH"'
+#   # - echo %PATH%
+#   # - cp C:\projects\dot\.dotrc.yml C:\Users\appveyor\.dotrc.yml
+#   # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/.dotrc.yml $HOME/.dotrc.yml"'
 
 build_script:
   # - 'bash -lc "./autogen.sh"'
@@ -88,14 +86,14 @@ build_script:
   # - 'bash -lc "make distcheck VERBOSE=1 V=1"'
   # - echo %USERPROFILE%
 
-  - touch C:\Users\appveyor\.dotnc
-  # - 'bash -lc "touch $HOME/.dotnc"'
-
   - go run build.go vendor -only check install # testRace
   # - go run build.go vendor -only check build:windows
   # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
   # - 'bash -lc "ls -la /usr/local/bin"'
   # - 'bash -lc "dot --version"'
+
+  - touch C:\Users\appveyor\.dotnc
+  # - 'bash -lc "touch $HOME/.dotnc"'
 
   - dot --release
   - 'bash -lc "dot sync --verbose"'

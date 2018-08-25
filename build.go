@@ -741,9 +741,11 @@ func runOutput(name string, args ...string) (string, error) {
 
 // Check if a command is available
 func executable(name string) bool {
-	cmd := exec.Command("command", "-v", name)
-	err := cmd.Run()
-	return err == nil
+	// cmd := exec.Command("command", "-v", name)
+	// err := cmd.Run()
+	// return err == nil
+	out, err := exec.LookPath(name)
+	return err == nil && len(out) > 0
 }
 
 // func getFunctionName(i interface{}) string {
