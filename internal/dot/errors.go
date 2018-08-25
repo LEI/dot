@@ -5,7 +5,9 @@ package dot
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 )
 
 var (
@@ -69,6 +71,28 @@ func (e *OpError) Error() string {
 // 	}
 // 	return fmt.Sprintf("%s: %s", e.Code, msg)
 // }
+
+// DiffError ...
+type DiffError struct {
+	Src, Dst string
+	Full     string
+}
+
+func (e *DiffError) Error() string {
+	// return e.Src + " != " + e.Dst
+	return fmt.Sprintf("%s differs from source %s", tildify(e.Dst), tildify(e.Src))
+}
+
+// Full diff ouput
+func (e *DiffError) String() string {
+	fullDiff := strings.TrimSuffix(e.Full, "\n")
+	return fmt.Sprintf(
+		"--- %s\n+++ %s\n%s",
+		tildify(e.Src),
+		tildify(e.Dst),
+		fullDiff,
+	)
+}
 
 // IsExist unwraps task error
 func IsExist(err error) bool {

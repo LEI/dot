@@ -14,6 +14,7 @@ import (
 	"unicode"
 
 	"github.com/LEI/dot/internal/env"
+	"github.com/LEI/dot/internal/prompt"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -62,6 +63,8 @@ type Tpl struct {
 	Env         map[string]string
 	Vars        map[string]interface{}
 	IncludeVars string `mapstructure:"include_vars"`
+
+	overwrite bool
 }
 
 func (t *Tpl) String() string {
@@ -120,6 +123,14 @@ func (t *Tpl) Status() error {
 	}
 	exists, err := tplExists(t.Source, t.Target, data)
 	if err != nil {
+		if derr, ok := err.(*DiffError); ok {
+			fmt.Fprintf(os.Stderr, "%s\n", derr.String())
+			q := fmt.Sprintf("Overwrite %s?", t.Target)
+			if t.overwrite || prompt.AskConfirmation(q) {
+				t.overwrite = true
+				return nil
+			}
+		}
 		return err
 	}
 	if exists {
@@ -134,6 +145,8 @@ func (t *Tpl) Do() error {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
+		case ErrInvalid:
+			fmt.Println("ask?")
 		default:
 			return err
 		}
@@ -229,17 +242,26 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 	}
 	dstContent := string(b)
 	if content != dstContent {
-		diff, err := getDiff(dst, content)
-		if err != nil {
-			return false, err
-		}
-		fmt.Printf("--- %s\n+++ %s\n%s\n", src, dst, strings.TrimSuffix(diff, "\n"))
 		// return false, &os.PathError{
 		// 	Op:   "template mismatch",
 		// 	Path: dst,
 		// 	Err:  ErrInvalid,
 		// }
-		return false, ErrSkip
+		diff, err := getDiff(dst, content)
+		if err != nil {
+			return false, err
+		}
+		// fmt.Printf(
+		// 	"--- %s\n+++ %s\n%s\n",
+		// 	src,
+		// 	dst,
+		// 	strings.TrimSuffix(diff, "\n"),
+		// )
+		return false, &DiffError{
+			Src:  src,
+			Dst:  dst,
+			Full: diff,
+		}
 	}
 	return true, nil
 }
