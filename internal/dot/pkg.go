@@ -23,25 +23,13 @@ func (p *Pkg) String() string {
 	// case "remove":
 	// }
 	if action == "" {
-		str := ""
+		a := []string{}
 		if p.Manager != "" {
-			str += p.Manager // + " "
+			a = append(a, p.Manager)
 		}
-		pkgs := cli.FormatArgs(p.Name)
-		if pkgs != "" {
-			if str != "" {
-				str += " "
-			}
-			str += pkgs
-		}
-		opts := cli.FormatArgs(p.Args)
-		if opts != "" {
-			if str != "" {
-				str += " "
-			}
-			str += pkgs
-		}
-		return fmt.Sprint(str)
+		a = append(a, p.Name...)
+		a = append(a, p.Args...)
+		return fmt.Sprint(cli.FormatArgs(a))
 	}
 	m, err := pkg.NewPm(p.Manager)
 	if err != nil {
