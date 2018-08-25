@@ -234,6 +234,11 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 			return false, err
 		}
 		fmt.Printf("--- %s\n+++ %s\n%s\n", src, dst, strings.TrimSuffix(diff, "\n"))
+		// return false, &os.PathError{
+		// 	Op:   "template mismatch",
+		// 	Path: dst,
+		// 	Err:  ErrInvalid,
+		// }
 		return false, ErrSkip
 	}
 	return true, nil

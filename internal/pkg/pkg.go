@@ -144,6 +144,7 @@ func (m *Pm) GetAction(name string, input ...string) (string, error) {
 	case "remove":
 		i = m.Remove
 	default:
+		// Unknown action
 		return name, fmt.Errorf("invalid pkg action: %s", name)
 	}
 	// act, ok := m.Acts[a]

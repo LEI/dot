@@ -17,12 +17,37 @@ type Pkg struct {
 }
 
 func (p *Pkg) String() string {
+	action := p.GetAction()
+	// switch p.GetAction() {
+	// case "install":
+	// case "remove":
+	// }
+	if action == "" {
+		str := ""
+		if p.Manager != "" {
+			str += p.Manager // + " "
+		}
+		pkgs := cli.FormatArgs(p.Name)
+		if pkgs != "" {
+			if str != "" {
+				str += " "
+			}
+			str += pkgs
+		}
+		opts := cli.FormatArgs(p.Args)
+		if opts != "" {
+			if str != "" {
+				str += " "
+			}
+			str += pkgs
+		}
+		return fmt.Sprint(str)
+	}
 	m, err := pkg.NewPm(p.Manager)
 	if err != nil {
 		return "<none>"
 	}
-	a := p.GetAction()
-	bin, opts, err := m.Build(a, p.Name, p.Args...)
+	bin, opts, err := m.Build(action, p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""

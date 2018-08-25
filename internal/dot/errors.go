@@ -24,8 +24,11 @@ var (
 	// ErrNotEmpty ...
 	ErrNotEmpty = errors.New("not empty")
 
-	// ErrSkip ...
-	ErrSkip = errors.New("skip task")
+	// ErrSkip task
+	ErrSkip = errors.New("skip")
+
+	// ErrInvalid ...
+	ErrInvalid = errors.New("invalid file")
 )
 
 // OpError ...
