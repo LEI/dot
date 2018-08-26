@@ -151,30 +151,37 @@ func formatTasks(prefix string, i interface{}) string {
 }
 
 // Sync role repository
-func (r *Role) Sync() error {
+func (r *Role) Sync() (string, error) {
 	// u, err := url.Parse(r.URL)
 	// if err != nil {
 	// 	return err
 	// }
+	out := ""
 	repo, err := git.NewRepo(r.Git, r.URL, r.Path)
 	if err != nil {
-		return err
+		return out, err
 	}
 	if dirExists(r.Path) {
 		// fmt.Fprintf(dotCli.Out(), "Checking %s...\n", name)
-		if err := repo.Status(); err != nil {
-			return err
+		status, err := repo.Status()
+		out += status
+		if err != nil {
+			return out, err
 		}
-		if err := repo.Pull(); err != nil {
-			return err
+		pull, err := repo.Pull()
+		out += pull
+		if err != nil {
+			return out, err
 		}
 	} else {
 		// fmt.Fprintf(dotCli.Out(), "Cloning %s into %s...\n", name, repo.Dir)
-		if err := repo.Clone(); err != nil {
-			return err
+		clone, err := repo.Clone()
+		out += clone
+		if err != nil {
+			return out, err
 		}
 	}
-	return nil
+	return out, nil
 }
 
 // GetConfigFile path

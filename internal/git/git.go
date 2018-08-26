@@ -94,6 +94,9 @@ func git(args ...string) (string, string, error) {
 
 func gitCombined(args ...string) (string, error) {
 	cmd := exec.Command(GitBin, args...)
+	if Verbose > 1 {
+		fmt.Fprintln(Stdout, "exec:", GitBin, cli.FormatArgs(args))
+	}
 	buf, err := cmd.CombinedOutput()
 	str := strings.TrimSuffix(string(buf), "\n")
 	return str, err
