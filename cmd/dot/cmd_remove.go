@@ -44,7 +44,7 @@ func runRemove(cmd *cobra.Command, args []string) error {
 	action := "remove"
 	for _, r := range dotConfig.Roles {
 		if dotOpts.verbosity >= 1 {
-			fmt.Printf("## Removing %s...\n", r.Name)
+			fmt.Fprintf(dotOpts.stdout, "## Removing %s...\n", r.Name)
 		}
 		// Pre remove hooks
 		for _, h := range r.Remove {

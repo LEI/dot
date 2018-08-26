@@ -57,13 +57,13 @@ func runDoc(cmd *cobra.Command, args []string) error {
 		if err := genMan(c, manFlag); err != nil {
 			return err
 		}
-		fmt.Printf("Generated man pages in: %s\n", manFlag)
+		fmt.Fprintf(dotOpts.stdout, "Generated man pages in: %s\n", manFlag)
 	}
 	if mdFlag != "" {
 		if err := genMd(c, mdFlag); err != nil {
 			return err
 		}
-		fmt.Printf("Generated markdown pages in: %s\n", mdFlag)
+		fmt.Fprintf(dotOpts.stdout, "Generated markdown pages in: %s\n", mdFlag)
 	}
 	return nil
 }

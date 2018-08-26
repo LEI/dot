@@ -59,7 +59,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	action := "install"
 	for _, r := range dotConfig.Roles {
 		if dotOpts.verbosity >= 1 {
-			fmt.Printf("## Installing %s...\n", r.Name)
+			fmt.Fprintf(dotOpts.stdout, "## Installing %s...\n", r.Name)
 		}
 		// Pre install hooks
 		for _, h := range r.Install {
