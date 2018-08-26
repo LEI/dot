@@ -123,23 +123,23 @@ jobs:
           tags: true
           condition: $TRAVIS_OS_NAME = linux
 
-      - stage: deploy
-        before_deploy:
-          - make docs
-        deploy:
-          provider: pages
-          skip-cleanup: true
-          github-token: $GITHUB_TOKEN
-          local-dir: docs
-          # target-branch: gh-pages
-          keep-history: true
-          # email: deploy@travis-ci.org
-          # name: Deployment Bot
-          committer-from-gh: true
-          # verbose: false
-          on:
-            branch: master
-            # tags: true
+    - stage: deploy
+      before_deploy:
+        - make docs
+      deploy:
+        provider: pages
+        skip-cleanup: true
+        github-token: $GITHUB_TOKEN
+        local-dir: docs
+        # target-branch: gh-pages
+        keep-history: true
+        # email: deploy@travis-ci.org
+        # name: Deployment Bot
+        committer-from-gh: true
+        # verbose: false
+        on:
+          branch: master
+          # tags: true
 
 notifications:
   email: false
