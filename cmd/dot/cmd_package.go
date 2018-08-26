@@ -17,10 +17,10 @@ var cmdPkg = &cobra.Command{
 	Long: `
 The "pkg" task installs or removes packages.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunTask,
-	RunE:              runPkg,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunTask,
+	RunE:    runPkg,
+	// DisableAutoGenTag: true,
 }
 
 var cmdRmPkg = &cobra.Command{}

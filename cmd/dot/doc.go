@@ -14,11 +14,11 @@ var defaultDocPath = "/tmp"
 var cmdDoc = &cobra.Command{
 	Use: "doc",
 	// Aliases: []string{},
-	Short:             "Generate documentation",
-	Long:              ``,
-	DisableAutoGenTag: true,
-	Args:              cobra.MaximumNArgs(1), // cobra.ExactArgs(1),
-	RunE:              genDoc,
+	Short: "Generate documentation",
+	Long:  ``,
+	// DisableAutoGenTag: true,
+	Args: cobra.MaximumNArgs(1), // cobra.ExactArgs(1),
+	RunE: genDoc,
 }
 
 func init() {

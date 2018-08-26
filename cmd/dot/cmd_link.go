@@ -17,10 +17,10 @@ var cmdLink = &cobra.Command{
 	Long: `
 The "link" task installs or removes symlinks.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunTask,
-	RunE:              runLink,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunTask,
+	RunE:    runLink,
+	// DisableAutoGenTag: true,
 }
 
 var cmdRmLink = &cobra.Command{}

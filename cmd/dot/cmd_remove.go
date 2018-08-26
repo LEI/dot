@@ -22,10 +22,10 @@ var cmdRemove = &cobra.Command{
 	Long: `
 The "remove" command removes roles by executing their tasks.
 `,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunRemove,
-	RunE:              runRemove,
-	DisableAutoGenTag: true,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunRemove,
+	RunE:    runRemove,
+	// DisableAutoGenTag: true,
 }
 
 func init() {

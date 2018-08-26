@@ -23,10 +23,10 @@ var cmdInstall = &cobra.Command{
 	Long: `
 The "install" command installs roles by executing their tasks.
 `,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunInstall,
-	RunE:              runInstall,
-	DisableAutoGenTag: true,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunInstall,
+	RunE:    runInstall,
+	// DisableAutoGenTag: true,
 }
 
 func init() {
