@@ -32,7 +32,13 @@ type actionResult struct {
 
 func checkTask(action, name string, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
 	t.SetAction(action)
-	err := t.Check()
+	// err := t.Check()
+	if err := t.Check(); err != nil {
+		c <- actionResult{name, t, err}
+		wg.Done()
+		return
+	}
+	err := t.Status()
 	c <- actionResult{name, t, err}
 	wg.Done()
 }
@@ -97,11 +103,31 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 		}()
 	}()
 	// Check all tasks result
+	exists := 0
 	failed := 0
+	skipped := 0
+	total := 0
 	for r := range c {
-		if r.err != nil && !dot.IsSkip(r.err) {
-			fmt.Fprintf(dotOpts.stderr, "error in %s role: %s\n", r.name, r.err)
-			failed++
+		total++
+		if r.err == nil {
+			continue
+		}
+		if dot.IsExist(r.err) {
+			exists++
+			continue
+		}
+		if dot.IsSkip(r.err) {
+			skipped++
+			continue
+		}
+		fmt.Fprintf(dotOpts.stderr, "error in %s role: %s\n", r.name, r.err)
+		failed++
+	}
+	if total == exists+skipped && !dotOpts.Force {
+		return &appError{
+			Err:  nil, // dot.ErrExist
+			Msg:  "nothing to do",
+			Code: 0,
 		}
 	}
 	if failed > 0 {

@@ -13,6 +13,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type appError struct {
+	Err  error
+	Msg  string
+	Code int
+}
+
+func (e *appError) Error() string {
+	// s := fmt.Sprintf("exited with code %d, and message '%s'", e.Code, e.Msg)
+	s := e.Msg
+	if e.Err != nil {
+		s += fmt.Sprintf(": %s", e.Err)
+	}
+	return s
+}
+
 var (
 	// Root command options
 	flagVersion bool
@@ -266,7 +281,11 @@ func main() {
 
 	var exitCode int
 	if err != nil {
-		exitCode = 1
+		if aerr, ok := err.(*appError); ok {
+			exitCode = aerr.Code
+		} else {
+			exitCode = 1
+		}
 	}
 
 	os.Exit(exitCode)
