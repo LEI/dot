@@ -87,8 +87,16 @@ func (r *Repo) Exec(args ...string) (string, string, error) {
 	return git(args...)
 }
 
+// ExecCombined git command
+func (r *Repo) ExecCombined(args ...string) (string, error) {
+	if r.Dir != "" {
+		args = append([]string{"-C", r.Dir}, args...)
+	}
+	return gitCombined(args...)
+}
+
 // Status repo
-func (r *Repo) Status() error {
+/*func (r *Repo) Status() error {
 	args := []string{"status", "--porcelain"}
 	stdout, stderr, err := r.Exec(args...)
 	if err != nil {
@@ -103,10 +111,25 @@ func (r *Repo) Status() error {
 		return fmt.Errorf("uncommitted changes in %s:\n%s", r.Dir, stdout)
 	}
 	return nil
+}*/
+
+// Status repo
+func (r *Repo) Status() (string, error) {
+	args := []string{"status", "--porcelain"}
+	out, err := r.ExecCombined(args...)
+	if err != nil {
+		// return fmt.Errorf("%s: not a git directory", r.Dir)
+		return out, fmt.Errorf("git status %s: %s", r.Dir, err)
+	}
+	if out != "" && !Force {
+		// ErrDirtyRepo
+		return out, fmt.Errorf("uncommitted changes in %s:\n%s", r.Dir, out)
+	}
+	return out, nil
 }
 
 // Clone repo
-func (r *Repo) Clone() error {
+func (r *Repo) Clone() (string, error) {
 	args := []string{"clone", r.URL.String()}
 	if r.Dir != "" {
 		args = append(args, r.Dir)
@@ -128,27 +151,28 @@ func (r *Repo) Clone() error {
 	// }
 	if DryRun {
 		fmt.Fprintf(Stderr, "DRY-RUN: %s %s\n", GitBin, cli.FormatArgs(args))
-		return nil
+		return "", nil
 	}
-	// status := r.ExecStatus(args...)
-	// if status != 0 {
-	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
-	// }
-	stdout, stderr, err := git(args...)
-	if stderr != "" { // && Verbose > 0 {
-		fmt.Fprintln(Stderr, stderr)
-	}
-	if stdout != "" { // && Verbose > 0 {
-		fmt.Fprintln(Stdout, stdout)
-	}
+	out, err := gitCombined(args...)
 	if err != nil {
-		return fmt.Errorf("unable to clone %s in %s: %s", r.URL, r.Dir, err)
+		return out, fmt.Errorf("git clone %s %s: %s", r.URL, r.Dir, err)
 	}
-	return nil
+	return out, nil
+	// stdout, stderr, err := git(args...)
+	// if stderr != "" { // && Verbose > 0 {
+	// 	fmt.Fprintln(Stderr, stderr)
+	// }
+	// if stdout != "" { // && Verbose > 0 {
+	// 	fmt.Fprintln(Stdout, stdout)
+	// }
+	// if err != nil {
+	// 	return fmt.Errorf("unable to clone %s in %s: %s", r.URL, r.Dir, err)
+	// }
+	// return nil
 }
 
 // Pull repo
-func (r *Repo) Pull() error {
+func (r *Repo) Pull() (string, error) {
 	args := []string{"pull", r.remote, r.branch}
 	if DryRun {
 		args = append(args, "--dry-run")
@@ -159,23 +183,26 @@ func (r *Repo) Pull() error {
 	// if Verbose > 0 {
 	// 	fmt.Println("git pull", r.remote, r.branch)
 	// }
-	// status := r.ExecStatus(args...)
-	// if status != 0 {
-	//     return fmt.Errorf("git clone %s failed with exit code %d", r.URL, status)
-	// }
-	stderr, stdout, err := r.Exec(args...)
+	out, err := r.ExecCombined(args...)
 	if err != nil {
-		if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
-			return nil
-		}
-		return err
+		return out, fmt.Errorf("git pull %s %s: %s", r.remote, r.branch, err)
 	}
-	if stderr != "" { // && Verbose > 0 {
-		fmt.Fprintln(Stderr, stderr)
-	}
-	if stdout != "" && Verbose > 0 {
-		fmt.Fprintln(Stdout, stdout)
-	}
+	return out, nil
+	// stderr, stdout, err := r.Exec(args...)
+	// if err != nil {
+	// 	if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
+	// 		return nil
+	// 	}
+	// 	return err
+	// }
+	// if stderr != "" { // && Verbose > 0 {
+	// 	fmt.Fprintln(Stderr, stderr)
+	// }
+	// if stdout != "" && Verbose > 0 {
+	// 	fmt.Fprintln(Stdout, stdout)
+	// }
+	// return nil
+
 	// stdout, stderr, err := r.Exec(args...)
 	// if err != nil {
 	// 	// '{{.URL}}': Could not resolve host: {{.Host}}
@@ -192,7 +219,6 @@ func (r *Repo) Pull() error {
 	// if stdout != "" && Verbose > 0 {
 	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
 	// }
-	return nil
 }
 
 // ParseURL ...
