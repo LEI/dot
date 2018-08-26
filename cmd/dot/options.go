@@ -125,6 +125,7 @@ func addActionFlags(cmd *cobra.Command) {
 
 func setActionEnv(cmd *cobra.Command) error {
 	vars := map[string]string{
+		"DOT_ACTION": cmd.Name(),
 		"DOT_SOURCE": dotOpts.Source,
 		"DOT_TARGET": dotOpts.Target,
 		// Dotfile

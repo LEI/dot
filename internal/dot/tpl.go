@@ -93,63 +93,37 @@ func (t *Tpl) Prepare() error {
 	// for k, v := range t.Env {
 	// 	// ...
 	// }
-	// Prepare env vars from the task and role config
-	for k, v := range t.Env {
-		k = strings.ToUpper(k)
-		ev, err := buildTplEnv(k, v, t.Env)
-		if err != nil {
-			return err
-		}
-		//fmt.Printf("$ export %s=%q\n", k, ev)
-		t.Env[k] = ev
+	if err := t.PrepareEnv(); err != nil {
+		return err
 	}
 	return t.PrepareVars()
 }
 
-// PrepareVars template
+// PrepareEnv role
+func (t *Tpl) PrepareEnv() error {
+	environ, err := parseEnv(t.Env)
+	if err != nil {
+		return err
+	}
+	t.Env = environ
+	return nil
+}
+
+// PrepareVars role
 func (t *Tpl) PrepareVars() error {
-	if len(t.IncludeVars) == 0 {
-		return nil
+	vars, err := parseVars(t.Env, t.Vars, t.IncludeVars...)
+	if err != nil {
+		return err
 	}
-	// Included variables override existing tpl.Vars keys
-	for _, v := range t.IncludeVars {
-		inclVars, err := includeVars(v) // os.ExpandEnv?
-		if err != nil {
-			return err
-		}
-		for k, v := range inclVars {
-			// if val, ok := t.Vars[k]; !ok {
-			// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
-			// }
-			t.Vars[k] = v
-		}
-	}
-	// Parse extra variables, already merged with role vars
-	for k, v := range t.Vars {
-		// if k == "Env" ...
-		if val, ok := v.(string); ok && val != "" {
-			// Parse go template
-			ev, err := buildTplEnv(k, val, t.Env)
-			if err != nil {
-				return err
-			}
-			// Expand environment variables
-			expand := func(s string) string {
-				if v, ok := t.Env[s]; ok {
-					return v
-				}
-				return env.Get(s) // os.ExpandEnv(s)
-			}
-			v = os.Expand(ev, expand)
-		}
-		// fmt.Printf("# var %s = %+v\n", k, v)
-		t.Vars[k] = v
-	}
+	t.Vars = vars
 	return nil
 }
 
 // Status check task
 func (t *Tpl) Status() error {
+	if t.overwrite {
+		return nil
+	}
 	data, err := tplData(t)
 	if err != nil {
 		return err
@@ -178,9 +152,12 @@ func (t *Tpl) Do() error {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
-		case ErrInvalid:
-			fmt.Println("ask?")
+		// case ErrInvalid:
+		// 	fmt.Println("ask?")
 		default:
+			// if derr, ok := err.(*DiffError); ok {
+			// }
+			// if !t.overwrite ...
 			return err
 		}
 	}

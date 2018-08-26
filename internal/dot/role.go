@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/git"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
@@ -28,6 +29,12 @@ var ignoredFilePatterns = []string{
 	".git",
 }
 
+// Env map
+type Env map[string]string
+
+// Vars map
+type Vars map[string]interface{}
+
 // RoleConfig struct
 type RoleConfig struct {
 	Role *Role // `mapstructure:",squash"`
@@ -43,8 +50,8 @@ type Role struct {
 	// Tasks []string
 
 	OS          []string
-	Env         map[string]string
-	Vars        map[string]interface{}
+	Env         Env
+	Vars        Vars
 	IncludeVars []string
 
 	Deps []string `mapstructure:"dependencies"`
@@ -289,7 +296,7 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 	return i, nil
 }
 
-// Transform map[string]interface{} to []*Line
+// Transform map[i{}]i{} to []*Line
 func decodeLines(in map[interface{}]interface{}) []*Line {
 	lines := []*Line{}
 	for k, v := range in {
@@ -304,8 +311,11 @@ func decodeLines(in map[interface{}]interface{}) []*Line {
 // Parse all role tasks
 func (r *Role) Parse(target string) error {
 	// if r.Vars == nil {
-	// 	r.Vars = map[string]interface{}{}
+	// 	r.Vars = Vars{}
 	// }
+	if err := r.ParseEnv(); err != nil {
+		return err
+	}
 	if err := r.ParseVars(); err != nil {
 		return err
 	}
@@ -333,22 +343,74 @@ func (r *Role) Parse(target string) error {
 	return nil
 }
 
-// ParseVars task
-func (r *Role) ParseVars() error {
-	// if r.Vars == nil {
-	// 	r.Vars = map[string]interface{}{}
-	// }
-	for _, v := range r.IncludeVars {
-		inclVars, err := includeVars(v)
+// ParseEnv role
+func (r *Role) ParseEnv() error {
+	environ, err := parseEnv(r.Env)
+	if err != nil {
+		return err
+	}
+	r.Env = environ
+	return nil
+}
+
+func parseEnv(environ Env) (Env, error) {
+	m := Env{}
+	for k, v := range environ {
+		k = strings.ToUpper(k)
+		ev, err := buildTplEnv(k, v, environ)
 		if err != nil {
-			return err
+			return m, err
+		}
+		//fmt.Printf("$ export %s=%q\n", k, ev)
+		m[k] = ev
+	}
+	return m, nil
+}
+
+// ParseVars role
+func (r *Role) ParseVars() error {
+	vars, err := parseVars(r.Env, r.Vars, r.IncludeVars...)
+	if err != nil {
+		return err
+	}
+	r.Vars = vars
+	return nil
+}
+
+func parseVars(environ Env, vars Vars, incl ...string) (Vars, error) {
+	data := Vars{}
+	// Parse extra variables, already merged with role vars
+	for k, v := range vars {
+		// if k == "Env" ...
+		if val, ok := v.(string); ok && val != "" {
+			// Parse go template
+			ev, err := buildTplEnv(k, val, environ)
+			if err != nil {
+				return data, err
+			}
+			// Expand environment variables
+			expand := func(s string) string {
+				if v, ok := environ[s]; ok {
+					return v
+				}
+				return env.Get(s) // os.ExpandEnv(s)
+			}
+			v = os.Expand(ev, expand)
+		}
+		// fmt.Printf("# var %s = %+v\n", k, v)
+		data[k] = v
+	}
+	// Included variables override existing vars
+	for _, v := range incl {
+		inclVars, err := includeVars(v) // os.ExpandEnv?
+		if err != nil {
+			return data, err
 		}
 		for k, v := range inclVars {
-			r.Vars[k] = v
+			data[k] = v
 		}
 	}
-	// TODO
-	return nil
+	return data, nil
 }
 
 // ParseDirs tasks
@@ -463,23 +525,23 @@ func (r *Role) ParseTpls(target string) error {
 		}
 		// Merge task env with role env
 		if t.Env == nil {
-			t.Env = map[string]string{}
+			t.Env = Env{}
 		}
-		for k, v := range r.Env {
-			if _, ok := t.Env[k]; !ok {
-				t.Env[k] = v
-			}
-		}
+		// for k, v := range r.Env {
+		// 	if _, ok := t.Env[k]; !ok {
+		// 		t.Env[k] = v
+		// 	}
+		// }
 		// Merge task vars with role vars
 		if t.Vars == nil {
-			t.Vars = map[string]interface{}{}
+			t.Vars = Vars{}
 		}
-		for k, v := range r.Vars {
-			_, ok := t.Vars[k]
-			if !ok {
-				t.Vars[k] = v
-			}
-		}
+		// for k, v := range r.Vars {
+		// 	_, ok := t.Vars[k]
+		// 	if !ok {
+		// 		t.Vars[k] = v
+		// 	}
+		// }
 		// Glob templates
 		paths, err := preparePaths(target, t.Source, t.Target)
 		if err != nil {
@@ -491,6 +553,17 @@ func (r *Role) ParseTpls(target string) error {
 			tt.Target = v
 			if err := tt.Prepare(); err != nil {
 				return err
+			}
+			for k, v := range r.Env {
+				if _, ok := tt.Env[k]; !ok {
+					tt.Env[k] = v
+				}
+			}
+			for k, v := range r.Vars {
+				_, ok := tt.Vars[k]
+				if !ok {
+					tt.Vars[k] = v
+				}
 			}
 			templates = append(templates, &tt)
 		}
