@@ -113,12 +113,17 @@ func (t *Task) CheckIf() error {
 	// 	"hasOS": host.HasOS,
 	// }
 	// https://golang.org/pkg/text/template/#hdr-Functions
-	for _, cond := range t.If {
+	for i, cond := range t.If {
 		// str, err := TemplateData("", cond, varsMap, funcMap)
 		// if err != nil {
 		// 	fmt.Fprintf(os.Stderr, "err tpl: %s\n", err)
 		// 	continue
 		// }
+		name := fmt.Sprintf("if(%d)", i+1)
+		c, err := buildTplEnv(name, cond)
+		if err != nil {
+			return err
+		}
 		// _, stdErr, status := executils.ExecuteBuf(shell.Get(), "-c", str)
 		// // out := strings.TrimRight(string(stdOut), "\n")
 		// strErr := strings.TrimRight(string(stdErr), "\n")
@@ -131,7 +136,7 @@ func (t *Task) CheckIf() error {
 		// if status == 0 {
 		// 	return true
 		// }
-		cmd := exec.Command(shell.Get(), "-c", cond)
+		cmd := exec.Command(shell.Get(), "-c", c)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin

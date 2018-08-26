@@ -51,10 +51,9 @@ func preRunInstall(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	return nil
+	return preRunAction(cmd, args)
 }
 
-// TODO: check nothing to do
 func runInstall(cmd *cobra.Command, args []string) error {
 	action := "install"
 	for _, r := range dotConfig.Roles {

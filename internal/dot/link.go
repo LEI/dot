@@ -126,7 +126,11 @@ func linkExists(src, dst string) (bool, error) {
 	}
 	if !isSymlink(fi) {
 		// return false, fmt.Errorf("%s: not a symlink", dst)
-		return false, &os.PathError{Op: "target link", Path: src, Err: ErrFileExist}
+		return false, &os.PathError{
+			Op:   "target link",
+			Path: src,
+			Err:  ErrFileExist,
+		}
 	}
 	real, err := os.Readlink(dst)
 	if err != nil {
@@ -142,7 +146,11 @@ func linkExists(src, dst string) (bool, error) {
 	}
 	if real != src {
 		// return false, fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
-		return false, &os.PathError{Op: "target link (real: " + real + ")", Path: src, Err: ErrLinkExist}
+		return false, &os.PathError{
+			Op:   "target link (real: " + real + ")",
+			Path: src,
+			Err:  ErrLinkExist,
+		}
 		// return false, &os.LinkError{
 		// 	Op: "link "+src+" to "+dst,
 		// 	Path: real,

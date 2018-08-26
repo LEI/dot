@@ -662,7 +662,9 @@ func (r *Role) Status() error {
 	if err := r.StatusLines(); !IsExist(err) {
 		return err
 	}
-	// StatusHooks() is not implemented
+	if err := r.StatusHooks(); !IsExist(err) {
+		return err
+	}
 	return ErrExist
 }
 
@@ -752,6 +754,31 @@ func (r *Role) StatusLines() error {
 	}
 	if c == len(r.Lines) {
 		return ErrExist
+	}
+	return nil
+}
+
+// StatusHooks ...
+func (r *Role) StatusHooks() error {
+	for _, t := range r.Install {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+	}
+	for _, t := range r.PostInstall {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+	}
+	for _, t := range r.Remove {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+	}
+	for _, t := range r.PostRemove {
+		if err := checkTask(t); err != nil {
+			return err
+		}
 	}
 	return nil
 }
