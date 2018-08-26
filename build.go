@@ -383,7 +383,10 @@ func dep() error {
 		return run("brew", "install", "dep")
 	}
 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-	return run("go", "get", "-u", "github.com/golang/dep/cmd/dep")
+	if err := run("go", "get", "-u", "github.com/golang/dep/cmd/dep"); err != nil {
+		return err
+	}
+	return run("go", "install", "github.com/golang/dep/cmd/dep")
 }
 
 // Check run tests and linters
