@@ -51,9 +51,14 @@ func init() {
 	// flags.Var(&listOpts.tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
 	// flags.StringArrayVar(&listOpts.paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot ID is given")
 	// flags.BoolVar(&listOpts.recursive, "recursive", false, "include files in subfolders of the listed directories")
+
+	addActionFlags(cmdList)
 }
 
 func preRunList(cmd *cobra.Command, args []string) error {
+	if err := setActionEnv(cmd); err != nil {
+		return err
+	}
 	if listOpts.quiet && listOpts.format != "" && listOpts.format != defaultListFormat {
 		return fmt.Errorf("--quiet and --format cannot be specified at the same time")
 	}

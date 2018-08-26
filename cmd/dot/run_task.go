@@ -9,7 +9,7 @@ import (
 )
 
 func preRunTask(cmd *cobra.Command, args []string) error {
-	action := cmd. /*Parent().*/ Name()
+	action := cmd.Parent().Name()
 	switch action {
 	// case "list":
 	// 	return preRunList(cmd, args)
