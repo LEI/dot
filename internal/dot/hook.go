@@ -44,8 +44,8 @@ func (h *Hook) Status() error {
 	// if err := h.Check(); err != nil {
 	// 	return err
 	// }
-	// return ErrExist // Always run hooks
-	return nil
+	// return ErrExist
+	return nil // Always run hooks
 }
 
 // Do task
@@ -71,15 +71,15 @@ func (h *Hook) Do() error {
 
 // Undo task (non applicable)
 func (h *Hook) Undo() error {
-	if err := h.Status(); err != nil {
-		switch err {
-		case ErrExist:
-			// continue
-		case ErrSkip:
-			return nil
-		default:
-			return err
-		}
-	}
+	// if err := h.Status(); err != nil {
+	// 	switch err {
+	// 	case ErrExist:
+	// 		// continue
+	// 	case ErrSkip:
+	// 		return nil
+	// 	default:
+	// 		return err
+	// 	}
+	// }
 	return fmt.Errorf("not implemented")
 }
