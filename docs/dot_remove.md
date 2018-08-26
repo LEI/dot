@@ -1,6 +1,6 @@
 ## dot remove
 
-Remove managed files
+Remove tasks
 
 ### Synopsis
 
@@ -33,10 +33,10 @@ dot remove [flags]
 ### SEE ALSO
 
 * [dot](dot.md)	 - Manage files
-* [dot remove copy](dot_remove_copy.md)	 - Copy managed files
-* [dot remove directory](dot_remove_directory.md)	 - Dir managed files
-* [dot remove line](dot_remove_line.md)	 - Line managed files
-* [dot remove link](dot_remove_link.md)	 - Link managed files
-* [dot remove pkg](dot_remove_pkg.md)	 - Package manager
-* [dot remove template](dot_remove_template.md)	 - Template managed files
+* [dot remove copy](dot_remove_copy.md)	 - File tasks
+* [dot remove directory](dot_remove_directory.md)	 - Directory tasks
+* [dot remove line](dot_remove_line.md)	 - Line in file tasks
+* [dot remove link](dot_remove_link.md)	 - Symbolic link tasks
+* [dot remove package](dot_remove_package.md)	 - Package tasks
+* [dot remove template](dot_remove_template.md)	 - Template tasks
 

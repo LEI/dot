@@ -1,6 +1,6 @@
 ## dot remove directory
 
-Dir managed files
+Directory tasks
 
 ### Synopsis
 
@@ -31,5 +31,5 @@ dot remove directory [flags]
 
 ### SEE ALSO
 
-* [dot remove](dot_remove.md)	 - Remove managed files
+* [dot remove](dot_remove.md)	 - Remove tasks
 

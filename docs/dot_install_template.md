@@ -1,6 +1,6 @@
 ## dot install template
 
-Template managed files
+Template tasks
 
 ### Synopsis
 
@@ -32,5 +32,5 @@ dot install template [flags]
 
 ### SEE ALSO
 
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 

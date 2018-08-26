@@ -1,19 +1,19 @@
-## dot install pkg
+## dot install package
 
-Package manager
+Package tasks
 
 ### Synopsis
 
 The "pkg" task installs or removes packages.
 
 ```
-dot install pkg [flags]
+dot install package [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for pkg
+  -h, --help   help for package
 ```
 
 ### Options inherited from parent commands
@@ -32,5 +32,5 @@ dot install pkg [flags]
 
 ### SEE ALSO
 
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 

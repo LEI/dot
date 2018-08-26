@@ -1,6 +1,6 @@
 ## dot install link
 
-Link managed files
+Symbolic link tasks
 
 ### Synopsis
 
@@ -32,5 +32,5 @@ dot install link [flags]
 
 ### SEE ALSO
 
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 

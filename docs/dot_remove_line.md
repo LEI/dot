@@ -1,6 +1,6 @@
 ## dot remove line
 
-Line managed files
+Line in file tasks
 
 ### Synopsis
 
@@ -31,5 +31,5 @@ dot remove line [flags]
 
 ### SEE ALSO
 
-* [dot remove](dot_remove.md)	 - Remove managed files
+* [dot remove](dot_remove.md)	 - Remove tasks
 
