@@ -18,7 +18,7 @@ var cmdRemove = &cobra.Command{
 	Use:        "remove [flags]",
 	Aliases:    []string{"rm"},
 	SuggestFor: []string{"delete", "uninstall"},
-	Short:      "Remove managed files",
+	Short:      "Remove tasks",
 	Long:       `The "remove" command removes roles by executing their tasks.`,
 	Args:       cobra.NoArgs,
 	PreRunE:    preRunRemove,

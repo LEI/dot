@@ -3,6 +3,8 @@
 // This package contains the code for the dot executable.
 package main
 
+// https://godoc.org/github.com/spf13/cobra/doc
+
 import (
 	"fmt"
 	"os"

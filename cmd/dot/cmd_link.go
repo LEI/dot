@@ -13,7 +13,7 @@ var linkOpts linkOptions
 var cmdLink = &cobra.Command{
 	Use:     "link [flags]",
 	Aliases: []string{"ln"}, // ~stow
-	Short:   "Link managed files",
+	Short:   "Symbolic link tasks",
 	Long:    `The "link" task installs or removes symlinks.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,

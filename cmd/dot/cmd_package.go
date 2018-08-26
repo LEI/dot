@@ -11,9 +11,9 @@ type packageOptions struct {
 var pkgOpts packageOptions
 
 var cmdPkg = &cobra.Command{
-	Use:     "pkg [flags]",
-	Aliases: []string{"li"},
-	Short:   "Package manager",
+	Use:     "package [flags]",
+	Aliases: []string{"pkg"},
+	Short:   "Package tasks",
 	Long:    `The "pkg" task installs or removes packages.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,

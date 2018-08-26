@@ -12,7 +12,7 @@ import (
 var cmdSync = &cobra.Command{
 	Use:     "sync",
 	Aliases: []string{"s"},
-	Short:   "Synchronize a role",
+	Short:   "Synchronize roles",
 	Long:    `The "sync" command clone or pull a role repository.`,
 	Args:    cobra.NoArgs,
 	RunE:    runSync,
