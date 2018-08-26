@@ -14,9 +14,7 @@ var cmdLine = &cobra.Command{
 	Use:     "line [flags]",
 	Aliases: []string{"li"},
 	Short:   "Line managed files",
-	Long: `
-The "line" task installs or removes lines.
-`,
+	Long:    `The "line" task installs or removes lines.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runLine,

@@ -15,9 +15,7 @@ var cmdDir = &cobra.Command{
 	Use:     "directory [flags]",
 	Aliases: []string{"d", "dir"},
 	Short:   "Dir managed files",
-	Long: `
-The "dir" task installs or removes directories.
-`,
+	Long:    `The "dir" task installs or removes directories.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runDir,

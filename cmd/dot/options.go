@@ -7,6 +7,7 @@ import (
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/docker/docker/pkg/homedir"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
@@ -61,6 +62,25 @@ var dotOpts = DotOptions{
 }
 
 func init() {
+	pflags := cmdRoot.PersistentFlags()
+	pflags.BoolVarP(&dotOpts.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
+	pflags.CountVarP(&dotOpts.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
+	// pflags.StringVar(&dotOpts.CacheDir, "cache-dir", "", "set the cache directory")
+	// pflags.BoolVar(&dotOpts.NoCache, "no-cache", false, "do not use a local cache")
+	// pflags.BoolVar(&dotOpts.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
+	// pflags.StringSliceVarP(&dotOpts.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
+}
+
+func markHidden(f *pflag.FlagSet, in []string) error {
+	for _, n := range in {
+		if err := f.MarkHidden(n); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addActionFlags(cmd *cobra.Command) {
 	source := os.Getenv("DOT_SOURCE")
 	if source == "" {
 		source = homeDir
@@ -87,35 +107,20 @@ func init() {
 		envRoleFile = ".dot.yml"
 	}
 
-	f := cmdRoot.PersistentFlags()
-	f.StringVarP(&dotOpts.Source, "source", "s", source, "`DOT_SOURCE` directory")
-	f.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
-	f.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "main configuration `DOT_FILE`")
-	f.StringVarP(&dotOpts.RoleDirname, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
-	f.StringVarP(&dotOpts.RoleFilename, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
-	f.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
-	f.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
-	f.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
-	f.BoolVarP(&dotOpts.Quiet, "quiet", "q", false, "do not output") // comprehensive progress report
-	f.CountVarP(&dotOpts.Verbose, "verbose", "v", "be verbose (specify --verbose multiple times or level `n`)")
-	// f.StringVar(&dotOpts.CacheDir, "cache-dir", "", "set the cache directory")
-	// f.BoolVar(&dotOpts.NoCache, "no-cache", false, "do not use a local cache")
-	// f.BoolVar(&dotOpts.CleanupCache, "cleanup-cache", false, "auto remove old cache directories")
-	// f.StringSliceVarP(&dotOpts.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
+	pflags := cmd.PersistentFlags()
+	pflags.StringVarP(&dotOpts.Source, "source", "s", source, "`DOT_SOURCE` directory")
+	pflags.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
+	pflags.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "main configuration `DOT_FILE`")
+	pflags.StringVarP(&dotOpts.RoleDirname, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
+	pflags.StringVarP(&dotOpts.RoleFilename, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
+	pflags.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
+	pflags.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
+	pflags.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
 
 	hidden := []string{"role-dir", "role-file"}
-	if err := markHidden(f, hidden); err != nil {
+	if err := markHidden(pflags, hidden); err != nil {
 		panic(err)
 	}
-}
-
-func markHidden(f *pflag.FlagSet, in []string) error {
-	for _, n := range in {
-		if err := f.MarkHidden(n); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // // checkErrno returns nil when err is set to syscall.Errno(0), since this is no

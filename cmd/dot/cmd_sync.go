@@ -13,16 +13,16 @@ var cmdSync = &cobra.Command{
 	Use:     "sync",
 	Aliases: []string{"s"},
 	Short:   "Synchronize a role",
-	Long: `
-The "sync" command clone or pull a role repository.
-`,
-	Args: cobra.NoArgs,
-	RunE: runSync,
+	Long:    `The "sync" command clone or pull a role repository.`,
+	Args:    cobra.NoArgs,
+	RunE:    runSync,
 	// DisableAutoGenTag: true,
 }
 
 func init() {
 	cmdRoot.AddCommand(cmdSync)
+
+	addActionFlags(cmdSync)
 }
 
 // https://golang.org/pkg/os/exec/#Cmd.StdoutPipe

@@ -31,10 +31,8 @@ var dotConfig *dot.Config = &dot.Config{}
 var cmdRoot = &cobra.Command{
 	Use:   binary,
 	Short: "Manage files",
-	Long: `
-dot is yet another file manager program.
-`,
-	Args: cobra.NoArgs,
+	Long:  binary + ` is yet another file manager program.`,
+	Args:  cobra.NoArgs,
 	// Cannot be overriden
 	PersistentPreRunE: persistentPreRunDot,
 	RunE:              runDot,

@@ -27,6 +27,10 @@ build:
 docker:
 	$(RUN) docker
 
+.PHONY: docs
+docs:
+	$(RUN) docs
+
 # MAKEFLAGS += --silent
 ifndef VERBOSE
 .SILENT:
