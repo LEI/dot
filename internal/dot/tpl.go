@@ -71,7 +71,8 @@ func (t *Tpl) String() string {
 	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
 	switch t.GetAction() {
 	case "install":
-		s = fmt.Sprintf("gotpl %s %s", tildify(t.Source), tildify(t.Target))
+		// TODO gotpl standalone cmd
+		s = fmt.Sprintf("tpl %s %s", tildify(t.Source), tildify(t.Target))
 	case "remove":
 		s = fmt.Sprintf("rm %s", tildify(t.Target))
 	}
