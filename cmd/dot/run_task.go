@@ -123,13 +123,13 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(dotOpts.stderr, "error in %s role: %s\n", r.name, r.err)
 		failed++
 	}
-	if total == exists+skipped && !dotOpts.Force {
-		return &appError{
-			Err:  nil, // dot.ErrExist
-			Msg:  "nothing to do",
-			Code: 0,
-		}
-	}
+	// if total == exists+skipped && !dotOpts.Force {
+	// 	return &appError{
+	// 		Err:  nil, // dot.ErrExist
+	// 		Msg:  "nothing to do",
+	// 		Code: 0,
+	// 	}
+	// }
 	if failed > 0 {
 		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
 	}
