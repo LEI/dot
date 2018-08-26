@@ -735,7 +735,7 @@ func (r *Role) Status() error {
 	if err := r.StatusLines(); !IsExist(err) {
 		return err
 	}
-	if err := r.StatusHooks(); !IsExist(err) {
+	if err := r.StatusHooks(); err != nil { // !IsExist(err)
 		return err
 	}
 	return ErrExist
