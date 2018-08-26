@@ -1,6 +1,6 @@
 ## dot install directory
 
-Dir managed files
+Directory tasks
 
 ### Synopsis
 
@@ -32,5 +32,5 @@ dot install directory [flags]
 
 ### SEE ALSO
 
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 

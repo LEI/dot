@@ -1,6 +1,6 @@
 ## dot install copy
 
-Copy managed files
+File tasks
 
 ### Synopsis
 
@@ -32,5 +32,5 @@ dot install copy [flags]
 
 ### SEE ALSO
 
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 

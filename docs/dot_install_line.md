@@ -1,6 +1,6 @@
 ## dot install line
 
-Line managed files
+Line in file tasks
 
 ### Synopsis
 
@@ -32,5 +32,5 @@ dot install line [flags]
 
 ### SEE ALSO
 
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 

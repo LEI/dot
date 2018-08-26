@@ -23,9 +23,9 @@ dot [flags]
 ### SEE ALSO
 
 * [dot doc](dot_doc.md)	 - Generate documentation
-* [dot install](dot_install.md)	 - Install managed files
+* [dot install](dot_install.md)	 - Install tasks
 * [dot list](dot_list.md)	 - List managed files
-* [dot remove](dot_remove.md)	 - Remove managed files
-* [dot sync](dot_sync.md)	 - Synchronize a role
+* [dot remove](dot_remove.md)	 - Remove tasks
+* [dot sync](dot_sync.md)	 - Synchronize roles
 * [dot version](dot_version.md)	 - Print version information
 

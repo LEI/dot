@@ -1,6 +1,6 @@
 ## dot remove link
 
-Link managed files
+Symbolic link tasks
 
 ### Synopsis
 
@@ -31,5 +31,5 @@ dot remove link [flags]
 
 ### SEE ALSO
 
-* [dot remove](dot_remove.md)	 - Remove managed files
+* [dot remove](dot_remove.md)	 - Remove tasks
 

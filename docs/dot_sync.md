@@ -1,6 +1,6 @@
 ## dot sync
 
-Synchronize a role
+Synchronize roles
 
 ### Synopsis
 

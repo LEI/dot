@@ -1,6 +1,6 @@
 ## dot remove template
 
-Template managed files
+Template tasks
 
 ### Synopsis
 
@@ -31,5 +31,5 @@ dot remove template [flags]
 
 ### SEE ALSO
 
-* [dot remove](dot_remove.md)	 - Remove managed files
+* [dot remove](dot_remove.md)	 - Remove tasks
 

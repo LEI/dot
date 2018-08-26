@@ -1,6 +1,6 @@
 ## dot remove copy
 
-Copy managed files
+File tasks
 
 ### Synopsis
 
@@ -31,5 +31,5 @@ dot remove copy [flags]
 
 ### SEE ALSO
 
-* [dot remove](dot_remove.md)	 - Remove managed files
+* [dot remove](dot_remove.md)	 - Remove tasks
 

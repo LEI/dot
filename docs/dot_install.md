@@ -1,6 +1,6 @@
 ## dot install
 
-Install managed files
+Install tasks
 
 ### Synopsis
 
@@ -34,10 +34,10 @@ dot install [flags]
 ### SEE ALSO
 
 * [dot](dot.md)	 - Manage files
-* [dot install copy](dot_install_copy.md)	 - Copy managed files
-* [dot install directory](dot_install_directory.md)	 - Dir managed files
-* [dot install line](dot_install_line.md)	 - Line managed files
-* [dot install link](dot_install_link.md)	 - Link managed files
-* [dot install pkg](dot_install_pkg.md)	 - Package manager
-* [dot install template](dot_install_template.md)	 - Template managed files
+* [dot install copy](dot_install_copy.md)	 - File tasks
+* [dot install directory](dot_install_directory.md)	 - Directory tasks
+* [dot install line](dot_install_line.md)	 - Line in file tasks
+* [dot install link](dot_install_link.md)	 - Symbolic link tasks
+* [dot install package](dot_install_package.md)	 - Package tasks
+* [dot install template](dot_install_template.md)	 - Template tasks
 
