@@ -62,7 +62,7 @@ type Tpl struct {
 	Ext         string // Template extenstion (default: tpl)
 	Env         map[string]string
 	Vars        map[string]interface{}
-	IncludeVars string `mapstructure:"include_vars"`
+	IncludeVars []string `mapstructure:"include_vars"`
 
 	overwrite bool
 }
@@ -98,19 +98,21 @@ func (t *Tpl) Prepare() error {
 
 // ParseVars template
 func (t *Tpl) ParseVars() error {
-	if t.IncludeVars == "" {
+	if len(t.IncludeVars) == 0 {
 		return nil
 	}
 	// Included variables override existing tpl.Vars keys
-	inclVars, err := includeVars(t.IncludeVars) // os.ExpandEnv?
-	if err != nil {
-		return err
-	}
-	for k, v := range inclVars {
-		// if val, ok := t.Vars[k]; !ok {
-		// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
-		// }
-		t.Vars[k] = v
+	for _, v := range t.IncludeVars {
+		inclVars, err := includeVars(v) // os.ExpandEnv?
+		if err != nil {
+			return err
+		}
+		for k, v := range inclVars {
+			// if val, ok := t.Vars[k]; !ok {
+			// 	return fmt.Errorf("include vars %s: %s=%v already set to %v", t.IncludeVars, k, v, val)
+			// }
+			t.Vars[k] = v
+		}
 	}
 	return nil
 }

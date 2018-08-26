@@ -26,15 +26,15 @@ type Hook struct {
 }
 
 func (h *Hook) String() string {
-	s := ""
+	// s := ""
+	s := strings.TrimRight(h.Command, "\n")
+	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
+		s = fmt.Sprintf("(%s)", s)
+	}
 	switch h.GetAction() {
 	case "install":
-		s = strings.TrimRight(h.Command, "\n")
-		if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
-			s = fmt.Sprintf("(%s)", s)
-		}
 	case "remove":
-		// noop
+		s = "# noop"
 	}
 	return s
 }

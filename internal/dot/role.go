@@ -28,19 +28,6 @@ var ignoredFilePatterns = []string{
 	".git",
 }
 
-var taskListFields = []string{
-	// "Pkgs",
-	"Dirs",
-	"Files",
-	"Links",
-	"Tpls",
-	"Lines",
-	// "Install",
-	// "PostInstall",
-	// "Remove",
-	// "PostRemove",
-}
-
 // RoleConfig struct
 type RoleConfig struct {
 	Role *Role // `mapstructure:",squash"`
@@ -58,7 +45,7 @@ type Role struct {
 	OS          []string
 	Env         map[string]string
 	Vars        map[string]interface{}
-	IncludeVars string
+	IncludeVars []string
 
 	Deps []string `mapstructure:"dependencies"`
 	Pkgs []*Pkg   `mapstructure:"pkg"`
@@ -81,74 +68,112 @@ type Role struct {
 	configFile string
 }
 
-func (r *Role) String() string {
+func (r *Role) String() (s string) {
 	// return fmt.Sprintf("%s %s", r.Name, r.URL)
-	s := ""
+	prefix := "  "
 	s += fmt.Sprintf("%s\n", r.Name)
-	s += fmt.Sprintf("  Path: %s\n", r.Path)
-	s += fmt.Sprintf("  URL: %s\n", r.URL)
-	if len(r.Deps) > 0 {
-		s += fmt.Sprintf("  Deps: %s\n", r.Deps)
+	s += fmt.Sprintf("%sPath: %s\n", prefix, r.Path)
+	s += fmt.Sprintf("%sURL: %s\n", prefix, r.URL)
+	if len(r.OS) > 0 {
+		s += fmt.Sprintf("%sOS: %s\n", prefix, r.OS)
 	}
 	if len(r.Env) > 0 {
-		s += fmt.Sprintf("  Env: %s\n", r.Env)
+		s += fmt.Sprintf("%sEnv: %s\n", prefix, r.Env)
 	}
-	if len(r.OS) > 0 {
-		s += fmt.Sprintf("  OS: %s\n", r.OS)
+	if len(r.IncludeVars) > 0 {
+		s += fmt.Sprintf("%sIncludeVars: %s\n", prefix, r.IncludeVars)
+	}
+	if len(r.Vars) > 0 {
+		s += fmt.Sprintf("%sVars: %s\n", prefix, r.Vars)
+	}
+	if len(r.Deps) > 0 {
+		s += fmt.Sprintf("%sDeps: %s\n", prefix, r.Deps)
 	}
 	if len(r.Pkgs) > 0 {
-		s += fmt.Sprintf("  Pkgs: %s\n", r.Pkgs)
+		s += fmt.Sprintf("%sPkgs: %s\n", prefix, r.Pkgs)
 	}
-	s += formatRoleTasks("  ", r)
-	if len(r.Install) > 0 {
-		s += fmt.Sprintf("  Install: %s\n", r.Install)
-	}
-	if len(r.PostInstall) > 0 {
-		s += fmt.Sprintf("  PostInstall: %s\n", r.PostInstall)
-	}
-	if len(r.Remove) > 0 {
-		s += fmt.Sprintf("  Remove: %s\n", r.Remove)
-	}
-	if len(r.PostRemove) > 0 {
-		s += fmt.Sprintf("  PostRemove: %s\n", r.PostRemove)
-	}
+	s += formatRole(prefix, r)
 	return strings.TrimRight(s, "\n")
 }
 
-func formatRoleTasks(prefix string, r *Role) string {
-	s := ""
+func formatRole(prefix string, r *Role) (s string) {
 	if len(r.Dirs) > 0 {
 		s += fmt.Sprintf("%sDirs:\n", prefix)
-		s += formatTasks(prefix+"  ", r.Dirs)
+		// s += formatRoleTasks(prefix+prefix, r.Dirs)
+		for _, d := range r.Dirs {
+			s += formatTask(prefix+prefix, d)
+		}
 	}
 	if len(r.Files) > 0 {
 		s += fmt.Sprintf("%sFiles:\n", prefix)
-		s += formatTasks(prefix+"  ", r.Files)
+		// s += formatRoleTasks(prefix+prefix, r.Files)
+		for _, f := range r.Files {
+			s += formatTask(prefix+prefix, f)
+		}
 	}
 	if len(r.Links) > 0 {
 		s += fmt.Sprintf("%sLinks:\n", prefix)
-		s += formatTasks(prefix+"  ", r.Links)
+		// s += formatRoleTasks(prefix+prefix, r.Links)
+		for _, l := range r.Links {
+			s += formatTask(prefix+prefix, l)
+		}
 	}
 	if len(r.Tpls) > 0 {
 		s += fmt.Sprintf("%sTemplates:\n", prefix)
-		s += formatTasks(prefix+"  ", r.Tpls)
+		// s += formatRoleTasks(prefix+prefix, r.Tpls)
+		for _, t := range r.Tpls {
+			s += formatTask(prefix+prefix, t)
+		}
 	}
-	if r.Lines != nil {
+	if len(r.Lines) > 0 { // r.Lines != nil
 		s += fmt.Sprintf("%sLines:\n", prefix)
-		s += formatTasks(prefix+"  ", r.Lines)
+		// s += formatRoleTasks(prefix+prefix, r.Lines)
+		for _, l := range r.Lines {
+			s += formatTask(prefix+prefix, l)
+		}
+	}
+	if len(r.Install) > 0 {
+		s += fmt.Sprintf("%sInstall:\n", prefix)
+		s += formatRoleHooks(prefix+prefix, r.Install)
+	}
+	if len(r.PostInstall) > 0 {
+		s += fmt.Sprintf("%sPostInstall:\n", prefix)
+		s += formatRoleHooks(prefix+prefix, r.PostInstall)
+	}
+	if len(r.Remove) > 0 {
+		s += fmt.Sprintf("%sRemove:\n", prefix)
+		s += formatRoleHooks(prefix+prefix, r.Remove)
+	}
+	if len(r.PostRemove) > 0 {
+		s += fmt.Sprintf("%sPostRemove:\n", prefix)
+		s += formatRoleHooks(prefix+prefix, r.PostRemove)
 	}
 	return s
 }
 
-func formatTasks(prefix string, i interface{}) string {
-	s := fmt.Sprintf("%s%s\n", prefix, i)
-	// s := ""
-	// tasks := i.([]Tasker)
-	// for _, t := range tasks {
-	// 	s += fmt.Sprintf("%s%s\n", prefix, t)
-	// }
+func formatRoleHooks(prefix string, hooks []*Hook) (s string) {
+	for _, h := range hooks {
+		s += fmt.Sprintf("%s%s\n", prefix, h.String())
+	}
 	return s
 }
+
+// func formatRoleTasks(prefix string, is []interface{}) (s string) {
+// 	for _, i := range is {
+// 		s += formatTask(prefix, i.(Tasker))
+// 	}
+// 	return s
+// }
+
+func formatTask(prefix string, t Tasker) (s string) {
+	t.SetAction("install")
+	return fmt.Sprintf("%s%s\n", prefix, t.String())
+}
+
+// func formatTasks(prefix string, i interface{}) string {
+// 	s := fmt.Sprintf("%s%s\n", prefix, i)
+// 	return s
+// }
 
 // Sync role repository
 func (r *Role) Sync() (string, error) {
@@ -314,8 +339,8 @@ func (r *Role) ParseVars() error {
 	// if r.Vars == nil {
 	// 	r.Vars = map[string]interface{}{}
 	// }
-	if r.IncludeVars != "" {
-		inclVars, err := includeVars(r.IncludeVars)
+	for _, v := range r.IncludeVars {
+		inclVars, err := includeVars(v)
 		if err != nil {
 			return err
 		}
