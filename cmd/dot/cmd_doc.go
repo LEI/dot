@@ -30,6 +30,7 @@ func init() {
 
 // Generate documentation files.
 func genDoc(cmd *cobra.Command, args []string) error {
+	// cmd = cmd.Parent()
 	path := defaultDocPath
 	if len(args) == 1 {
 		path = args[0]
@@ -46,13 +47,13 @@ func genDoc(cmd *cobra.Command, args []string) error {
 		// return fmt.Errorf("Please specify something to generate (--man, --md or both)")
 	}
 	if manFlag {
-		if err := genMan(cmd, path); err != nil {
+		if err := genMan(cmdRoot, path); err != nil {
 			return err
 		}
 		fmt.Printf("Generated man pages in: %s\n", path)
 	}
 	if mdFlag {
-		if err := genMd(cmd, path); err != nil {
+		if err := genMd(cmdRoot, path); err != nil {
 			return err
 		}
 		fmt.Printf("Generated markdown pages in: %s\n", path)
