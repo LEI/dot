@@ -41,12 +41,17 @@ func preRunSync(cmd *cobra.Command, args []string) error {
 
 func runSync(cmd *cobra.Command, args []string) error {
 	c := syncRoles(dotConfig.Roles)
+	failed := false
 	for r := range c {
 		// fmt.Printf("# Synced %s:\n", r.role.Name)
 		fmt.Fprintln(dotOpts.stdout, r.out)
 		if r.err != nil {
 			fmt.Fprintln(os.Stderr, "ERR", r.err)
+			failed = true
 		}
+	}
+	if failed {
+		return fmt.Errorf("failed to sync roles")
 	}
 	return nil
 }
