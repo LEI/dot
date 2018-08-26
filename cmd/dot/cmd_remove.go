@@ -15,16 +15,17 @@ type removeOptions struct {
 var removeOpts removeOptions
 
 var cmdRemove = &cobra.Command{
-	Use:     "remove [flags]",
-	Aliases: []string{"rm"},
-	Short:   "Remove managed files",
+	Use:        "remove [flags]",
+	Aliases:    []string{"rm"},
+	SuggestFor: []string{"delete", "uninstall"},
+	Short:      "Remove managed files",
 	Long: `
 The "remove" command removes roles by executing their tasks.
 `,
-	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
 	PreRunE:           preRunRemove,
 	RunE:              runRemove,
+	DisableAutoGenTag: true,
 }
 
 func init() {
