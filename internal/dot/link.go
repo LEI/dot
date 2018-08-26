@@ -134,10 +134,20 @@ func linkExists(src, dst string) (bool, error) {
 	}
 	if real == "" {
 		return false, fmt.Errorf("%s: unable to read symlink real target", dst)
+		// return false, &os.LinkError{
+		// 	Op: "readllink"
+		// 	Path: dst,
+		// 	Err: os.ErrInvalid,
+		// }
 	}
 	if real != src {
 		// return false, fmt.Errorf("%s: already a symlink to %s, want %s", dst, real, src)
 		return false, &os.PathError{Op: "target link (real: " + real + ")", Path: src, Err: ErrLinkExist}
+		// return false, &os.LinkError{
+		// 	Op: "link "+src+" to "+dst,
+		// 	Path: real,
+		// 	Err: os.ErrExist,
+		// }
 	}
 	return true, nil
 }

@@ -262,6 +262,11 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 			Dst:  dst,
 			Full: diff,
 		}
+		// return false, &os.PathError{
+		// 	Op: diff,
+		// 	Path: dst,
+		// 	Err: os.ErrExist,
+		// }
 	}
 	return true, nil
 }
