@@ -19,7 +19,7 @@ var cmdInstall = &cobra.Command{
 	Use:        "install [flags]",
 	Aliases:    []string{"i"},
 	SuggestFor: []string{"add"},
-	Short:      "Install managed files",
+	Short:      "Install tasks",
 	Long:       `The "install" command installs roles by executing their tasks.`,
 	Args:       cobra.NoArgs,
 	PreRunE:    preRunInstall,

@@ -13,7 +13,7 @@ var lineOpts lineOptions
 var cmdLine = &cobra.Command{
 	Use:     "line [flags]",
 	Aliases: []string{"li"},
-	Short:   "Line managed files",
+	Short:   "Line in file tasks",
 	Long:    `The "line" task installs or removes lines.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,

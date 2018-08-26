@@ -13,7 +13,7 @@ var tplOpts templateOptions
 var cmdTpl = &cobra.Command{
 	Use:     "template [flags]",
 	Aliases: []string{"tpl"},
-	Short:   "Template managed files",
+	Short:   "Template tasks",
 	Long:    `The "template" task installs or removes templates.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,

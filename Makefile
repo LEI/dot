@@ -14,6 +14,10 @@ dot:
 vendor:
 	$(RUN) vendor -only
 
+.PHONY: check
+check:
+	$(RUN) check # -v
+
 # go test ./cmd/... ./internal/...
 .PHONY: test
 test:
@@ -23,6 +27,10 @@ test:
 build:
 	$(RUN) build
 
+.PHONY: install
+install:
+	$(RUN) install
+
 .PHONY: docker
 docker:
 	$(RUN) docker
@@ -30,6 +38,14 @@ docker:
 .PHONY: docs
 docs:
 	$(RUN) docs
+
+.PHONY: release
+release:
+	$(RUN) release
+
+.PHONY: snapshot
+snapshot:
+	$(RUN) snapshot
 
 # MAKEFLAGS += --silent
 ifndef VERBOSE
