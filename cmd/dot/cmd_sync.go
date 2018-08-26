@@ -16,9 +16,9 @@ var cmdSync = &cobra.Command{
 	Long: `
 The "sync" command clone or pull a role repository.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	RunE:              runSync,
+	Args: cobra.NoArgs,
+	RunE: runSync,
+	// DisableAutoGenTag: true,
 }
 
 func init() {

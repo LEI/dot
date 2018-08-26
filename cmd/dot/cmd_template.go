@@ -17,10 +17,10 @@ var cmdTpl = &cobra.Command{
 	Long: `
 The "template" task installs or removes templates.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunTask,
-	RunE:              runTpl,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunTask,
+	RunE:    runTpl,
+	// DisableAutoGenTag: true,
 }
 
 var cmdRmTpl = &cobra.Command{}

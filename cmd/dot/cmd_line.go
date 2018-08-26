@@ -17,10 +17,10 @@ var cmdLine = &cobra.Command{
 	Long: `
 The "line" task installs or removes lines.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunTask,
-	RunE:              runLine,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunTask,
+	RunE:    runLine,
+	// DisableAutoGenTag: true,
 }
 
 var cmdRmLine = &cobra.Command{}

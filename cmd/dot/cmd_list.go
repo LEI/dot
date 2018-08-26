@@ -34,10 +34,10 @@ var cmdList = &cobra.Command{
 	Long: `
 The "list" command lists roles and their tasks.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunList,
-	RunE:              runList,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunList,
+	RunE:    runList,
+	// DisableAutoGenTag: true,
 }
 
 func init() {

@@ -15,9 +15,9 @@ var versionCmd = &cobra.Command{
 The "version" command prints detailed information about the build environment
 and the version of this software.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	Run:               runVersion,
+	// DisableAutoGenTag: true,
+	Args: cobra.NoArgs,
+	Run:  runVersion,
 }
 
 func init() {

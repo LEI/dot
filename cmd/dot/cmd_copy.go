@@ -17,10 +17,10 @@ var cmdCopy = &cobra.Command{
 	Long: `
 The "copy" task installs or removes files.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunTask,
-	RunE:              runCopy,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunTask,
+	RunE:    runCopy,
+	// DisableAutoGenTag: true,
 }
 
 var cmdRmCopy = &cobra.Command{}

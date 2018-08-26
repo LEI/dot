@@ -18,10 +18,10 @@ var cmdDir = &cobra.Command{
 	Long: `
 The "dir" task installs or removes directories.
 `,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	PreRunE:           preRunTask,
-	RunE:              runDir,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunTask,
+	RunE:    runDir,
+	// DisableAutoGenTag: true,
 }
 
 var cmdRmDir = *cmdDir
