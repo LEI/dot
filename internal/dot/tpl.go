@@ -93,6 +93,16 @@ func (t *Tpl) Prepare() error {
 	// for k, v := range t.Env {
 	// 	// ...
 	// }
+	// Prepare env vars from the task and role config
+	for k, v := range t.Env {
+		k = strings.ToUpper(k)
+		ev, err := buildTplEnv(k, v, t.Env)
+		if err != nil {
+			return err
+		}
+		//fmt.Printf("$ export %s=%q\n", k, ev)
+		t.Env[k] = ev
+	}
 	return t.ParseVars()
 }
 
@@ -113,6 +123,19 @@ func (t *Tpl) ParseVars() error {
 			// }
 			t.Vars[k] = v
 		}
+	}
+	// Parse extra variables, already merged with role vars
+	for k, v := range t.Vars {
+		// if k == "Env" ...
+		if val, ok := v.(string); ok && val != "" {
+			ev, err := buildTplEnv(k, val, t.Env)
+			if err != nil {
+				return err
+			}
+			v = ev
+		}
+		// fmt.Printf("# var %s = %+v\n", k, v)
+		t.Vars[k] = v
 	}
 	return nil
 }
@@ -186,31 +209,15 @@ func (t *Tpl) Undo() error {
 func tplData(t *Tpl) (map[string]interface{}, error) {
 	data := make(map[string]interface{}, 0)
 	// Global environment variables
-	e := env.GetAll() // map[string]string{}
-	// for k, v := range env.GetAll() {
-	// 	data[k] = v
-	// }
+	for k, v := range env.GetAll() {
+		data[k] = v
+	}
 	// Specific role environment variables (uppercase key)
 	for k, v := range t.Env {
-		k = strings.ToUpper(k)
-		ev, err := buildTplEnv(k, v, e)
-		if err != nil {
-			return data, err
-		}
-		// fmt.Printf("$ export %s=%q\n", k, ev)
-		data[k] = ev // e[k] = ev
+		data[k] = v
 	}
 	// Extra variables (not only strings)
 	for k, v := range t.Vars {
-		// if k == "Env" ...
-		if val, ok := v.(string); ok && val != "" {
-			ev, err := buildTplEnv(k, val, e)
-			if err != nil {
-				return data, err
-			}
-			v = ev
-		}
-		// fmt.Printf("# var %s = %+v\n", k, v)
 		data[k] = v
 	}
 	return data, nil
@@ -312,7 +319,8 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 	return v, nil
 }
 
-// buildTplEnv ...
+// buildTplEnv uses the global env and merges multiple slices
+// to build a string from a template.
 func buildTplEnv(k, v string, envs ...map[string]string) (string, error) {
 	environ := env.GetAll()
 	for _, e := range envs {

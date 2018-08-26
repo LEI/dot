@@ -25,7 +25,7 @@ type listOptions struct {
 
 var listOpts listOptions
 
-var defaultListFormat = "{{.Name}} {{if .Ok}}✓{{end}}"
+var defaultListFormat = "{{.Name}} {{if .Ok}}✓{{end}}" // ×
 
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]

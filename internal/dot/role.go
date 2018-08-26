@@ -153,7 +153,7 @@ func formatRole(prefix string, r *Role) (s string) {
 
 func formatRoleHooks(prefix string, hooks []*Hook) (s string) {
 	for _, h := range hooks {
-		s += fmt.Sprintf("%s%s\n", prefix, h.String())
+		s += fmt.Sprintf("%s→ %s\n", prefix, h.String())
 	}
 	return s
 }
@@ -166,8 +166,7 @@ func formatRoleHooks(prefix string, hooks []*Hook) (s string) {
 // }
 
 func formatTask(prefix string, t Tasker) (s string) {
-	t.SetAction("install")
-	return fmt.Sprintf("%s%s\n", prefix, t.String())
+	return fmt.Sprintf("%s→ %s\n", prefix, t.SetAction("install").String())
 }
 
 // func formatTasks(prefix string, i interface{}) string {
@@ -462,15 +461,16 @@ func (r *Role) ParseTpls(target string) error {
 		if !filepath.IsAbs(t.Target) {
 			t.Target = filepath.Join(target, t.Target)
 		}
+		// Merge task env with role env
 		if t.Env == nil {
 			t.Env = map[string]string{}
 		}
-		// Merge task env with global config env
 		for k, v := range r.Env {
 			if _, ok := t.Env[k]; !ok {
 				t.Env[k] = v
 			}
 		}
+		// Merge task vars with role vars
 		if t.Vars == nil {
 			t.Vars = map[string]interface{}{}
 		}
@@ -480,6 +480,7 @@ func (r *Role) ParseTpls(target string) error {
 				t.Vars[k] = v
 			}
 		}
+		// Glob templates
 		paths, err := preparePaths(target, t.Source, t.Target)
 		if err != nil {
 			return err

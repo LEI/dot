@@ -19,7 +19,7 @@ type Tasker interface {
 	Undo() error
 
 	// Already implemented
-	SetAction(string)
+	SetAction(string) *Task
 	GetAction() string
 	CheckAction() error
 	CheckOS() error
@@ -42,8 +42,9 @@ var (
 )
 
 // SetAction name
-func (t *Task) SetAction(name string) {
+func (t *Task) SetAction(name string) *Task {
 	t.running = name
+	return t
 }
 
 // GetAction name
