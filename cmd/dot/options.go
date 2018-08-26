@@ -123,6 +123,29 @@ func addActionFlags(cmd *cobra.Command) {
 	}
 }
 
+func setActionEnv(cmd *cobra.Command) error {
+	vars := map[string]string{
+		"DOT_SOURCE": dotOpts.Source,
+		"DOT_TARGET": dotOpts.Target,
+		// Dotfile
+		"DOT_FILE": dotOpts.ConfigFile,
+		// Roles directory
+		"DOT_ROLE_DIR": dotOpts.RoleDirname,
+		// Roles config name
+		"DOT_ROLE_FILE": dotOpts.RoleFilename,
+	}
+	for k, v := range vars {
+		// if dotOpts.verbosity >= 3 {
+		// 	fmt.Printf("%s=%q\n", k, v)
+		// }
+		err := os.Setenv(k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // // checkErrno returns nil when err is set to syscall.Errno(0), since this is no
 // // error condition.
 // func checkErrno(err error) error {

@@ -37,7 +37,7 @@ func init() {
 }
 
 func preRunRemove(cmd *cobra.Command, args []string) error {
-	return nil
+	return setActionEnv(cmd)
 }
 
 func runRemove(cmd *cobra.Command, args []string) error {
