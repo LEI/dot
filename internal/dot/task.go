@@ -3,10 +3,12 @@ package dot
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/LEI/dot/internal/host"
+	"github.com/LEI/dot/internal/shell"
 	"github.com/docker/docker/pkg/homedir"
 )
 
@@ -110,29 +112,37 @@ func (t *Task) CheckIf() error {
 	// funcMap := template.FuncMap{
 	// 	"hasOS": host.HasOS,
 	// }
-	if len(t.If) > 0 {
-		return ErrSkip // &OpError{"check if", t, ErrSkip}
-	}
 	// https://golang.org/pkg/text/template/#hdr-Functions
-	// for _, cond := range t.If {
-	// 	str, err := TemplateData("", cond, varsMap, funcMap)
-	// 	if err != nil {
-	// 		fmt.Fprintf(os.Stderr, "err tpl: %s\n", err)
-	// 		continue
-	// 	}
-	// 	_, stdErr, status := executils.ExecuteBuf(shell.Get(), "-c", str)
-	// 	// out := strings.TrimRight(string(stdOut), "\n")
-	// 	strErr := strings.TrimRight(string(stdErr), "\n")
-	// 	// if out != "" {
-	// 	// 	fmt.Printf("stdout: %s\n", out)
-	// 	// }
-	// 	if strErr != "" {
-	// 		fmt.Fprintf(os.Stderr, "'%s' stderr: %s\n", str, strErr)
-	// 	}
-	// 	if status == 0 {
-	// 		return true
-	// 	}
-	// }
+	for _, cond := range t.If {
+		// str, err := TemplateData("", cond, varsMap, funcMap)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "err tpl: %s\n", err)
+		// 	continue
+		// }
+		// _, stdErr, status := executils.ExecuteBuf(shell.Get(), "-c", str)
+		// // out := strings.TrimRight(string(stdOut), "\n")
+		// strErr := strings.TrimRight(string(stdErr), "\n")
+		// // if out != "" {
+		// // 	fmt.Printf("stdout: %s\n", out)
+		// // }
+		// if strErr != "" {
+		// 	fmt.Fprintf(os.Stderr, "'%s' stderr: %s\n", str, strErr)
+		// }
+		// if status == 0 {
+		// 	return true
+		// }
+		cmd := exec.Command(shell.Get(), "-c", cond)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+		// cmd.Env = expand
+		if err := cmd.Run(); err != nil {
+			// if Verbose > 1 {
+			// 	fmt.Fprtinln(os.Stderr, err)
+			// }
+			return ErrSkip
+		}
+	}
 	return nil
 }
 

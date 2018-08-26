@@ -57,12 +57,12 @@ func doTask(t dot.Tasker) error {
 	// }
 	if ok {
 		if str != "" && dotOpts.verbosity >= 2 {
-			fmt.Printf("# %s\n", str)
+			fmt.Fprintf(dotOpts.stdout, "# %s\n", str)
 		}
 		return nil
 	}
 	if str != "" && dotOpts.verbosity >= 1 {
-		fmt.Printf("$ %s\n", str)
+		fmt.Fprintf(dotOpts.stdout, "$ %s\n", str)
 	}
 	if dotOpts.DryRun {
 		return nil
@@ -86,14 +86,14 @@ func undoTask(t dot.Tasker) error {
 	// }
 	if !ok {
 		if str != "" && dotOpts.verbosity >= 2 {
-			fmt.Printf("# %s\n", str)
+			fmt.Fprintf(dotOpts.stdout, "# %s\n", str)
 		}
 		// if !prompt.AskConfirmation("Proceed to execute?") {
 		return nil
 		// }
 	}
 	if str != "" && dotOpts.verbosity >= 1 {
-		fmt.Printf("$ %s\n", str)
+		fmt.Fprintf(dotOpts.stdout, "$ %s\n", str)
 	}
 	if dotOpts.DryRun {
 		return nil

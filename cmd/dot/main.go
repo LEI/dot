@@ -131,12 +131,12 @@ func runDot(cmd *cobra.Command, args []string) error {
 		// if commit != "" {
 		// 	str += fmt.Sprintf(" (%s)", commit)
 		// }
-		fmt.Println(str)
+		fmt.Fprintf(dotOpts.stdout, "%s", str)
 		return nil
 	}
 	if flagRelease {
 		ostypes := host.GetOSTypes()
-		fmt.Printf("%s", ostypes)
+		fmt.Fprintf(dotOpts.stdout, "%s\n", ostypes)
 		return nil
 	}
 	// if err := cmd.Usage(); err != nil {

@@ -136,7 +136,7 @@ func setActionEnv(cmd *cobra.Command) error {
 	}
 	for k, v := range vars {
 		// if dotOpts.verbosity >= 3 {
-		// 	fmt.Printf("%s=%q\n", k, v)
+		// 	fmt.Fprintf(dotOpts.stdout, "%s=%q\n", k, v)
 		// }
 		err := os.Setenv(k, v)
 		if err != nil {

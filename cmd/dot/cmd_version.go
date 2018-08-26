@@ -32,6 +32,6 @@ func runVersion(cmd *cobra.Command, args []string) {
 	if dotOpts.verbosity >= 2 {
 		info += " at " + date
 	}
-	fmt.Printf("%s %s compiled with %v on %s\n",
+	fmt.Fprintf(dotOpts.stdout, "%s %s compiled with %v on %s\n",
 		binary, ver, runtime.Version(), info)
 }

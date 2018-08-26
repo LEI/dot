@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"text/template"
 
 	"github.com/spf13/cobra"
@@ -74,9 +73,9 @@ func runList(cmd *cobra.Command, args []string) error {
 	// if !listOpts.all {
 	// 	dotConfig.Roles.FilterOS()
 	// }
-	w := os.Stdout // tabwriter.NewWriter(os.Stdout, 8, 8, 8, ' ', 0)
+	w := dotOpts.stdout // tabwriter.NewWriter(os.Stdout, 8, 8, 8, ' ', 0)
 	for _, r := range dotConfig.Roles {
-		// fmt.Printf("%+v\n", r)
+		// fmt.Fprintf(w, "%+v\n", r)
 		if listOpts.quiet {
 			fmt.Fprintln(w, r.Name)
 			continue
