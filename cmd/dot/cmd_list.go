@@ -25,7 +25,7 @@ type listOptions struct {
 
 var listOpts listOptions
 
-var defaultListFormat = "{{if .Ok}}OK{{else}}KO{{end}} {{.}}"
+var defaultListFormat = "{{.Name}} {{if .Ok}}✓{{end}}"
 
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]
@@ -60,6 +60,9 @@ func preRunList(cmd *cobra.Command, args []string) error {
 	if listOpts.quiet && listOpts.format != "" && listOpts.format != defaultListFormat {
 		return fmt.Errorf("--quiet and --format cannot be specified at the same time")
 	}
+	if listOpts.format == "" && dotOpts.Verbose > 0 {
+		listOpts.format = "{{.}}"
+	}
 	// if len(listOpts.filter) > 0 {
 	// 	fmt.Fprintf(os.Stderr, "--filter not implemented\n")
 	// }
@@ -81,13 +84,6 @@ func runList(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		format := listOpts.format
-		// if format == "" {
-		// 	if dotOpts.Verbose > 0 {
-		// 		format = "{{.}}"
-		// 	} else {
-		// 		format = defaultListFormat
-		// 	}
-		// }
 		str, err := templateString(r.Name, format, r)
 		if err != nil {
 			return err

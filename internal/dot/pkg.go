@@ -23,9 +23,6 @@ func (p *Pkg) String() string {
 	// case "remove":
 	// }
 	m, err := pkg.NewPm(p.Manager)
-	// if err != nil {
-	// 	return "<none>"
-	// }
 	if err != nil || action == "" {
 		a := []string{}
 		if p.Manager != "" {
