@@ -16,16 +16,17 @@ type installOptions struct {
 var installOpts installOptions
 
 var cmdInstall = &cobra.Command{
-	Use:     "install [flags]",
-	Aliases: []string{"i"},
-	Short:   "Install managed files",
+	Use:        "install [flags]",
+	Aliases:    []string{"i"},
+	SuggestFor: []string{"add"},
+	Short:      "Install managed files",
 	Long: `
 The "install" command installs roles by executing their tasks.
 `,
-	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
 	PreRunE:           preRunInstall,
 	RunE:              runInstall,
+	DisableAutoGenTag: true,
 }
 
 func init() {

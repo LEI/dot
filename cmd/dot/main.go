@@ -21,6 +21,7 @@ var (
 	// Extra environment variables
 	extraEnv = map[string]string{
 		"OS": runtime.GOOS,
+		// DOT_...
 	}
 )
 
@@ -33,14 +34,14 @@ var cmdRoot = &cobra.Command{
 	Long: `
 dot is yet another file manager program.
 `,
+	Args: cobra.NoArgs,
+	// Cannot be overriden
+	PersistentPreRunE: persistentPreRunDot,
+	RunE:              runDot,
 	SilenceErrors:     true,
 	SilenceUsage:      true,
 	DisableAutoGenTag: true,
 	TraverseChildren:  true,
-	Args:              cobra.NoArgs,
-	// Cannot be overriden
-	PersistentPreRunE: persistentPreRunDot,
-	RunE:              runDot,
 }
 
 // var logBuffer = bytes.NewBuffer(nil)
