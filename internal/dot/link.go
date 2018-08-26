@@ -51,6 +51,7 @@ func (l *Link) Status() error {
 			return err
 		}
 		switch perr.Err {
+		// TODO os.LinkError Err: ErrExist
 		case ErrFileExist, ErrLinkExist:
 			if l.GetAction() != "install" {
 				fmt.Println("Skip", l.GetAction(), l.Target, "("+perr.Err.Error()+")")

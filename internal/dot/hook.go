@@ -41,6 +41,10 @@ func (h *Hook) String() string {
 
 // Status check task
 func (h *Hook) Status() error {
+	// if err := h.Check(); err != nil {
+	// 	return err
+	// }
+	// return ErrExist // Always run hooks
 	return nil
 }
 

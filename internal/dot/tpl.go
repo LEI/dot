@@ -132,8 +132,11 @@ func (t *Tpl) Status() error {
 	if err != nil {
 		if derr, ok := err.(*DiffError); ok {
 			fmt.Fprintf(os.Stderr, "%s\n", derr.String())
-			q := fmt.Sprintf("Overwrite %s?", t.Target)
-			if t.overwrite || prompt.AskConfirmation(q) {
+			if t.overwrite || (t.GetAction() != "list" &&
+				prompt.AskConfirmation(fmt.Sprintf(
+					"Overwrite %s?",
+					t.Target,
+				))) {
 				t.overwrite = true
 				return nil
 			}
@@ -217,19 +220,11 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 		// Stop here if the target does not exist
 		return false, nil
 	}
-	// d, err := ioutil.ReadFile(src)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// fmt.Printf("%s:\n%s\n", src, string(d))
-	// os.Exit(3)
 	content, err := parseTpl(src, data)
 	if err != nil {
 		return false, err
 	}
-	// TODO compare file content and ask confirmation
-	// printDiff(dst, content)
-
+	// Compare actual file with the generated content
 	b, err := ioutil.ReadFile(dst)
 	if err != nil {
 		return false, err
