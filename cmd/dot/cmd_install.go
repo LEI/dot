@@ -20,12 +20,10 @@ var cmdInstall = &cobra.Command{
 	Aliases:    []string{"i"},
 	SuggestFor: []string{"add"},
 	Short:      "Install managed files",
-	Long: `
-The "install" command installs roles by executing their tasks.
-`,
-	Args:    cobra.NoArgs,
-	PreRunE: preRunInstall,
-	RunE:    runInstall,
+	Long:       `The "install" command installs roles by executing their tasks.`,
+	Args:       cobra.NoArgs,
+	PreRunE:    preRunInstall,
+	RunE:       runInstall,
 	// DisableAutoGenTag: true,
 }
 
@@ -39,6 +37,8 @@ func init() {
 	flags := cmdInstall.Flags()
 	flags.BoolVarP(&installOpts.pkg, "packages", "P", false, "manage system packages")
 	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
+
+	addActionFlags(cmdInstall)
 }
 
 func preRunInstall(cmd *cobra.Command, args []string) error {

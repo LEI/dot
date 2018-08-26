@@ -14,9 +14,7 @@ var cmdCopy = &cobra.Command{
 	Use:     "copy [flags]",
 	Aliases: []string{"cp"},
 	Short:   "Copy managed files",
-	Long: `
-The "copy" task installs or removes files.
-`,
+	Long:    `The "copy" task installs or removes files.`,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runCopy,

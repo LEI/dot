@@ -58,7 +58,7 @@ var (
 		"main.date":    time.Now().Format("2006-01-02T15:04:05Z0700"),
 	}
 
-	buildTagsEnv = "DOT_BUILD_TAGS"
+	defaultBuildTags = []string{}
 
 	listFlag bool
 	// testFlag    bool
@@ -83,6 +83,7 @@ var (
 		"build:linux":   Build_Linux,
 		"build:windows": Build_Windows,
 		"clean":         Clean,
+		"docs":          Docs,
 		"docker":        Docker,
 		"dockeros":      DockerOS,
 		"goreleaser":    goreleaser,
@@ -558,7 +559,7 @@ func Install() error {
 	args := []string{
 		"install",
 		"-ldflags", ldflags(constants),
-		"-tags", buildTags(buildTagsEnv),
+		"-tags", buildTags(),
 	}
 	if verboseFlag {
 		args = append(args, "-v")
@@ -581,7 +582,7 @@ func Build() error {
 	// args = append([]string{
 	// 	"build",
 	// 	"-ldflags", ldflags(constants),
-	// 	"-tags", buildTags(buildTagsEnv),
+	// 	"-tags", buildTags(),
 	// }, args...)
 	// return run("go", args...)
 	for _, p := range platforms {
@@ -613,7 +614,7 @@ func buildPlatform(goos, goarch string) error {
 	args := []string{
 		"build",
 		"-ldflags", ldflags(constants),
-		"-tags", buildTags(buildTagsEnv),
+		"-tags", buildTags(),
 		"-o", output,
 		mainPackage,
 	}
@@ -666,10 +667,10 @@ func version() string {
 	return strings.TrimSpace(string(buf))
 }
 
-// Parse build tags from environment variable
-func buildTags(s string) string {
-	bd := []string{} // defaultBuildTags
-	if envTags := os.Getenv(s); envTags != "" {
+// Parse build tags from a given environment variable
+func buildTags() string {
+	bd := defaultBuildTags
+	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
 		for _, et := range strings.Fields(envTags) {
 			bd = append(bd, et)
 		}
@@ -693,6 +694,18 @@ func Clean() error {
 		fmt.Println("Removing dist...")
 	}
 	return os.RemoveAll("dist")
+}
+
+// Docs generates markdown documentation
+func Docs() error {
+	defaultBuildTags = []string{"doc"}
+	// os.Setenv("DOT_BUILD_TAGS", "doc")
+	serialFunc(Vendor, Install)
+	path := "./docs"
+	if err := os.Mkdir(path, 0755); err != nil {
+		return err
+	}
+	return run("dot", "doc", "--md", path)
 }
 
 // Run an external command
@@ -808,7 +821,7 @@ func parseDoc() (map[string]string, error) {
 
 // Docker build container based on OS env var (default: debian)
 func Docker() error {
-	// mg.SerialDeps(Vendor, Check)
+	// serial(Vendor, Check)
 	envOS, ok := os.LookupEnv("OS")
 	if !ok {
 		// Build from golang if OS is undefined

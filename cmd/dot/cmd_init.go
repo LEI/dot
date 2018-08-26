@@ -10,16 +10,16 @@ var cmdInit = &cobra.Command{
 	Use:     "init",
 	Aliases: []string{},
 	Short:   "Initialize a new repository",
-	Long: `
-The "init" command initializes a new repository.
-`,
-	Args: cobra.NoArgs,
-	RunE: runInit,
+	Long:    `The "init" command initializes a new repository.`,
+	Args:    cobra.NoArgs,
+	RunE:    runInit,
 	// DisableAutoGenTag: true,
 }
 
 func init() {
 	// TODO cmdRoot.AddCommand(cmdInit)
+
+	// addActionFlags(cmdInit)
 }
 
 func runInit(cmd *cobra.Command, args []string) error {

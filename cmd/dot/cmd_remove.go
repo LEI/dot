@@ -19,12 +19,10 @@ var cmdRemove = &cobra.Command{
 	Aliases:    []string{"rm"},
 	SuggestFor: []string{"delete", "uninstall"},
 	Short:      "Remove managed files",
-	Long: `
-The "remove" command removes roles by executing their tasks.
-`,
-	Args:    cobra.NoArgs,
-	PreRunE: preRunRemove,
-	RunE:    runRemove,
+	Long:       `The "remove" command removes roles by executing their tasks.`,
+	Args:       cobra.NoArgs,
+	PreRunE:    preRunRemove,
+	RunE:       runRemove,
 	// DisableAutoGenTag: true,
 }
 
@@ -34,6 +32,8 @@ func init() {
 	flags := cmdRemove.Flags()
 	// flags.BoolVarP(&removeOptions.empty, "remove-empty", "", false, "remove empty directories and empty files")
 	flags.BoolVarP(&removeOpts.pkg, "packages", "P", false, "manage system packages")
+
+	addActionFlags(cmdRemove)
 }
 
 func preRunRemove(cmd *cobra.Command, args []string) error {
