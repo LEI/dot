@@ -103,11 +103,11 @@ func (t *Tpl) Prepare() error {
 		//fmt.Printf("$ export %s=%q\n", k, ev)
 		t.Env[k] = ev
 	}
-	return t.ParseVars()
+	return t.PrepareVars()
 }
 
-// ParseVars template
-func (t *Tpl) ParseVars() error {
+// PrepareVars template
+func (t *Tpl) PrepareVars() error {
 	if len(t.IncludeVars) == 0 {
 		return nil
 	}
@@ -128,11 +128,19 @@ func (t *Tpl) ParseVars() error {
 	for k, v := range t.Vars {
 		// if k == "Env" ...
 		if val, ok := v.(string); ok && val != "" {
+			// Parse go template
 			ev, err := buildTplEnv(k, val, t.Env)
 			if err != nil {
 				return err
 			}
-			v = ev
+			// Expand environment variables
+			expand := func(s string) string {
+				if v, ok := t.Env[s]; ok {
+					return v
+				}
+				return env.Get(s) // os.ExpandEnv(s)
+			}
+			v = os.Expand(ev, expand)
 		}
 		// fmt.Printf("# var %s = %+v\n", k, v)
 		t.Vars[k] = v

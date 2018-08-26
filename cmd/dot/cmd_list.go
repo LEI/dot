@@ -63,7 +63,7 @@ func preRunList(cmd *cobra.Command, args []string) error {
 	// if len(listOpts.filter) > 0 {
 	// 	fmt.Fprintf(os.Stderr, "--filter not implemented\n")
 	// }
-	return nil
+	return preRunAction(cmd, args)
 }
 
 func runList(cmd *cobra.Command, args []string) error {

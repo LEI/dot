@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
 )
 
 func preRunTask(cmd *cobra.Command, args []string) error {
-	action := cmd.Parent().Name()
+	action := cmd. /*Parent().*/ Name()
 	switch action {
 	// case "list":
 	// 	return preRunList(cmd, args)
@@ -19,6 +20,94 @@ func preRunTask(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("%s: invalid action", action)
 	}
+}
+
+type actionResult struct {
+	// role *dot.Role
+	name string
+	task dot.Tasker
+	// out  string
+	err error
+}
+
+func checkTask(action, name string, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
+	t.SetAction(action)
+	err := t.Check()
+	c <- actionResult{name, t, err}
+	wg.Done()
+}
+
+// Run after preRunInstall and preRunRemove
+func preRunAction(cmd *cobra.Command, args []string) error {
+	action := cmd.Name()
+	c := make(chan actionResult)
+	roles := dotConfig.Roles
+	go func() {
+		var wg sync.WaitGroup
+		for _, r := range roles {
+			// if dotOpts.verbosity >= 1 {
+			// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
+			// }
+			for _, p := range r.Pkgs {
+				wg.Add(1)
+				go checkTask(action, r.Name, p, c, &wg)
+			}
+			for _, d := range r.Dirs {
+				wg.Add(1)
+				go checkTask(action, r.Name, d, c, &wg)
+			}
+			for _, f := range r.Files {
+				wg.Add(1)
+				go checkTask(action, r.Name, f, c, &wg)
+			}
+			for _, l := range r.Links {
+				wg.Add(1)
+				go checkTask(action, r.Name, l, c, &wg)
+			}
+			for _, t := range r.Tpls {
+				wg.Add(1)
+				go checkTask(action, r.Name, t, c, &wg)
+			}
+			for _, l := range r.Lines {
+				wg.Add(1)
+				go checkTask(action, r.Name, l, c, &wg)
+			}
+			for _, h := range r.Install {
+				wg.Add(1)
+				go checkTask(action, r.Name, h, c, &wg)
+			}
+			for _, h := range r.PostInstall {
+				wg.Add(1)
+				go checkTask(action, r.Name, h, c, &wg)
+			}
+			for _, h := range r.Remove {
+				wg.Add(1)
+				go checkTask(action, r.Name, h, c, &wg)
+			}
+			for _, h := range r.PostRemove {
+				wg.Add(1)
+				go checkTask(action, r.Name, h, c, &wg)
+			}
+		}
+		// All calls to wg.Add are done. Start a goroutine
+		// to close c once all the sends are done.
+		go func() {
+			wg.Wait()
+			close(c)
+		}()
+	}()
+	// Check all tasks result
+	failed := 0
+	for r := range c {
+		if r.err != nil && !dot.IsSkip(r.err) {
+			fmt.Fprintf(dotOpts.stderr, "error in %s role: %s\n", r.name, r.err)
+			failed++
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
+	}
+	return nil
 }
 
 func runTask(action string, i interface{}) error {

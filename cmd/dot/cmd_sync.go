@@ -15,6 +15,7 @@ var cmdSync = &cobra.Command{
 	Short:   "Synchronize roles",
 	Long:    `The "sync" command clone or pull a role repository.`,
 	Args:    cobra.NoArgs,
+	PreRunE: preRunSync,
 	RunE:    runSync,
 	// DisableAutoGenTag: true,
 }
@@ -32,6 +33,10 @@ type syncResult struct {
 	role *dot.Role
 	out  string
 	err  error
+}
+
+func preRunSync(cmd *cobra.Command, args []string) error {
+	return preRunAction(cmd, args)
 }
 
 func runSync(cmd *cobra.Command, args []string) error {

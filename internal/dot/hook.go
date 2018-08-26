@@ -34,7 +34,7 @@ func (h *Hook) String() string {
 	switch h.GetAction() {
 	case "install":
 	case "remove":
-		s = "# noop"
+		s = "" // noop
 	}
 	return s
 }
