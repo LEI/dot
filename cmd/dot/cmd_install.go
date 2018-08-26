@@ -42,6 +42,7 @@ func init() {
 
 func preRunInstall(cmd *cobra.Command, args []string) error {
 	if installOpts.sync {
+		// syncRoles dotConfig.Roles
 		if err := runSync(cmd, []string{}); err != nil {
 			return err
 		}
