@@ -6,8 +6,9 @@ mkdir docs
 
 cp README.md docs/index.md
 
-# make docs
-"$GOPATH/bin/dot" doc --markdown docs
+# make install && "$GOPATH/bin/dot" doc --markdown docs
+
+make docs
 
 # Visualizing dependencies
 # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
