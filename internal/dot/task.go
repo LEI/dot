@@ -143,9 +143,11 @@ func (t *Task) CheckIf() error {
 		// }
 		// fmt.Printf("EXEC COND: %q\n", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
+
 		// cmd.Env = expand
 		if err := cmd.Run(); err != nil {
 			// if Verbose > 1 {
