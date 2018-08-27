@@ -125,7 +125,10 @@ jobs:
 
     - stage: deploy
       before_deploy:
-        - make docs
+        - make docs # dot doc --markdown docs/
+        # Visualizing dependencies
+        # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
+        # - dep status -dot | dot -T png > deps.png
       deploy:
         provider: pages
         skip-cleanup: true

@@ -39,8 +39,8 @@ func init() {
 	cmdRoot.AddCommand(cmdDoc)
 
 	flags := cmdDoc.Flags()
-	flags.StringVarP(&manFlag, "man", "", manFlag, "generate man pages")
-	flags.StringVarP(&mdFlag, "md", "", mdFlag, "generate markdown files")
+	flags.StringVarP(&manFlag, "man-page", "", manFlag, "generate man pages")
+	flags.StringVarP(&mdFlag, "markdown", "", mdFlag, "generate markdown files")
 
 	for k, v := range docEnv {
 		os.Setenv(k, v)
@@ -51,7 +51,7 @@ func init() {
 func runDoc(cmd *cobra.Command, args []string) error {
 	c := cmdRoot // cmd.Parent()
 	if manFlag == "" && mdFlag == "" {
-		return fmt.Errorf("Please specify --man and/or --md")
+		return fmt.Errorf("Please specify --man-page and/or --markdown")
 	}
 	if manFlag != "" {
 		if err := genMan(c, manFlag); err != nil {

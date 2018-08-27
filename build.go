@@ -59,6 +59,8 @@ var (
 
 	defaultBuildTags = []string{}
 
+	docsPath = "docs/" // ./docs
+
 	listFlag bool
 	// testFlag    bool
 	vendorOnlyFlag bool
@@ -700,14 +702,26 @@ func Clean() error {
 
 // Docs generates markdown documentation
 func Docs() error {
-	defaultBuildTags = []string{"doc"}
 	// os.Setenv("DOT_BUILD_TAGS", "doc")
+	defaultBuildTags = []string{"doc"}
 	serialFunc(Vendor, Install)
-	path := "./docs"
-	if err := os.Mkdir(path, 0755); err != nil {
+	if _, err := os.Stat(docsPath); err != nil && os.IsNotExist(err) {
+		if err := os.Mkdir(docsPath, 0755); err != nil {
+			return err
+		}
+	}
+	// rm -rf docs/dot*.md
+	pattern := filepath.Join(docsPath, name+"*.md")
+	paths, err := filepath.Glob(pattern)
+	if err != nil {
 		return err
 	}
-	return run("dot", "doc", "--md", path)
+	for _, p := range paths {
+		if err := os.Remove(p); err != nil {
+			return err
+		}
+	}
+	return run("dot", "doc", "--markdown", docsPath)
 }
 
 // Run an external command
