@@ -61,67 +61,67 @@ jobs:
         # - go run build.go vendor check install
         - make
 
-    - &base
-      stage: test
-      script:
-        # - go run build.go -v vendor docker
-        - make docker
-      skip_cleanup: true
-      env: OS=debian
+    # - &base
+    #   stage: test
+    #   script:
+    #     # - go run build.go -v vendor docker
+    #     - make docker
+    #   skip_cleanup: true
+    #   env: OS=debian
 
-    - <<: *base
-      env: OS=alpine
+    # - <<: *base
+    #   env: OS=alpine
 
-    - <<: *base
-      env: OS=archlinux
+    # - <<: *base
+    #   env: OS=archlinux
 
-    - <<: *base
-      env: OS=centos
+    # - <<: *base
+    #   env: OS=centos
 
-    - <<: *base
-      env: OS=debian
+    # - <<: *base
+    #   env: OS=debian
 
-    - stage: test
-      script:
-        - brew --version
-        # - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
-        - export HOMEBREW_NO_ANALYTICS=1
-        - export HOMEBREW_NO_AUTO_UPDATE=1
-        - export HOMEBREW_NO_EMOJI=1
-        # - brew update --quiet
-        # - brew upgrade --quiet || true
-        # brew 1.6.9 -> no quiet option?
-        - brew install --quiet gnu-sed --with-default-names
-        - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
-        - make # go run build.go vendor check install
-          # - go run build.go build:darwin
-        # - cp dist/darwin_amd64/dot /usr/local/bin/dot
-        - cp .dotrc.yml $HOME/
-        - scripts/e2e-test.sh
-      env: OS=darwin
-      os: osx
-      language: go
+    # - stage: test
+    #   script:
+    #     - brew --version
+    #     # - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
+    #     - export HOMEBREW_NO_ANALYTICS=1
+    #     - export HOMEBREW_NO_AUTO_UPDATE=1
+    #     - export HOMEBREW_NO_EMOJI=1
+    #     # - brew update --quiet
+    #     # - brew upgrade --quiet || true
+    #     # brew 1.6.9 -> no quiet option?
+    #     - brew install --quiet gnu-sed --with-default-names
+    #     - if test ! -d $GOPATH/bin; then mkdir $GOPATH/bin; fi
+    #     - make # go run build.go vendor check install
+    #       # - go run build.go build:darwin
+    #     # - cp dist/darwin_amd64/dot /usr/local/bin/dot
+    #     - cp .dotrc.yml $HOME/
+    #     - scripts/e2e-test.sh
+    #   env: OS=darwin
+    #   os: osx
+    #   language: go
 
-    - stage: deploy
-      addons:
-        apt:
-          packages:
-          - rpm
-          - snapd
-      env:
-        - PATH=/snap/bin:$PATH
-      before_deploy:
-        - sudo snap install snapcraft --classic
-      deploy:
-        provider: script
-        # script: curl -sL https://git.io/goreleaser | bash
-        # script: go run build.go vendor -only release
-        script: make release
-        skip_cleanup: true
-        on:
-          repo: LEI/dot
-          tags: true
-          condition: $TRAVIS_OS_NAME = linux
+    # - stage: deploy
+    #   addons:
+    #     apt:
+    #       packages:
+    #       - rpm
+    #       - snapd
+    #   env:
+    #     - PATH=/snap/bin:$PATH
+    #   before_deploy:
+    #     - sudo snap install snapcraft --classic
+    #   deploy:
+    #     provider: script
+    #     # script: curl -sL https://git.io/goreleaser | bash
+    #     # script: go run build.go vendor -only release
+    #     script: make release
+    #     skip_cleanup: true
+    #     on:
+    #       repo: LEI/dot
+    #       tags: true
+    #       condition: $TRAVIS_OS_NAME = linux
 
     - stage: deploy
       before_deploy:
