@@ -15,6 +15,7 @@ var cmdTpl = &cobra.Command{
 	Aliases: []string{"tpl"},
 	Short:   "Template tasks",
 	Long:    `The "template" task installs or removes templates.`,
+	// Example: ``,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runTpl,

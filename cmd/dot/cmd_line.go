@@ -15,6 +15,7 @@ var cmdLine = &cobra.Command{
 	Aliases: []string{"li"},
 	Short:   "Line in file tasks",
 	Long:    `The "line" task installs or removes lines.`,
+	// Example: ``,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runLine,

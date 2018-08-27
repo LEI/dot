@@ -20,9 +20,10 @@ var cmdRemove = &cobra.Command{
 	SuggestFor: []string{"delete", "uninstall"},
 	Short:      "Remove tasks",
 	Long:       `The "remove" command removes roles by executing their tasks.`,
-	Args:       cobra.NoArgs,
-	PreRunE:    preRunRemove,
-	RunE:       runRemove,
+	// Example: ``,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunRemove,
+	RunE:    runRemove,
 	// DisableAutoGenTag: true,
 }
 
