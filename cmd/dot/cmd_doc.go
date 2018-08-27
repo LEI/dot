@@ -25,14 +25,15 @@ var (
 
 var cmdDoc = &cobra.Command{
 	Use: "doc",
-	// Aliases: []string{},
+	// Aliases: []string{"docs"},
 	Short: "Generate documentation",
 	Long:  ``,
-	// DisableAutoGenTag: true,
-	Args: cobra.NoArgs,
+	Args:  cobra.NoArgs,
 	// cobra.MaximumNArgs(1),
 	// cobra.ExactArgs(1),
-	RunE: runDoc,
+	Hidden:            true,
+	RunE:              runDoc,
+	DisableAutoGenTag: true,
 }
 
 func init() {

@@ -20,9 +20,10 @@ var cmdInstall = &cobra.Command{
 	SuggestFor: []string{"add"},
 	Short:      "Install tasks",
 	Long:       `The "install" command installs roles by executing their tasks.`,
-	Args:       cobra.NoArgs,
-	PreRunE:    preRunInstall,
-	RunE:       runInstall,
+	// Example: ``,
+	Args:    cobra.NoArgs,
+	PreRunE: preRunInstall,
+	RunE:    runInstall,
 	// DisableAutoGenTag: true,
 }
 

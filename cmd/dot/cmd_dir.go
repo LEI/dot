@@ -16,6 +16,7 @@ var cmdDir = &cobra.Command{
 	Aliases: []string{"d", "dir"},
 	Short:   "Directory tasks",
 	Long:    `The "dir" task installs or removes directories.`,
+	// Example: ``,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runDir,

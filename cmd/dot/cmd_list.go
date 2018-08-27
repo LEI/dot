@@ -32,6 +32,7 @@ var cmdList = &cobra.Command{
 	Aliases: []string{"ls"},
 	Short:   "List managed files",
 	Long:    `The "list" command lists roles and their tasks.`,
+	// Example: ``,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunList,
 	RunE:    runList,

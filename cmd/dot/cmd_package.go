@@ -15,6 +15,7 @@ var cmdPkg = &cobra.Command{
 	Aliases: []string{"pkg"},
 	Short:   "Package tasks",
 	Long:    `The "pkg" task installs or removes packages.`,
+	// Example: ``,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runPkg,

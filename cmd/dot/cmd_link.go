@@ -15,6 +15,7 @@ var cmdLink = &cobra.Command{
 	Aliases: []string{"ln"}, // ~stow
 	Short:   "Symbolic link tasks",
 	Long:    `The "link" task installs or removes symlinks.`,
+	// Example: ``,
 	Args:    cobra.NoArgs,
 	PreRunE: preRunTask,
 	RunE:    runLink,
