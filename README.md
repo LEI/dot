@@ -5,6 +5,7 @@
 -->
 
 [Documentation](https://dot.lei.sh/dot)
+<!-- [Contribution Guide](CONTRIBUTING.md) -->
 
 [![GoDoc](https://godoc.org/github.com/LEI/dot?status.svg)](https://godoc.org/github.com/LEI/dot)
 [![Travis](https://travis-ci.org/LEI/dot.svg?branch=master)](https://travis-ci.org/LEI/dot)

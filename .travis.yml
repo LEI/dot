@@ -137,6 +137,7 @@ jobs:
         local-dir: docs
         target-branch: gh-pages
         keep-history: true
+        fqdn: dot.lei.sh
         # email: deploy@travis-ci.org
         # name: Deployment Bot
         committer-from-gh: true
