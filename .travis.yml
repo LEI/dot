@@ -128,13 +128,13 @@ jobs:
         - make docs # dot doc --markdown docs/
         # Visualizing dependencies
         # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
-        - apt-get install graphviz
+        - sudo apt-get install graphviz
         - which dot
         - dot --version
         - dep status -dot | dot -T png > docs/deps.png
       deploy:
         provider: pages
-        skip-cleanup: true
+        # skip-cleanup: true
         github-token: $GITHUB_TOKEN
         local-dir: docs
         target-branch: master
