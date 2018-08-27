@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/LEI/dot/internal/conf"
 	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/git"
 	"github.com/imdario/mergo"
@@ -234,7 +235,7 @@ func (r *Role) Load() error {
 	if r.configFile == "" {
 		return fmt.Errorf("role %s: empty config file path", r.Name)
 	}
-	role, err := LoadConfigFile(r.configFile)
+	role, err := roleLoadConfig(r.configFile)
 	if err != nil {
 		return fmt.Errorf("role %s: %s", r.Name, err)
 	}
@@ -248,10 +249,10 @@ func (r *Role) Load() error {
 	return nil
 }
 
-// LoadConfigFile role config from a file path
-func LoadConfigFile(path string) (*Role, error) {
+// roleLoadConfig from a file path
+func roleLoadConfig(path string) (*Role, error) {
 	rc := &RoleConfig{}
-	data, err := ReadConfigFile(path)
+	data, err := conf.ReadFile(path)
 	if err != nil {
 		return rc.Role, err
 	}

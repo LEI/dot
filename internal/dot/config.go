@@ -2,19 +2,15 @@ package dot
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 
+	"github.com/LEI/dot/internal/conf"
 	"github.com/LEI/dot/internal/git"
 	"github.com/mitchellh/mapstructure"
-	toml "github.com/pelletier/go-toml"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -60,10 +56,10 @@ func (c *Config) SetRoleFile(name string) {
 	c.filename = name
 }
 
-// Load ...
+// Load config from file
 func (c *Config) Load() error {
 	c.file = FindConfig(c.file, c.dirname)
-	data, err := ReadConfigFile(c.file)
+	data, err := conf.ReadFile(c.file)
 	if err != nil {
 		return err
 	}
@@ -122,69 +118,6 @@ func (c *Config) ParseRoles() error {
 	}
 	c.Roles = roles
 	return nil
-}
-
-// ReadConfigFile ...
-func ReadConfigFile(path string) (map[string]interface{}, error) {
-	// TODO auto ext detection if inexisting path
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	// TODO if Verbose fmt.Println("## Loaded config file", path)
-	return readConfig(path, b)
-}
-
-type configType struct {
-	name   string
-	alt    []string // Alternative extensions
-	decode func([]byte, interface{}) error
-}
-
-var configFileTypes = []configType{
-	{"toml", []string{}, toml.Unmarshal},
-	{"yaml", []string{"yml"}, yaml.Unmarshal},
-	{"json", []string{}, json.Unmarshal},
-	/* {"ini", []string{}, func(b []byte, i interface{}) error {
-		// if err := ini.MapTo(&i, b); err != nil {
-		// 	return err
-		// }
-		return ini.MapTo(&i, b)
-	}}, */
-}
-
-// readConfig detects the config file type
-func readConfig(path string, b []byte) (map[string]interface{}, error) {
-	var data map[string]interface{}
-	fts := configFileTypes
-loop:
-	// Check file extension
-	for _, ft := range configFileTypes {
-		exts := append([]string{ft.name}, ft.alt...)
-		for _, e := range exts {
-			if strings.HasSuffix(path, "."+e) {
-				fts = []configType{ft}
-				break loop
-			}
-		}
-	}
-	// Attempt to decode config
-	for i, ft := range fts {
-		err := ft.decode(b, &data)
-		if err != nil {
-			// Last or single file type
-			if i == len(fts)-1 {
-				return data, fmt.Errorf("%s error: %s", ft.name, err)
-			}
-			fmt.Fprintf(os.Stderr, "failed to decode as %s: %s\n", ft.name, err)
-			continue
-		}
-		if err == nil {
-			// fmt.Printf("%s: decoded as %s config file\n", path, ft.name)
-			break
-		}
-	}
-	return data, nil // fmt.Errorf("%s: unknown config file type", path)
 }
 
 // FindConfig searches a given file name or path
