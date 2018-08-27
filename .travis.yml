@@ -126,6 +126,8 @@ jobs:
 
     - stage: deploy
       before_deploy:
+        - mkdir ./docs
+        - cp README.md docs/index.md
         - make docs # dot doc --markdown docs/
         # Visualizing dependencies
         # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
