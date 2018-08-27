@@ -1,5 +1,7 @@
-# [dot](dot)
+# dot
 
-<!-- * [Documentation](https://lei.github.io/dot) -->
+<!-- https://lei.github.io/dot -->
+
+* [docs](/dot/dot)
 
 ![deps](deps.png)
