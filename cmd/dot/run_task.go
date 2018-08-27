@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
@@ -13,6 +12,8 @@ func preRunTask(cmd *cobra.Command, args []string) error {
 	switch action {
 	// case "list":
 	// 	return preRunList(cmd, args)
+	case "sync":
+		return nil
 	case "install":
 		return preRunInstall(cmd, args)
 	case "remove":
@@ -22,7 +23,7 @@ func preRunTask(cmd *cobra.Command, args []string) error {
 	}
 }
 
-type actionResult struct {
+/*type actionResult struct {
 	// role *dot.Role
 	name string
 	task dot.Tasker
@@ -132,6 +133,85 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	// }
 	if failed > 0 {
 		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
+	}
+	return nil
+} */
+
+func checkTask(action, name string, i interface{}) error {
+	t, ok := i.(dot.Tasker)
+	if !ok {
+		return fmt.Errorf("%s: not a tasker", i)
+	}
+	t.SetAction(action)
+	if err := t.Check(); err != nil && !dot.IsSkip(err) {
+		return err
+	}
+	if err := t.Status(); err != nil && !dot.IsExist(err) {
+		return err
+	}
+	return nil
+}
+
+// Run after preRunInstall and preRunRemove
+func preRunAction(cmd *cobra.Command, args []string) error {
+	action := cmd.Name()
+	roles := dotConfig.Roles
+	for _, r := range roles {
+		// if dotOpts.verbosity >= 1 {
+		// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
+		// }
+		if dotOpts.pkg { // action != "list"
+			for _, p := range r.Pkgs {
+				if err := checkTask(action, r.Name, p); err != nil {
+					return err
+				}
+			}
+		}
+		for _, d := range r.Dirs {
+			if err := checkTask(action, r.Name, d); err != nil {
+				return err
+			}
+		}
+		for _, f := range r.Files {
+			if err := checkTask(action, r.Name, f); err != nil {
+				return err
+			}
+		}
+		for _, l := range r.Links {
+			if err := checkTask(action, r.Name, l); err != nil {
+				return err
+			}
+		}
+		for _, t := range r.Tpls {
+			if err := checkTask(action, r.Name, t); err != nil {
+				return err
+			}
+		}
+		for _, l := range r.Lines {
+			if err := checkTask(action, r.Name, l); err != nil {
+				return err
+			}
+		}
+		for _, h := range r.Install {
+			if err := checkTask(action, r.Name, h); err != nil {
+				return err
+			}
+		}
+		for _, h := range r.PostInstall {
+			if err := checkTask(action, r.Name, h); err != nil {
+				return err
+			}
+		}
+		for _, h := range r.Remove {
+			if err := checkTask(action, r.Name, h); err != nil {
+				return err
+			}
+		}
+		for _, h := range r.PostRemove {
+			if err := checkTask(action, r.Name, h); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

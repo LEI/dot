@@ -43,6 +43,11 @@ var (
 	homeDir = homedir.Get()
 )
 
+func (t *Task) String() string {
+	// FIXME invalid memory address or nil pointer dereference
+	return "<task interface>"
+}
+
 // SetAction name
 func (t *Task) SetAction(name string) *Task {
 	t.running = name
@@ -144,7 +149,7 @@ func (t *Task) CheckIf() error {
 		// cmd.Env = expand
 		if err := cmd.Run(); err != nil {
 			// if Verbose > 1 {
-			fmt.Fprintf(os.Stderr, "skip task [%s] -> %s\n", t, err)
+			// 	fmt.Fprintf(os.Stderr, "skip task because %s -> %s\n", c, err)
 			// }
 			return ErrSkip
 		}

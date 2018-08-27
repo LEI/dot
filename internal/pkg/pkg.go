@@ -139,6 +139,8 @@ func (m *Pm) BuildOptions(a string, pkgs []string, opts ...string) ([]string, er
 func (m *Pm) GetAction(name string, input ...string) (string, error) {
 	var i interface{}
 	switch name {
+	case "sync":
+		fallthrough
 	case "install":
 		i = m.Install
 	case "remove":

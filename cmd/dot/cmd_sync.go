@@ -23,7 +23,7 @@ var cmdSync = &cobra.Command{
 func init() {
 	cmdRoot.AddCommand(cmdSync)
 
-	addActionFlags(cmdSync)
+	// addActionFlags(cmdSync)
 }
 
 // https://golang.org/pkg/os/exec/#Cmd.StdoutPipe
@@ -36,7 +36,7 @@ type syncResult struct {
 }
 
 func preRunSync(cmd *cobra.Command, args []string) error {
-	return preRunAction(cmd, args)
+	return nil // preRunAction(cmd, args)
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
@@ -44,7 +44,9 @@ func runSync(cmd *cobra.Command, args []string) error {
 	failed := false
 	for r := range c {
 		// fmt.Printf("# Synced %s:\n", r.role.Name)
-		fmt.Fprintln(dotOpts.stdout, r.out)
+		if r.out != "" {
+			fmt.Fprintln(dotOpts.stdout, r.out)
+		}
 		if r.err != nil {
 			fmt.Fprintln(os.Stderr, "ERR", r.err)
 			failed = true

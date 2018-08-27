@@ -9,7 +9,7 @@ import (
 // Options for the remove command.
 type removeOptions struct {
 	// empty bool
-	pkg bool
+	// pkg bool
 }
 
 var removeOpts removeOptions
@@ -29,9 +29,9 @@ var cmdRemove = &cobra.Command{
 func init() {
 	cmdRoot.AddCommand(cmdRemove)
 
-	flags := cmdRemove.Flags()
+	// flags := cmdRemove.Flags()
 	// flags.BoolVarP(&removeOptions.empty, "remove-empty", "", false, "remove empty directories and empty files")
-	flags.BoolVarP(&removeOpts.pkg, "packages", "P", false, "manage system packages")
+	// flags.BoolVarP(&removeOpts.pkg, "packages", "P", false, "manage system packages")
 
 	addActionFlags(cmdRemove)
 }
@@ -84,7 +84,7 @@ func runRemove(cmd *cobra.Command, args []string) error {
 			}
 		}
 		// Package management
-		if removeOpts.pkg {
+		if dotOpts.pkg {
 			for _, p := range r.Pkgs {
 				if err := runTask(action, p); err != nil {
 					return err
