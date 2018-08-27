@@ -5,9 +5,7 @@ git:
   # scheme: https
 
 roles:
-  - name: bash
-    url: "https://github.com/LEI/dot-bash"
-    os: darwin
+  - "bash:LEI/dot-bash"
 
   - name: gpg
     url: "https://github.com/LEI/dot-gpg"

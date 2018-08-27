@@ -29,10 +29,8 @@ main() {
   run test -d "$HOME/.tmux/plugins/tpm"
   run test -d "$HOME/.vim/pack/config"
 
-  echo Checking ~/.bashrc tail...
   [ "$(tail -n1 ~/.bashrc)" != "$tail_bashrc" ] exit 1
   run dot remove --packages --verbose
-  echo Checking ~/.bashrc tail...
   [ "$(tail -n1 ~/.bashrc)" = "$tail_bashrc" ] exit 1
   # touch ~/{.bashrc,.vim/init.vim}
   # yes | run dot install -s -f bash,vim -c $DOT/.dotrc.yml
