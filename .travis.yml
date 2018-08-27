@@ -62,13 +62,12 @@ jobs:
     #     # - go run build.go vendor check install
     #     - make
 
-    # - &base
-    #   stage: test
-    #   script:
-    #     # - go run build.go -v vendor docker
-    #     - make docker
-    #   skip_cleanup: true
-    #   env: OS=debian
+    - &base
+      stage: test
+      # go run build.go -v vendor docker
+      script: make docker
+      skip_cleanup: true
+      env: OS=debian
 
     # - <<: *base
     #   env: OS=alpine
