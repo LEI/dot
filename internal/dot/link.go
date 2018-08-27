@@ -114,7 +114,9 @@ func (l *Link) Undo() error {
 // linkExists returns true if the link has the same target.
 func linkExists(src, dst string) (bool, error) {
 	if !exists(src) {
-		return false, fmt.Errorf("%s: no such file or directory (to link %s)", src, dst)
+		// FIXME: ignore invalid src
+		fmt.Fprintf(os.Stderr, "%s: no such file or directory (to link to %s)\n", src, dst)
+		return false, ErrSkip // fmt.Errorf("%s: no such file or directory (to link to %s)", src, dst)
 		// return false, &os.PathError{Op: "source link", Path: src, Err: ErrNotExist}
 	}
 	if !exists(dst) {
