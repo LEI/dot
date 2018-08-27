@@ -40,7 +40,7 @@ type Task struct {
 }
 
 var (
-	homeDir = homedir.Get()
+	homeDir = shell.HomeDir
 )
 
 func (t *Task) String() string {

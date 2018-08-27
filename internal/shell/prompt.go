@@ -1,8 +1,4 @@
-package prompt
-
-// https://github.com/manifoldco/promptui
-// https://github.com/c-bata/go-prompt
-// https://github.com/AlecAivazis/survey
+package shell
 
 import (
 	"bufio"
@@ -10,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/docker/docker/pkg/homedir"
 )
 
 // AskConfirmation ...
@@ -44,7 +38,7 @@ func AskConfirmation(s string) (ret bool) {
 }
 
 func noConfirm() bool {
-	ncfile := filepath.Join(homedir.Get(), ".dotnc")
+	ncfile := filepath.Join(HomeDir, ".dotnc")
 	_, err := os.Stat(ncfile)
 	exists := err == nil || os.IsExist(err)
 	if exists {
