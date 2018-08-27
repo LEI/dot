@@ -342,9 +342,9 @@ func (r *Role) Parse(target string) error {
 	if err := r.ParseLines(target); err != nil {
 		return err
 	}
-	// if err := r.ParseHooks(target); err != nil {
-	// 	return err
-	// }
+	if err := r.ParseHooks(target); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -587,6 +587,31 @@ func (r *Role) ParseLines(target string) error {
 		// if err := l.Prepare(); err != nil {
 		// 	return err
 		// }
+	}
+	return nil
+}
+
+// ParseHooks tasks
+func (r *Role) ParseHooks(target string) error {
+	for _, h := range r.Install {
+		if h == nil || h.Command == "" {
+			return fmt.Errorf("%s: empty install hook", r.Name)
+		}
+	}
+	for _, h := range r.PostInstall {
+		if h == nil || h.Command == "" {
+			return fmt.Errorf("%s: empty post_install hook", r.Name)
+		}
+	}
+	for _, h := range r.Remove {
+		if h == nil || h.Command == "" {
+			return fmt.Errorf("%s: empty remove hook", r.Name)
+		}
+	}
+	for _, h := range r.PostRemove {
+		if h == nil || h.Command == "" {
+			return fmt.Errorf("%s: empty post_remove hook", r.Name)
+		}
 	}
 	return nil
 }

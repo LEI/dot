@@ -21,7 +21,7 @@ type Tasker interface {
 	Undo() error
 
 	// Already implemented
-	SetAction(string) *Task
+	SetAction(string)
 	GetAction() string
 	CheckAction() error
 	CheckOS() error
@@ -43,15 +43,14 @@ var (
 	homeDir = homedir.Get()
 )
 
-// func (t *Task) String() string {
-// 	// FIXME invalid memory address or nil pointer dereference
-// 	return "<task interface>"
-// }
+func (t *Task) String() string {
+	// FIXME invalid memory address or nil pointer dereference
+	return "<task interface>"
+}
 
 // SetAction name
-func (t *Task) SetAction(name string) *Task {
+func (t *Task) SetAction(name string) {
 	t.running = name
-	return t
 }
 
 // GetAction name
