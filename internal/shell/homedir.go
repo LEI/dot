@@ -1,20 +1,31 @@
 package shell
 
 import (
-	"github.com/docker/docker/pkg/homedir"
+	"os"
+	"runtime"
+
+	"github.com/opencontainers/runc/libcontainer/user"
 )
+
+// github.com/docker/docker/pkg/homedir
 
 // HomeDirKey returns the env var name for the user's home directory.
 func HomeDirKey() string {
-	return homedir.Key() // "HOME"
+	return "HOME" // homedir.Key()
 }
 
 // GetHomeDir returns the current user home directory.
-func GetHomeDir() string {
-	return homedir.Get() // os.Getenv(HomeDirKey())
+func GetHomeDir() string { // homedir.Get()
+	home := os.Getenv(HomeDirKey())
+	if home == "" && runtime.GOOS != "windows" {
+		if u, err := user.CurrentUser(); err == nil {
+			return u.Home
+		}
+	}
+	return home
 }
 
-// GetHomeDirShortcutString for the home directory.
-func GetHomeDirShortcutString() string {
-	return homedir.GetShortcutString() // "~"
+// GetHomeShortcutString for the home directory.
+func GetHomeShortcutString() string {
+	return "~" // homedir.GetShortcutString()
 }
