@@ -107,8 +107,8 @@ jobs:
       addons:
         apt:
           packages:
-          - rpm
-          - snapd
+            - rpm
+            - snapd
       env:
         - PATH=/snap/bin:$PATH
       before_deploy:
@@ -125,13 +125,17 @@ jobs:
           condition: $TRAVIS_OS_NAME = linux
 
     - stage: deploy
+      addons:
+        apt:
+          packages:
+            - graphviz
       before_deploy:
         - mkdir ./docs
         - cp README.md docs/index.md
-        - make docs # dot doc --markdown docs/
+        # make docs
+        - which dot
+        - $GOPATH/bin/dot doc --markdown docs/
         # Visualizing dependencies
-        # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
-        - sudo apt-get install -yqq graphviz
         - dep status -dot | /usr/bin/dot -T png > docs/deps.png
       deploy:
         provider: pages
