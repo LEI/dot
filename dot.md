@@ -22,7 +22,6 @@ dot [flags]
 
 ### SEE ALSO
 
-* [dot doc](dot_doc.md)	 - Generate documentation
 * [dot install](dot_install.md)	 - Install tasks
 * [dot list](dot_list.md)	 - List managed files
 * [dot remove](dot_remove.md)	 - Remove tasks
