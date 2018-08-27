@@ -63,4 +63,10 @@ func init() {
 	*termux = *aptGet
 	termux.Sudo = false
 	termux.Bin = "packages"
+	termux.Init = func(m *Pm) error {
+		return nil
+	}
+	termux.Has = func(m *Pm, pkgs []string) (bool, error) {
+		return false, nil
+	}
 }
