@@ -23,5 +23,5 @@
   unused-packages = true
 
 [[constraint]]
-  name = "github.com/opencontainers/runc"
-  version = "0.1.1"
+  name = "github.com/mitchellh/go-homedir"
+  version = "1.0.0"
