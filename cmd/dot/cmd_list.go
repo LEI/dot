@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
 )
 
@@ -68,7 +69,12 @@ func preRunList(cmd *cobra.Command, args []string) error {
 	// if len(listOpts.filter) > 0 {
 	// 	fmt.Fprintf(os.Stderr, "--filter not implemented\n")
 	// }
-	return preRunAction(cmd, args)
+	if err := preRunAction(cmd, args); err != nil {
+		if _, ok := err.(*dot.DiffError); !ok {
+			return err
+		}
+	}
+	return nil
 }
 
 func runList(cmd *cobra.Command, args []string) error {

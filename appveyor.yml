@@ -18,7 +18,7 @@ branches:
   only:
     - master
 
-skip_non_tags: true
+# skip_non_tags: true
 
 skip_commits:
   message: /.*\[skip appveyor\].*/
@@ -98,7 +98,7 @@ build_script:
   - dot --release
   - 'bash -lc "dot sync --verbose"'
   # - 'bash -lc "dot install --packages --verbose"'
-  - 'bash -lc "dot install --verbose"'
+  - 'bash -lc "dot install --dry-run --verbose"'
 
   # - choco install --yes --no-progress docker-compose
   # - OS=windows go run build.go -v docker

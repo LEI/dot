@@ -24,6 +24,8 @@ var (
 
 // DotOptions hold all global options for restic.
 type DotOptions struct {
+	pkg bool // Enable package managment
+
 	Source     string
 	Target     string
 	ConfigFile string
@@ -121,6 +123,9 @@ func addActionFlags(cmd *cobra.Command) {
 	if err := markHidden(pflags, hidden); err != nil {
 		panic(err)
 	}
+
+	flags := cmd.Flags()
+	flags.BoolVarP(&dotOpts.pkg, "packages", "P", false, "manage system packages")
 }
 
 func setActionEnv(cmd *cobra.Command) error {

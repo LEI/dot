@@ -9,8 +9,7 @@ import (
 // Options for the install command.
 type installOptions struct {
 	sync bool
-
-	pkg bool
+	// pkg bool
 }
 
 var installOpts installOptions
@@ -34,8 +33,8 @@ func init() {
 	pflags.BoolVarP(&installOpts.sync, "sync", "S", false, "synchronize repositories")
 	// pflags.BoolVarP(&installOpts.noSync, "no-sync", "", false, "ignore uncommitted changes")
 
-	flags := cmdInstall.Flags()
-	flags.BoolVarP(&installOpts.pkg, "packages", "P", false, "manage system packages")
+	// flags := cmdInstall.Flags()
+	// flags.BoolVarP(&installOpts.pkg, "packages", "P", false, "manage system packages")
 	// flags.BoolVarP(&installOpts.pull, "pull", "p", false, "pull repositories")
 
 	addActionFlags(cmdInstall)
@@ -68,7 +67,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			}
 		}
 		// Package management
-		if installOpts.pkg {
+		if dotOpts.pkg {
 			for _, p := range r.Pkgs {
 				if err := runTask(action, p); err != nil {
 					return err

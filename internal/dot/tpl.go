@@ -122,9 +122,9 @@ func (t *Tpl) PrepareVars() error {
 
 // Status check task
 func (t *Tpl) Status() error {
-	if t.overwrite {
-		return nil
-	}
+	// if t.overwrite {
+	// 	return nil
+	// }
 	data, err := tplData(t)
 	if err != nil {
 		return err
@@ -132,15 +132,28 @@ func (t *Tpl) Status() error {
 	exists, err := tplExists(t.Source, t.Target, data)
 	if err != nil {
 		if derr, ok := err.(*DiffError); ok {
+			if t.overwrite {
+				return nil
+			}
+			if t.GetAction() == "list" {
+				return err
+			}
 			fmt.Fprintf(os.Stderr, "%s\n", derr.String())
-			if t.overwrite || (t.GetAction() != "list" &&
-				prompt.AskConfirmation(fmt.Sprintf(
-					"Overwrite %s?",
-					t.Target,
-				))) {
+			if prompt.AskConfirmation(fmt.Sprintf(
+				"Overwrite %s?",
+				t.Target,
+			)) {
 				t.overwrite = true
 				return nil
 			}
+			// if t.overwrite || t.GetAction() == "list" ||
+			// 	prompt.AskConfirmation(fmt.Sprintf(
+			// 		"Overwrite %s?",
+			// 		t.Target,
+			// 	)) {
+			// 	t.overwrite = true
+			// 	return nil
+			// }
 		}
 		return err
 	}
