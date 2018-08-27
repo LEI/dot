@@ -143,7 +143,7 @@ func (t *Task) CheckIf() error {
 		// cmd.Env = expand
 		if err := cmd.Run(); err != nil {
 			// if Verbose > 1 {
-			// 	fmt.Fprtinln(os.Stderr, err)
+			fmt.Fprintf(os.Stderr, "skip task [%s] -> %s\n", t, err)
 			// }
 			return ErrSkip
 		}
