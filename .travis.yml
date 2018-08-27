@@ -36,6 +36,7 @@ branches:
 # https://github.com/travis-ci/travis-ci/issues/5032
 before_install:
   - if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[skip travis]"; then exit 0; fi
+  - exit 1
 
 stages:
   - build
@@ -43,6 +44,8 @@ stages:
   - deploy
 
 install:
+  - sudo apt-get install -yqq graphviz
+  - type /usr/bin/dot
   # - go run build.go vendor
   - make vendor
 
@@ -128,8 +131,6 @@ jobs:
         - make docs # dot doc --markdown docs/
         # Visualizing dependencies
         # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
-        - sudo apt-get install graphviz
-        - which dot
         - dot --version
         - dep status -dot | dot -T png > docs/deps.png
       deploy:
