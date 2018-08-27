@@ -63,7 +63,7 @@ func preRunList(cmd *cobra.Command, args []string) error {
 	if listOpts.quiet && listOpts.format != "" && listOpts.format != defaultListFormat {
 		return fmt.Errorf("--quiet and --format cannot be specified at the same time")
 	}
-	if listOpts.format == "" && dotOpts.Verbose > 0 {
+	if listOpts.format == "" { // && dotOpts.Verbose > 0 {
 		listOpts.format = "{{.}}"
 	}
 	// if len(listOpts.filter) > 0 {

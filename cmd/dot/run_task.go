@@ -34,7 +34,6 @@ type actionResult struct {
 
 func checkTask(action, name string, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
 	t.SetAction(action)
-	// err := t.Check()
 	if err := t.Check(); err != nil {
 		c <- actionResult{name, t, err}
 		wg.Done()
@@ -140,98 +139,18 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-/* func checkTask(action, name string, i interface{}) error {
-	t, ok := i.(dot.Tasker)
-	if !ok {
-		return fmt.Errorf("%s: not a tasker", i)
-	}
-	t.SetAction(action)
-	if err := t.Check(); err != nil && !dot.IsSkip(err) {
-		return err
-	}
-	if err := t.Status(); err != nil && !dot.IsExist(err) {
-		return err
-	}
-	return nil
-}
-
-// Run after preRunInstall and preRunRemove
-func preRunAction(cmd *cobra.Command, args []string) error {
-	action := cmd.Name()
-	roles := dotConfig.Roles
-	for _, r := range roles {
-		// if dotOpts.verbosity >= 1 {
-		// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
-		// }
-		if dotOpts.pkg { // action != "list"
-			for _, p := range r.Pkgs {
-				if err := checkTask(action, r.Name, p); err != nil {
-					return err
-				}
-			}
-		}
-		for _, d := range r.Dirs {
-			if err := checkTask(action, r.Name, d); err != nil {
-				return err
-			}
-		}
-		for _, f := range r.Files {
-			if err := checkTask(action, r.Name, f); err != nil {
-				return err
-			}
-		}
-		for _, l := range r.Links {
-			if err := checkTask(action, r.Name, l); err != nil {
-				return err
-			}
-		}
-		for _, t := range r.Tpls {
-			if err := checkTask(action, r.Name, t); err != nil {
-				return err
-			}
-		}
-		for _, l := range r.Lines {
-			if err := checkTask(action, r.Name, l); err != nil {
-				return err
-			}
-		}
-		for _, h := range r.Install {
-			if err := checkTask(action, r.Name, h); err != nil {
-				return err
-			}
-		}
-		for _, h := range r.PostInstall {
-			if err := checkTask(action, r.Name, h); err != nil {
-				return err
-			}
-		}
-		for _, h := range r.Remove {
-			if err := checkTask(action, r.Name, h); err != nil {
-				return err
-			}
-		}
-		for _, h := range r.PostRemove {
-			if err := checkTask(action, r.Name, h); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-} */
-
-func runTask(action string, i interface{}) error {
-	t := i.(dot.Tasker)
-	// act := action + " " + t.Type()
+// func runTask(action string, i interface{}) error {
+// 	t := i.(dot.Tasker)
+func runTask(action string, t dot.Tasker) error {
+	// t.SetAction(action)
 	switch action {
 	case "install":
 		if err := doTask(t); err != nil && !dot.IsSkip(err) {
-			// act := t.String()
-			return err // fmt.Errorf("%s: %s", act, err)
+			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	case "remove":
 		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
-			// act := t.UndoString()
-			return err // fmt.Errorf("%s: %s", act, err)
+			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	default:
 		return fmt.Errorf("%s: unknown action", action)
@@ -240,7 +159,6 @@ func runTask(action string, i interface{}) error {
 }
 
 func doTask(t dot.Tasker) error {
-	t.SetAction("install")
 	if err := t.Check(); err != nil {
 		return err
 	}
@@ -249,7 +167,7 @@ func doTask(t dot.Tasker) error {
 	if !ok && err != nil {
 		return err
 	}
-	str := t.String()
+	str := t.String() // fmt.Sprintf("%s", t)
 	// if str == "" {
 	// 	fmt.Fprintln(os.Stderr, "warning: empty task string")
 	// }
@@ -269,7 +187,6 @@ func doTask(t dot.Tasker) error {
 }
 
 func undoTask(t dot.Tasker) error {
-	t.SetAction("remove")
 	if err := t.Check(); err != nil {
 		return err
 	}
@@ -278,7 +195,7 @@ func undoTask(t dot.Tasker) error {
 	if !ok && err != nil {
 		return err
 	}
-	str := t.String()
+	str := t.String() // fmt.Sprintf("%s", t)
 	// if str == "" {
 	// 	fmt.Fprintln(os.Stderr, "warning: empty task string")
 	// }

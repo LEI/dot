@@ -43,10 +43,10 @@ var (
 	homeDir = homedir.Get()
 )
 
-func (t *Task) String() string {
-	// FIXME invalid memory address or nil pointer dereference
-	return "<task interface>"
-}
+// func (t *Task) String() string {
+// 	// FIXME invalid memory address or nil pointer dereference
+// 	return "<task interface>"
+// }
 
 // SetAction name
 func (t *Task) SetAction(name string) *Task {

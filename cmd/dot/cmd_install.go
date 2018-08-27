@@ -107,6 +107,25 @@ func runInstall(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
+		// if err := runDefaults(); err != nil {
+		// 	return err
+		// }
 	}
 	return nil
 }
+
+// func runDefaults() error {
+// 	defaultsFile := filepath.Join(r.Path, "defaults.yml")
+// 	if utils.Exist(defaultsFile) {
+// 		defaults := &dotfile.Defaults{}
+// 		if err := defaults.Read(defaultsFile); err != nil {
+// 			return err
+// 		}
+// 		if err := defaults.Parse(); err != nil {
+// 			return err
+// 		}
+// 		if err := defaults.Exec(); err != nil {
+// 			return err
+// 		}
+// 	}
+// }
