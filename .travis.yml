@@ -36,7 +36,6 @@ branches:
 # https://github.com/travis-ci/travis-ci/issues/5032
 before_install:
   - if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[skip travis]"; then exit 0; fi
-  - exit 1
 
 stages:
   - build
@@ -56,13 +55,13 @@ install:
 jobs:
   include:
 
-    - stage: build
-      # install: skip
-      script:
-        # - dot --version
-        # - dot install --help
-        # - go run build.go vendor check install
-        - make
+    # - stage: build
+    #   # install: skip
+    #   script:
+    #     # - dot --version
+    #     # - dot install --help
+    #     # - go run build.go vendor check install
+    #     - make
 
     # - &base
     #   stage: test
