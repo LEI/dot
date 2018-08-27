@@ -24,16 +24,16 @@ var (
 
 // DotOptions hold all global options for restic.
 type DotOptions struct {
-	Source       string
-	Target       string
-	ConfigFile   string
-	RoleDirname  string
-	RoleFilename string
-	RoleFilter   []string
-	DryRun       bool
-	Force        bool
-	Quiet        bool
-	Verbose      int
+	Source     string
+	Target     string
+	ConfigFile string
+	RoleDir    string // name
+	RoleFile   string // name
+	RoleFilter []string
+	DryRun     bool
+	Force      bool
+	Quiet      bool
+	Verbose    int
 	// CacheDir     string
 	// NoCache      bool
 	// CleanupCache bool
@@ -111,8 +111,8 @@ func addActionFlags(cmd *cobra.Command) {
 	pflags.StringVarP(&dotOpts.Source, "source", "s", source, "`DOT_SOURCE` directory")
 	pflags.StringVarP(&dotOpts.Target, "target", "t", target, "`DOT_TARGET` directory")
 	pflags.StringVarP(&dotOpts.ConfigFile, "config-file", "c", envCfgFile, "main configuration `DOT_FILE`")
-	pflags.StringVarP(&dotOpts.RoleDirname, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
-	pflags.StringVarP(&dotOpts.RoleFilename, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
+	pflags.StringVarP(&dotOpts.RoleDir, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
+	pflags.StringVarP(&dotOpts.RoleFile, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
 	pflags.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
 	pflags.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
 	pflags.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
@@ -131,9 +131,9 @@ func setActionEnv(cmd *cobra.Command) error {
 		// Dotfile
 		"DOT_FILE": dotOpts.ConfigFile,
 		// Roles directory
-		"DOT_ROLE_DIR": dotOpts.RoleDirname,
+		"DOT_ROLE_DIR": dotOpts.RoleDir,
 		// Roles config name
-		"DOT_ROLE_FILE": dotOpts.RoleFilename,
+		"DOT_ROLE_FILE": dotOpts.RoleFile,
 	}
 	for k, v := range vars {
 		// if dotOpts.verbosity >= 3 {
@@ -261,9 +261,12 @@ func OpenConfig(opts DotOptions) (*dot.Config, error) {
 		return nil, fmt.Errorf("Please specify config file location (-c)")
 	}
 
-	cfg, err := dot.NewConfig(opts.ConfigFile, opts.RoleDirname)
+	cfg, err := dot.NewConfig(opts.ConfigFile, opts.RoleDir)
 	if err != nil {
 		return nil, err
+	}
+	if cf := cfg.FileUsed(); cf != "" && dotOpts.verbosity >= 2 {
+		fmt.Printf("Using config file: %s\n", cf)
 	}
 	// Note: default flag values will always override config
 	if opts.Source != "" {
@@ -272,11 +275,11 @@ func OpenConfig(opts DotOptions) (*dot.Config, error) {
 	if opts.Target != "" {
 		cfg.Target = opts.Target
 	}
-	// if opts.RoleDirname != "" {
-	// 	cfg.SetDir(opts.RoleDirname)
+	// if opts.RoleDir != "" {
+	// 	cfg.SetDir(opts.RoleDir)
 	// }
-	if opts.RoleFilename != "" {
-		cfg.SetRoleFile(opts.RoleFilename)
+	if opts.RoleFile != "" {
+		cfg.SetRoleFile(opts.RoleFile)
 	}
 	// s := repository.New(be)
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -49,6 +50,11 @@ func NewConfig(path, dirname string) (*Config, error) {
 	return cfg, nil
 }
 
+// FileUsed path
+func (c *Config) FileUsed() string {
+	return c.file
+}
+
 // SetRoleFile name
 func (c *Config) SetRoleFile(name string) {
 	c.filename = name
@@ -80,7 +86,6 @@ func (c *Config) Load() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Using config file: %s\n", c.file)
 	return nil
 }
 
@@ -121,6 +126,7 @@ func (c *Config) ParseRoles() error {
 
 // ReadConfigFile ...
 func ReadConfigFile(path string) (map[string]interface{}, error) {
+	// TODO auto ext detection if inexisting path
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -139,6 +145,12 @@ var configFileTypes = []configType{
 	{"toml", []string{}, toml.Unmarshal},
 	{"yaml", []string{"yml"}, yaml.Unmarshal},
 	{"json", []string{}, json.Unmarshal},
+	/* {"ini", []string{}, func(b []byte, i interface{}) error {
+		// if err := ini.MapTo(&i, b); err != nil {
+		// 	return err
+		// }
+		return ini.MapTo(&i, b)
+	}}, */
 }
 
 // readConfig detects the config file type
@@ -164,7 +176,7 @@ loop:
 			if i == len(fts)-1 {
 				return data, fmt.Errorf("%s error: %s", ft.name, err)
 			}
-			fmt.Printf("failed to decode as %s: %s\n", ft.name, err)
+			fmt.Fprintf(os.Stderr, "failed to decode as %s: %s\n", ft.name, err)
 			continue
 		}
 		if err == nil {
