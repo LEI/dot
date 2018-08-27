@@ -61,7 +61,7 @@ type Pm struct {
 	Env  map[string]string
 	Init func(*Pm) error                   // Install manager or prepare bin
 	Has  func(*Pm, []string) (bool, error) // Search local packages
-	done bool
+	done bool                              // TODO use sync.Once
 }
 
 // NewPm ...
@@ -343,7 +343,6 @@ func getBin(m *Pm, opts []string) (string, []string, error) {
 	bin := m.Bin
 	// Switch binary for sudo
 	if m.Sudo && bin != "sudo" && !isRoot() {
-		fmt.Println("BIN", bin, "OPTS", opts)
 		opts = append([]string{bin}, opts...)
 		bin = "sudo"
 	}

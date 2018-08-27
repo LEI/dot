@@ -93,7 +93,7 @@ func addActionFlags(cmd *cobra.Command) {
 	envCfgFile := os.Getenv("DOT_FILE")
 	if envCfgFile == "" {
 		// envCfgFile = filepath.Join(homeDir, ".dotrc.yml")
-		envCfgFile = ".dotrc.yml"
+		envCfgFile = ".dotrc.yml" // TODO auto ext detection
 	}
 	// Roles directory
 	envRoleDir := os.Getenv("DOT_ROLE_DIR")
