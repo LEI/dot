@@ -37,7 +37,6 @@ docker:
 
 .PHONY: docs
 docs:
-	rm -fr ./docs
 	$(RUN) docs
 
 .PHONY: release
