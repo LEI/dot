@@ -43,8 +43,6 @@ stages:
   - deploy
 
 install:
-  - sudo apt-get install -yqq graphviz
-  - type /usr/bin/dot
   # - go run build.go vendor
   - make vendor
 
@@ -130,8 +128,8 @@ jobs:
         - make docs # dot doc --markdown docs/
         # Visualizing dependencies
         # https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies
-        - dot --version
-        - dep status -dot | dot -T png > docs/deps.png
+        - sudo apt-get install -yqq graphviz
+        - dep status -dot | /usr/bin/dot -T png > docs/deps.png
       deploy:
         provider: pages
         # skip-cleanup: true
