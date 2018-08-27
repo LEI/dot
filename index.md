@@ -1,3 +1,5 @@
-# [dot](https://lei.github.io/dot)
+# [dot](dot)
 
-* [Documentation](dot.md)
+<!-- * [Documentation](https://lei.github.io/dot) -->
+
+![deps](deps.png)
