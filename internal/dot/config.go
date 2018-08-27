@@ -77,7 +77,11 @@ func (c *Config) Load() error {
 		return err
 	}
 	err = decoder.Decode(data)
-	return err
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Using config file: %s\n", c.file)
+	return nil
 }
 
 // ParseRoles config
@@ -117,43 +121,58 @@ func (c *Config) ParseRoles() error {
 
 // ReadConfigFile ...
 func ReadConfigFile(path string) (map[string]interface{}, error) {
-	var data map[string]interface{}
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		return data, err
+		return nil, err
 	}
 	// TODO if Verbose fmt.Println("## Loaded config file", path)
-	cfgType := detectType(path)
-	switch cfgType {
-	case "toml":
-		if err := toml.Unmarshal(b, &data); err != nil {
-			return data, err
-		}
-	case "yaml":
-		if err := yaml.Unmarshal(b, &data); err != nil {
-			return data, err
-		}
-	case "json":
-		if err := json.Unmarshal(b, &data); err != nil {
-			return data, err
-		}
-	default:
-		return data, fmt.Errorf("%s: unknown config type", path)
-	}
-	return data, nil
+	return readConfig(path, b)
 }
 
-func detectType(path string) string {
-	var fileType string
-	switch {
-	case strings.HasSuffix(path, ".toml"):
-		fileType = "toml"
-	case strings.HasSuffix(path, ".yaml"), strings.HasSuffix(path, ".yml"):
-		fileType = "yaml"
-	case strings.HasSuffix(path, ".json"):
-		fileType = "json"
+type configType struct {
+	name   string
+	alt    []string // Alternative extensions
+	decode func([]byte, interface{}) error
+}
+
+var configFileTypes = []configType{
+	{"toml", []string{}, toml.Unmarshal},
+	{"yaml", []string{"yml"}, yaml.Unmarshal},
+	{"json", []string{}, json.Unmarshal},
+}
+
+// readConfig detects the config file type
+func readConfig(path string, b []byte) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	fts := configFileTypes
+loop:
+	// Check file extension
+	for _, ft := range configFileTypes {
+		exts := append([]string{ft.name}, ft.alt...)
+		for _, e := range exts {
+			if strings.HasSuffix(path, "."+e) {
+				fts = []configType{ft}
+				break loop
+			}
+		}
 	}
-	return fileType
+	// Attempt to decode config
+	for i, ft := range fts {
+		err := ft.decode(b, &data)
+		if err != nil {
+			// Last or single file type
+			if i == len(fts)-1 {
+				return data, fmt.Errorf("%s error: %s", ft.name, err)
+			}
+			fmt.Printf("failed to decode as %s: %s\n", ft.name, err)
+			continue
+		}
+		if err == nil {
+			// fmt.Printf("%s: decoded as %s config file\n", path, ft.name)
+			break
+		}
+	}
+	return data, nil // fmt.Errorf("%s: unknown config file type", path)
 }
 
 // FindConfig searches a given file name or path
