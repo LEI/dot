@@ -103,6 +103,7 @@ jobs:
       language: go
 
     - stage: deploy
+      if: tag IS present
       addons:
         apt:
           packages:
