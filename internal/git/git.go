@@ -1,5 +1,8 @@
 package git
 
+// https://github.com/src-d/go-git
+// https://github.com/graymeta/stow
+
 import (
 	"bytes"
 	"fmt"
