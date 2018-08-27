@@ -43,7 +43,6 @@ func TestRead(t *testing.T) {
 			t.Errorf("got %s; want %s", data, tc.out)
 		}
 	}
-	// JSON actually gets decoded as YAML w/o extension
 	for _, tc := range testCases {
 		tc.path = removeExt(tc.path)
 		data, err := Read(tc.path, tc.in)
@@ -57,5 +56,6 @@ func TestRead(t *testing.T) {
 }
 
 func removeExt(path string) string {
+	// return strings.TrimSuffix(path, filepath.Ext(path))
 	return path[0 : len(path)-len(filepath.Ext(path))]
 }

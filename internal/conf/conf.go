@@ -15,8 +15,9 @@ import (
 )
 
 type configType struct {
-	name   string
-	alt    []string // Alternative extensions
+	ext string   // Type name and main extension
+	alt []string // Alternative extensions
+	// Unmarshall function
 	decode func([]byte, interface{}) error
 }
 
@@ -41,16 +42,17 @@ func ReadFile(path string) (map[string]interface{}, error) {
 	return Read(path, b)
 }
 
-// Read detects the config file type base on its extension or content.
+// Read detects the config file type base on its extension or content,
+// JSON actually gets decoded as YAML if no extension is present.
 func Read(path string, b []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	fileTypes := configFileTypes
 FT:
 	// Check file extension
 	for _, ft := range configFileTypes {
-		exts := append([]string{ft.name}, ft.alt...)
+		exts := append([]string{ft.ext}, ft.alt...)
 		for _, e := range exts {
-			if e == filepath.Ext(path) {
+			if "."+e == filepath.Ext(path) {
 				fileTypes = []configType{ft}
 				break FT
 			}
@@ -62,15 +64,15 @@ FT:
 		if err != nil {
 			// Last or single file type
 			if i == len(fileTypes)-1 {
-				return data, fmt.Errorf("%s error: %s", ft.name, err)
+				return data, fmt.Errorf("%s error: %s", ft.ext, err)
 			}
 			// if Verbose > 1 {
-			// 	fmt.Fprintf(os.Stderr, "failed to decode as %s: %s\n", ft.name, err)
+			// 	fmt.Fprintf(os.Stderr, "failed to decode as %s: %s\n", ft.ext, err)
 			// }
 			continue
 		}
 		// if err == nil {
-		// 	fmt.Printf("%s: decoded as %s config file\n", path, ft.name)
+		// 	fmt.Printf("%s: decoded as %s config file\n", path, ft.ext)
 		// }
 		break
 	}
