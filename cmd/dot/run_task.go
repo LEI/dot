@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
@@ -23,7 +24,7 @@ func preRunTask(cmd *cobra.Command, args []string) error {
 	}
 }
 
-/*type actionResult struct {
+type actionResult struct {
 	// role *dot.Role
 	name string
 	task dot.Tasker
@@ -55,9 +56,11 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 			// if dotOpts.verbosity >= 1 {
 			// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
 			// }
-			for _, p := range r.Pkgs {
-				wg.Add(1)
-				go checkTask(action, r.Name, p, c, &wg)
+			if dotOpts.pkg {
+				for _, p := range r.Pkgs {
+					wg.Add(1)
+					go checkTask(action, r.Name, p, c, &wg)
+				}
 			}
 			for _, d := range r.Dirs {
 				wg.Add(1)
@@ -121,7 +124,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 			skipped++
 			continue
 		}
-		fmt.Fprintf(dotOpts.stderr, "error in %s role: %s\n", r.name, r.err)
+		fmt.Fprintf(dotOpts.stderr, "# error in %s role: %s\n", r.name, r.err)
 		failed++
 	}
 	// if total == exists+skipped && !dotOpts.Force {
@@ -131,13 +134,13 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	// 		Code: 0,
 	// 	}
 	// }
-	if failed > 0 {
+	if failed > 0 && action != "list" {
 		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
 	}
 	return nil
-} */
+}
 
-func checkTask(action, name string, i interface{}) error {
+/* func checkTask(action, name string, i interface{}) error {
 	t, ok := i.(dot.Tasker)
 	if !ok {
 		return fmt.Errorf("%s: not a tasker", i)
@@ -214,7 +217,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 		}
 	}
 	return nil
-}
+} */
 
 func runTask(action string, i interface{}) error {
 	t := i.(dot.Tasker)
