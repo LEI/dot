@@ -136,6 +136,7 @@ func (t *Task) CheckIf() error {
 		// if status == 0 {
 		// 	return true
 		// }
+		// fmt.Printf("EXEC COND: %q\n", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

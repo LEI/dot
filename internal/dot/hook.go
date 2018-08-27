@@ -61,7 +61,7 @@ func (h *Hook) Do() error {
 	if h.Shell == "" {
 		h.Shell = defaultShell
 	}
-	// fmt.Println("EXEC:", h.Command)
+	// fmt.Printf("EXEC HOOK: %q\n", h.Command)
 	cmd := exec.Command(h.Shell, []string{"-c", "set -e; " + h.Command}...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
