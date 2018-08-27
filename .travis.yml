@@ -42,9 +42,10 @@ stages:
   - test
   - deploy
 
-install:
-  # - go run build.go vendor
-  - make vendor
+# go run build.go vendor
+install: make vendor
+
+script: make check
 
 # after_success:
 #   - go run build.go coverage
@@ -132,11 +133,11 @@ jobs:
         - dep status -dot | /usr/bin/dot -T png > docs/deps.png
       deploy:
         provider: pages
-        # skip-cleanup: true
+        skip-cleanup: true
         github-token: $GITHUB_TOKEN
         local-dir: docs
         target-branch: gh-pages
-        # keep-history: true
+        keep-history: true
         # email: deploy@travis-ci.org
         # name: Deployment Bot
         committer-from-gh: true
