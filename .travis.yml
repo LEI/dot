@@ -129,15 +129,7 @@ jobs:
       #   apt:
       #     packages:
       #       - graphviz
-      before_deploy:
-        - mkdir ./docs
-        - cp README.md docs/index.md
-        # make docs
-        - which dot
-        - ls -la $GOPATH/bin
-        - make docs # $GOPATH/bin/dot doc --markdown docs/
-        # Visualizing dependencies
-        - dep status -dot | /usr/bin/dot -T png > docs/deps.png
+      before_deploy: scripts/travis-docs.sh
       deploy:
         provider: pages
         skip-cleanup: true
