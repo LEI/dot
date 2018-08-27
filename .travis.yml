@@ -125,10 +125,10 @@ jobs:
           condition: $TRAVIS_OS_NAME = linux
 
     - stage: deploy
-      # addons:
-      #   apt:
-      #     packages:
-      #       - graphviz
+      addons:
+        apt:
+          packages:
+            - graphviz
       before_deploy: scripts/build-docs.sh
       deploy:
         provider: pages
