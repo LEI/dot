@@ -24,8 +24,6 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
-
-	"github.com/LEI/dot/internal/shell"
 )
 
 // Target ...
@@ -371,7 +369,7 @@ func Vendor() error {
 	if vendorOnlyFlag {
 		args = append(args, "-vendor-only")
 	}
-	return runWith(env, "dep", "ensure")
+	return runWith(env, "dep", args...)
 }
 
 // Dep install go dep
@@ -731,7 +729,7 @@ func run(name string, args ...string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, shell.FormatArgs(args))
+		fmt.Printf("exec: %s %s\n", name, formatArgs(args))
 	}
 	return cmd.Run()
 }
@@ -746,7 +744,7 @@ func runWith(env map[string]string, name string, args ...string) error {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, shell.FormatArgs(args))
+		fmt.Printf("exec: %s %s\n", name, formatArgs(args))
 	}
 	return cmd.Run()
 }
@@ -757,7 +755,7 @@ func runOutput(name string, args ...string) (string, error) {
 	// cmd.Stdout = &buf
 	// cmd.Stderr = os.Stderr
 	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, shell.FormatArgs(args))
+		fmt.Printf("exec: %s %s\n", name, formatArgs(args))
 	}
 	// if err := cmd.Run(); err != nil {
 	// 	return "", err
@@ -932,7 +930,7 @@ func goreleaser() error {
 	}
 	// Installation command
 	c := "dep ensure -vendor-only && make setup build"
-	if err := run(shell.Get(), "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
+	if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
 		return err
 	}
 	return run("go", "install", repo)
@@ -969,6 +967,10 @@ func isGoLatest() bool {
 	}
 	// patch := strconv.Atoi(parts[2])
 	return major >= 1 && minor >= 10
+}
+
+func formatArgs(args []string) string {
+	return strings.Join(args, " ")
 }
 
 func init() {
