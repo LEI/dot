@@ -21,3 +21,7 @@
   # non-go = false
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/opencontainers/runc"
+  version = "0.1.1"
