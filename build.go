@@ -25,7 +25,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/LEI/dot/internal/cli"
 	"github.com/LEI/dot/internal/shell"
 )
 
@@ -718,7 +717,7 @@ func run(name string, args ...string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, cli.FormatArgs(args))
+		fmt.Printf("exec: %s %s\n", name, shell.FormatArgs(args))
 	}
 	return cmd.Run()
 }
@@ -733,7 +732,7 @@ func runWith(env map[string]string, name string, args ...string) error {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, cli.FormatArgs(args))
+		fmt.Printf("exec: %s %s\n", name, shell.FormatArgs(args))
 	}
 	return cmd.Run()
 }
@@ -744,7 +743,7 @@ func runOutput(name string, args ...string) (string, error) {
 	// cmd.Stdout = &buf
 	// cmd.Stderr = os.Stderr
 	if verboseFlag {
-		fmt.Printf("exec: %s %s\n", name, cli.FormatArgs(args))
+		fmt.Printf("exec: %s %s\n", name, shell.FormatArgs(args))
 	}
 	// if err := cmd.Run(); err != nil {
 	// 	return "", err

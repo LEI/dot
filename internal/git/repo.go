@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LEI/dot/internal/cli"
+	"github.com/LEI/dot/internal/shell"
 )
 
 var (
@@ -150,7 +150,7 @@ func (r *Repo) Clone() (string, error) {
 	// 	fmt.Println("git clone", r.URL, r.Dir)
 	// }
 	if DryRun {
-		fmt.Fprintf(Stderr, "DRY-RUN: %s %s\n", GitBin, cli.FormatArgs(args))
+		fmt.Fprintf(Stderr, "DRY-RUN: %s %s\n", GitBin, shell.FormatArgs(args))
 		return "", nil
 	}
 	out, err := gitCombined(args...)

@@ -35,113 +35,27 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"github.com/LEI/dot/internal/shell"
-	"gopkg.in/go-ini/ini.v1"
 )
 
 var (
 	// OSTypes stores the list of OS types
 	OSTypes []string
-
-	// release *Release
-
-	// releasePattern is used to find release files
-	releasePattern = "/etc/*-release"
 )
 
 func init() {
 	OSTypes = GetOSTypes()
 }
 
-// Release ...
-type Release struct {
-	ID         string `ini:"ID"`
-	IDLike     string `ini:"ID_LIKE"`
-	Name       string `ini:"NAME"`
-	PrettyName string `ini:"PRETTY_NAME"`
-	Version    string `ini:"VERSION"`
-	VersionID  string `ini:"VERSION_ID"`
-	// HomeURL string `ini:"HOME_URL"`
-	// SupportURL string `ini:"SUPPORT_URL"`
-	// BugReportURL string `ini:"BUG_REPORT_URL"`
-	DistribID          string `ini:"DISTRIB_ID"`
-	DistribRelease     string `ini:"DISTRIB_RELEASE"`
-	DistribCodename    string `ini:"DISTRIB_CODENAME"`
-	DistribDescription string `ini:"DISTRIB_DESCRIPTION"`
-}
-
-// NewRelease parses release files as INI.
-func NewRelease() *Release {
-	release := &Release{}
-	paths, err := filepath.Glob(releasePattern)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %s\n", releasePattern, err)
-		os.Exit(1)
-	}
-	for _, p := range paths {
-		if err := ini.MapTo(&release, p); err != nil {
-			// fmt.Fprintf(os.Stderr, "%s: %s\n", p, err)
-			continue // return err
-		}
-	}
-	return release
-}
-
 // GetOSTypes types (name, release, family, distrib...).
 func GetOSTypes() []string {
 	types := []string{runtime.GOOS}
-	release := NewRelease()
-	name := strings.ToLower(release.Name)
-	id := strings.ToLower(release.ID)
-	if name != "" && id != "" && isNum(id) {
-		types = append(types, name+id)
-	} else if id != "" {
-		types = append(types, id)
-	} else if name != "" {
-		types = append(types, name)
-	}
-	if release.IDLike != "" {
-		for _, id := range strings.Fields(release.IDLike) {
-			types = append(types, id)
-		}
-	}
-	if release.DistribCodename != "" {
-		types = append(types, release.DistribCodename)
-	}
+	types = append(types, NewRelease().Parse()...)
 	types = append(types, parseEnvVar("OSTYPE")...)
-	return types
-}
-
-func isNum(v string) bool {
-	_, err := strconv.Atoi(v)
-	return err == nil
-}
-
-func parseEnvVar(name string) []string {
-	types := make([]string, 0)
-	if o, ok := os.LookupEnv(name); ok && o != "" {
-		types = append(types, o)
-	} else { // !ok || s == ""
-		// fmt.Printf("%s='%s' (%v)\n", name, s, ok)
-		out, err := exec.Command(shell.Get(), "-c", "printf '%s' \"$"+name+"\"").Output()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s error: %s\n", name, err)
-		}
-		if len(out) > 0 {
-			s := string(out)
-			o := strings.Split(s, ".")
-			if len(o) > 0 && o[0] != s {
-				types = append(types, o[0])
-			}
-			types = append(types, s)
-		}
-	}
 	return types
 }
 
@@ -189,4 +103,27 @@ func matches(in []string, list []string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func parseEnvVar(name string) []string {
+	types := make([]string, 0)
+	if o, ok := os.LookupEnv(name); ok && o != "" {
+		types = append(types, o)
+	} else { // !ok || s == ""
+		// Fallback to shell invocation
+		// fmt.Printf("%s='%s' (%v)\n", name, s, ok)
+		out, err := exec.Command(shell.Get(), "-c", "printf '%s' \"$"+name+"\"").Output()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s error: %s\n", name, err)
+		}
+		if len(out) > 0 {
+			s := string(out)
+			o := strings.Split(s, ".")
+			if len(o) > 0 && o[0] != s {
+				types = append(types, o[0])
+			}
+			types = append(types, s)
+		}
+	}
+	return types
 }

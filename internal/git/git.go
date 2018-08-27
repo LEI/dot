@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LEI/dot/internal/cli"
+	"github.com/LEI/dot/internal/shell"
 )
 
 const (
@@ -84,7 +84,7 @@ func git(args ...string) (string, string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stdin = os.Stdin
 	if Verbose > 0 {
-		fmt.Fprintln(Stdout, "exec:", GitBin, cli.FormatArgs(args))
+		fmt.Fprintln(Stdout, "exec:", GitBin, shell.FormatArgs(args))
 	}
 	err := cmd.Run()
 	outstr := strings.TrimSuffix(stdout.String(), "\n")
@@ -95,7 +95,7 @@ func git(args ...string) (string, string, error) {
 func gitCombined(args ...string) (string, error) {
 	cmd := exec.Command(GitBin, args...)
 	if Verbose > 1 {
-		fmt.Fprintln(Stdout, "exec:", GitBin, cli.FormatArgs(args))
+		fmt.Fprintln(Stdout, "exec:", GitBin, shell.FormatArgs(args))
 	}
 	buf, err := cmd.CombinedOutput()
 	str := strings.TrimSuffix(string(buf), "\n")

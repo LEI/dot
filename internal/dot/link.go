@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/LEI/dot/internal/prompt"
+	"github.com/LEI/dot/internal/shell"
 )
 
 // // LinkError type
@@ -58,7 +58,7 @@ func (l *Link) Status() error {
 				return ErrSkip
 			}
 			// Confirm override
-			if prompt.AskConfirmation("Remove existing " + l.Target + "?") {
+			if shell.AskConfirmation("Remove existing " + l.Target + "?") {
 				if err := os.Remove(l.Target); err != nil {
 					return err
 				}
@@ -83,7 +83,7 @@ func (l *Link) Do() error {
 			return nil
 		// case ErrFileExist, ErrLinkExist:
 		// 	// Confirm override
-		// 	if !prompt.AskConfirmation("Remove existing " + l.Target + "?") {
+		// 	if !shell.AskConfirmation("Remove existing " + l.Target + "?") {
 		// 		return ErrSkip
 		// 	}
 		// 	if rmerr := os.Remove(l.Target); rmerr != nil {

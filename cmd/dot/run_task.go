@@ -203,7 +203,7 @@ func undoTask(t dot.Tasker) error {
 		if str != "" && dotOpts.verbosity >= 2 {
 			fmt.Fprintf(dotOpts.stdout, "# %s\n", str)
 		}
-		// if !prompt.AskConfirmation("Proceed to execute?") {
+		// if !shell.AskConfirmation("Proceed to execute?") {
 		return nil
 		// }
 	}

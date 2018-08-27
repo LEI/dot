@@ -14,7 +14,7 @@ import (
 	"unicode"
 
 	"github.com/LEI/dot/internal/env"
-	"github.com/LEI/dot/internal/prompt"
+	"github.com/LEI/dot/internal/shell"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -139,7 +139,7 @@ func (t *Tpl) Status() error {
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", derr.String())
-			if prompt.AskConfirmation(fmt.Sprintf(
+			if shell.AskConfirmation(fmt.Sprintf(
 				"Overwrite %s?",
 				t.Target,
 			)) {
@@ -147,7 +147,7 @@ func (t *Tpl) Status() error {
 				return nil
 			}
 			// if t.overwrite || t.GetAction() == "list" ||
-			// 	prompt.AskConfirmation(fmt.Sprintf(
+			// 	shell.AskConfirmation(fmt.Sprintf(
 			// 		"Overwrite %s?",
 			// 		t.Target,
 			// 	)) {

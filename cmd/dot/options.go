@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/LEI/dot/internal/dot"
-	"github.com/docker/docker/pkg/homedir"
+	"github.com/LEI/dot/internal/shell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -19,7 +19,7 @@ var (
 	commit  string
 	date    string
 
-	homeDir = homedir.Get()
+	homeDir = shell.HomeDir
 )
 
 // DotOptions hold all global options for restic.

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/LEI/dot/internal/cli"
 	"github.com/LEI/dot/internal/pkg"
+	"github.com/LEI/dot/internal/shell"
 )
 
 // Pkg task
@@ -30,14 +30,14 @@ func (p *Pkg) String() string {
 		}
 		a = append(a, p.Name...)
 		a = append(a, p.Args...)
-		return fmt.Sprint(cli.FormatArgs(a))
+		return fmt.Sprint(shell.FormatArgs(a))
 	}
 	bin, opts, err := m.Build(action, p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""
 	}
-	return fmt.Sprintf("%s %s", bin, cli.FormatArgs(opts))
+	return fmt.Sprintf("%s %s", bin, shell.FormatArgs(opts))
 }
 
 // Status check task

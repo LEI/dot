@@ -11,7 +11,6 @@ import (
 
 	// "github.com/LEI/dot/cli/config/tasks"
 
-	"github.com/LEI/dot/internal/cli"
 	"github.com/LEI/dot/internal/host"
 	"github.com/LEI/dot/internal/shell"
 )
@@ -240,7 +239,7 @@ func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 
 // Install ...
 func Install(manager string, pkgs []string, opts ...string) error {
-	// fmt.Printf("%s %s\n", cmd.Bin, cli.FormatArgs(cmdArgs))
+	// fmt.Printf("%s %s\n", cmd.Bin, shell.FormatArgs(cmdArgs))
 	// stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
 	// str := strings.TrimRight(stdout, "\n")
 	// // Quickfix centos yum
@@ -302,7 +301,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 
 // TODO: return *exec.Cmd
 func execManagerCommand(m *Pm, bin string, args ...string) error {
-	// fmt.Printf("$ %s %s\n", bin, cli.FormatArgs(args))
+	// fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 	if DryRun {
 		if len(m.DryRunOpts) == 0 {
 			return nil
@@ -314,7 +313,7 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	if m.Shell != "" {
 		s := shell.Get()
 		fmt.Println("Using shell:", s)
-		c := fmt.Sprintf("%s %s", bin, cli.FormatArgs(args))
+		c := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
 		cmd = exec.Command(s, "-c", c)
 	} else {
 		cmd = exec.Command(bin, args...)
@@ -325,13 +324,13 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	// 	if !m.AllowFailure {
 	// 		return err
 	// 	}
-	// 	fmt.Fprintf(os.Stderr, "$ %s %s: %s", bin, cli.FormatArgs(args), err) // return err
+	// 	fmt.Fprintf(os.Stderr, "$ %s %s: %s", bin, shell.FormatArgs(args), err) // return err
 	// }
 	return cmd.Run()
 }
 
 func execCommand(name string, args ...string) error {
-	fmt.Printf("$ %s %s\n", name, cli.FormatArgs(args))
+	fmt.Printf("$ %s %s\n", name, shell.FormatArgs(args))
 	if DryRun {
 		return nil
 	}
