@@ -45,8 +45,8 @@ type OpError struct {
 }
 
 func (e *OpError) Error() string {
-	return e.Op + " " + e.Task.String() + ": " + e.Err.Error()
-	// return fmt.Sprintf("%s %s: %s", e.Op, e.Task.String(), e.Err.Error())
+	// return e.Op + " " + fmt.Sprintf("[%s]", e.Task) + ": " + e.Err.Error()
+	return fmt.Sprintf("%s %s: %s", e.Op, e.Task.String(), e.Err.Error())
 }
 
 // // Code is used as a prefix

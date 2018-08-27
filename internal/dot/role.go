@@ -173,8 +173,12 @@ func formatRoleHooks(prefix string, hooks []*Hook) (s string) {
 // 	return s
 // }
 
-func formatTask(prefix string, t Tasker) (s string) {
-	return fmt.Sprintf("%s→ %s\n", prefix, t.SetAction("install").String())
+// func formatTask(prefix string, t Tasker) (s string) {
+// 	return fmt.Sprintf("%s→ %s\n", prefix, t.SetAction("install").String())
+// }
+
+func formatTask(prefix string, i interface{}) (s string) {
+	return fmt.Sprintf("%s→ %s\n", prefix, i)
 }
 
 // func formatTasks(prefix string, i interface{}) string {
