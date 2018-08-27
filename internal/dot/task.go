@@ -9,7 +9,6 @@ import (
 
 	"github.com/LEI/dot/internal/host"
 	"github.com/LEI/dot/internal/shell"
-	"github.com/docker/docker/pkg/homedir"
 )
 
 // Tasker interface
@@ -164,7 +163,7 @@ func tildify(path string) string {
 	if !strings.HasPrefix(path, prefix) {
 		return path
 	}
-	s := homedir.GetShortcutString()
+	s := shell.GetHomeShortcutString()
 	return s + strings.TrimPrefix(path, prefix)
 }
 
