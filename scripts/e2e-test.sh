@@ -27,7 +27,8 @@ main() {
 
   # for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -d "$d"; done
   run test -d "$HOME/.tmux/plugins/tpm"
-  run test -d "$HOME/.vim/pack/config"
+  run ls -la $HOME/.vim/pack/config
+  # run test -d "$HOME/.vim/pack/config"
 
   [ "$(tail -n1 ~/.bashrc)" != "$tail_bashrc" ] || exit 1
   run dot remove --packages --verbose
