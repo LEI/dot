@@ -142,14 +142,14 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 // func runTask(action string, i interface{}) error {
 // 	t := i.(dot.Tasker)
 func runTask(action string, t dot.Tasker) error {
-	// t.SetAction(action)
+	//t.SetAction(action)
 	switch action {
 	case "install":
 		if err := doTask(t); err != nil && !dot.IsSkip(err) {
 			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	case "remove":
-		if err := undoTask(t); err != nil { // && !dot.IsSkip(err) {
+		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
 			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	default:

@@ -31,7 +31,8 @@ type Tasker interface {
 // Task struct
 type Task struct {
 	Tasker
-	Action string   `mapstructure:",omitempty"` // install, remove
+	// Action specifies a single action for which the task should be run
+	Action string   `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
 	If     []string `mapstructure:",omitempty"`
 
@@ -59,16 +60,17 @@ func (t *Task) GetAction() string {
 
 // Check conditions
 func (t *Task) Check() error {
+	// TODO Debug Verbose
 	if err := t.CheckAction(); err != nil {
-		// fmt.Println("> Skip "+t.GetAction(), t, err)
+		// fmt.Printf("> If %q != %q -> %s\n", t.Action, t.running, err)
 		return err
 	}
 	if err := t.CheckOS(); err != nil {
-		// fmt.Println("> Skip OS", t, err)
+		// fmt.Printf("> OS %s -> %s\n", t.OS, err)
 		return err
 	}
 	if err := t.CheckIf(); err != nil {
-		// fmt.Println("> Skip If", t, err)
+		// fmt.Printf("> If %q -> %s\n", t.If, err)
 		return err
 	}
 	return nil
