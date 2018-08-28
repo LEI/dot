@@ -100,6 +100,7 @@ jobs:
       os: osx
       language: go
 
+    # Release to GitHub with goreleaser when a tag is specified
     - stage: deploy
       if: tag IS present
       addons:
@@ -122,6 +123,7 @@ jobs:
           tags: true
           condition: $TRAVIS_OS_NAME = linux
 
+    # Deploy GitHub pages and coverage status
     - stage: deploy
       addons:
         apt:
@@ -143,10 +145,9 @@ jobs:
         on:
           branch: master
           condition: $TRAVIS_OS_NAME = linux
-
-after_success:
-  - go run build.go coverage
-  - bash <(curl -s https://codecov.io/bash)
+      after_success:
+        - go run build.go coverage
+        - bash <(curl -s https://codecov.io/bash)
 
 notifications:
   email: false

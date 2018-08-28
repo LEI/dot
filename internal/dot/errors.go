@@ -25,6 +25,7 @@ var (
 
 	// ErrNotEmpty ...
 	ErrNotEmpty = errors.New("not empty")
+	// ErrDirNotEmpty = errors.New("directory not empty")
 
 	// ErrSkip task
 	ErrSkip = errors.New("skip")

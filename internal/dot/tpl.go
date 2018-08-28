@@ -139,6 +139,7 @@ func (t *Tpl) Status() error {
 			if t.GetAction() == "list" {
 				return err
 			}
+			// Output full diff
 			fmt.Fprintf(os.Stderr, "%s\n", derr.String())
 			if shell.AskConfirmation(fmt.Sprintf(
 				"Overwrite %s?",
