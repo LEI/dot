@@ -11,8 +11,8 @@ import (
 
 // Options for the list command.
 type listOptions struct {
-	quiet  bool
-	all    bool
+	quiet bool
+	// all    bool
 	format string
 	// filter []string
 
@@ -44,7 +44,7 @@ func init() {
 
 	flags := cmdList.Flags()
 	flags.BoolVarP(&listOpts.quiet, "quiet", "q", false, "Only show role names")
-	flags.BoolVarP(&listOpts.all, "all", "a", false, "Show all roles (default hides incompatible platforms)")
+	// flags.BoolVarP(&listOpts.all, "all", "a", false, "Show all roles (default hides incompatible platforms)")
 	flags.StringVarP(&listOpts.format, "format", "", defaultListFormat, "Pretty-print roles using a Go template")
 	// flags.StringSliceVarP(&listOpts.filter, "filter", "f", []string{}, "Filter task list")
 
