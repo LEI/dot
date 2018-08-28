@@ -123,7 +123,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 			skipped++
 			continue
 		}
-		fmt.Fprintf(dotOpts.stderr, "# error in %s role: %s\n", r.name, r.err)
+		fmt.Fprintf(dotOpts.stderr, "failed to %s %s role: %s\n", action, r.name, r.err)
 		failed++
 	}
 	// if total == exists+skipped && !dotOpts.Force {
@@ -149,7 +149,7 @@ func runTask(action string, t dot.Tasker) error {
 			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	case "remove":
-		if err := undoTask(t); err != nil {
+		if err := undoTask(t); err != nil { // && !dot.IsSkip(err) {
 			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	default:
