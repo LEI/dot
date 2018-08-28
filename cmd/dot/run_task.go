@@ -32,18 +32,6 @@ type actionResult struct {
 	err error
 }
 
-func checkTask(action, name string, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
-	t.SetAction(action)
-	if err := t.Check(); err != nil {
-		c <- actionResult{name, t, err}
-		wg.Done()
-		return
-	}
-	err := t.Status()
-	c <- actionResult{name, t, err}
-	wg.Done()
-}
-
 // Run after preRunInstall and preRunRemove
 func preRunAction(cmd *cobra.Command, args []string) error {
 	action := cmd.Name()
@@ -52,51 +40,8 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	go func() {
 		var wg sync.WaitGroup
 		for _, r := range roles {
-			// if dotOpts.verbosity >= 1 {
-			// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
-			// }
-			if dotOpts.pkg {
-				for _, p := range r.Pkgs {
-					wg.Add(1)
-					go checkTask(action, r.Name, p, c, &wg)
-				}
-			}
-			for _, d := range r.Dirs {
-				wg.Add(1)
-				go checkTask(action, r.Name, d, c, &wg)
-			}
-			for _, f := range r.Files {
-				wg.Add(1)
-				go checkTask(action, r.Name, f, c, &wg)
-			}
-			for _, l := range r.Links {
-				wg.Add(1)
-				go checkTask(action, r.Name, l, c, &wg)
-			}
-			for _, t := range r.Tpls {
-				wg.Add(1)
-				go checkTask(action, r.Name, t, c, &wg)
-			}
-			for _, l := range r.Lines {
-				wg.Add(1)
-				go checkTask(action, r.Name, l, c, &wg)
-			}
-			for _, h := range r.Install {
-				wg.Add(1)
-				go checkTask(action, r.Name, h, c, &wg)
-			}
-			for _, h := range r.PostInstall {
-				wg.Add(1)
-				go checkTask(action, r.Name, h, c, &wg)
-			}
-			for _, h := range r.Remove {
-				wg.Add(1)
-				go checkTask(action, r.Name, h, c, &wg)
-			}
-			for _, h := range r.PostRemove {
-				wg.Add(1)
-				go checkTask(action, r.Name, h, c, &wg)
-			}
+			wg.Add(1)
+			go checkAllTasks(action, r, c, &wg)
 		}
 		// All calls to wg.Add are done. Start a goroutine
 		// to close c once all the sends are done.
@@ -137,6 +82,73 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
 	}
 	return nil
+}
+
+func checkAllTasks(action string, r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
+	// if dotOpts.verbosity >= 1 {
+	// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
+	// }
+	if dotOpts.pkg {
+		for _, p := range r.Pkgs {
+			wg.Add(1)
+			go checkOneTask(action, r, p, c, wg)
+		}
+	}
+	for _, d := range r.Dirs {
+		wg.Add(1)
+		go checkOneTask(action, r, d, c, wg)
+	}
+	for _, f := range r.Files {
+		wg.Add(1)
+		go checkOneTask(action, r, f, c, wg)
+	}
+	for _, l := range r.Links {
+		wg.Add(1)
+		go checkOneTask(action, r, l, c, wg)
+	}
+	for _, t := range r.Tpls {
+		wg.Add(1)
+		go checkOneTask(action, r, t, c, wg)
+	}
+	for _, l := range r.Lines {
+		wg.Add(1)
+		go checkOneTask(action, r, l, c, wg)
+	}
+	wg.Add(1)
+	go checkTaskHooks(action, r, c, wg)
+	wg.Done()
+}
+
+func checkTaskHooks(action string, r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
+	for _, h := range r.Install {
+		wg.Add(1)
+		go checkOneTask(action, r, h, c, wg)
+	}
+	for _, h := range r.PostInstall {
+		wg.Add(1)
+		go checkOneTask(action, r, h, c, wg)
+	}
+	for _, h := range r.Remove {
+		wg.Add(1)
+		go checkOneTask(action, r, h, c, wg)
+	}
+	for _, h := range r.PostRemove {
+		wg.Add(1)
+		go checkOneTask(action, r, h, c, wg)
+	}
+	wg.Done()
+}
+
+func checkOneTask(action string, r *dot.Role, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
+	t.SetAction(action)
+	if err := t.Check(); err != nil {
+		c <- actionResult{r.Name, t, err}
+		wg.Done()
+		return
+	}
+	err := t.Status()
+	c <- actionResult{r.Name, t, err}
+	wg.Done()
 }
 
 // func runTask(action string, i interface{}) error {

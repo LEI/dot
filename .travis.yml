@@ -64,7 +64,8 @@ jobs:
       # go run build.go -v vendor docker
       script: make docker
       skip_cleanup: true
-      if: 'env(OS) != ""' # env: OS=debian
+      if: env(OS) != ""
+      # env: OS=debian
 
     - <<: *base
       env: OS=alpine
