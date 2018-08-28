@@ -2,6 +2,9 @@
 # https://golang.github.io/dep/docs/Gopkg.toml.html
 
 # required = ["github.com/user/thing/cmd/thing"]
+required = [
+    "golang.org/x/lint/golint",
+]
 # ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
 
 # [[constraint]]
@@ -21,7 +24,3 @@
   # non-go = false
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  name = "github.com/mitchellh/go-homedir"
-  version = "1.0.0"
