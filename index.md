@@ -1,16 +1,18 @@
-# dot
+dot
+[![GoDoc](https://godoc.org/github.com/LEI/dot?status.svg)](https://godoc.org/github.com/LEI/dot)
+[![Travis](https://travis-ci.org/LEI/dot.svg?branch=master)](https://travis-ci.org/LEI/dot)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/s4qqanrbe62cp1ku?svg=true)](https://ci.appveyor.com/project/LEI/dot)
+===
+
+[![Codecov](https://codecov.io/gh/LEI/dot/branch/master/graph/badge.svg)](https://codecov.io/gh/LEI/dot)
+[![Go Report Card](https://goreportcard.com/badge/github.com/LEI/dot)](https://goreportcard.com/report/github.com/LEI/dot)
 
 <!--
 `dot` is a configuration based file manager. It requires Go 1.8 to compile.
 -->
 
 [Documentation](https://dot.lei.sh/dot)
-
-[![GoDoc](https://godoc.org/github.com/LEI/dot?status.svg)](https://godoc.org/github.com/LEI/dot)
-[![Travis](https://travis-ci.org/LEI/dot.svg?branch=master)](https://travis-ci.org/LEI/dot)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/s4qqanrbe62cp1ku?svg=true)](https://ci.appveyor.com/project/LEI/dot)
-[![Go Report Card](https://goreportcard.com/badge/github.com/LEI/dot)](https://goreportcard.com/report/github.com/LEI/dot)
-<!-- [![Codecov](https://codecov.io/gh/LEI/dot/branch/master/graph/badge.svg)](https://codecov.io/gh/LEI/dot) -->
+<!-- [Contribution Guide](CONTRIBUTING.md) -->
 
 <!--
 ## License
