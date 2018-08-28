@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"text/template"
+	"html/template"
+	"strconv"
+	"text/tabwriter"
 
 	"github.com/LEI/dot/internal/dot"
 	"github.com/spf13/cobra"
@@ -11,10 +13,12 @@ import (
 
 // Options for the list command.
 type listOptions struct {
-	quiet bool
 	// all    bool
-	format string
 	// filter []string
+	format string
+	long   bool
+	quiet  bool
+	// noTab  bool
 
 	// listLong bool
 	// host      string
@@ -25,7 +29,14 @@ type listOptions struct {
 
 var listOpts listOptions
 
-var defaultListFormat = "{{.Name}} {{if .Ok}}✓{{end}}" // {{else}}×
+var (
+	// List templates
+	// listFmt = "{{range .}}%s\n{{end}}"
+	// FIXME tabwriter "{{.Name}}\t{{.Path}}\t({{.URL}}"
+	defaultListTpl = "{{.Name}}\t{{if .Ok}}✓{{else}}×{{end}}\t[{{.Path}}]({{.URL}})"
+	quietListTpl   = "{{.Name}} {{if .Ok}}✓{{end}}"
+	longListTpl    = "{{.}}"
+)
 
 var cmdList = &cobra.Command{
 	Use:     "list [flags]", //  [snapshotID] [dir...]
@@ -43,10 +54,12 @@ func init() {
 	cmdRoot.AddCommand(cmdList)
 
 	flags := cmdList.Flags()
-	flags.BoolVarP(&listOpts.quiet, "quiet", "q", false, "Only show role names")
 	// flags.BoolVarP(&listOpts.all, "all", "a", false, "Show all roles (default hides incompatible platforms)")
-	flags.StringVarP(&listOpts.format, "format", "", defaultListFormat, "Pretty-print roles using a Go template")
 	// flags.StringSliceVarP(&listOpts.filter, "filter", "f", []string{}, "Filter task list")
+	flags.StringVarP(&listOpts.format, "format", "", "", "Pretty-print roles using a Go template")
+	flags.BoolVarP(&listOpts.long, "long", "l", false, "Output role tasks")
+	flags.BoolVarP(&listOpts.quiet, "quiet", "q", false, "Only show role names and status")
+	// flags.BoolVarP(&listOpts.noTab, "no-tab", "n", false, "Disable tabwriter")
 
 	// flags.BoolVarP(&listOpts.listLong, "long", "l", false, "use a long listing format showing size and mode")
 	// flags.StringVarP(&listOpts.host, "host", "H", "", "only consider snapshots for this `host`, when no snapshot ID is given")
@@ -61,18 +74,44 @@ func preRunList(cmd *cobra.Command, args []string) error {
 	if err := setActionEnv(cmd); err != nil {
 		return err
 	}
-	if listOpts.quiet && listOpts.format != "" && listOpts.format != defaultListFormat {
-		return fmt.Errorf("--quiet and --format cannot be specified at the same time")
+	if err := initList(&listOpts); err != nil {
+		return err
 	}
-	if listOpts.format == "" { // && dotOpts.Verbose > 0 {
-		listOpts.format = "{{.}}"
-	}
+	// if listOpts.format == "" { // && dotOpts.Verbose > 0 {
+	// 	listOpts.format = "{{.}}"
+	// }
 	// if len(listOpts.filter) > 0 {
-	// 	fmt.Fprintf(os.Stderr, "--filter not implemented\n")
+	// 	fmt.Fprintf(dotOpts.stderr, "--filter not implemented\n")
 	// }
 	if err := preRunAction(cmd, args); err != nil {
 		if _, ok := err.(*dot.DiffError); !ok {
 			return err
+		}
+	}
+	return nil
+}
+
+func initList(opts *listOptions) error {
+	switch {
+	case opts.long:
+		if opts.format != "" {
+			return fmt.Errorf("--format and --long cannot be specified at the same time")
+		}
+		if opts.quiet {
+			return fmt.Errorf("--long and --quiet cannot be specified at the same time")
+		}
+		opts.format = longListTpl
+	case opts.quiet:
+		if opts.format != "" {
+			return fmt.Errorf("--format and --quiet cannot be specified at the same time")
+		}
+		if opts.long {
+			return fmt.Errorf("--long and --quiet cannot be specified at the same time")
+		}
+		opts.format = quietListTpl
+	default:
+		if opts.format == "" {
+			opts.format = defaultListTpl
 		}
 	}
 	return nil
@@ -85,20 +124,32 @@ func runList(cmd *cobra.Command, args []string) error {
 	// if !listOpts.all {
 	// 	dotConfig.Roles.FilterOS()
 	// }
-	w := dotOpts.stdout // tabwriter.NewWriter(os.Stdout, 8, 8, 8, ' ', 0)
+
+	/* w := dotOpts.stdout
+	// if !listOpts.noTab {
+	// 	// w = tabwriter.NewWriter(w, 8, 8, 8, ' ', 0)
+	// 	w = tabwriter.NewWriter(w, 0, 0, 1, ' ', 0)
+	// }
 	for _, r := range dotConfig.Roles {
-		// fmt.Fprintf(w, "%+v\n", r)
-		if listOpts.quiet {
-			fmt.Fprintln(w, r.Name)
-			continue
-		}
-		format := listOpts.format
-		str, err := templateString(r.Name, format, r)
+		// fmt.Fprintf(dotOpts.stdout, "format %+v\n", listOpts.format)
+		str, err := templateString(r.Name, listOpts.format, r)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintln(w, str)
+	} */
+
+	// format := listOpts.format // fmt.Sprintf(listFmt, listOpts.format)
+	// str, err := templateString(format, dotConfig.Roles)
+	str, err := rolesTable(dotConfig.Roles, 0, 8, 1, listOpts.format)
+	if err != nil {
+		return err
 	}
+	fmt.Fprint(dotOpts.stdout, str)
+
+	// v := reflect.ValueOf(dotConfig.Roles)
+	// str := createTable(v, 8, 8, 1, "%v", getTableHeadings(v))
+	// fmt.Fprint(dotOpts.stdout, str)
 
 	// // extract any specific directories to walk
 	// var dirs []string
@@ -210,3 +261,86 @@ func templateString(name, format string, data interface{}) (string, error) {
 	}
 	return tpl.String(), nil
 }
+
+/* func templateString(format string, data interface{}) (string, error) {
+	var tpl bytes.Buffer
+	if err := tfortools.OutputToTemplate(&tpl, "tfortools", format, data, nil); err != nil {
+		return "", err
+	}
+	return tpl.String(), nil
+} */
+
+func rolesTable(roles []*dot.Role, minWidth, tabWidth, padding int, format string) (string, error) {
+	var b bytes.Buffer
+	w := tabwriter.NewWriter(&b, minWidth, tabWidth, padding, ' ', 0)
+	for i, v := range roles {
+		name := "index " + strconv.Itoa(i)
+		str, err := templateString(name, format, v)
+		if err != nil {
+			return "", err
+		}
+		fmt.Fprintf(w, "%s\n", str)
+	}
+	if err := w.Flush(); err != nil {
+		return b.String(), err
+	}
+	return b.String(), nil
+}
+
+/* type tableHeading struct {
+	name  string
+	index int
+}
+
+// https://github.com/intel/tfortools/blob/master/funcs.go
+func createTable(v reflect.Value, minWidth, tabWidth, padding int,
+	format string, headings []tableHeading) string {
+	var b bytes.Buffer
+	w := tabwriter.NewWriter(&b, minWidth, tabWidth, padding, ' ', 0)
+	for _, h := range headings {
+		fmt.Fprintf(w, "%s\t", h.name)
+	}
+	fmt.Fprintln(w)
+
+	for i := 0; i < v.Len(); i++ {
+		el := v.Index(i)
+		if el.Kind() == reflect.Ptr {
+			el = el.Elem()
+		}
+		for _, h := range headings {
+			fmt.Fprintf(w, format+"\t", el.Field(h.index).Interface())
+		}
+		fmt.Fprintln(w)
+	}
+	_ = w.Flush()
+
+	return b.String()
+}
+
+func getTableHeadings(v reflect.Value) []tableHeading {
+	// assertCollectionOfStructs(v)
+
+	typ := v.Type()
+	styp := typ.Elem()
+	if styp.Kind() == reflect.Ptr {
+		styp = styp.Elem()
+	}
+
+	var headings []tableHeading
+	for i := 0; i < styp.NumField(); i++ {
+		field := styp.Field(i)
+		if field.PkgPath != "" || ignoreKind(field.Type.Kind()) {
+			continue
+		}
+		headings = append(headings, tableHeading{name: field.Name, index: i})
+	}
+
+	if len(headings) == 0 {
+		log.Fatalf("structures must contain at least one exported non-channel field")
+	}
+	return headings
+}
+
+func ignoreKind(kind reflect.Kind) bool {
+	return (kind == reflect.Chan) || (kind == reflect.Invalid)
+} */
