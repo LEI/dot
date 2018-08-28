@@ -40,7 +40,7 @@ var (
 	}
 )
 
-var dotConfig *dot.Config = &dot.Config{}
+var dotConfig = &dot.Config{}
 
 // cmdRoot is the base command when no other command has been specified.
 var cmdRoot = &cobra.Command{
