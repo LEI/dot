@@ -52,14 +52,11 @@ jobs:
     - stage: build
       # install: skip
       script:
-        - ls -la
-        - ls -la $GOPATH/bin
-        - make build
-        - du -sh dist/*_*/*
+        # - make build && du -sh dist/*_*/*
+        - make install
         - dot --help
         - dot --release
         - dot --version
-        - make
 
     - &base
       # if: tag IS present
