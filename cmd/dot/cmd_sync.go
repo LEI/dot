@@ -61,7 +61,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 // done <-chan struct{}
 func syncRoles(roles []*dot.Role) <-chan syncResult {
 	c := make(chan syncResult)
-	go func(roles []*dot.Role) {
+	go func() {
 		var wg sync.WaitGroup
 		for _, r := range roles {
 			wg.Add(1)
@@ -91,6 +91,6 @@ func syncRoles(roles []*dot.Role) <-chan syncResult {
 			wg.Wait()
 			close(c)
 		}()
-	}(roles)
+	}()
 	return c
 }
