@@ -149,7 +149,7 @@ func runTask(action string, t dot.Tasker) error {
 			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	case "remove":
-		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
+		if err := undoTask(t); err != nil {
 			return err // fmt.Errorf("%s task: %s", action, err)
 		}
 	default:

@@ -26,26 +26,23 @@ type Hook struct {
 }
 
 func (h *Hook) String() string {
-	// s := ""
 	s := strings.TrimRight(h.Command, "\n")
 	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
 		s = fmt.Sprintf("(%s)", s)
-	}
-	switch h.GetAction() {
-	case "install":
-	case "remove":
-		s = "" // noop
 	}
 	return s
 }
 
 // Status check task
 func (h *Hook) Status() error {
-	// if err := h.Check(); err != nil {
-	// 	return err
-	// }
-	// return ErrExist
-	return nil // Always run hooks
+	// Always run hooks
+	switch h.GetAction() {
+	case "install":
+		// return nil
+	case "remove":
+		return ErrExist
+	}
+	return nil
 }
 
 // Do task
@@ -61,7 +58,7 @@ func (h *Hook) Do() error {
 	if h.Shell == "" {
 		h.Shell = defaultShell
 	}
-	// fmt.Printf("EXEC HOOK: %q\n", h.Command)
+	// fmt.Printf("EXEC DO HOOK: %q\n", h.Command)
 	cmd := exec.Command(h.Shell, []string{"-c", "set -e; " + h.Command}...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -71,15 +68,23 @@ func (h *Hook) Do() error {
 
 // Undo task (non applicable)
 func (h *Hook) Undo() error {
-	// if err := h.Status(); err != nil {
-	// 	switch err {
-	// 	case ErrExist:
-	// 		// continue
-	// 	case ErrSkip:
-	// 		return nil
-	// 	default:
-	// 		return err
-	// 	}
-	// }
-	return fmt.Errorf("not implemented")
+	if err := h.Status(); err != nil {
+		switch err {
+		case ErrExist:
+			// continue
+		case ErrSkip:
+			return nil
+		default:
+			return err
+		}
+	}
+	if h.Shell == "" {
+		h.Shell = defaultShell
+	}
+	// fmt.Printf("EXEC UNDO HOOK: %q\n", h.Command)
+	cmd := exec.Command(h.Shell, []string{"-c", "set -e; " + h.Command}...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = h.ExecDir
+	return cmd.Run()
 }

@@ -243,6 +243,7 @@ func (r *Role) Load() error {
 	if err != nil {
 		return fmt.Errorf("role %s: %s", r.Name, err)
 	}
+	fmt.Printf("Using role config file: %s\n", r.configFile)
 	// fmt.Printf("Merging role config:\n%+v\nwith original struct:\n%+v\n", role, r)
 	if err = mergo.Merge(r, role); err != nil {
 		return err

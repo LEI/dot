@@ -64,6 +64,7 @@ type Tpl struct {
 	Vars        map[string]interface{}
 	IncludeVars []string `mapstructure:"include_vars"`
 
+	// backup bool
 	overwrite bool
 }
 
@@ -178,6 +179,11 @@ func (t *Tpl) Do() error {
 			return err
 		}
 	}
+	// if t.backup {
+	// 	if err := backup(t.Source); err != nil {
+	// 		return err
+	// 	}
+	// }
 	data, err := tplData(t)
 	if err != nil {
 		return err
