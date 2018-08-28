@@ -178,6 +178,7 @@ func setupGlobalOptions(opts *DotOptions) error {
 }
 
 func setupGlobalConfig(cfg *dot.Config) error {
+	// Filter roles according to env and flags
 	if err := setupConfigRoles(cfg); err != nil {
 		return err
 	}
