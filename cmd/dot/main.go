@@ -101,6 +101,9 @@ func persistentPreRunDot(cmd *cobra.Command, args []string) error {
 	case dotOpts.Quiet:
 		dotOpts.verbosity = 0
 	}
+	// if dotOps.DryRun {
+	// 	os.Setenv("DOT_DRY_RUN", "1")
+	// }
 	if err := setupGlobalOptions(&dotOpts); err != nil {
 		return err
 	}

@@ -39,6 +39,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/shell"
 )
 
@@ -107,7 +108,7 @@ func matches(in []string, list []string) (bool, error) {
 
 func parseEnvVar(name string) []string {
 	types := make([]string, 0)
-	if o, ok := os.LookupEnv(name); ok && o != "" {
+	if o, ok := env.Lookup(name); ok && o != "" {
 		types = append(types, o)
 	} else { // !ok || s == ""
 		// Fallback to shell invocation

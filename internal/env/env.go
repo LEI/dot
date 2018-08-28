@@ -23,7 +23,7 @@ func init() {
 // 	return nil
 // }
 
-// Set ...
+// Set environment variable
 func Set(k, v string) error {
 	// if Verbose > 0 {
 	// 	fmt.Printf("%s=%s\n", k, v)
@@ -31,7 +31,12 @@ func Set(k, v string) error {
 	return os.Setenv(k, v)
 }
 
-// GetAll ...
+// Unset environment variable
+func Unset(k, v string) error {
+	return os.Unsetenv(k)
+}
+
+// GetAll environment variables
 func GetAll() map[string]string {
 	env := make(map[string]string, 0)
 	for _, i := range os.Environ() {
@@ -45,7 +50,7 @@ func GetAll() map[string]string {
 	return env
 }
 
-// Get ...
+// Get environment variable
 func Get(k string) string {
 	env := GetAll()
 	// v, ok := env[k]
@@ -61,17 +66,28 @@ func Get(k string) string {
 }
 
 // Expand ...
-func Expand(k string, env map[string]string) string {
-	return os.Expand(k, Get)
+func Expand(k string) string {
+	return os.ExpandEnv(k)
+	// return os.Expand(k, Get)
 }
 
 // ExpandEnv ...
-func ExpandEnv(k string) string {
-	return Expand(k, GetAll())
-	// return os.ExpandEnv(k)
+func ExpandEnv(k string, env map[string]string) string {
+	expand := func(k string) string {
+		if v, ok := env[k]; ok {
+			return v
+		}
+		return Get(k)
+	}
+	return os.Expand(k, expand)
 }
 
-// Restore ...
+// Lookup environment variable
+func Lookup(k string) (string, bool) {
+	return os.LookupEnv(k)
+}
+
+// Restore environment
 func Restore(env map[string]string) error {
 	os.Clearenv()
 	for k, v := range env {
@@ -80,4 +96,9 @@ func Restore(env map[string]string) error {
 		}
 	}
 	return nil
+}
+
+// RestoreOriginal environment
+func RestoreOriginal(env map[string]string) error {
+	return Restore(original)
 }

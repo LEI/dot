@@ -394,13 +394,14 @@ func parseVars(environ Env, vars Vars, incl ...string) (Vars, error) {
 				return data, err
 			}
 			// Expand environment variables
-			expand := func(s string) string {
-				if v, ok := environ[s]; ok {
-					return v
-				}
-				return env.Get(s) // os.ExpandEnv(s)
-			}
-			v = os.Expand(ev, expand)
+			v = env.ExpandEnv(ev, environ)
+			// expand := func(s string) string {
+			// 	if v, ok := environ[s]; ok {
+			// 		return v
+			// 	}
+			// 	return env.Get(s) // os.ExpandEnv(s)
+			// }
+			// v = os.Expand(ev, expand)
 		}
 		// fmt.Printf("# var %s = %+v\n", k, v)
 		data[k] = v
