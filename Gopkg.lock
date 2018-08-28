@@ -77,6 +77,30 @@
   version = "v1.0.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:7bed3b51d5574e7ecca8a1de4081e8dc2bd24d1321f61f2daee054fde27885b1"
+  name = "golang.org/x/lint"
+  packages = [
+    ".",
+    "golint",
+  ]
+  pruneopts = "UT"
+  revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3d35f43f18787f661e7a4c8d8bcd424e96b046ef63769f02ae23e34aa57ff661"
+  name = "golang.org/x/tools"
+  packages = [
+    "go/ast/astutil",
+    "go/gcexportdata",
+    "go/internal/gcimporter",
+    "go/types/typeutil",
+  ]
+  pruneopts = "UT"
+  revision = "6cd1fcedba52a3e8045a1c96970cec308e4a632c"
+
+[[projects]]
   digest = "1:fe8a03a8222d5b913f256972933d26d24ad7c8286692a42943bc01633cc8fce3"
   name = "gopkg.in/go-ini/ini.v1"
   packages = ["."]
@@ -103,6 +127,7 @@
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
     "github.com/spf13/pflag",
+    "golang.org/x/lint/golint",
     "gopkg.in/go-ini/ini.v1",
     "gopkg.in/yaml.v2",
   ]
