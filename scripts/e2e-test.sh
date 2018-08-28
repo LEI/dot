@@ -23,11 +23,10 @@ main() {
   run test -f "$HOME/.gitconfig"
   run test -f "$HOME/.gitconfig.local"
 
-  run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
-
-  # for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -d "$d"; done
-  run test -d "$HOME/.tmux/plugins/tpm"
-  run test -d "$HOME/.vim/pack/config"
+  # run tmux -2 -u new-session -n test "vim -E -s -u $HOME/.vimrc +Install +qall; exit"
+  # # for d in "$HOME"/{.tmux/plugins/tpm,.vim/pack/config}; do run test -d "$d"; done
+  # run test -d "$HOME/.tmux/plugins/tpm"
+  # run test -d "$HOME/.vim/pack/config"
 
   [ "$(tail -n1 ~/.bashrc)" != "$tail_bashrc" ] || exit 1
   run dot remove --packages --verbose
