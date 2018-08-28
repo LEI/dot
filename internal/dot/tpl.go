@@ -51,6 +51,7 @@ var (
 			}
 			return strconv.Quote(str)
 		},
+		// "tildify": tildify,
 	}
 )
 
@@ -283,7 +284,9 @@ func tplExists(src, dst string, data map[string]interface{}) (bool, error) {
 
 func parseTpl(src string, data map[string]interface{}) (string, error) {
 	_, name := filepath.Split(src)
-	tmpl, err := template.New(name).Option("missingkey=zero").Funcs(tplFuncMap).ParseGlob(src)
+	tmpl, err := template.New(name).Option("missingkey=zero").
+		Funcs(tplFuncMap).
+		ParseGlob(src)
 	if err != nil {
 		return "", err
 	}
