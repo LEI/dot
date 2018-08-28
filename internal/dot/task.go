@@ -60,7 +60,7 @@ func (t *Task) GetAction() string {
 // Check conditions
 func (t *Task) Check() error {
 	if err := t.CheckAction(); err != nil {
-		// fmt.Println("> Skip "+action, t, err)
+		// fmt.Println("> Skip "+t.GetAction(), t, err)
 		return err
 	}
 	if err := t.CheckOS(); err != nil {

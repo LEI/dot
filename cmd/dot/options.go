@@ -129,9 +129,14 @@ func markHidden(f *pflag.FlagSet, in []string) error {
 }
 
 func setActionEnv(cmd *cobra.Command) error {
+	verbose := "0"
+	if dotOpts.Verbose > 0 { // verbosity > 1?
+		verbose = "1"
+	}
 	vars := map[string]string{
 		"DOT_ACTION": cmd.Name(),
 		// "DOT_DRY_RUN": dotOpts.DryRun,
+		"DOT_VERBOSE":   verbose,
 		"DOT_SOURCE":    dotOpts.Source,
 		"DOT_TARGET":    dotOpts.Target,
 		"DOT_FILE":      dotOpts.ConfigFile, // Dotfile

@@ -48,12 +48,16 @@ func (c *Copy) Do() error {
 			return err
 		}
 	}
-	in, err := os.Open(c.Source)
+	return copyFile(c.Source, c.Target)
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
-	out, err := os.Create(c.Target)
+	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
@@ -61,10 +65,7 @@ func (c *Copy) Do() error {
 	if _, err = io.Copy(out, in); err != nil {
 		return err
 	}
-	if err := out.Sync(); err != nil {
-		return err
-	}
-	return nil
+	return out.Sync()
 }
 
 // Undo task

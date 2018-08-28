@@ -87,9 +87,14 @@ func Lookup(k string) (string, bool) {
 	return os.LookupEnv(k)
 }
 
+// Clear environment
+func Clear() {
+	os.Clearenv()
+}
+
 // Restore environment
 func Restore(env map[string]string) error {
-	os.Clearenv()
+	Clear()
 	for k, v := range env {
 		if err := os.Setenv(k, v); err != nil {
 			return err
