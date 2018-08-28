@@ -44,29 +44,30 @@ install: make vendor
 
 script: make check
 
-# after_success:
-#   - go run build.go coverage
-#   - bash <(curl -s https://codecov.io/bash)
+# make: go run build.go vendor check install
 
 jobs:
   include:
 
-    # - stage: build
-    #   # install: skip
-    #   script:
-    #     # - dot --version
-    #     # - dot install --help
-    #     # - go run build.go vendor check install
-    #     - make
+    - stage: build
+      # install: skip
+      script:
+        - ls -la
+        - ls -la $GOPATH/bin
+        - make build
+        - du -sh dist/*_*/*
+        - dot --help
+        - dot --release
+        - dot --version
+        - make
 
     - &base
+      # if: tag IS present
       stage: test
       # go run build.go -v vendor docker
       script: make docker
       skip_cleanup: true
       env: OS=debian
-      # Only build tags
-      if: tag IS present
 
     - <<: *base
       env: OS=alpine
@@ -81,6 +82,7 @@ jobs:
       env: OS=debian
 
     - stage: test
+      # if: tag IS present
       script:
         - brew --version
         # - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
@@ -98,7 +100,6 @@ jobs:
         - cp .dotrc.yml $HOME/
         - scripts/e2e-test.sh
       env: OS=darwin
-      if: tag IS present
       os: osx
       language: go
 
@@ -145,6 +146,10 @@ jobs:
         on:
           branch: master
           condition: $TRAVIS_OS_NAME = linux
+
+after_success:
+  - go run build.go coverage
+  - bash <(curl -s https://codecov.io/bash)
 
 notifications:
   email: false
