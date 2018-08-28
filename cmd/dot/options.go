@@ -73,15 +73,6 @@ func init() {
 	// pflags.StringSliceVarP(&dotOpts.Options, "option", "o", []string{}, "set extended option (`key=value`, can be specified multiple times)")
 }
 
-func markHidden(f *pflag.FlagSet, in []string) error {
-	for _, n := range in {
-		if err := f.MarkHidden(n); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func addActionFlags(cmd *cobra.Command) {
 	source := os.Getenv("DOT_SOURCE")
 	if source == "" {
@@ -128,17 +119,24 @@ func addActionFlags(cmd *cobra.Command) {
 	flags.BoolVarP(&dotOpts.pkg, "packages", "P", false, "manage system packages")
 }
 
+func markHidden(f *pflag.FlagSet, in []string) error {
+	for _, n := range in {
+		if err := f.MarkHidden(n); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func setActionEnv(cmd *cobra.Command) error {
 	vars := map[string]string{
 		"DOT_ACTION": cmd.Name(),
-		"DOT_SOURCE": dotOpts.Source,
-		"DOT_TARGET": dotOpts.Target,
-		// Dotfile
-		"DOT_FILE": dotOpts.ConfigFile,
-		// Roles directory
-		"DOT_ROLE_DIR": dotOpts.RoleDir,
-		// Roles config name
-		"DOT_ROLE_FILE": dotOpts.RoleFile,
+		// "DOT_DRY_RUN": dotOpts.DryRun,
+		"DOT_SOURCE":    dotOpts.Source,
+		"DOT_TARGET":    dotOpts.Target,
+		"DOT_FILE":      dotOpts.ConfigFile, // Dotfile
+		"DOT_ROLE_DIR":  dotOpts.RoleDir,    // Roles directory
+		"DOT_ROLE_FILE": dotOpts.RoleFile,   // Roles config name
 	}
 	for k, v := range vars {
 		// if dotOpts.verbosity >= 3 {
