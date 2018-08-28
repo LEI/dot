@@ -1,10 +1,7 @@
 # Gopkg.toml
 # https://golang.github.io/dep/docs/Gopkg.toml.html
 
-# required = ["github.com/user/thing/cmd/thing"]
-required = [
-    "golang.org/x/lint/golint",
-]
+required = ["golang.org/x/lint/golint"]
 # ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
 
 # [[constraint]]
