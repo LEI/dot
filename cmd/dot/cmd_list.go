@@ -89,6 +89,7 @@ func preRunList(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// Check list flags setup
 func initList(opts *listOptions) error {
 	switch {
 	case opts.long:
@@ -116,9 +117,6 @@ func initList(opts *listOptions) error {
 }
 
 func runList(cmd *cobra.Command, args []string) error {
-	// if len(args) == 0 && opts.Host == "" && len(opts.tags) == 0 && len(opts.paths) == 0 {
-	// 	return errors.Fatal("Invalid arguments, either give one or more snapshot IDs or set filters.")
-	// }
 	// if !listOpts.all {
 	// 	dotConfig.Roles.FilterOS()
 	// }
@@ -127,103 +125,6 @@ func runList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	fmt.Fprint(dotOpts.stdout, str)
-
-	// // extract any specific directories to walk
-	// var dirs []string
-	// if len(args) > 1 {
-	// 	dirs = args[1:]
-	// 	for _, dir := range dirs {
-	// 		if !strings.HasPrefix(dir, "/") {
-	// 			return errors.Fatal("All path filters must be absolute, starting with a forward slash '/'")
-	// 		}
-	// 	}
-	// }
-
-	// withinDir := func(nodepath string) bool {
-	// 	if len(dirs) == 0 {
-	// 		return true
-	// 	}
-
-	// 	for _, dir := range dirs {
-	// 		// we're within one of the selected dirs, example:
-	// 		//   nodepath: "/test/foo"
-	// 		//   dir:      "/test"
-	// 		if fs.HasPathPrefix(dir, nodepath) {
-	// 			return true
-	// 		}
-	// 	}
-	// 	return false
-	// }
-
-	// approachingMatchingTree := func(nodepath string) bool {
-	// 	if len(dirs) == 0 {
-	// 		return true
-	// 	}
-
-	// 	for _, dir := range dirs {
-	// 		// the current node path is a prefix for one of the
-	// 		// directories, so we're interested in something deeper in the
-	// 		// tree. Example:
-	// 		//   nodepath: "/test"
-	// 		//   dir:      "/test/foo"
-	// 		if fs.HasPathPrefix(nodepath, dir) {
-	// 			return true
-	// 		}
-	// 	}
-	// 	return false
-	// }
-
-	// repo, err := OpenRepository(gopts)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if err = repo.LoadIndex(gopts.ctx); err != nil {
-	// 	return err
-	// }
-
-	// ctx, cancel := context.WithCancel(gopts.ctx)
-	// defer cancel()
-	// for sn := range FindFilteredSnapshots(ctx, repo, opts.Host, opts.tags, opts.paths, args[:1]) {
-	// 	Verbosef("snapshot %s of %v filtered by %v at %s):\n", sn.ID().Str(), sn.paths, dirs, sn.Time)
-
-	// 	err := walker.Walk(ctx, repo, *sn.Tree, nil, func(nodepath string, node *restic.Node, err error) (bool, error) {
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-	// 		if node == nil {
-	// 			return false, nil
-	// 		}
-
-	// 		if withinDir(nodepath) {
-	// 			// if we're within a dir, print the node
-	// 			Printf("%s\n", formatNode(nodepath, node, lsOptions.ListLong))
-
-	// 			// if recursive listing is requested, signal the walker that it
-	// 			// should continue walking recursively
-	// 			if opts.recursive {
-	// 				return false, nil
-	// 			}
-	// 		}
-
-	// 		// if there's an upcoming match deeper in the tree (but we're not
-	// 		// there yet), signal the walker to descend into any subdirs
-	// 		if approachingMatchingTree(nodepath) {
-	// 			return false, nil
-	// 		}
-
-	// 		// otherwise, signal the walker to not walk recursively into any
-	// 		// subdirs
-	// 		if node.Type == "dir" {
-	// 			return false, walker.SkipNode
-	// 		}
-	// 		return false, nil
-	// 	})
-
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 	return nil
 }
 
