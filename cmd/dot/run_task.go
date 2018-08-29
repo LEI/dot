@@ -36,6 +36,7 @@ type actionResult struct {
 func preRunAction(cmd *cobra.Command, args []string) error {
 	action := cmd.Name()
 	c := make(chan actionResult)
+	ignoreErrors := action == "list"
 	roles := dotConfig.Roles
 	go func() {
 		var wg sync.WaitGroup
@@ -68,7 +69,9 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 			skipped++
 			continue
 		}
-		fmt.Fprintf(dotOpts.stderr, "failed to %s %s role: %s\n", action, r.name, r.err)
+		if !ignoreErrors {
+			fmt.Fprintf(dotOpts.stderr, "failed to %s %s role: %s\n", action, r.name, r.err)
+		}
 		failed++
 	}
 	// if total == exists+skipped && !dotOpts.Force {
@@ -78,7 +81,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	// 		Code: 0,
 	// 	}
 	// }
-	if failed > 0 && action != "list" {
+	if failed > 0 && !ignoreErrors {
 		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
 	}
 	return nil
