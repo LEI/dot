@@ -88,6 +88,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 }
 
 func checkAllTasks(action string, r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
+	// var wg sync.WaitGroup
 	// if dotOpts.verbosity >= 1 {
 	// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
 	// }
@@ -97,6 +98,7 @@ func checkAllTasks(action string, r *dot.Role, c chan<- actionResult, wg *sync.W
 			go checkOneTask(action, r, p, c, wg)
 		}
 	}
+	// wg.Add(len(r.Dirs))
 	for _, d := range r.Dirs {
 		wg.Add(1)
 		go checkOneTask(action, r, d, c, wg)
@@ -117,8 +119,7 @@ func checkAllTasks(action string, r *dot.Role, c chan<- actionResult, wg *sync.W
 		wg.Add(1)
 		go checkOneTask(action, r, l, c, wg)
 	}
-	wg.Add(1)
-	go checkTaskHooks(action, r, c, wg)
+	checkTaskHooks(action, r, c, wg)
 	wg.Done()
 }
 
@@ -139,7 +140,6 @@ func checkTaskHooks(action string, r *dot.Role, c chan<- actionResult, wg *sync.
 		wg.Add(1)
 		go checkOneTask(action, r, h, c, wg)
 	}
-	wg.Done()
 }
 
 func checkOneTask(action string, r *dot.Role, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
