@@ -62,11 +62,17 @@ var termux = &Pm{}
 func init() {
 	*termux = *aptGet
 	termux.Sudo = false
-	termux.Bin = "packages"
-	termux.Init = func(m *Pm) error {
-		return nil
-	}
+	// termux.Bin = "packages"
+	// termux.Init = func(m *Pm) error {
+	// 	return nil
+	// }
 	termux.Has = func(m *Pm, pkgs []string) (bool, error) {
-		return false, nil
+		opts := append([]string{"-Wf'${db:Status-abbrev}'"}, pkgs...)
+		cmd := exec.Command("dpkg-query", opts...)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdin = os.Stdin
+		err := cmd.Run()
+		return err == nil, nil
 	}
 }
