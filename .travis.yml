@@ -108,10 +108,10 @@ jobs:
       addons:
         apt:
           packages:
-            # Goreleaser nfpm and snap pipe
+            # Goreleaser nfpm and snap pipes
             - rpm
             - snapd
-            # Ironically install 'dot'
+            # Graphviz dot format for deps.png
             - graphviz
       env:
         # Needed for the snap pipe
@@ -131,7 +131,7 @@ jobs:
           skip_cleanup: true
           on:
             repo: LEI/dot
-            branch: master
+            branch: docs
             tags: true
             condition: $TRAVIS_OS_NAME = linux
 

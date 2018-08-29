@@ -126,7 +126,7 @@ func IsSkip(err error) bool {
 	if err == nil {
 		return false
 	}
-	err = getError(err)
+	err = unwrapError(err)
 	switch err {
 	case ErrDirNotEmpty, ErrSkip:
 		return true
@@ -135,7 +135,7 @@ func IsSkip(err error) bool {
 	}
 }
 
-func getError(err error) error {
+func unwrapError(err error) error {
 	switch e := err.(type) {
 	case *os.PathError: // , *OpError:
 		if e.Err != nil {
