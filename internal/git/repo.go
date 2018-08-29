@@ -19,6 +19,9 @@ var (
 
 	// User git
 	User *url.Userinfo // = url.User("git")
+
+	// DefaultHTTPS for repo URL
+	// TODO DefaultHTTPS bool
 )
 
 // Repo ...
