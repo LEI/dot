@@ -149,10 +149,7 @@ func configDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{
 		case reflect.TypeOf((*Role)(nil)):
 			i = &Role{Name: val}
 		case reflect.TypeOf((*url.Userinfo)(nil)):
-			fmt.Println("URL", t)
-			i = url.User(val) // &url.URL{val}
-			// case reflect.TypeOf((*url.URL)(nil)):
-			// 	i = &net.URL{val}
+			i = url.User(val) // &url.URL{}
 		}
 	case *url.URL:
 		// fmt.Println("DECODE URL", val)

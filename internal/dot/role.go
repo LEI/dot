@@ -187,6 +187,7 @@ func formatTask(prefix string, i interface{}) (s string) {
 // }
 
 // Sync role repository
+// TODO update role URL?
 func (r *Role) Sync() (string, error) {
 	// u, err := url.Parse(r.URL)
 	// if err != nil {
