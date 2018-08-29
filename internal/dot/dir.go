@@ -38,10 +38,8 @@ func (d *Dir) Status() error {
 			return err // &DirError{"remove", d.Path, err}
 		}
 		if !empty {
-			fmt.Fprintf(os.Stderr, "# rmdir: %s: directory not empty\n", tildify(d.Path))
 			// ErrExist would indicate that the directory should be removed
-			return nil // &OpError{"undo dir", d, ErrNotEmpty}
-			// return &os.PathError{Op: "rmdir", Path: d.Path, Err: ErrNotEmpty}
+			return &os.PathError{Op: "rmdir", Path: d.Path, Err: ErrDirNotEmpty}
 		}
 	}
 	return ErrExist // &OpError{"check dir", d, ErrExist}
@@ -76,7 +74,7 @@ func (d *Dir) Do() error {
 	return nil
 }
 
-// Undo task
+// Undo task unless the directory is not empty.
 func (d *Dir) Undo() error {
 	if err := d.Status(); err != nil {
 		// terr, ok := err.(*OpError)
@@ -94,7 +92,7 @@ func (d *Dir) Undo() error {
 		}
 	}
 	if err := os.Remove(d.Path); err != nil {
-		return err // &OpError{"rmdir", d, err}
+		return err
 	}
 	return nil
 }

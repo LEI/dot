@@ -23,6 +23,10 @@ check:
 test:
 	$(RUN) -v test
 
+.PHONY: coverage
+coverage:
+	$(RUN) coverage
+
 .PHONY: build
 build:
 	$(RUN) build

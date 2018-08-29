@@ -101,53 +101,59 @@ jobs:
       os: osx
       language: go
 
-    # Release to GitHub with goreleaser when a tag is specified
+    # Deploy when a tag is specified
+    # https://goreleaser.com/ci/
     - stage: deploy
       if: tag IS present
       addons:
         apt:
           packages:
+            # Goreleaser nfpm and snap pipe
             - rpm
             - snapd
+            # Ironically install 'dot'
+            - graphviz
       env:
+        # Needed for the snap pipe
         - PATH=/snap/bin:$PATH
       before_deploy:
+        # Needed for the snap pipe
         - sudo snap install snapcraft --classic
+        # Build docs for Github pages
+        - scripts/build-docs.sh
       deploy:
-        provider: script
-        # script: curl -sL https://git.io/goreleaser | bash
-        # script: go run build.go vendor -only release
-        script: make release
-        skip_cleanup: true
-        on:
-          repo: LEI/dot
-          tags: true
-          condition: $TRAVIS_OS_NAME = linux
 
-    # Deploy GitHub pages and coverage status
-    - stage: deploy
-      addons:
-        apt:
-          packages:
-            - graphviz
-      before_deploy: scripts/build-docs.sh
-      deploy:
-        provider: pages
-        skip-cleanup: true
-        github-token: $GITHUB_TOKEN
-        local-dir: docs
-        target-branch: gh-pages
-        keep-history: true
-        fqdn: dot.lei.sh
-        # email: deploy@travis-ci.org
-        # name: Deployment Bot
-        committer-from-gh: true
-        # verbose: true
-        on:
-          branch: master
-          condition: $TRAVIS_OS_NAME = linux
+        # Release with goreleaser
+        - provider: script
+          # script: curl -sL https://git.io/goreleaser | bash
+          # script: go run build.go vendor -only release
+          script: make release
+          skip_cleanup: true
+          on:
+            repo: LEI/dot
+            branch: master
+            tags: true
+            condition: $TRAVIS_OS_NAME = linux
+
+        # Publish Github pages and coverage status
+        - provider: pages
+          skip-cleanup: true
+          github-token: $GITHUB_TOKEN
+          local-dir: docs
+          target-branch: gh-pages
+          keep-history: true
+          fqdn: dot.lei.sh
+          # email: deploy@travis-ci.org
+          # name: Deployment Bot
+          committer-from-gh: true
+          # verbose: true
+          on:
+            repo: LEI/dot
+            branch: master
+            condition: $TRAVIS_OS_NAME = linux
+
       after_success:
-        - go run build.go coverage
+        - make coverage # go run build.go coverage
         - bash <(curl -s https://codecov.io/bash)
 
 notifications:

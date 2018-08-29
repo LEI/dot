@@ -25,7 +25,9 @@ var (
 
 	// ErrNotEmpty ...
 	ErrNotEmpty = errors.New("not empty")
-	// ErrDirNotEmpty = errors.New("directory not empty")
+
+	// ErrDirNotEmpty ...
+	ErrDirNotEmpty = errors.New("directory not empty")
 
 	// ErrSkip task
 	ErrSkip = errors.New("skip")
@@ -95,7 +97,7 @@ func (e *DiffError) String() string {
 	)
 }
 
-// IsExist unwraps task error
+// IsExist error
 func IsExist(err error) bool {
 	if err == nil {
 		return false
@@ -124,33 +126,36 @@ func IsSkip(err error) bool {
 	if err == nil {
 		return false
 	}
-	// if ok {
-	// 	// terr.Op == "undo dir"
-	// 	if terr.Err == ErrNotEmpty {
-	// 		// Skip rm empty directory
-	// 		err = ErrSkip
-	// 	} else {
-	// 		err = terr.Err
-	// 	}
-	// }
-	if terr, ok := err.(*OpError); ok && terr.Err != nil {
-		err = terr.Err
-	}
-	if perr, ok := err.(*os.PathError); ok && perr.Err != nil {
-		err = perr.Err
-	}
-	// switch e := err.(type) {
-	// case *os.PathError, *OpError:
-	// 	if e.Err != nil {
-	// 		err = e.Err
-	// 	}
-	// }
+	err = getError(err)
 	switch err {
-	case ErrNotEmpty, ErrSkip:
-		return true
-	case ErrFileExist, ErrLinkExist:
+	case ErrDirNotEmpty, ErrSkip:
 		return true
 	default:
 		return false
 	}
+}
+
+func getError(err error) error {
+	switch e := err.(type) {
+	case *os.PathError: // , *OpError:
+		if e.Err != nil {
+			err = e.Err
+		}
+	}
+	// if terr, ok := err.(*OpError); ok && terr.Err != nil {
+	// 	if terr.Op == "rmdir" {
+	// 		// ...
+	// 	} else {
+	// 		err = terr.Err
+	// 	}
+	// }
+	// // Check for custom os.PathError (os.Remove Op: "remove")
+	// if perr, ok := err.(*os.PathError); ok && perr.Err != nil {
+	// 	if perr.Op == "rmdir" && perr.Err == ErrDirNotEmpty {
+	// 		// fmt.Fprintf(os.Stderr, "# rmdir: %s: directory not empty\n", perr.Path)
+	// 		// TODO Skip ErrDirNotEmpty
+	// 	}
+	// 	err = perr.Err
+	// }
+	return err
 }
