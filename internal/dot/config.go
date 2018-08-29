@@ -142,11 +142,17 @@ func FindConfig(path, dirname string) string {
 }
 
 func configDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{}, error) {
+	// fmt.Printf("DECODE %T (%s -> %s)\n", i, f, t)
 	switch val := i.(type) {
 	case string:
 		switch t {
 		case reflect.TypeOf((*Role)(nil)):
 			i = &Role{Name: val}
+		case reflect.TypeOf((*url.Userinfo)(nil)):
+			fmt.Println("URL", t)
+			i = url.User(val) // &url.URL{val}
+			// case reflect.TypeOf((*url.URL)(nil)):
+			// 	i = &net.URL{val}
 		}
 	case *url.URL:
 		// fmt.Println("DECODE URL", val)
