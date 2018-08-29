@@ -13,12 +13,12 @@ dot list [flags]
 ### Options
 
 ```
-  -a, --all                    Show all roles (default hides incompatible platforms)
   -c, --config-file DOT_FILE   main configuration DOT_FILE (default ".dotrc.yml")
   -d, --dry-run                do not execute tasks
   -F, --force                  force execution
-      --format string          Pretty-print roles using a Go template (default "{{.Name}} {{if .Ok}}✓{{end}}")
+      --format string          Pretty-print roles using a Go template
   -h, --help                   help for list
+  -l, --long                   Output role tasks
   -P, --packages               manage system packages
   -r, --role-filter strings    filter roles by name
   -s, --source DOT_SOURCE      DOT_SOURCE directory (default "$HOME")
