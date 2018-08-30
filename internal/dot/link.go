@@ -27,6 +27,11 @@ type Link struct {
 	Target string
 }
 
+// NewLink task
+func NewLink(s string) *Link {
+	return &Link{Source: s}
+}
+
 func (l *Link) String() string {
 	s := fmt.Sprintf("%s:%s", l.Source, l.Target)
 	switch l.GetAction() {

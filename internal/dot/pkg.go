@@ -16,6 +16,11 @@ type Pkg struct {
 	Manager string `mapstructure:"type"`
 }
 
+// NewPkg task
+func NewPkg(s string) *Pkg {
+	return &Pkg{Name: []string{s}}
+}
+
 func (p *Pkg) String() string {
 	action := p.GetAction()
 	// switch p.GetAction() {
