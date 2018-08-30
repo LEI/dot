@@ -14,42 +14,24 @@ dot:
 vendor:
 	$(RUN) vendor -only
 
-.PHONY: check
-check:
-	$(RUN) check # -v
-
-# go test ./cmd/... ./internal/...
 .PHONY: test
 test:
+	# go test ./cmd/... ./internal/...
 	$(RUN) -v test
+
+.PHONY: integration
+integration:
+	$(RUN) test:integration
 
 .PHONY: coverage
 coverage:
-	$(RUN) coverage
+	$(RUN) test:coverage
 
-.PHONY: build
-build:
-	$(RUN) build
+COMMANDS := build check docker docs install release snapshot
 
-.PHONY: install
-install:
-	$(RUN) install
-
-.PHONY: docker
-docker:
-	$(RUN) docker
-
-.PHONY: docs
-docs:
-	$(RUN) docs
-
-.PHONY: release
-release:
-	$(RUN) release
-
-.PHONY: snapshot
-snapshot:
-	$(RUN) snapshot
+.PHONY: $(COMMANDS)
+$(COMMANDS):
+	$(RUN) $@
 
 # MAKEFLAGS += --silent
 ifndef VERBOSE

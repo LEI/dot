@@ -86,7 +86,7 @@ build_script:
   # - 'bash -lc "make distcheck VERBOSE=1 V=1"'
   # - echo %USERPROFILE%
 
-  - go run build.go vendor -only check install # testRace
+  - go run build.go vendor -only check install # test:race
   # - go run build.go vendor -only check build:windows
   # - 'bash -lc "cp /c/gopath/src/github.com/LEI/dot/dist/windows_amd64/dot /usr/local/bin/dot"'
   # - 'bash -lc "ls -la /usr/local/bin"'

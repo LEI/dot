@@ -257,6 +257,7 @@ func main() {
 		if o == v {
 			continue
 		}
+		// TODO: !ok os.Unsetenv?
 		defer os.Setenv(k, o)
 		if err := os.Setenv(k, v); err != nil {
 			panic(err)

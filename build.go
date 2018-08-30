@@ -67,27 +67,28 @@ var (
 
 	// docMap map[string]string
 	funcMap = map[string]TargetFunc{
-		"vendor":        Vendor,
-		"dep":           dep,
-		"check":         Check,
-		"test":          Test,
-		"testrace":      TestRace,
-		"coverage":      Coverage,
-		"vet":           Vet,
-		"lint":          Lint,
-		"fmt":           Fmt,
-		"install":       Install,
-		"build":         Build,
-		"build:darwin":  Build_Darwin,
-		"build:linux":   Build_Linux,
-		"build:windows": Build_Windows,
-		"clean":         Clean,
-		"docs":          Docs,
-		"docker":        Docker,
-		"dockeros":      DockerOS,
-		"goreleaser":    goreleaser,
-		"release":       Release,
-		"snapshot":      Snapshot,
+		"vendor":           Vendor,
+		"dep":              dep,
+		"check":            Check,
+		"test":             Test,
+		"test:coverage":    Test_Coverage,
+		"test:integration": Test_Integration,
+		"test:race":        Test_Race,
+		"vet":              Vet,
+		"lint":             Lint,
+		"fmt":              Fmt,
+		"install":          Install,
+		"build":            Build,
+		"build:darwin":     Build_Darwin,
+		"build:linux":      Build_Linux,
+		"build:windows":    Build_Windows,
+		"clean":            Clean,
+		"docs":             Docs,
+		"docker":           Docker,
+		"dockeros":         DockerOS,
+		"goreleaser":       goreleaser,
+		"release":          Release,
+		"snapshot":         Snapshot,
 	}
 
 	targetList = []Target{}
@@ -232,6 +233,11 @@ func execute() error {
 	}
 	return serial(ts...)
 }
+
+// // Run verbose go tests
+// func testV() error {
+// 	return run("go", "test", "-v", "./...")
+// }
 
 // serial targets
 func serial(ts ...Target) error {
@@ -402,7 +408,10 @@ func Check() error {
 
 // Test run go tests
 func Test() error {
-	args := []string{"test"}
+	args := []string{
+		"test",
+		"-tags", testTags(),
+	}
 	if verboseFlag {
 		args = append(args, "-v")
 	}
@@ -418,18 +427,8 @@ func Test() error {
 	return nil
 }
 
-// Run verbose go tests
-func testV() error {
-	return run("go", "test", "-v", "./...")
-}
-
-// TestRace run go tests with race detector
-func TestRace() error {
-	return run("go", "test", "-v", "-race", "./...")
-}
-
-// Coverage run test coverage
-func Coverage() error {
+// Test_Coverage run test coverage
+func Test_Coverage() error {
 	profile := os.Getenv("COVERPROFILE")
 	if profile == "" {
 		profile = "coverage.txt"
@@ -438,10 +437,38 @@ func Coverage() error {
 	if mode == "" {
 		mode = "atomic"
 	}
-	return run("go", "test", "-v", "-race", "-coverprofile="+profile, "-covermode="+mode, "./...")
+	args := []string{
+		"test", "-v", "-race",
+		"-tags", testTags(),
+		"-coverprofile=" + profile,
+		"-covermode=" + mode,
+		"./...",
+	}
+	return run("go", args...)
 }
 
-// Vet run go vet
+// Test_Integration run long or expensive tests
+// DOT_TEST_TAGS=integration go run build.go -v test
+func Test_Integration() error {
+	args := []string{
+		"test", "-v", "-race",
+		"-tags", "integration",
+		"./...",
+	}
+	return run("go", args...)
+}
+
+// Test_Race run tests with race detector
+func Test_Race() error {
+	args := []string{
+		"test", "-v", "-race",
+		"-tags", testTags(),
+		"./...",
+	}
+	return run("go", args...)
+}
+
+// Vet run vet (already run with test since Go 1.11)
 func Vet() error {
 	args := []string{"vet"}
 	if verboseFlag {
@@ -669,22 +696,32 @@ func version() string {
 	return strings.TrimSpace(string(buf))
 }
 
-// Parse build tags from a given environment variable
+// Parse build tags
 func buildTags() string {
-	bd := defaultBuildTags
-	if envTags := os.Getenv("DOT_BUILD_TAGS"); envTags != "" {
+	str := getEnvTags("DOT_BUILD_TAGS")
+	return str
+}
+
+// Parse test tags
+func testTags() string {
+	return getEnvTags("DOT_TEST_TAGS")
+}
+
+// Parse tags from a given environment variable
+func getEnvTags(s string) string {
+	tags := []string{}
+	if envTags := os.Getenv(s); envTags != "" {
 		for _, et := range strings.Fields(envTags) {
-			bd = append(bd, et)
+			tags = append(tags, et)
 		}
 	}
-	if len(bd) == 0 {
-		// bd = append(bd, "release")
+	for i := range tags {
+		tags[i] = strings.TrimSpace(tags[i])
+	}
+	if len(tags) == 0 {
 		return "none"
 	}
-	for i := range bd {
-		bd[i] = strings.TrimSpace(bd[i])
-	}
-	return strings.Join(bd, " ")
+	return strings.Join(tags, " ")
 }
 
 // Clean remove dist directory
