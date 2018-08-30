@@ -69,6 +69,11 @@ type Tpl struct {
 	overwrite bool
 }
 
+// NewTpl task
+func NewTpl(s string) *Tpl {
+	return &Tpl{Source: s}
+}
+
 func (t *Tpl) String() string {
 	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
 	switch t.GetAction() {

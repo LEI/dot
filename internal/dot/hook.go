@@ -25,6 +25,11 @@ type Hook struct {
 	ExecDir string
 }
 
+// NewHook task
+func NewHook(s string) *Hook {
+	return &Hook{Command: s}
+}
+
 func (h *Hook) String() string {
 	s := strings.TrimRight(h.Command, "\n")
 	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {

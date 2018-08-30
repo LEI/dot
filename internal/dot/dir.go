@@ -16,6 +16,11 @@ type Dir struct {
 	Path string
 }
 
+// NewDir task
+func NewDir(s string) *Dir {
+	return &Dir{Path: s}
+}
+
 func (d *Dir) String() string {
 	s := d.Path
 	switch d.GetAction() {

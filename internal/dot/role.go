@@ -282,17 +282,17 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 	case string:
 		switch t {
 		case reflect.TypeOf((*Pkg)(nil)):
-			i = &Pkg{Name: []string{val}}
+			i = NewPkg(val) // &Pkg{Name: []string{val}}
 		case reflect.TypeOf((*Dir)(nil)):
-			i = &Dir{Path: val}
+			i = NewDir(val) // Path
 		case reflect.TypeOf((*Link)(nil)):
-			i = &Link{Source: val}
+			i = NewLink(val)
 		case reflect.TypeOf((*Tpl)(nil)):
-			i = &Tpl{Source: val}
+			i = NewTpl(val)
 		case reflect.TypeOf((*Line)(nil)):
-			i = &Tpl{Source: val}
+			i = NewTpl(val)
 		case reflect.TypeOf((*Hook)(nil)):
-			i = &Hook{Command: val}
+			i = NewHook(val)
 		}
 	case map[interface{}]interface{}:
 		switch t {
