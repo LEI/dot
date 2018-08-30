@@ -18,6 +18,11 @@ type Line struct {
 	Data   string                   // Line content
 }
 
+// NewLine task
+func NewLine(s, d string) *Line {
+	return &Line{Target: s, Data: d}
+}
+
 func (l *Line) String() string {
 	s := fmt.Sprintf("%s:%s", l.Target, l.Data)
 	switch l.GetAction() {
