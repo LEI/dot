@@ -188,7 +188,7 @@ func pkgOnly(input []string) []string {
 // Detect default package manager
 func Detect() (name string, err error) {
 	switch runtime.GOOS {
-	case "android": // executable("packages"):
+	case "android": // executable("pkg"):
 		name = "termux"
 	case "darwin":
 		name = "brew"

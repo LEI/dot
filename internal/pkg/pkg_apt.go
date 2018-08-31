@@ -57,12 +57,13 @@ var aptGet = &Pm{
 	},
 }
 
+// https://wiki.termux.com/wiki/Package_Management
 var termux = &Pm{}
 
 func init() {
 	*termux = *aptGet
 	termux.Sudo = false
-	// termux.Bin = "packages"
+	// termux.Bin = "pkg"
 	// termux.Init = func(m *Pm) error {
 	// 	return nil
 	// }
