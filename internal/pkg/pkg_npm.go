@@ -3,9 +3,11 @@ package pkg
 import "os/exec"
 
 var npm = &Pm{
-	Bin:     "npm",
+	Bin: "npm",
+	// https://docs.npmjs.com/cli/install
 	Install: "install",
-	Remove:  "uninstall",
+	// https://docs.npmjs.com/cli/uninstall
+	Remove: "uninstall",
 	Opts: []string{
 		"--global",
 	},

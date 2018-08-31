@@ -47,6 +47,8 @@ func (p *Pkg) String() string {
 
 // Status check task
 func (p *Pkg) Status() error {
+	// TODO: upgrade flag (this will prevent any pkg.Pm.Install
+	// function to execute even if it can upgrade the package
 	exists, err := pkg.Has(p.Manager, p.Name, p.Args...)
 	if err != nil {
 		return err

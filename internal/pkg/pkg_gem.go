@@ -2,10 +2,22 @@ package pkg
 
 import "os/exec"
 
+// https://bundler.io/docs.html
+
+// https://guides.rubygems.org/command-reference
 var gem = &Pm{
 	Bin:     "gem",
 	Install: "install",
-	Remove:  "uninstall",
+	// Install: func(m *Pm, pkgs ...string) string {
+	// 	if Upgrade {
+	// 		ok, err := m.Has(m, pkgs)
+	// 		if err == nil && ok {
+	// 			return "update" // upgrade
+	// 		}
+	// 	}
+	// 	return "install"
+	// },
+	Remove: "uninstall",
 	Opts: []string{
 		// "--no-verbose",
 		"--quiet",

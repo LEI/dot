@@ -2,6 +2,7 @@ package pkg
 
 import "os/exec"
 
+// https://pip.pypa.io/en/stable/reference
 var pip = &Pm{
 	Bin:     "pip",
 	Install: "install",
@@ -14,8 +15,7 @@ var pip = &Pm{
 		// "--quiet",
 		// "--requirement", "requirements.txt",
 	},
-	InstallOpts: []string{
-		"--noinput", // undocumented
+	InstallOpts: []string{ // --noinput?
 		"--progress-bar", "off",
 		// "--upgrade",
 	},
