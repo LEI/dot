@@ -326,6 +326,7 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 	// if err := cmd.Run(); err != nil {
 	// 	if !m.AllowFailure {
 	// 		return err
