@@ -9,9 +9,9 @@ var npm = &Pm{
 	Opts: []string{
 		"--global",
 	},
-	InstallOpts: []string{},
-	RemoveOpts:  []string{},
-	DryRunOpts:  []string{"--dry-run"},
+	// InstallOpts: []string{},
+	// RemoveOpts:  []string{},
+	DryRunOpts: []string{"--dry-run"},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// npm info ... --json
 		opts := []string{"list", "--global"}
