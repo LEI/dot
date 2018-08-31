@@ -7,73 +7,73 @@ git:
 roles:
   - "bash:LEI/dot-bash"
 
+  - name: node
+    url: LEI/dot-node
+    os: ["!android"]
+
+  - name: php
+    url: LEI/dot-php
+    os: ["!android"]
+
+  - name: python
+    url: LEI/dot-python
+
+  - name: ruby
+    url: LEI/dot-ruby
+
+  # - name: rust
+  #   url: LEI/dot-rust
+  #   os: ["!alpine", "!android"]
+
+  - name: termux
+    url: LEI/dot-termux
+    os: ["android"]
+
+  - name: arch
+    url: LEI/dot-arch
+    os: ["arch"]
+
+  - name: osx
+    url: LEI/dot-osx
+    os: ["darwin"]
+
+  - name: hammerspoon
+    url: LEI/dot-hammerspoon
+    os: ["darwin"]
+
   - name: gpg
-    url: "https://github.com/LEI/dot-gpg"
+    url: LEI/dot-gpg
 
   - name: git
     url: LEI/dot-git
     dependencies: ["gpg"]
 
   - name: vim
-    url: "https://github.com/LEI/dot-vim"
+    url: LEI/dot-vim
     dependencies: ["bash", "git"]
 
   - name: tmux
-    url: "https://github.com/LEI/dot-tmux"
+    url: LEI/dot-tmux
     dependencies: ["git"]
 
-  - name: termux
-    url: "https://github.com/LEI/dot-termux"
-    os: ["android"]
-
-  - name: arch
-    url: "https://github.com/LEI/dot-arch"
-    os: ["arch"]
-
-  - name: osx
-    url: "https://github.com/LEI/dot-osx"
-    os: ["darwin"]
-
-  - name: hammerspoon
-    url: "https://github.com/LEI/dot-hammerspoon"
-    os: ["darwin"]
-
   - name: i3
-    url: "https://github.com/LEI/dot-i3"
+    url: LEI/dot-i3
     os: ["arch"]
     dependencies: ["arch"]
 
   - name: rxvt
-    url: "https://github.com/LEI/dot-rxvt"
+    url: LEI/dot-rxvt
     os: ["arch"]
     dependencies: ["i3"]
 
   - name: mutt
-    url: "https://github.com/LEI/dot-mutt"
+    url: LEI/dot-mutt
     os: ["darwin"]
     dependencies: ["gpg"]
 
-  - name: node
-    url: "https://github.com/LEI/dot-node"
-    os: ["!android"]
-
-  - name: php
-    url: "https://github.com/LEI/dot-php"
-    os: ["!android"]
-
-  - name: python
-    url: "https://github.com/LEI/dot-python"
-
-  - name: ruby
-    url: "https://github.com/LEI/dot-ruby"
-
-  - name: rust
-    url: "https://github.com/LEI/dot-rust"
-    os: ["!alpine", "!android"]
-
   - name: htop
-    url: "https://github.com/LEI/dot-htop"
+    url: LEI/dot-htop
 
   - name: usql
-    url: "https://github.com/LEI/dot-usql"
+    url: LEI/dot-usql
     os: ["darwin"]
