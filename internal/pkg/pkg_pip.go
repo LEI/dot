@@ -9,7 +9,6 @@ var pip = &Pm{
 	Opts: []string{
 		// "--no-cache",
 		// "--prefix", "/usr/local",
-		"--progress-bar", "off",
 		"--quiet",
 		// "--quiet",
 		// "--quiet",
@@ -17,6 +16,7 @@ var pip = &Pm{
 	},
 	InstallOpts: []string{
 		"--noinput", // undocumented
+		"--progress-bar", "off",
 		// "--upgrade",
 	},
 	RemoveOpts: []string{
@@ -44,5 +44,5 @@ func init() {
 	pip2.Bin = "pip2"
 
 	*pip3 = *pip
-	pip2.Bin = "pip3"
+	pip3.Bin = "pip3"
 }
