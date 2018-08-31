@@ -48,6 +48,8 @@ var (
 	}
 )
 
+type hasFunc func(*Pm, []string) (bool, error)
+
 // Pm package manager
 type Pm struct {
 	Shell       string
@@ -64,9 +66,9 @@ type Pm struct {
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
 	Env  map[string]string
-	Init func(*Pm) error                   // Install manager or prepare bin
-	Has  func(*Pm, []string) (bool, error) // Search local packages
-	done bool                              // TODO use sync.Once
+	Init func(*Pm) error // Install manager or prepare bin
+	Has  hasFunc         // Search local packages
+	done bool            // TODO use sync.Once
 }
 
 // NewPm ...
@@ -293,14 +295,8 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 		}
 		m.done = true
 	}
-	if action == "install" && m.Has != nil {
-		ok, err := m.Has(m, pkgs)
-		if err != nil {
-			return err
-		}
-		if ok {
-			return ErrExist
-		}
+	if err := m.checkIfExist(pkgs); err != nil {
+		return err
 	}
 	return execManagerCommand(m, bin, opts...)
 }
@@ -318,7 +314,7 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	var cmd *exec.Cmd
 	if m.Shell != "" {
 		s := shell.Get()
-		fmt.Println("Using shell:", s)
+		// if Verbose { fmt.Println("Using shell:", s) }
 		c := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
 		cmd = exec.Command(s, "-c", c)
 	} else {
@@ -345,6 +341,26 @@ func execCommand(name string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+// Return ErrExist if packages are present (installed)
+func (m *Pm) checkIfExist(pkgs []string) error {
+	// Abort if not check function is available
+	if m.Has != nil {
+		return nil
+	}
+	// // Ignore presence check if install is a func
+	// if _, ok := m.Install.(hasFunc); ok {
+	// 	return nil
+	// }
+	ok, err := m.Has(m, pkgs)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return ErrExist
+	}
+	return nil
 }
 
 func getBin(m *Pm, opts []string) (string, []string, error) {
