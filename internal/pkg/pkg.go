@@ -29,16 +29,22 @@ var (
 	Manager *Pm
 
 	managers = map[string]*Pm{
-		"apk":     apk,
-		"apt-cyg": aptCyg,
-		"apt-get": aptGet,
-		"brew":    brew,
-		"cask":    brewCask,
-		"choco":   choco,
-		"pacman":  pacman,
-		"termux":  termux,
-		"yaourt":  yaourt,
-		"yum":     yum,
+		"apk":     apk,      // alpine
+		"apt-cyg": aptCyg,   // cygwin
+		"apt-get": aptGet,   // debian
+		"brew":    brew,     // homebrew
+		"cask":    brewCask, // darwin
+		"choco":   choco,    // windows
+		// "cpan":    cpan,     // perl
+		"gem":    gem,    // ruby
+		"npm":    npm,    // node
+		"pacman": pacman, // archlinux
+		"pip":    pip,    // python
+		"pip2":   pip2,
+		"pip3":   pip3,
+		"termux": termux, // android pkg
+		"yaourt": yaourt, // arch user repository
+		"yum":    yum,    // centos
 	}
 )
 
