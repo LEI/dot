@@ -3,6 +3,8 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -13,8 +15,13 @@ import (
 // TODO: test main no confirm
 
 func testCobra(cmd *cobra.Command, args []string) error {
+	var buf bytes.Buffer
 	cmd.SetArgs(args)
+	cmd.SetOutput(buf)
 	err := cmd.Execute()
+	if err != nil {
+		fmt.Print(buf)
+	}
 	return err
 }
 
