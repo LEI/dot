@@ -10,13 +10,13 @@ var pip = &Pm{
 	Opts: []string{
 		// "--no-cache",
 		// "--prefix", "/usr/local",
-		"--quiet",
+		"--quiet", // TODO flag
 		// "--quiet",
 		// "--quiet",
 		// "--requirement", "requirements.txt",
 	},
 	InstallOpts: []string{ // --noinput?
-		"--progress-bar", "off",
+		// "--progress-bar", "off",
 		// "--upgrade",
 	},
 	RemoveOpts: []string{

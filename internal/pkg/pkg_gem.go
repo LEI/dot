@@ -29,6 +29,8 @@ var gem = &Pm{
 		// "--no-post-install-message",
 	},
 	RemoveOpts: []string{
+		// "--all" // matching versions
+		"--executables", // without confirmation
 		// "--install-dir", "/usr/local",
 	},
 	Init: func(m *Pm) error {
