@@ -5,7 +5,6 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -68,7 +67,7 @@ var aptCyg = &Pm{
 	Remove:  "remove",
 	// Opts: []string{},
 	// DryRunOpts:  []string{},
-	Init: func(m *Pm) error {
+	/* Init: func(m *Pm) error {
 		// fmt.Println("$ apt-cyg --version")
 		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version")
 		// cmd := exec.Command("apt-cyg", "--version")
@@ -82,7 +81,7 @@ var aptCyg = &Pm{
 		// 	// return err
 		// }
 		return cmd.Run()
-	},
+	}, */
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// cygcheck --list-package ...
 		opts := []string{"show"}

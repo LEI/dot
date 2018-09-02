@@ -432,7 +432,7 @@ func parseVars(e *Env, vars *Vars, incl ...string) (*Vars, error) {
 			if err != nil {
 				return data, err
 			}
-			// Expand environment variables
+			// Expand resulting environment variables
 			v = env.ExpandEnv(ev, *e)
 			// expand := func(s string) string {
 			// 	if v, ok := e[s]; ok {
@@ -663,6 +663,11 @@ func parseHook(e *Env, h *Hook) error {
 	if h.Env == nil {
 		h.Env = &Env{}
 	}
+	// Expand hook environment variables
+	for k, v := range *h.Env {
+		(*h.Env)[k] = env.ExpandEnv(v, *h.Env)
+	}
+	// Merge given environment (global role config)
 	for k, v := range *e {
 		if _, ok := (*h.Env)[k]; !ok {
 			(*h.Env)[k] = v

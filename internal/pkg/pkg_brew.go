@@ -1,10 +1,7 @@
 package pkg
 
 import (
-	"fmt"
 	"os/exec"
-
-	"github.com/LEI/dot/internal/shell"
 )
 
 // TODO: Brewfile (bundle & unbundle)
@@ -31,7 +28,8 @@ var brew = &Pm{
 		"HOMEBREW_NO_EMOJI":       "1",
 		// "HOMEBREW_VERBOSE": "0",
 	},
-	Init: func(m *Pm) error {
+	/* Init: func(m *Pm) error {
+		// TODO: check action == "install"
 		opts := []string{"update", "--quiet"}
 		bin, args, err := getBin(m, opts)
 		if err != nil {
@@ -40,7 +38,7 @@ var brew = &Pm{
 		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 		return execManagerCommand(m, bin, args...)
 		// return execCommand("brew", "update", "--quiet")
-	},
+	}, */
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// fmt.Printf("brew ls --versions %s\n", pkgs)
 		cmd := exec.Command("brew", append([]string{"ls", "--versions"}, pkgs...)...)

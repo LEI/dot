@@ -279,6 +279,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 		return err
 	}
 	// First run initialisation
+	// TODO: before execute
 	if !m.done && m.Init != nil {
 		if err := m.Init(m); err != nil {
 			return err

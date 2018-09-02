@@ -333,9 +333,12 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 func buildTplEnv(k, v string, envs ...map[string]string) (string, error) {
 	environ := env.GetAll()
 	for _, e := range envs {
-		for k, v := range e {
-			environ[k] = v
-		}
+		v = env.ExpandEnv(v, e)
+		// for ek, ev := range e {
+		// 	fmt.Printf("EXPANDING %s=%q\n", ek, ev)
+		// 	environ[ek] = env.ExpandEnv(ev, e)
+		// 	fmt.Printf("EXPANDED %q\n", environ[ek])
+		// }
 	}
 	return buildTpl(k, v, environ)
 }

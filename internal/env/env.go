@@ -72,20 +72,20 @@ func Get(k string) string {
 }
 
 // Expand ...
-func Expand(k string) string {
-	return os.ExpandEnv(k)
-	// return os.Expand(k, Get)
+func Expand(s string) string {
+	// return os.ExpandEnv(s)
+	return os.Expand(s, Get)
 }
 
 // ExpandEnv ...
-func ExpandEnv(k string, env map[string]string) string {
+func ExpandEnv(s string, env map[string]string) string {
 	expand := func(k string) string {
 		if v, ok := env[k]; ok {
 			return v
 		}
 		return Get(k)
 	}
-	return os.Expand(k, expand)
+	return os.Expand(s, expand)
 }
 
 // Lookup environment variable

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-
-	"github.com/LEI/dot/internal/shell"
 )
 
 // https://manpages.debian.org/stretch/apt/apt-get.8.en.html
@@ -22,7 +20,8 @@ var aptGet = &Pm{
 		"--quiet",
 		"--quiet",
 	},
-	Init: func(m *Pm) error {
+	/* Init: func(m *Pm) error {
+		// TODO: check action == "install"
 		opts := []string{"update", "--quiet"}
 		bin, args, err := getBin(m, opts)
 		if err != nil {
@@ -31,7 +30,7 @@ var aptGet = &Pm{
 		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 		return execManagerCommand(m, bin, args...)
 		// return execCommand("apt-get", "update", "--quiet")
-	},
+	}, */
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// dpkg-query -l "$package" | grep -q ^.i
 		c1 := exec.Command("dpkg-query", append([]string{"-Wf'${db:Status-abbrev}'"}, pkgs...)...)

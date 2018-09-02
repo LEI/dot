@@ -1,10 +1,8 @@
 package pkg
 
 import (
-	"fmt"
 	"os/exec"
-
-	"github.com/LEI/dot/internal/shell"
+	"runtime"
 )
 
 // https://pip.pypa.io/en/stable/reference
@@ -28,15 +26,23 @@ var pip = &Pm{
 		"--yes",
 	},
 	// DryRunOpts: []string{},
-	Init: func(m *Pm) error {
+	/* Init: func(m *Pm) error {
+		// TODO: check action == "install" and if pip is up to date
+		// /!\ sudo is needed on linux unless:
+		// curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+		// python get-pip.py --user
 		opts := []string{"install", "--upgrade", "pip"}
+		if runtime.GOOS == "linux" {
+			// sudo needed for /usr/bin/pip
+			opts = append(opts, "--user")
+		}
 		bin, args, err := getBin(m, opts)
 		if err != nil {
 			return err
 		}
 		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 		return execManagerCommand(m, bin, args...)
-	},
+	}, */
 	// FIXME: python2 -c 'import neovim' did not work until
 	// pip2 uninstall neovim && pip2 install neovim
 	Has: func(m *Pm, pkgs []string) (bool, error) {
@@ -52,9 +58,13 @@ var pip2 = &Pm{}
 var pip3 = &Pm{}
 
 func init() {
-	// if runtime.GOOS == "darwin" {
-	// 	pip.Sudo = true
+	// if runtime.GOOS != "darwin" {
+	// 	// brew install python
 	// }
+	if runtime.GOOS == "linux" {
+		pip.InstallOpts = append(pip.InstallOpts, "--user")
+	}
+	// windows: python -m pip ...
 
 	*pip2 = *pip
 	pip2.Bin = "pip2"
