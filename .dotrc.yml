@@ -5,73 +5,73 @@ git:
   # scheme: https
 
 roles:
-  # - name: bash
-  #   url: LEI/dot-bash
+  - name: bash
+    url: LEI/dot-bash
 
-  # - name: gpg
-  #   url: LEI/dot-gpg
+  - name: gpg
+    url: LEI/dot-gpg
 
-  # - name: git
-  #   url: LEI/dot-git
-  #   dependencies: ["gpg"]
+  - name: git
+    url: LEI/dot-git
+    dependencies: ["gpg"]
 
-  # - name: node
-  #   url: LEI/dot-node
-  #   os: ["!android"]
-  #   dependencies: ["gpg"]
+  - name: node
+    url: LEI/dot-node
+    os: ["!android"]
+    dependencies: ["gpg"]
 
-  # - name: php
-  #   url: LEI/dot-php
-  #   os: ["!android"]
+  - name: php
+    url: LEI/dot-php
+    os: ["!android"]
 
-  # - name: python
-  #   url: LEI/dot-python
+  - name: python
+    url: LEI/dot-python
 
-  # - name: ruby
-  #   url: LEI/dot-ruby
+  - name: ruby
+    url: LEI/dot-ruby
 
-  # # - name: rust
-  # #   url: LEI/dot-rust
-  # #   os: ["!alpine", "!android"]
+  # - name: rust
+  #   url: LEI/dot-rust
+  #   os: ["!alpine", "!android"]
 
-  # - name: vim
-  #   url: LEI/dot-vim
-  #   dependencies: ["bash", "git"]
+  - name: vim
+    url: LEI/dot-vim
+    dependencies: ["bash", "git"]
 
-  # - name: tmux
-  #   url: LEI/dot-tmux
-  #   dependencies: ["git"]
+  - name: tmux
+    url: LEI/dot-tmux
+    dependencies: ["git"]
 
-  # - name: termux
-  #   url: LEI/dot-termux
-  #   os: ["android"]
+  - name: termux
+    url: LEI/dot-termux
+    os: ["android"]
 
-  # - name: osx
-  #   url: LEI/dot-osx
-  #   os: ["darwin"]
+  - name: osx
+    url: LEI/dot-osx
+    os: ["darwin"]
 
-  # - name: hammerspoon
-  #   url: LEI/dot-hammerspoon
-  #   os: ["darwin"]
+  - name: hammerspoon
+    url: LEI/dot-hammerspoon
+    os: ["darwin"]
 
-  # - name: mutt
-  #   url: LEI/dot-mutt
-  #   os: ["darwin"]
-  #   dependencies: ["gpg"]
+  - name: mutt
+    url: LEI/dot-mutt
+    os: ["darwin"]
+    dependencies: ["gpg"]
 
-  # - name: arch
-  #   url: LEI/dot-arch
-  #   os: ["arch"]
+  - name: arch
+    url: LEI/dot-arch
+    os: ["arch"]
 
-  # - name: i3
-  #   url: LEI/dot-i3
-  #   os: ["arch"]
-  #   dependencies: ["arch"]
+  - name: i3
+    url: LEI/dot-i3
+    os: ["arch"]
+    dependencies: ["arch"]
 
-  # - name: rxvt
-  #   url: LEI/dot-rxvt
-  #   os: ["arch"]
-  #   dependencies: ["i3"]
+  - name: rxvt
+    url: LEI/dot-rxvt
+    os: ["arch"]
+    dependencies: ["i3"]
 
   - name: htop
     url: LEI/dot-htop
