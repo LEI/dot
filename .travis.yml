@@ -100,7 +100,6 @@ jobs:
       os: osx
       language: go
 
-    # Deploy when a tag is specified
     # https://goreleaser.com/ci/
     - stage: deploy
       addons:
@@ -121,7 +120,7 @@ jobs:
         - scripts/build-docs.sh
       deploy:
 
-        # Release with goreleaser
+        # Release with goreleaser when a tag is specified
         - provider: script
           # if: tag IS present
           # script: curl -sL https://git.io/goreleaser | bash
