@@ -9,10 +9,10 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -qqy && \
 apt-get install --no-install-suggests --no-install-recommends -qqy \
 ca-certificates \
+curl \
 git \
 locales \
 sudo
-# curl
 
 COPY ./dist/${OS}_${ARCH}/dot /usr/local/bin/dot
 COPY ./scripts/setup-lang.sh setup-lang.sh

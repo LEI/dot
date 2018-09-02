@@ -1,6 +1,8 @@
 package pkg
 
-import "os/exec"
+import (
+	"os/exec"
+)
 
 // https://bundler.io/docs.html
 
@@ -25,7 +27,7 @@ var gem = &Pm{
 	InstallOpts: []string{
 		// "--bindir", "/usr/local/bin", // darwin?
 		// "--install-dir", "/usr/local",
-		// "--no-document", // "rdoc,ri",
+		"--no-document", // rdoc,ri
 		// "--no-post-install-message",
 	},
 	RemoveOpts: []string{
@@ -33,7 +35,18 @@ var gem = &Pm{
 		"--executables", // without confirmation
 		// "--install-dir", "/usr/local",
 	},
+	Env: map[string]string{
+		// "GEM_HOME": "",
+	},
 	Init: func(m *Pm) error {
+		// // export GEM_HOME="$(ruby -e 'print Gem.user_dir')"
+		// cmd := exec.Command("ruby", "-e", "print Gem.user_dir")
+		// out, err := cmd.Output()
+		// if err != nil {
+		// 	return err
+		// }
+		// m.Env["GEM_HOME"] = string(out)
+
 		opts := []string{"update", "--system"}
 		// "--bindir", "/usr/local/bin"
 		// "--silent"
@@ -41,6 +54,13 @@ var gem = &Pm{
 		if err != nil {
 			return err
 		}
+		// str := strings.TrimSuffix(string(out), "\n")
+		// if os.Getenv("GEM_HOME") == "" {
+		// 	err = os.Setenv("GEM_HOME", str)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
 		return execManagerCommand(m, bin, opts...)
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
@@ -50,4 +70,20 @@ var gem = &Pm{
 		err := cmd.Run()
 		return err == nil, nil
 	},
+}
+
+func init() {
+	// if runtime.GOOS == "linux" {
+	// 	gem.Opts = append(gem.Opts, []string{"--bindir", "/usr/local/bin"}...)
+	// }
+	// FIXME alpine, debian, arch?
+	// if !gem.Sudo && runtime.GOOS == "linux" {
+	// 	gem.Sudo = true
+	// 	// bin, opts, err := getBin(gem, gem.Opts)
+	// 	// if err != nil {
+	// 	// 	log.Fatal(err)
+	// 	// }
+	// 	// gem.Bin = bin
+	// 	// gem.Opts = opts
+	// }
 }
