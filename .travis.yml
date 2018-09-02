@@ -55,7 +55,7 @@ jobs:
         # - make build && du -sh dist/*_*/*
         - make install
         - dot --help
-        - dot --release
+        # - dot --release
         - dot --version
 
     - &base
@@ -100,7 +100,6 @@ jobs:
       os: osx
       language: go
 
-    # https://goreleaser.com/ci/
     - stage: deploy
       addons:
         apt:
@@ -120,19 +119,6 @@ jobs:
         - scripts/build-docs.sh
       deploy:
 
-        # Release with goreleaser when a tag is specified
-        - provider: script
-          # if: tag IS present
-          # script: curl -sL https://git.io/goreleaser | bash
-          # script: go run build.go vendor -only release
-          script: make release
-          skip_cleanup: true
-          on:
-            repo: LEI/dot
-            branch: docs
-            tags: true
-            condition: $TRAVIS_OS_NAME = linux
-
         # Publish Github pages and coverage status
         - provider: pages
           skip-cleanup: true
@@ -148,6 +134,20 @@ jobs:
           on:
             repo: LEI/dot
             branch: master
+            condition: $TRAVIS_OS_NAME = linux
+
+        # Release with goreleaser when a tag is specified
+        # https://goreleaser.com/ci/
+        - provider: script
+          # if: tag IS present
+          # script: curl -sL https://git.io/goreleaser | bash
+          # script: go run build.go vendor -only release
+          script: make release
+          skip_cleanup: true
+          on:
+            repo: LEI/dot
+            branch: docs
+            tags: true
             condition: $TRAVIS_OS_NAME = linux
 
       after_success:
