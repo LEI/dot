@@ -698,7 +698,7 @@ func version() string {
 
 // Parse build tags
 func buildTags() string {
-	str := getEnvTags("DOT_BUILD_TAGS")
+	str := getEnvTags("DOT_BUILD_TAGS", defaultBuildTags...)
 	return str
 }
 
@@ -708,8 +708,8 @@ func testTags() string {
 }
 
 // Parse tags from a given environment variable
-func getEnvTags(s string) string {
-	tags := []string{}
+func getEnvTags(s string, t ...string) string {
+	tags := t // Default tags []string{}
 	if envTags := os.Getenv(s); envTags != "" {
 		for _, et := range strings.Fields(envTags) {
 			tags = append(tags, et)
