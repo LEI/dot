@@ -61,7 +61,7 @@ jobs:
     - &base
       stage: test
       # This stage builds from source
-      if: env(OS) != ""
+      if: tag IS present # FIXME if: env(OS) != ""
       # go run build.go -v vendor docker
       script: make docker
       skip_cleanup: true
@@ -80,7 +80,7 @@ jobs:
       env: OS=debian
 
     - stage: test
-      # if: tag IS present
+      if: tag IS present
       script:
         - brew --version
         # - (cd "$(brew --repo)" && git fetch && git reset --hard origin/master && brew update)
