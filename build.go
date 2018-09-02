@@ -56,6 +56,7 @@ var (
 	}
 
 	defaultBuildTags = []string{}
+	defaultTestTags  = []string{} // integration
 
 	docsPath = "docs/" // ./docs
 
@@ -450,12 +451,14 @@ func Test_Coverage() error {
 // Test_Integration run long or expensive tests
 // DOT_TEST_TAGS=integration go run build.go -v test
 func Test_Integration() error {
-	args := []string{
-		"test", "-v", "-race",
-		"-tags", "integration",
-		"./...",
-	}
-	return run("go", args...)
+	// args := []string{
+	// 	"test", "-v", "-race",
+	// 	"-tags", "integration",
+	// 	"./...",
+	// }
+	// return run("go", args...)
+	defaultTestTags = []string{"integration"}
+	return Test_Race()
 }
 
 // Test_Race run tests with race detector
@@ -704,7 +707,7 @@ func buildTags() string {
 
 // Parse test tags
 func testTags() string {
-	return getEnvTags("DOT_TEST_TAGS")
+	return getEnvTags("DOT_TEST_TAGS", defaultTestTags...)
 }
 
 // Parse tags from a given environment variable
