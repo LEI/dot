@@ -82,7 +82,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	// 	}
 	// }
 	if failed > 0 && !ignoreErrors {
-		return fmt.Errorf("%d error(s) while checking %d roles", failed, len(roles))
+		return fmt.Errorf("%d error(s) occurred while checking %d roles", failed, len(roles))
 	}
 	return nil
 }
