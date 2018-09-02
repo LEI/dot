@@ -4,6 +4,7 @@ package pkg
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -87,6 +88,7 @@ var aptCyg = &Pm{
 		opts := []string{"show"}
 		// opts = append(opts, m.Opts...)
 		opts = append(opts, pkgs...)
+		fmt.Printf("$ %s %s\n", m.Bin, shell.FormatArgs(opts))
 		err := execManagerCommand(m, m.Bin, opts...)
 		// cmd := exec.Command(shell.Get(), "-c", m.Bin + opts...)
 		// cmd.Stdout = os.Stdout

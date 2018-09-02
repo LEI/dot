@@ -37,6 +37,7 @@ roles:
   - name: vim
     url: LEI/dot-vim
     dependencies: ["bash", "git"]
+    # node, python, ruby
 
   - name: tmux
     url: LEI/dot-tmux

@@ -385,19 +385,19 @@ func (r *Role) ParseEnv() error {
 	if r.Env == nil {
 		r.Env = &Env{}
 	}
-	environ, err := parseEnv(r.Env)
+	e, err := parseEnviron(r.Env)
 	if err != nil {
 		return err
 	}
-	r.Env = environ
+	r.Env = e
 	return nil
 }
 
-func parseEnv(environ *Env) (*Env, error) {
+func parseEnviron(e *Env) (*Env, error) {
 	m := &Env{}
-	for k, v := range *environ {
+	for k, v := range *e {
 		k = strings.ToUpper(k)
-		ev, err := buildTplEnv(k, v, *environ)
+		ev, err := buildTplEnv(k, v, *e)
 		if err != nil {
 			return m, err
 		}
@@ -421,21 +421,21 @@ func (r *Role) ParseVars() error {
 	return nil
 }
 
-func parseVars(environ *Env, vars *Vars, incl ...string) (*Vars, error) {
+func parseVars(e *Env, vars *Vars, incl ...string) (*Vars, error) {
 	data := &Vars{}
 	// Parse extra variables, already merged with role vars
 	for k, v := range *vars {
 		// if k == "Env" ...
 		if val, ok := v.(string); ok && val != "" {
 			// Parse go template
-			ev, err := buildTplEnv(k, val, *environ)
+			ev, err := buildTplEnv(k, val, *e)
 			if err != nil {
 				return data, err
 			}
 			// Expand environment variables
-			v = env.ExpandEnv(ev, *environ)
+			v = env.ExpandEnv(ev, *e)
 			// expand := func(s string) string {
-			// 	if v, ok := environ[s]; ok {
+			// 	if v, ok := e[s]; ok {
 			// 		return v
 			// 	}
 			// 	return env.Get(s) // os.ExpandEnv(s)
@@ -634,23 +634,38 @@ func (r *Role) ParseLines(target string) error {
 // ParseHooks tasks
 func (r *Role) ParseHooks(target string) error {
 	for _, h := range r.Install {
-		if h == nil || h.Command == "" {
-			return fmt.Errorf("%s: empty install hook", r.Name)
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" install hook", err)
 		}
 	}
 	for _, h := range r.PostInstall {
-		if h == nil || h.Command == "" {
-			return fmt.Errorf("%s: empty post_install hook", r.Name)
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" post_install hook", err)
 		}
 	}
 	for _, h := range r.Remove {
-		if h == nil || h.Command == "" {
-			return fmt.Errorf("%s: empty remove hook", r.Name)
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" remove hook", err)
 		}
 	}
 	for _, h := range r.PostRemove {
-		if h == nil || h.Command == "" {
-			return fmt.Errorf("%s: empty post_remove hook", r.Name)
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" post_remove hook", err)
+		}
+	}
+	return nil
+}
+
+func parseHook(e *Env, h *Hook) error {
+	if h == nil || h.Command == "" {
+		return fmt.Errorf("empty command")
+	}
+	if h.Env == nil {
+		h.Env = &Env{}
+	}
+	for k, v := range *e {
+		if _, ok := (*h.Env)[k]; !ok {
+			(*h.Env)[k] = v
 		}
 	}
 	return nil

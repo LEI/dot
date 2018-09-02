@@ -1,6 +1,11 @@
 package pkg
 
-import "os/exec"
+import (
+	"fmt"
+	"os/exec"
+
+	"github.com/LEI/dot/internal/shell"
+)
 
 // https://pip.pypa.io/en/stable/reference
 var pip = &Pm{
@@ -23,6 +28,17 @@ var pip = &Pm{
 		"--yes",
 	},
 	// DryRunOpts: []string{},
+	Init: func(m *Pm) error {
+		opts := []string{"install", "--upgrade", "pip"}
+		bin, args, err := getBin(m, opts)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
+		return execManagerCommand(m, bin, args...)
+	},
+	// FIXME: python2 -c 'import neovim' did not work until
+	// pip2 uninstall neovim && pip2 install neovim
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		opts := []string{"show"}
 		opts = append(opts, pkgs...)

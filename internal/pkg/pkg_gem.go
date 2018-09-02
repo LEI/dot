@@ -1,7 +1,10 @@
 package pkg
 
 import (
+	"fmt"
 	"os/exec"
+
+	"github.com/LEI/dot/internal/shell"
 )
 
 // https://bundler.io/docs.html
@@ -50,7 +53,7 @@ var gem = &Pm{
 		opts := []string{"update", "--system"}
 		// "--bindir", "/usr/local/bin"
 		// "--silent"
-		bin, opts, err := getBin(m, opts)
+		bin, args, err := getBin(m, opts)
 		if err != nil {
 			return err
 		}
@@ -61,7 +64,8 @@ var gem = &Pm{
 		// 		return err
 		// 	}
 		// }
-		return execManagerCommand(m, bin, opts...)
+		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
+		return execManagerCommand(m, bin, args...)
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		opts := []string{"list", "--exact", "--installed"} // --local?
