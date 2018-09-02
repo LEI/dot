@@ -52,8 +52,6 @@ Prerequisite:
 - [curl](https://curl.haxx.se/)
 - [git](https://git-scm.com/)
 
-- https://git-scm.com/
-
 ```sh
 go get -u github.com/LEI/dot
 cd $GOPATH/src/github.com/LEI/dot
