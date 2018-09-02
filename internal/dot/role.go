@@ -2,6 +2,7 @@ package dot
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -33,6 +34,24 @@ var ignoredFilePatterns = []string{
 // Env map
 type Env map[string]string
 
+// NewEnv vars
+func NewEnv(i interface{}) *Env {
+	e := &Env{}
+	switch in := i.(type) {
+	case string:
+		k, v := env.Split(in)
+		(*e)[k] = v
+	case []string:
+		for _, n := range in {
+			k, v := env.Split(n)
+			(*e)[k] = v
+		}
+	default:
+		log.Fatalf("invalid env: %s\n", i)
+	}
+	return e
+}
+
 // Vars map
 type Vars map[string]interface{}
 
@@ -51,8 +70,8 @@ type Role struct {
 	// Tasks []string
 
 	OS          []string
-	Env         Env
-	Vars        Vars
+	Env         *Env
+	Vars        *Vars
 	IncludeVars []string
 
 	Deps []string `mapstructure:"dependencies"`
@@ -85,14 +104,14 @@ func (r *Role) String() (s string) {
 	if len(r.OS) > 0 {
 		s += fmt.Sprintf("%sOS: %s\n", prefix, r.OS)
 	}
-	if len(r.Env) > 0 {
-		s += fmt.Sprintf("%sEnv: %s\n", prefix, r.Env)
+	if len(*r.Env) > 0 {
+		s += fmt.Sprintf("%sEnv: %s\n", prefix, *r.Env)
 	}
 	if len(r.IncludeVars) > 0 {
 		s += fmt.Sprintf("%sIncludeVars: %s\n", prefix, r.IncludeVars)
 	}
-	if len(r.Vars) > 0 {
-		s += fmt.Sprintf("%sVars: %s\n", prefix, r.Vars)
+	if len(*r.Vars) > 0 {
+		s += fmt.Sprintf("%sVars: %s\n", prefix, *r.Vars)
 	}
 	if len(r.Deps) > 0 {
 		s += fmt.Sprintf("%sDeps: %s\n", prefix, r.Deps)
@@ -281,6 +300,9 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 	switch val := i.(type) {
 	case string:
 		switch t {
+		case reflect.TypeOf((*Env)(nil)),
+			reflect.TypeOf((Env)(nil)):
+			i = NewEnv(val)
 		case reflect.TypeOf((*Pkg)(nil)):
 			i = NewPkg(val) // &Pkg{Name: []string{val}}
 		case reflect.TypeOf((*Dir)(nil)):
@@ -293,6 +315,15 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 			i = NewTpl(val)
 		case reflect.TypeOf((*Hook)(nil)):
 			i = NewHook(val)
+			// default:
+			// 	fmt.Println("FROM", f)
+			// 	fmt.Printf("%+v (%T)\n", val, val)
+			// 	fmt.Println("TO", t)
+		}
+	case []string:
+		switch t {
+		case reflect.TypeOf((*Env)(nil)):
+			i = NewEnv(val)
 		}
 	case map[interface{}]interface{}:
 		switch t {
@@ -300,6 +331,8 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 			i = decodeLines(val)
 		}
 	}
+	// default:
+	// 	fmt.Printf("%+v (%T)\n", val, val)
 	return i, nil
 }
 
@@ -317,9 +350,6 @@ func decodeLines(in map[interface{}]interface{}) []*Line {
 
 // Parse all role tasks
 func (r *Role) Parse(target string) error {
-	// if r.Vars == nil {
-	// 	r.Vars = Vars{}
-	// }
 	if err := r.ParseEnv(); err != nil {
 		return err
 	}
@@ -352,6 +382,9 @@ func (r *Role) Parse(target string) error {
 
 // ParseEnv role
 func (r *Role) ParseEnv() error {
+	if r.Env == nil {
+		r.Env = &Env{}
+	}
 	environ, err := parseEnv(r.Env)
 	if err != nil {
 		return err
@@ -360,22 +393,26 @@ func (r *Role) ParseEnv() error {
 	return nil
 }
 
-func parseEnv(environ Env) (Env, error) {
-	m := Env{}
-	for k, v := range environ {
+func parseEnv(environ *Env) (*Env, error) {
+	m := &Env{}
+	for k, v := range *environ {
 		k = strings.ToUpper(k)
-		ev, err := buildTplEnv(k, v, environ)
+		ev, err := buildTplEnv(k, v, *environ)
 		if err != nil {
 			return m, err
 		}
-		//fmt.Printf("$ export %s=%q\n", k, ev)
-		m[k] = ev
+		// TODO if verbose
+		fmt.Printf("$ export %s=%q\n", k, ev)
+		(*m)[k] = ev
 	}
 	return m, nil
 }
 
 // ParseVars role
 func (r *Role) ParseVars() error {
+	if r.Vars == nil {
+		r.Vars = &Vars{}
+	}
 	vars, err := parseVars(r.Env, r.Vars, r.IncludeVars...)
 	if err != nil {
 		return err
@@ -384,19 +421,19 @@ func (r *Role) ParseVars() error {
 	return nil
 }
 
-func parseVars(environ Env, vars Vars, incl ...string) (Vars, error) {
-	data := Vars{}
+func parseVars(environ *Env, vars *Vars, incl ...string) (*Vars, error) {
+	data := &Vars{}
 	// Parse extra variables, already merged with role vars
-	for k, v := range vars {
+	for k, v := range *vars {
 		// if k == "Env" ...
 		if val, ok := v.(string); ok && val != "" {
 			// Parse go template
-			ev, err := buildTplEnv(k, val, environ)
+			ev, err := buildTplEnv(k, val, *environ)
 			if err != nil {
 				return data, err
 			}
 			// Expand environment variables
-			v = env.ExpandEnv(ev, environ)
+			v = env.ExpandEnv(ev, *environ)
 			// expand := func(s string) string {
 			// 	if v, ok := environ[s]; ok {
 			// 		return v
@@ -406,7 +443,7 @@ func parseVars(environ Env, vars Vars, incl ...string) (Vars, error) {
 			// v = os.Expand(ev, expand)
 		}
 		// fmt.Printf("# var %s = %+v\n", k, v)
-		data[k] = v
+		(*data)[k] = v
 	}
 	// Included variables override existing vars
 	for _, v := range incl {
@@ -415,7 +452,7 @@ func parseVars(environ Env, vars Vars, incl ...string) (Vars, error) {
 			return data, err
 		}
 		for k, v := range inclVars {
-			data[k] = v
+			(*data)[k] = v
 		}
 	}
 	return data, nil
@@ -533,7 +570,7 @@ func (r *Role) ParseTpls(target string) error {
 		}
 		// Merge task env with role env
 		if t.Env == nil {
-			t.Env = Env{}
+			t.Env = &Env{}
 		}
 		// for k, v := range r.Env {
 		// 	if _, ok := t.Env[k]; !ok {
@@ -542,7 +579,7 @@ func (r *Role) ParseTpls(target string) error {
 		// }
 		// Merge task vars with role vars
 		if t.Vars == nil {
-			t.Vars = Vars{}
+			t.Vars = &Vars{}
 		}
 		// for k, v := range r.Vars {
 		// 	_, ok := t.Vars[k]
@@ -562,15 +599,15 @@ func (r *Role) ParseTpls(target string) error {
 			if err := tt.Prepare(); err != nil {
 				return err
 			}
-			for k, v := range r.Env {
-				if _, ok := tt.Env[k]; !ok {
-					tt.Env[k] = v
+			for k, v := range *r.Env {
+				if _, ok := (*tt.Env)[k]; !ok {
+					(*tt.Env)[k] = v
 				}
 			}
-			for k, v := range r.Vars {
-				_, ok := tt.Vars[k]
+			for k, v := range *r.Vars {
+				_, ok := (*tt.Vars)[k]
 				if !ok {
-					tt.Vars[k] = v
+					(*tt.Vars)[k] = v
 				}
 			}
 			templates = append(templates, &tt)

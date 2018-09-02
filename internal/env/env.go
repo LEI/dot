@@ -40,14 +40,20 @@ func Unset(k, v string) error {
 func GetAll() map[string]string {
 	env := make(map[string]string, 0)
 	for _, i := range os.Environ() {
-		sep := strings.Index(i, "=")
-		k := strings.ToUpper(i[0:sep])
-		v := i[sep+1:]
+		k, v := Split(i)
 		if _, ok := env[k]; !ok {
 			env[k] = v
 		}
 	}
 	return env
+}
+
+// Split "key=value" into two variables.
+func Split(s string) (string, string) {
+	sep := strings.Index(s, "=")
+	k := strings.ToUpper(s[0:sep])
+	v := s[sep+1:]
+	return k, v
 }
 
 // Get environment variable

@@ -60,9 +60,9 @@ type Tpl struct {
 	Task        `mapstructure:",squash"` // Action, If, OS
 	Source      string
 	Target      string
-	Ext         string // Template extenstion (default: tpl)
-	Env         map[string]string
-	Vars        map[string]interface{}
+	Ext         string   // Template extenstion (default: tpl)
+	Env         *Env     // map[string]string
+	Vars        *Vars    // map[string]interface{}
 	IncludeVars []string `mapstructure:"include_vars"`
 
 	// backup bool
@@ -228,11 +228,11 @@ func tplData(t *Tpl) (map[string]interface{}, error) {
 		data[k] = v
 	}
 	// Specific role environment variables (uppercase key)
-	for k, v := range t.Env {
+	for k, v := range *t.Env {
 		data[k] = v
 	}
 	// Extra variables (not only strings)
-	for k, v := range t.Vars {
+	for k, v := range *t.Vars {
 		data[k] = v
 	}
 	return data, nil

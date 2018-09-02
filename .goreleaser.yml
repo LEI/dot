@@ -71,6 +71,7 @@ brew:
   homepage: "https://github.com/LEI/dot"
   # description: ""
   dependencies:
+    # - curl
     - git
     # - bash
   # conflicts: []

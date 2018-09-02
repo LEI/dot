@@ -65,10 +65,10 @@ type Pm struct {
 	// ActOpts []*Opt         // Action options
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
-	Env  map[string]string
-	Init func(*Pm) error // Install manager or prepare bin
-	Has  hasFunc         // Search local packages
-	done bool            // TODO use sync.Once
+	Env  map[string]string // Execution environment variables
+	Init func(*Pm) error   // Install manager or prepare bin
+	Has  hasFunc           // Search local packages
+	done bool              // TODO use sync.Once
 }
 
 // NewPm ...
@@ -278,16 +278,6 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	if err != nil {
 		return err
 	}
-	/*for k, v := range m.Env {
-		o := os.Getenv(k)
-		if o == v {
-			continue
-		}
-		defer os.Setenv(k, o)
-		if err := os.Setenv(k, v); err != nil {
-			return err
-		}
-	}*/
 	// First run initialisation
 	if !m.done && m.Init != nil {
 		if err := m.Init(m); err != nil {
@@ -323,6 +313,19 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+	for k, v := range m.Env {
+		// o := os.Getenv(k)
+		// if o == v {
+		// 	continue
+		// }
+		// defer os.Setenv(k, o)
+		// if err := os.Setenv(k, v); err != nil {
+		// 	return err
+		// }
+		e := fmt.Sprintf("%s=%s", k, v)
+		fmt.Println(e)
+		cmd.Env = append(cmd.Env, e)
+	}
 	// if err := cmd.Run(); err != nil {
 	// 	if !m.AllowFailure {
 	// 		return err
