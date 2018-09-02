@@ -68,7 +68,7 @@ type Pm struct {
 	Env  map[string]string // Execution environment variables
 	Init func(*Pm) error   // Install manager or prepare bin
 	Has  hasFunc           // Search local packages
-	done bool              // TODO use sync.Once
+	done bool              // Initialized (TODO: use sync.Once instead?)
 }
 
 // NewPm ...
@@ -100,12 +100,12 @@ func (m *Pm) Build(action string, pkgs []string, opts ...string) (string, []stri
 	if err != nil {
 		return m.Bin, opts, err
 	}
-	bin, opts, err := getBin(m, opts)
+	bin, args, err := getBin(m, opts)
 	if err != nil {
-		return bin, opts, err
+		return bin, args, err
 	}
 	// m.Init(m)
-	return bin, opts, nil
+	return bin, args, nil
 }
 
 // BuildOptions constructs the command arguments.
@@ -274,7 +274,7 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	if m == nil {
 		return fmt.Errorf(manager, "no pkg manager", manager)
 	}
-	bin, opts, err := m.Build(action, pkgs, opts...)
+	bin, args, err := m.Build(action, pkgs, opts...)
 	if err != nil {
 		return err
 	}
@@ -288,12 +288,11 @@ func execute(manager, action string, pkgs []string, opts ...string) error {
 	if err := m.checkIfExist(pkgs); err != nil {
 		return err
 	}
-	return execManagerCommand(m, bin, opts...)
+	return execManagerCommand(m, bin, args...)
 }
 
 // TODO: return *exec.Cmd
 func execManagerCommand(m *Pm, bin string, args ...string) error {
-	// fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 	if DryRun {
 		if len(m.DryRunOpts) == 0 {
 			return nil
@@ -313,7 +312,7 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	return execWithEnv(m.Env, cmd)
 }
 
-// Run a command with custom env vars.
+// Run a command with custom env vars, even if DryRun is enabled.
 func execWithEnv(env map[string]string, cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -350,6 +349,7 @@ func execCommand(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 	return cmd.Run()
 }
 

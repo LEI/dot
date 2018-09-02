@@ -22,6 +22,7 @@ type Hook struct {
 	Task    `mapstructure:",squash"` // Action, If, OS
 	Command string
 	Shell   string
+	Env     *Env
 	ExecDir string
 }
 
@@ -68,6 +69,10 @@ func (h *Hook) Do() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
+	cmd.Env = os.Environ()
+	for k, v := range *h.Env {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
 	return cmd.Run()
 }
 
@@ -91,5 +96,8 @@ func (h *Hook) Undo() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
+	for k, v := range *h.Env {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
 	return cmd.Run()
 }

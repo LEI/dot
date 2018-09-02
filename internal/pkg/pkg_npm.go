@@ -1,6 +1,11 @@
 package pkg
 
-import "os/exec"
+import (
+	"fmt"
+	"os/exec"
+
+	"github.com/LEI/dot/internal/shell"
+)
 
 var npm = &Pm{
 	Bin: "npm",
@@ -14,6 +19,15 @@ var npm = &Pm{
 	// InstallOpts: []string{},
 	// RemoveOpts:  []string{},
 	DryRunOpts: []string{"--dry-run"},
+	Init: func(m *Pm) error {
+		opts := []string{"install", "npm"}
+		bin, args, err := getBin(m, opts)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
+		return execManagerCommand(m, bin, args...)
+	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		// npm info ... --json
 		opts := []string{"list", "--global"}

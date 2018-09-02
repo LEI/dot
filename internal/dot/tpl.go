@@ -109,7 +109,7 @@ func (t *Tpl) Prepare() error {
 
 // PrepareEnv role
 func (t *Tpl) PrepareEnv() error {
-	environ, err := parseEnv(t.Env)
+	environ, err := parseEnviron(t.Env)
 	if err != nil {
 		return err
 	}

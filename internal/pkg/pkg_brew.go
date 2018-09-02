@@ -1,7 +1,10 @@
 package pkg
 
 import (
+	"fmt"
 	"os/exec"
+
+	"github.com/LEI/dot/internal/shell"
 )
 
 // TODO: Brewfile (bundle & unbundle)
@@ -30,11 +33,12 @@ var brew = &Pm{
 	},
 	Init: func(m *Pm) error {
 		opts := []string{"update", "--quiet"}
-		bin, opts, err := getBin(m, opts)
+		bin, args, err := getBin(m, opts)
 		if err != nil {
 			return err
 		}
-		return execManagerCommand(m, bin, opts...)
+		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
+		return execManagerCommand(m, bin, args...)
 		// return execCommand("brew", "update", "--quiet")
 	},
 	Has: func(m *Pm, pkgs []string) (bool, error) {
