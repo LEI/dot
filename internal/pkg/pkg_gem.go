@@ -1,10 +1,7 @@
 package pkg
 
 import (
-	"fmt"
 	"os/exec"
-
-	"github.com/LEI/dot/internal/shell"
 )
 
 // https://bundler.io/docs.html
@@ -41,7 +38,9 @@ var gem = &Pm{
 	Env: map[string]string{
 		// "GEM_HOME": "",
 	},
-	Init: func(m *Pm) error {
+	/* Init: func(m *Pm) error {
+		// TODO: check action == "install"
+
 		// // export GEM_HOME="$(ruby -e 'print Gem.user_dir')"
 		// cmd := exec.Command("ruby", "-e", "print Gem.user_dir")
 		// out, err := cmd.Output()
@@ -66,7 +65,7 @@ var gem = &Pm{
 		// }
 		fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 		return execManagerCommand(m, bin, args...)
-	},
+	}, */
 	Has: func(m *Pm, pkgs []string) (bool, error) {
 		opts := []string{"list", "--exact", "--installed"} // --local?
 		opts = append(opts, pkgs...)

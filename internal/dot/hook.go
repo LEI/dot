@@ -31,7 +31,20 @@ func NewHook(s string) *Hook {
 	return &Hook{Command: s}
 }
 
+// Init hook: set default shell for next commands
+// and return arguments to be executed
+func (h *Hook) build() (string, []string) {
+	if h.Shell == "" {
+		h.Shell = defaultShell
+	}
+	args := []string{"-c", "set -e; " + h.Command}
+	return h.Shell, args
+}
+
 func (h *Hook) String() string {
+	// TODO: verbosity >= 2?
+	// bin, args := h.build()
+	// s := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
 	s := strings.TrimRight(h.Command, "\n")
 	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
 		s = fmt.Sprintf("(%s)", s)
@@ -61,11 +74,9 @@ func (h *Hook) Do() error {
 			return err
 		}
 	}
-	if h.Shell == "" {
-		h.Shell = defaultShell
-	}
 	// fmt.Printf("EXEC DO HOOK: %q\n", h.Command)
-	cmd := exec.Command(h.Shell, []string{"-c", "set -e; " + h.Command}...)
+	bin, args := h.build()
+	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
@@ -88,11 +99,9 @@ func (h *Hook) Undo() error {
 			return err
 		}
 	}
-	if h.Shell == "" {
-		h.Shell = defaultShell
-	}
+	bin, args := h.build()
 	// fmt.Printf("EXEC UNDO HOOK: %q\n", h.Command)
-	cmd := exec.Command(h.Shell, []string{"-c", "set -e; " + h.Command}...)
+	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
