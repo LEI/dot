@@ -4,7 +4,7 @@ import (
 	"os/exec"
 )
 
-// TODO: Brewfile
+// TODO: Brewfile (bundle & unbundle)
 
 // https://docs.brew.sh/Manpage
 var brew = &Pm{
@@ -21,11 +21,12 @@ var brew = &Pm{
 		return "install"
 	},
 	Remove: "uninstall",
-	Opts:   []string{"--quiet"},
+	// Opts:   []string{"--quiet"},
 	Env: map[string]string{
-		// "HOMEBREW_NO_ANALYTICS": "1",
+		"HOMEBREW_NO_ANALYTICS":   "1",
 		"HOMEBREW_NO_AUTO_UPDATE": "1",
-		// "HOMEBREW_NO_EMOJI": "1",
+		"HOMEBREW_NO_EMOJI":       "1",
+		// "HOMEBREW_VERBOSE": "0",
 	},
 	Init: func(m *Pm) error {
 		opts := []string{"update", "--quiet"}

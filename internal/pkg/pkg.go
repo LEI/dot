@@ -310,10 +310,16 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 	} else {
 		cmd = exec.Command(bin, args...)
 	}
+	return execWithEnv(m.Env, cmd)
+}
+
+// Run a command with custom env vars.
+func execWithEnv(env map[string]string, cmd *exec.Cmd) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	for k, v := range m.Env {
+	cmd.Env = os.Environ()
+	for k, v := range env {
 		// o := os.Getenv(k)
 		// if o == v {
 		// 	continue
@@ -322,9 +328,10 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 		// if err := os.Setenv(k, v); err != nil {
 		// 	return err
 		// }
-		e := fmt.Sprintf("%s=%s", k, v)
-		fmt.Println(e)
-		cmd.Env = append(cmd.Env, e)
+
+		// e := fmt.Sprintf("%s=%s", k, v)
+		// fmt.Println(e)
+		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	// if err := cmd.Run(); err != nil {
 	// 	if !m.AllowFailure {
