@@ -59,13 +59,12 @@ jobs:
         - dot --version
 
     - &base
-      # if: tag IS present
       stage: test
+      # This stage builds from source
+      if: tag IS present # env(OS) != ""
       # go run build.go -v vendor docker
       script: make docker
       skip_cleanup: true
-      # This stage builds from source
-      if: env(OS) != "" # FIXME
       # env: OS=debian
 
     - <<: *base
@@ -125,7 +124,7 @@ jobs:
 
         # Release with goreleaser
         - provider: script
-          if: tag IS present
+          # if: tag IS present
           # script: curl -sL https://git.io/goreleaser | bash
           # script: go run build.go vendor -only release
           script: make release
