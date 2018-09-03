@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"os/exec"
+	"runtime"
 )
 
 // https://bundler.io/docs.html
@@ -49,7 +50,7 @@ var gem = &Pm{
 		// }
 		// m.Env["GEM_HOME"] = string(out)
 
-		opts := []string{"update", "--system"}
+		opts := []string{"update", "--system"} // local?
 		// "--bindir", "/usr/local/bin"
 		// "--silent"
 		bin, args, err := getBin(m, opts)
@@ -67,7 +68,7 @@ var gem = &Pm{
 		return execManagerCommand(m, bin, args...)
 	}, */
 	Has: func(m *Pm, pkgs []string) (bool, error) {
-		opts := []string{"list", "--exact", "--installed"} // --local?
+		opts := []string{"list", "--exact", "--installed"} // , "--local"}
 		opts = append(opts, pkgs...)
 		cmd := exec.Command(m.Bin, opts...)
 		err := cmd.Run()
@@ -76,9 +77,12 @@ var gem = &Pm{
 }
 
 func init() {
-	// if runtime.GOOS == "linux" {
-	// 	gem.Opts = append(gem.Opts, []string{"--bindir", "/usr/local/bin"}...)
-	// }
+	if runtime.GOOS == "linux" {
+		// gem.Opts = append(gem.Opts, []string{"--bindir", "/usr/local/bin"}...)
+
+		// (Un)install in user's home directory instead of GEM_HOME.
+		gem.Opts = append(gem.Opts, "--user-install") // --local
+	}
 	// FIXME alpine, debian, arch?
 	// if !gem.Sudo && runtime.GOOS == "linux" {
 	// 	gem.Sudo = true

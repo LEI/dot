@@ -82,6 +82,7 @@ func (h *Hook) Do() error {
 	cmd.Dir = h.ExecDir
 	cmd.Env = os.Environ()
 	for k, v := range *h.Env {
+		// fmt.Printf("$ %s=%s\n", k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd.Run()
@@ -106,6 +107,7 @@ func (h *Hook) Undo() error {
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
 	for k, v := range *h.Env {
+		// fmt.Printf("$ %s=%s\n", k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd.Run()
