@@ -17,7 +17,6 @@ roles:
 
   - name: node
     url: LEI/dot-node
-    os: ["!android"]
     dependencies: ["gpg"]
 
   - name: php
