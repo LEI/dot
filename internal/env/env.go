@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -175,23 +174,14 @@ func Expand(s string) string {
 
 // ExpandEnvVar variables and execute commands, or fallback to global env
 func ExpandEnvVar(key, val string, env map[string]string) string {
-	/* if matches := substituteCommandRe.FindStringSubmatch(s); len(matches) == 2 {
-		c := matches[1]
-		cmd := exec.Command(shell.Get(), "-c", c)
-		// cmd.Env = os.Environ()
-		out, err := cmd.Output()
-		if err != nil {
-			// fmt.Fprintf(os.Stderr, "failed to execute `%s`: %s\n", c, err)
-			log.Fatalf("failed to execute `%s`: %s\n", c, err)
-		}
-		// if err == nil {
-		v := strings.TrimRight(string(out), "\n")
-		fmt.Printf("RETURN SUBST %s=%q\n", s, v)
-		return v
-		// }
-	} */
+	// FIXME: should already be unquoted on hook decode with env.Split
+	if matches := quotedRe.FindStringSubmatch(val); len(matches) == 2 {
+		val = matches[1]
+	} else if matches := singleQuotedRe.FindStringSubmatch(val); len(matches) == 2 {
+		val = matches[1]
+	}
+
 	if matches := substituteCommandRe.FindStringSubmatch(val); len(matches) >= 2 {
-		fmt.Printf("++++++ %+v\n", matches)
 		for i := 1; i < len(matches); i++ {
 			c := matches[1]
 			cmd := exec.Command(shell.Get(), "-c", c)
@@ -204,12 +194,9 @@ func ExpandEnvVar(key, val string, env map[string]string) string {
 			v := strings.TrimRight(string(out), "\n")
 			val = strings.Replace(val, "$("+c+")", v, -1)
 		}
-		fmt.Printf("RETURN SUBST %q\n", val)
-		return ExpandEnvVar(key, val, env)
+		// return ExpandEnvVar(key, val, env)
 	}
 	expand := func(k string) string {
-		fmt.Println(">>> EXPAND", k)
-		// var defaultValue string
 		// Check for param subst here passed as 'var:-def'
 		if matches := sustituteParameterRe.FindStringSubmatch(k); len(matches) == 3 {
 			k = matches[1]
@@ -218,50 +205,20 @@ func ExpandEnvVar(key, val string, env map[string]string) string {
 			// }
 			// v = matches[2]
 			// defaultValue = ExpandEnvVar(matches[2], env) // GetAll())
-			// if _, ok := env[k]; !ok { // FIXME: k != expanded one (e.g. PATH="$PATH:$xxx")
-			fmt.Printf("ExpandEnvVar(key, %#v, env)\n", "$"+k)
 			if v := ExpandEnvVar(key, "$"+k, env); v != "" {
-				fmt.Println("RETURN", "$"+k, "===", v)
 				return v
 			}
 			v := ExpandEnvVar(key, matches[2], GetAll())
-			fmt.Println("RETURN PARAM", k, "===", v)
 			return v
-			// }
 		}
 		if v, ok := env[k]; ok && k != key {
-			fmt.Printf("RETURN OK %s=%q\n", k, v)
 			return v
 		}
-		// fmt.Printf("GETENV %q\n", k)
-		// if v, ok := GetEnv(k, env); ok {
-		// 	return v
-		// }
 		v := Get(k)
-		// if v == "" && defaultValue != "" {
-		// 	v = defaultValue
-		// }
-		fmt.Printf("RETURN GET %s=%q\n", k, v)
 		return v
 	}
-	// key, val, ok := ParseEnv(s, env)
-	// if ok { // command substituted
-	// 	fmt.Println("SUBST", val)
-	// 	return val
-	// }
-	// if key != "" {
-	// 	fmt.Println("REPLACE S", s, key)
-	// 	s = "$" + key
-	// }
-	// v := os.Expand(s, expand)
-	// if v == "" { // key != ""
-	// 	fmt.Println("FALLB", val)
-	// 	return val // default value
-	// }
-	// fmt.Println("EXPANDED", v)
-	// return v
-	fmt.Println("<<< EXPAND", val)
-	return os.Expand(val, expand)
+	v := os.Expand(val, expand)
+	return v
 }
 
 // Lookup environment variable
