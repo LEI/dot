@@ -877,13 +877,13 @@ func parseDoc() (map[string]string, error) {
 func Docker() error {
 	// serial(Vendor, Check)
 	envOS, ok := os.LookupEnv("OS")
-	if !ok {
+	// if ok && envOS == "" {
+	// 	return errors.New("OS is empty")
+	// }
+	if !ok || envOS == "" {
 		// Build from golang if OS is undefined
 		return testDockerCompose("base", "test")
 		// return errors.New("OS is undefined")
-	}
-	if envOS == "" {
-		return errors.New("OS is empty")
 	}
 	return testDockerOS(envOS)
 	// if err := testDockerCompose("test_os", "test_os"); err != nil {
