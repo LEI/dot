@@ -78,7 +78,7 @@ func (t *Tpl) String() string {
 	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
 	switch t.GetAction() {
 	case "install":
-		// TODO gotpl standalone cmd
+		// TODO gotpl standalone cmd (gotpl/gosubst)
 		s = fmt.Sprintf("tpl %s %s", tildify(t.Source), tildify(t.Target))
 	case "remove":
 		s = fmt.Sprintf("rm %s", tildify(t.Target))
@@ -333,7 +333,7 @@ func buildTpl(k, v string, data interface{}, funcMaps ...template.FuncMap) (stri
 func buildTplEnv(k, v string, envs ...map[string]string) (string, error) {
 	environ := env.GetAll()
 	for _, e := range envs {
-		v = env.ExpandEnv(v, e)
+		v = env.ExpandEnvVar("", v, e)
 		// for ek, ev := range e {
 		// 	fmt.Printf("EXPANDING %s=%q\n", ek, ev)
 		// 	environ[ek] = env.ExpandEnv(ev, e)

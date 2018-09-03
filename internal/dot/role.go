@@ -433,7 +433,7 @@ func parseVars(e *Env, vars *Vars, incl ...string) (*Vars, error) {
 				return data, err
 			}
 			// Expand resulting environment variables
-			v = env.ExpandEnv(ev, *e)
+			v = env.ExpandEnvVar(k, ev, *e)
 			// expand := func(s string) string {
 			// 	if v, ok := e[s]; ok {
 			// 		return v
@@ -656,18 +656,14 @@ func (r *Role) ParseHooks(target string) error {
 	return nil
 }
 
+// Hook environment variables are not expanded now to allow
+// command substitution to be done at runtime
 func parseHook(e *Env, h *Hook) error {
 	if h == nil || h.Command == "" {
 		return fmt.Errorf("empty command")
 	}
 	if h.Env == nil {
 		h.Env = &Env{}
-	}
-	// Expand hook environment variables
-	for k, v := range *h.Env {
-		v = env.ExpandEnv(v, *h.Env)
-		// fmt.Println("EXPANDED", k, v)
-		(*h.Env)[k] = v
 	}
 	// Merge given environment (global role config)
 	for k, v := range *e {
