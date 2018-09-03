@@ -8,7 +8,7 @@ import (
 // https://pip.pypa.io/en/stable/reference
 var pip = &Pm{
 	Bin:     "pip",
-	Install: "install",
+	Install: "install", // "--upgrade",
 	Remove:  "uninstall",
 	Opts: []string{
 		// "--no-cache",
@@ -20,7 +20,6 @@ var pip = &Pm{
 	},
 	InstallOpts: []string{ // --noinput?
 		// "--progress-bar", "off",
-		// "--upgrade",
 	},
 	RemoveOpts: []string{
 		"--yes",

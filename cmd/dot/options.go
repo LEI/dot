@@ -133,6 +133,10 @@ func setActionEnv(cmd *cobra.Command) error {
 	if dotOpts.Verbose > 0 { // verbosity > 1?
 		verbose = "1"
 	}
+	dotPkg := "0"
+	if dotOpts.pkg {
+		dotPkg = "1"
+	}
 	vars := map[string]string{
 		"DOT_ACTION": cmd.Name(),
 		// "DOT_DRY_RUN": dotOpts.DryRun,
@@ -142,6 +146,7 @@ func setActionEnv(cmd *cobra.Command) error {
 		"DOT_FILE":      dotOpts.ConfigFile, // Dotfile
 		"DOT_ROLE_DIR":  dotOpts.RoleDir,    // Roles directory
 		"DOT_ROLE_FILE": dotOpts.RoleFile,   // Roles config name
+		"DOT_PKG":       dotPkg,
 	}
 	for k, v := range vars {
 		// if dotOpts.verbosity >= 3 {

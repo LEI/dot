@@ -33,7 +33,7 @@ ENV GIT_VERSION 2.18.0
 # ADD https://github.com/git/git/archive/v$GIT_VERSION.tar.gz git.tar.gz
 RUN curl -sSL https://github.com/git/git/archive/v$GIT_VERSION.tar.gz \
 -o git.tar.gz && \
-tar -zxf git.tar.gz && \
+tar -zxf git.tar.gz && rm $_ && \
 cd git-$GIT_VERSION && \
 make --quiet configure && \
 ./configure --prefix=/usr/local --quiet && \
@@ -43,7 +43,7 @@ sudo make --quiet install
 ENV LIBEVENT_VERSION 2.1.8
 RUN curl -sSL https://github.com/libevent/libevent/releases/download/release-$LIBEVENT_VERSION-stable/libevent-$LIBEVENT_VERSION-stable.tar.gz \
 -o libevent.tar.gz && \
-tar -xzf libevent.tar.gz && \
+tar -xzf libevent.tar.gz && rm $_ && \
 cd libevent-$LIBEVENT_VERSION-stable && \
 ./configure --prefix=/usr/local --quiet && \
 make --quiet && \
@@ -54,9 +54,19 @@ ENV TMUX_VERSION 2.7
 # RUN git clone https://github.com/tmux/tmux.git && \
 RUN curl -sSL https://github.com/tmux/tmux/releases/download/$TMUX_VERSION/tmux-$TMUX_VERSION.tar.gz \
 -o tmux.tar.gz && \
-tar -zxf tmux.tar.gz && \
+tar -zxf tmux.tar.gz && rm $_ && \
 cd tmux-$TMUX_VERSION && \
 LDFLAGS="-L/usr/local/lib -Wl,-rpath=/usr/local/lib" ./configure --prefix=/usr/local --quiet && \
+make --quiet && \
+sudo make --quiet install
+
+# Install latest ruby instead of 2.0 (neovim ruby host requires >= 2.2.0)
+ENV RUBY_VERSION 2.5.1
+RUN curl -sSL https://cache.ruby-lang.org/pub/ruby/2.5/ruby-$RUBY_VERSION.tar.gz \
+-o ruby.tar.gz && \
+tar -zxf ruby.tar.gz && rm $_ && \
+cd ruby-$RUBY_VERSION && \
+./configure --prefix=/usr/local --quiet && \
 make --quiet && \
 sudo make --quiet install
 

@@ -201,7 +201,7 @@ func setupGlobalConfig(cfg *dot.Config) error {
 	return nil
 }
 
-func setupConfigRoles(cfg *dot.Config) error {
+func setupConfigRoles(cfg *dot.Config) (err error) {
 	roles := cfg.Roles[:0] // []*dot.Role{}
 	// Filter roles by platform
 	for _, r := range cfg.Roles {
@@ -212,7 +212,10 @@ func setupConfigRoles(cfg *dot.Config) error {
 	}
 	// Filter roles by name
 	if len(dotOpts.RoleFilter) > 0 {
-		roles = filterRoles(roles, dotOpts.RoleFilter)
+		roles, err = filterRoles(roles, dotOpts.RoleFilter)
+		if err != nil {
+			return err
+		}
 		// tmp := roles[:0] // []*dot.Role{}
 		// for _, r := range roles {
 		// 	for _, s := range dotOpts.RoleFilter {
@@ -237,17 +240,21 @@ func setupConfigRoles(cfg *dot.Config) error {
 }
 
 // filterRoles by name
-func filterRoles(roles []*dot.Role, names []string) []*dot.Role {
-	res := roles[:0]
-	for _, r := range roles {
-		for _, s := range names {
+func filterRoles(roles []*dot.Role, names []string) ([]*dot.Role, error) {
+	matched := roles[:0]
+	for _, s := range names {
+		c := len(matched)
+		for _, r := range roles {
 			if s == r.Name {
-				res = append(res, r)
+				matched = append(matched, r)
 				break
 			}
 		}
+		if c == len(matched) {
+			return roles, fmt.Errorf("%s: role not found", s)
+		}
 	}
-	return res
+	return matched, nil
 }
 
 func main() {

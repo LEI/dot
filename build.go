@@ -897,7 +897,7 @@ func DockerOS() error {
 	return testDockerOS()
 }
 
-var platforms = []string{
+var defaultOSList = []string{
 	"alpine",
 	"archlinux",
 	"centos",
@@ -907,7 +907,7 @@ var platforms = []string{
 // Docker compose OS
 func testDockerOS(list ...string) error {
 	if len(list) == 0 {
-		list = platforms
+		list = defaultOSList
 	}
 	envOS, _ := os.LookupEnv("OS")
 	// mg.Deps(Linux) // Snapshot
