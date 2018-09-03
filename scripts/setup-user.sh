@@ -17,6 +17,6 @@ useradd --create-home --shell /bin/bash --user-group "$@"
 # echo "$USER:$USER" | chpasswd
 
 # Allow user to execute any command without password
-echo "$USER ALL=(ALL) NOPASSWD: ALL" >> "/etc/sudoers.d/$USER"
+echo "$USER ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/$USER"
 
 chmod 0440 "/etc/sudoers.d/$USER"
