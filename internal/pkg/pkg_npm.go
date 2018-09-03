@@ -4,17 +4,23 @@ import (
 	"os/exec"
 )
 
+// https://docs.npmjs.com/misc/config
+// https://docs.npmjs.com/cli
 var npm = &Pm{
-	Bin: "npm",
-	// https://docs.npmjs.com/cli/install
-	Install: "install",
-	// https://docs.npmjs.com/cli/uninstall
-	Remove: "uninstall",
+	Bin:     "npm",
+	Install: "install",   // https://docs.npmjs.com/cli/install
+	Remove:  "uninstall", // https://docs.npmjs.com/cli/uninstall
 	Opts: []string{
 		"--global",
+		"--no-progress",
+		"--quiet", // --slient
 	},
-	// InstallOpts: []string{},
-	// RemoveOpts:  []string{},
+	// InstallOpts: []string{
+	// 	"--no-progress",
+	// },
+	// RemoveOpts: []string{
+	// 	"--no-progress",
+	// },
 	DryRunOpts: []string{"--dry-run"},
 	/* Init: func(m *Pm) error {
 		// TODO: check action == "install" and if npm is up to date

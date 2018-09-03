@@ -665,7 +665,9 @@ func parseHook(e *Env, h *Hook) error {
 	}
 	// Expand hook environment variables
 	for k, v := range *h.Env {
-		(*h.Env)[k] = env.ExpandEnv(v, *h.Env)
+		v = env.ExpandEnv(v, *h.Env)
+		// fmt.Println("EXPANDED", k, v)
+		(*h.Env)[k] = v
 	}
 	// Merge given environment (global role config)
 	for k, v := range *e {
@@ -686,7 +688,12 @@ func parsePaths(p string) (src, dst string, err error) {
 		src = parts[0]
 		dst = parts[1]
 	default:
-		return src, dst, fmt.Errorf("unhandled path spec: %s", src)
+		// unhandled path spec
+		return src, dst, fmt.Errorf(
+			"too many paths (%d): %s",
+			len(parts),
+			src,
+		)
 	}
 	return src, dst, nil
 	// src = s
