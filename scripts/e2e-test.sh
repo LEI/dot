@@ -19,7 +19,8 @@ main() {
   tail_bashrc="$(tail -n1 ~/.bashrc)"
 
   # run dot sync --verbose
-  run dot install --packages --sync --verbose
+  run dot install --packages --sync --verbose \
+    -r bash,gpg,git,node,php,python,ruby,vim,tmux
 
   # for f in "$HOME"/.gitconfig; do run test -f "$f"; done
   run test -f "$HOME/.gitconfig"
@@ -40,9 +41,9 @@ main() {
 }
 
 sep() {
-  d=80;
-  c="${COLUMNS:-$d}";
-  [ "$c" -gt 80 ] && d=$d;
+  d=80
+  c="${COLUMNS:-$d}"
+  [ "$c" -gt 80 ] && d=$d
   printf "%${c}s" | tr " " "${1:-=}"
   echo
 }
