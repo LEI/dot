@@ -19,13 +19,13 @@ test:
 	# go test ./cmd/... ./internal/...
 	$(RUN) -v test
 
-.PHONY: integration
-integration:
-	$(RUN) test:integration
-
 .PHONY: coverage
 coverage:
 	$(RUN) test:coverage
+
+.PHONY: integration
+integration:
+	$(RUN) test:integration
 
 .PHONY: docker
 docker:

@@ -70,11 +70,7 @@ func Split(s string) (string, string) {
 	sep := strings.Index(s, "=")
 	k := strings.ToUpper(s[0:sep])
 	v := s[sep+1:]
-	if matches := quotedRe.FindStringSubmatch(k); len(matches) == 2 {
-		v = matches[1]
-	} else if matches := singleQuotedRe.FindStringSubmatch(k); len(matches) == 2 {
-		v = matches[1]
-	}
+	v = removeSurroundingQuotes(v)
 	return k, v
 }
 
@@ -172,14 +168,19 @@ func Expand(s string) string {
 	return os.Expand(s, Get)
 }
 
+func removeSurroundingQuotes(s string) string {
+	if matches := quotedRe.FindStringSubmatch(s); len(matches) == 2 {
+		s = matches[1]
+	} else if matches := singleQuotedRe.FindStringSubmatch(s); len(matches) == 2 {
+		s = matches[1]
+	}
+	return s
+}
+
 // ExpandEnvVar variables and execute commands, or fallback to global env
 func ExpandEnvVar(key, val string, env map[string]string) string {
 	// FIXME: should already be unquoted on hook decode with env.Split
-	if matches := quotedRe.FindStringSubmatch(val); len(matches) == 2 {
-		val = matches[1]
-	} else if matches := singleQuotedRe.FindStringSubmatch(val); len(matches) == 2 {
-		val = matches[1]
-	}
+	val = removeSurroundingQuotes(val)
 
 	if matches := substituteCommandRe.FindStringSubmatch(val); len(matches) >= 2 {
 		for i := 1; i < len(matches); i++ {
