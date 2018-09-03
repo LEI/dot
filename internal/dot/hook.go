@@ -6,11 +6,14 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/shell"
 )
 
 var (
 	defaultShell string
+
+	hookEnvPrefix = "$"
 )
 
 func init() {
@@ -82,7 +85,8 @@ func (h *Hook) Do() error {
 	cmd.Dir = h.ExecDir
 	cmd.Env = os.Environ()
 	for k, v := range *h.Env {
-		// fmt.Printf("$ %s=%s\n", k, v)
+		v = env.ExpandEnvVar(k, v, *h.Env)
+		fmt.Printf("%s %s=%s\n", hookEnvPrefix, k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd.Run()
@@ -107,7 +111,8 @@ func (h *Hook) Undo() error {
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
 	for k, v := range *h.Env {
-		// fmt.Printf("$ %s=%s\n", k, v)
+		v = env.ExpandEnvVar(k, v, *h.Env)
+		fmt.Printf("%s %s=%s\n", hookEnvPrefix, k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd.Run()

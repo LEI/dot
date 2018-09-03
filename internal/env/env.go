@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -19,7 +20,8 @@ var (
 	sustituteParameterRe = regexp.MustCompile(`^([a-zA-Z0-9_]+):-(.*)$`)
 	// Command subsitutions with backticks are not supported
 	// Example: $(command substitution)
-	substituteCommandRe = regexp.MustCompile(`^\$\((.*)\)$`)
+	// substituteCommandRe = regexp.MustCompile(`^\$\((.*)\)$`)
+	substituteCommandRe = regexp.MustCompile(`\$\((.*)\)`)
 	// Used to handle quoted values
 	quotedRe       = regexp.MustCompile(`^"(.*)"$`)
 	singleQuotedRe = regexp.MustCompile(`^'(.*)'$`)
@@ -171,33 +173,64 @@ func Expand(s string) string {
 	return os.Expand(s, Get)
 }
 
-// ExpandEnv variables and execute commands, or fallback to global env
-func ExpandEnv(s string, env map[string]string) string {
-	if matches := substituteCommandRe.FindStringSubmatch(s); len(matches) == 2 {
+// ExpandEnvVar variables and execute commands, or fallback to global env
+func ExpandEnvVar(key, val string, env map[string]string) string {
+	/* if matches := substituteCommandRe.FindStringSubmatch(s); len(matches) == 2 {
 		c := matches[1]
 		cmd := exec.Command(shell.Get(), "-c", c)
 		// cmd.Env = os.Environ()
 		out, err := cmd.Output()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to execute `%s`: %s\n", c, err)
+			// fmt.Fprintf(os.Stderr, "failed to execute `%s`: %s\n", c, err)
+			log.Fatalf("failed to execute `%s`: %s\n", c, err)
 		}
-		if err == nil {
+		// if err == nil {
+		v := strings.TrimRight(string(out), "\n")
+		fmt.Printf("RETURN SUBST %s=%q\n", s, v)
+		return v
+		// }
+	} */
+	if matches := substituteCommandRe.FindStringSubmatch(val); len(matches) >= 2 {
+		fmt.Printf("++++++ %+v\n", matches)
+		for i := 1; i < len(matches); i++ {
+			c := matches[1]
+			cmd := exec.Command(shell.Get(), "-c", c)
+			// cmd.Env = os.Environ()
+			out, err := cmd.Output()
+			if err != nil {
+				// fmt.Fprintf(os.Stderr, "failed to execute `%s`: %s\n", c, err)
+				log.Fatalf("failed to execute `%s`: %s\n", c, err)
+			}
 			v := strings.TrimRight(string(out), "\n")
-			// fmt.Printf("SUBST %s=%q\n", k, v)
-			return v
+			val = strings.Replace(val, "$("+c+")", v, -1)
 		}
+		fmt.Printf("RETURN SUBST %q\n", val)
+		return ExpandEnvVar(key, val, env)
 	}
 	expand := func(k string) string {
-		var defaultValue string
+		fmt.Println(">>> EXPAND", k)
+		// var defaultValue string
+		// Check for param subst here passed as 'var:-def'
 		if matches := sustituteParameterRe.FindStringSubmatch(k); len(matches) == 3 {
 			k = matches[1]
 			// if val, ok := env[k]; ok {
 			// 	return k, val
 			// }
 			// v = matches[2]
-			defaultValue = ExpandEnv(matches[2], env) // GetAll())
+			// defaultValue = ExpandEnvVar(matches[2], env) // GetAll())
+			// if _, ok := env[k]; !ok { // FIXME: k != expanded one (e.g. PATH="$PATH:$xxx")
+			fmt.Printf("ExpandEnvVar(key, %#v, env)\n", "$"+k)
+			if v := ExpandEnvVar(key, "$"+k, env); v != "" {
+				fmt.Println("RETURN", "$"+k, "===", v)
+				return v
+			}
+			v := ExpandEnvVar(key, matches[2], GetAll())
+			fmt.Println("RETURN PARAM", k, "===", v)
+			return v
+			// }
 		}
-		if v, ok := env[k]; ok {
+		if v, ok := env[k]; ok && k != key {
+			fmt.Printf("RETURN OK %s=%q\n", k, v)
 			return v
 		}
 		// fmt.Printf("GETENV %q\n", k)
@@ -205,9 +238,10 @@ func ExpandEnv(s string, env map[string]string) string {
 		// 	return v
 		// }
 		v := Get(k)
-		if v == "" && defaultValue != "" {
-			v = defaultValue
-		}
+		// if v == "" && defaultValue != "" {
+		// 	v = defaultValue
+		// }
+		fmt.Printf("RETURN GET %s=%q\n", k, v)
 		return v
 	}
 	// key, val, ok := ParseEnv(s, env)
@@ -226,7 +260,8 @@ func ExpandEnv(s string, env map[string]string) string {
 	// }
 	// fmt.Println("EXPANDED", v)
 	// return v
-	return os.Expand(s, expand)
+	fmt.Println("<<< EXPAND", val)
+	return os.Expand(val, expand)
 }
 
 // Lookup environment variable

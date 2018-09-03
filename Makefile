@@ -27,7 +27,11 @@ integration:
 coverage:
 	$(RUN) test:coverage
 
-COMMANDS := build check docker docs install release snapshot
+.PHONY: docker
+docker:
+	OS=$(OS) $(RUN) $@
+
+COMMANDS := build check docs install release snapshot
 
 .PHONY: $(COMMANDS)
 $(COMMANDS):
