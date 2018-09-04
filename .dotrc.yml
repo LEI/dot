@@ -8,6 +8,8 @@ roles:
   - name: bash
     url: LEI/dot-bash
 
+  # - "zsh:LEI/dot-zsh"
+
   - name: gpg
     url: LEI/dot-gpg
 
