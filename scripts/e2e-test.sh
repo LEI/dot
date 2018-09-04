@@ -18,8 +18,12 @@ main() {
   # Save last ~/.bashrc line
   tail_bashrc="$(tail -n1 ~/.bashrc)"
 
-  # run dot sync --verbose
-  run dot install --packages --sync --verbose \
+  # run dot sync --https --verbose
+  run dot install \
+    --https \
+    --sync \
+    --packages \
+    --verbose \
     -r bash,gpg,git,node,php,python,ruby,vim,tmux
 
   # for f in "$HOME"/.gitconfig; do run test -f "$f"; done

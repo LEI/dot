@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -169,6 +170,10 @@ func runDot(cmd *cobra.Command, args []string) error {
 
 func setupGlobalOptions(opts *DotOptions) error {
 	dot.DecodeErrorUnused = !opts.Force
+	if !opts.HTTPS {
+		git.Scheme = "ssh"
+		git.User = url.User("git")
+	}
 	git.DryRun = opts.DryRun
 	git.Quiet = opts.verbosity == 0
 	git.Verbose = opts.Verbose
