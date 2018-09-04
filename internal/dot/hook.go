@@ -86,7 +86,7 @@ func (h *Hook) Do() error {
 	cmd.Env = os.Environ()
 	for k, v := range *h.Env {
 		v = env.ExpandEnvVar(k, v, *h.Env)
-		fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
+		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd.Run()
@@ -112,7 +112,7 @@ func (h *Hook) Undo() error {
 	cmd.Dir = h.ExecDir
 	for k, v := range *h.Env {
 		v = env.ExpandEnvVar(k, v, *h.Env)
-		fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
+		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd.Run()

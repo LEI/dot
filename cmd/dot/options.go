@@ -32,6 +32,7 @@ type DotOptions struct {
 	RoleDir    string // name
 	RoleFile   string // name
 	RoleFilter []string
+	HTTPS      bool
 	DryRun     bool
 	Force      bool
 	Quiet      bool
@@ -107,6 +108,7 @@ func addActionFlags(cmd *cobra.Command) {
 	pflags.StringVarP(&dotOpts.RoleDir, "role-dir", "", envRoleDir, "roles `DOT_ROLE_DIR`")
 	pflags.StringVarP(&dotOpts.RoleFile, "role-file", "", envRoleFile, "roles `DOT_ROLE_FILE`")
 	pflags.StringSliceVarP(&dotOpts.RoleFilter, "role-filter", "r", []string{}, "filter roles by name")
+	pflags.BoolVarP(&dotOpts.HTTPS, "https", "", false, "use HTTPS to clone repositories")
 	pflags.BoolVarP(&dotOpts.DryRun, "dry-run", "d", false, "do not execute tasks")
 	pflags.BoolVarP(&dotOpts.Force, "force", "F", false, "force execution")
 

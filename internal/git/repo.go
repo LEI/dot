@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -12,7 +13,7 @@ import (
 
 var (
 	// Scheme git, https or ssh
-	Scheme = "https" // "git://"
+	Scheme = "https"
 
 	// Host git
 	Host = "github.com"
@@ -72,15 +73,42 @@ func NewRepo(u *url.URL, repo, dir string) (*Repo, error) {
 	}
 	r.URL = repoURL
 	if r.URL.String() == "" {
-		return r, fmt.Errorf("missing repo url")
+		return r, fmt.Errorf("empty repo url")
 	}
 	return r, nil
+}
+
+// ParseURL ...
+func ParseURL(u *url.URL, repo string) (*url.URL, error) {
+	if u.Scheme == "" && Scheme != "" {
+		// fmt.Println("ParseURL", repo, "set Scheme", Scheme)
+		u.Scheme = Scheme
+	}
+	if u.Host == "" && Host != "" { // u.Opaque == ""
+		// fmt.Println("ParseURL", repo, "set Host", Host)
+		u.Host = Host
+	}
+	if u.User == nil && User != nil {
+		// fmt.Println("ParseURL", repo, "set User", User.String())
+		u.User = User // url.User(username)
+	}
+	if repo != "" && !strings.HasSuffix(repo, ".git") {
+		repo += ".git"
+	}
+	return u.Parse(repo)
 }
 
 // // ExecStatus repo command
 // func (r *Repo) ExecStatus(args ...string) int {
 // 	return shell.Run(GitBin, args...)
 // }
+
+// GetURL transforms ssh://user@host/path into user@host:path
+func (r *Repo) GetURL() string {
+	s := r.URL.String()
+	re := regexp.MustCompile(`(^\/\/|ssh:\/\/)([^\/]+)\/(.*)`)
+	return re.ReplaceAllString(s, "$2:$3")
+}
 
 // Exec git command
 func (r *Repo) Exec(args ...string) (string, string, error) {
@@ -133,7 +161,7 @@ func (r *Repo) Status() (string, error) {
 
 // Clone repo
 func (r *Repo) Clone() (string, error) {
-	args := []string{"clone", r.URL.String()}
+	args := []string{"clone", r.GetURL()}
 	if r.Dir != "" {
 		args = append(args, r.Dir)
 	}
@@ -150,7 +178,7 @@ func (r *Repo) Clone() (string, error) {
 		args = append(args, "--quiet")
 	}
 	// if Verbose > 0 {
-	// 	fmt.Println("git clone", r.URL, r.Dir)
+	// 	fmt.Println("git clone", r.GetURL(), r.Dir)
 	// }
 	if DryRun {
 		fmt.Fprintf(Stderr, "DRY-RUN: %s %s\n", GitBin, shell.FormatArgs(args))
@@ -158,7 +186,7 @@ func (r *Repo) Clone() (string, error) {
 	}
 	out, err := gitCombined(args...)
 	if err != nil {
-		return out, fmt.Errorf("git clone %s %s: %s", r.URL, r.Dir, err)
+		return out, fmt.Errorf("git clone %s %s: %s", r.GetURL(), r.Dir, err)
 	}
 	return out, nil
 	// stdout, stderr, err := git(args...)
@@ -169,7 +197,7 @@ func (r *Repo) Clone() (string, error) {
 	// 	fmt.Fprintln(Stdout, stdout)
 	// }
 	// if err != nil {
-	// 	return fmt.Errorf("unable to clone %s in %s: %s", r.URL, r.Dir, err)
+	// 	return fmt.Errorf("unable to clone %s in %s: %s", r.GetURL(), r.Dir, err)
 	// }
 	// return nil
 }
@@ -213,7 +241,7 @@ func (r *Repo) Pull() (string, error) {
 	// 	if Force && strings.HasPrefix(stderr, "fatal: unable to access") {
 	// 		return nil
 	// 	}
-	// 	// return fmt.Errorf("Unable to pull %s in %s:\n%s", r.URL, r.Dir, stderr)
+	// 	// return fmt.Errorf("Unable to pull %s in %s:\n%s", r.GetURL(), r.Dir, stderr)
 	// 	return err
 	// }
 	// if stderr != "" { // && Verbose > 0 {
@@ -222,24 +250,4 @@ func (r *Repo) Pull() (string, error) {
 	// if stdout != "" && Verbose > 0 {
 	// 	fmt.Fprintf(Stdout, "%s\n", stdout)
 	// }
-}
-
-// ParseURL ...
-func ParseURL(u *url.URL, repo string) (*url.URL, error) {
-	if u.Scheme == "" && Scheme != "" {
-		// fmt.Println("ParseURL", repo, "set Scheme", Scheme)
-		u.Scheme = Scheme
-	}
-	if u.Host == "" && Host != "" { // u.Opaque == ""
-		// fmt.Println("ParseURL", repo, "set Host", Host)
-		u.Host = Host
-	}
-	if u.User != nil && u.User.String() == "" && User != nil {
-		// fmt.Println("ParseURL", repo, "set User", User.String())
-		u.User = User // url.User(username)
-	}
-	if repo != "" && !strings.HasSuffix(repo, ".git") {
-		repo += ".git"
-	}
-	return u.Parse(repo)
 }
