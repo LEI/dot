@@ -31,7 +31,6 @@ type Tasker interface {
 // Task struct
 type Task struct {
 	Tasker
-	Disabled bool `mapstructure:",omitempty"`
 	// Action specifies a single action for which the task should be run
 	Action string   `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
@@ -59,16 +58,8 @@ func (t *Task) GetAction() string {
 	return t.running
 }
 
-// ShouldRun check
-func (t *Task) ShouldRun() bool {
-	return !t.Disabled
-}
-
 // Check conditions
 func (t *Task) Check() error {
-	if !t.ShouldRun() {
-		return ErrSkip
-	}
 	if err := t.CheckAction(); err != nil {
 		// fmt.Printf("> If %q != %q -> %s\n", t.Action, t.running, err)
 		return err

@@ -67,7 +67,13 @@ type Role struct {
 	URL  string   // Git repository URL
 	Git  *url.URL // repo host and user
 	// Scheme string // Remote type: git (default), https, ssh
+
 	// Tasks []string
+
+	// Ignore []string
+	// Target string
+
+	Disabled bool `mapstructure:",omitempty"`
 
 	OS          []string
 	Env         *Env
@@ -87,9 +93,6 @@ type Role struct {
 	PostInstall []*Hook `mapstructure:"post_install"`
 	Remove      []*Hook
 	PostRemove  []*Hook `mapstructure:"post_remove"`
-
-	// Ignore []string
-	// Target string
 
 	// synced bool
 	configFile string
@@ -204,6 +207,11 @@ func formatTask(prefix string, i interface{}) (s string) {
 // 	s := fmt.Sprintf("%s%s\n", prefix, i)
 // 	return s
 // }
+
+// ShouldRun check
+func (r *Role) ShouldRun() bool {
+	return !r.Disabled
+}
 
 // Sync role repository
 // TODO update role URL?
