@@ -74,7 +74,7 @@ type Role struct {
 	Vars        *Vars
 	IncludeVars []string
 
-	Deps []string `mapstructure:"dependencies"`
+	Deps []string `mapstructure:"depends"`
 	Pkgs []*Pkg   `mapstructure:"pkg"`
 
 	Dirs  []*Dir  `mapstructure:"dir"`
