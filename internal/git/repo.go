@@ -165,10 +165,10 @@ func (r *Repo) Clone() (string, error) {
 	if r.Dir != "" {
 		args = append(args, r.Dir)
 	}
-	if r.branch != "" {
+	if r.branch != "" && r.branch != defaultBranch {
 		args = append(args, "--branch", r.branch)
 	}
-	if r.remote != "" {
+	if r.remote != "" && r.branch != defaultRemote {
 		args = append(args, "--origin", r.remote)
 	}
 	if cloneDepth > 0 {

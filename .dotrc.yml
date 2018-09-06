@@ -5,10 +5,15 @@ git:
   # scheme: https
 
 roles:
+  - "sh:LEI/dot-sh"
+
   - name: bash
     url: LEI/dot-bash
+    dependencies: ["sh"]
 
-  # - "zsh:LEI/dot-zsh"
+  # - name: zsh
+  #   url: LEI/dot-zsh
+  #   dependencies: ["sh"]
 
   - name: gpg
     url: LEI/dot-gpg
