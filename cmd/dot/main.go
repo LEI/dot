@@ -246,7 +246,7 @@ func setupConfigRoles(cfg *dot.Config) (err error) {
 
 // filterRoles by name
 func filterRoles(roles []*dot.Role, names []string) ([]*dot.Role, error) {
-	matched := roles[:0]
+	matched := []*dot.Role{} // FIXME roles[:0]
 	for _, s := range names {
 		c := len(matched)
 		for _, r := range roles {
