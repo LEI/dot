@@ -68,6 +68,9 @@ func syncRoles(roles []*dot.Role) <-chan syncResult {
 	go func() {
 		var wg sync.WaitGroup
 		for _, r := range roles {
+			if !r.ShouldRun() {
+				continue
+			}
 			wg.Add(1)
 			go func(r *dot.Role) {
 				out, err := r.Sync()

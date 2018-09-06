@@ -41,8 +41,10 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	go func() {
 		var wg sync.WaitGroup
 		for _, r := range roles {
-			wg.Add(1)
-			go checkAllTasks(action, r, c, &wg)
+			if r.ShouldRun() {
+				wg.Add(1)
+				go checkAllTasks(action, r, c, &wg)
+			}
 		}
 		// All calls to wg.Add are done. Start a goroutine
 		// to close c once all the sends are done.
