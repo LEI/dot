@@ -51,10 +51,6 @@ func preRunInstall(cmd *cobra.Command, args []string) error {
 		if err := runSync(cmd, []string{}); err != nil {
 			return err
 		}
-		// Parse roles again as in main setupGlobalConfig
-		if err := dotConfig.ParseRoles(); err != nil {
-			return err
-		}
 	}
 	return preRunAction(cmd, args)
 }

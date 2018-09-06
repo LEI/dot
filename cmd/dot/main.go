@@ -199,7 +199,8 @@ func setupGlobalConfig(cfg *dot.Config) error {
 			git.User = cfg.Git.User
 		}
 	}
-	if err := cfg.ParseRoles(); err != nil {
+	// if err := cfg.ParseRoles(); err != nil {
+	if err := cfg.PrepareRoles(); err != nil {
 		return err
 	}
 	dotConfig = cfg

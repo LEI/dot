@@ -37,6 +37,10 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	dot.Action = cmd.Name()
 	c := make(chan actionResult)
 	ignoreErrors := dot.Action == "list"
+	// Parse roles config
+	if err := dotConfig.ParseRoles(); err != nil {
+		return err
+	}
 	roles := dotConfig.Roles
 	go func() {
 		var wg sync.WaitGroup
