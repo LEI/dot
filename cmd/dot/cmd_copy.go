@@ -33,10 +33,10 @@ func init() {
 }
 
 func runCopy(cmd *cobra.Command, args []string) error {
-	action := cmd.Parent().Name()
+	// action := cmd.Parent().Name()
 	for _, r := range dotConfig.Roles {
 		for _, c := range r.Files {
-			if err := runTask(action, c); err != nil {
+			if err := runTask(c); err != nil {
 				return err
 			}
 		}

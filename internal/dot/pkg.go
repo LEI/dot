@@ -22,13 +22,12 @@ func NewPkg(s string) *Pkg {
 }
 
 func (p *Pkg) String() string {
-	action := p.GetAction()
-	// switch p.GetAction() {
+	// switch Action {
 	// case "install":
 	// case "remove":
 	// }
 	m, err := pkg.NewPm(p.Manager)
-	if err != nil || action == "" {
+	if err != nil || Action == "" {
 		a := []string{}
 		if p.Manager != "" {
 			a = append(a, p.Manager)
@@ -37,7 +36,7 @@ func (p *Pkg) String() string {
 		a = append(a, p.Args...)
 		return fmt.Sprint(shell.FormatArgs(a))
 	}
-	bin, opts, err := m.Build(action, p.Name, p.Args...)
+	bin, opts, err := m.Build(Action, p.Name, p.Args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
 		return ""

@@ -58,7 +58,7 @@ func (h *Hook) String() string {
 // Status check task
 func (h *Hook) Status() error {
 	// Always run hooks
-	switch h.GetAction() {
+	switch Action {
 	case "install":
 		// return nil
 	case "remove":

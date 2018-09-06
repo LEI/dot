@@ -11,6 +11,11 @@ import (
 	"github.com/LEI/dot/internal/shell"
 )
 
+var (
+	// Action contains the running command name
+	Action string
+)
+
 // Tasker interface
 type Tasker interface {
 	String() string
@@ -20,8 +25,6 @@ type Tasker interface {
 	Undo() error
 
 	// Already implemented
-	SetAction(string)
-	GetAction() string
 	CheckAction() error
 	CheckOS() error
 	CheckIf() error
@@ -35,8 +38,6 @@ type Task struct {
 	Action string   `mapstructure:",omitempty"`
 	OS     []string `mapstructure:",omitempty"`
 	If     []string `mapstructure:",omitempty"`
-
-	running string // Current action name
 }
 
 var (
@@ -48,25 +49,11 @@ func (t *Task) String() string {
 	return "<task interface>"
 }
 
-// SetAction name
-func (t *Task) SetAction(name string) {
-	t.running = name
-}
-
-// GetAction name
-func (t *Task) GetAction() string {
-	return t.running
-}
-
 // Check conditions
 func (t *Task) Check() error {
-	if err := t.CheckAction(); err != nil {
-		// fmt.Printf("> If %q != %q -> %s\n", t.Action, t.running, err)
-		return err
-	}
 	// TODO Debug Verbose
 	if err := t.CheckAction(); err != nil {
-		// fmt.Printf("> If %q != %q -> %s\n", t.Action, t.running, err)
+		// fmt.Printf("> If %q != %q -> %s\n", t.Action, Action, err)
 		return err
 	}
 	if err := t.CheckOS(); err != nil {
@@ -82,15 +69,12 @@ func (t *Task) Check() error {
 
 // CheckAction task
 func (t *Task) CheckAction() error {
-	if len(t.running) == 0 {
-		return fmt.Errorf("unable to check empty action")
-	}
 	if len(t.Action) == 0 {
 		// FIXME: detect if Task.Action is ignored
 		// e.g. private Task.state or just omitted
 		return nil
 	}
-	if t.Action != t.running {
+	if t.Action != Action {
 		return ErrSkip
 	}
 	return nil

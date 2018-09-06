@@ -25,7 +25,7 @@ func NewLine(s, d string) *Line {
 
 func (l *Line) String() string {
 	s := fmt.Sprintf("%s:%s", l.Target, l.Data)
-	switch l.GetAction() {
+	switch Action {
 	case "install":
 		s = fmt.Sprintf("echo '%s' >> %s", l.Data, tildify(l.Target))
 	case "remove":

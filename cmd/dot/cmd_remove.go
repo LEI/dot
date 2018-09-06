@@ -45,7 +45,6 @@ func preRunRemove(cmd *cobra.Command, args []string) error {
 }
 
 func runRemove(cmd *cobra.Command, args []string) error {
-	action := "remove"
 	for _, r := range dotConfig.Roles {
 		if dotOpts.verbosity >= 1 {
 			fmt.Fprintf(dotOpts.stdout, "## Removing %s...\n", r.Name)
@@ -53,41 +52,41 @@ func runRemove(cmd *cobra.Command, args []string) error {
 		// Pre remove hooks
 		for _, h := range r.Remove {
 			h.ExecDir = r.Path
-			if err := runTask(action, h); err != nil {
+			if err := runTask(h); err != nil {
 				return err
 			}
 		}
 		// Package management
 		for _, c := range r.Files {
-			if err := runTask(action, c); err != nil {
+			if err := runTask(c); err != nil {
 				return err
 			}
 		}
 		for _, l := range r.Links {
-			if err := runTask(action, l); err != nil {
+			if err := runTask(l); err != nil {
 				return err
 			}
 		}
 		for _, t := range r.Tpls {
-			if err := runTask(action, t); err != nil {
+			if err := runTask(t); err != nil {
 				return err
 			}
 		}
 		for _, l := range r.Lines {
-			if err := runTask(action, l); err != nil {
+			if err := runTask(l); err != nil {
 				return err
 			}
 		}
 		// Remove directories last
 		for _, d := range r.Dirs {
-			if err := runTask(action, d); err != nil {
+			if err := runTask(d); err != nil {
 				return err
 			}
 		}
 		// Package management
 		if dotOpts.pkg {
 			for _, p := range r.Pkgs {
-				if err := runTask(action, p); err != nil {
+				if err := runTask(p); err != nil {
 					return err
 				}
 			}
@@ -95,7 +94,7 @@ func runRemove(cmd *cobra.Command, args []string) error {
 		// Post remove hooks
 		for _, h := range r.PostRemove {
 			h.ExecDir = r.Path
-			if err := runTask(action, h); err != nil {
+			if err := runTask(h); err != nil {
 				return err
 			}
 		}

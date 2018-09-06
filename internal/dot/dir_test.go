@@ -51,7 +51,7 @@ func TestDoDir(t *testing.T) {
 		}
 		// d := r.Dirs[0]
 		for _, d := range r.Dirs {
-			d.SetAction("install")
+			Action = "install"
 			err := d.Status()
 			ok := IsExist(err)
 			if !ok && err != nil {
@@ -98,7 +98,7 @@ func TestUndoDir(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, d := range r.Dirs {
-			d.SetAction("remove")
+			Action = "remove"
 			err := d.Status()
 			ok := IsExist(err)
 			if !ok && err != nil {

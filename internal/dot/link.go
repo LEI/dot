@@ -34,7 +34,7 @@ func NewLink(s string) *Link {
 
 func (l *Link) String() string {
 	s := fmt.Sprintf("%s:%s", l.Source, l.Target)
-	switch l.GetAction() {
+	switch Action {
 	case "install":
 		s = fmt.Sprintf("ln -s %s %s", tildify(l.Source), tildify(l.Target))
 	case "remove":
@@ -58,8 +58,8 @@ func (l *Link) Status() error {
 		switch perr.Err {
 		// TODO os.LinkError Err: ErrExist
 		case ErrFileExist, ErrLinkExist:
-			if l.GetAction() != "install" {
-				fmt.Println("Skip", l.GetAction(), l.Target, "("+perr.Err.Error()+")")
+			if Action != "install" {
+				fmt.Println("Skip", Action, l.Target, "("+perr.Err.Error()+")")
 				return ErrSkip
 			}
 			// Confirm override

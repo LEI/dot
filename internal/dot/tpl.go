@@ -76,7 +76,7 @@ func NewTpl(s string) *Tpl {
 
 func (t *Tpl) String() string {
 	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
-	switch t.GetAction() {
+	switch Action {
 	case "install":
 		// TODO gotpl standalone cmd (gotpl/gosubst)
 		s = fmt.Sprintf("tpl %s %s", tildify(t.Source), tildify(t.Target))
@@ -142,7 +142,7 @@ func (t *Tpl) Status() error {
 			if t.overwrite {
 				return nil
 			}
-			if t.GetAction() == "list" {
+			if Action == "list" {
 				return err
 			}
 			// Output full diff
@@ -154,7 +154,7 @@ func (t *Tpl) Status() error {
 				t.overwrite = true
 				return nil
 			}
-			// if t.overwrite || t.GetAction() == "list" ||
+			// if t.overwrite || Action == "list" ||
 			// 	shell.AskConfirmation(fmt.Sprintf(
 			// 		"Overwrite %s?",
 			// 		t.Target,
