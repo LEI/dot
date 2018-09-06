@@ -61,6 +61,12 @@ func preRunInstall(cmd *cobra.Command, args []string) error {
 
 func runInstall(cmd *cobra.Command, args []string) error {
 	for _, r := range dotConfig.Roles {
+		if !r.ShouldRun() {
+			if dotOpts.verbosity >= 1 {
+				fmt.Fprintf(dotOpts.stdout, "## Disabled %s\n", r.Name)
+			}
+			continue
+		}
 		if dotOpts.verbosity >= 1 {
 			fmt.Fprintf(dotOpts.stdout, "## Installing %s...\n", r.Name)
 		}
