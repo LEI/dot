@@ -80,12 +80,12 @@ func syncRoles(roles []*dot.Role) <-chan syncResult {
 					wg.Done()
 					return
 				}
-				if err := r.Load(); err != nil {
-					// Cfg error
-					ch <- syncResult{r, out, err}
-					wg.Done()
-					return
-				}
+				// if err := r.Load(); err != nil {
+				// 	// Cfg error
+				// 	ch <- syncResult{r, out, err}
+				// 	wg.Done()
+				// 	return
+				// }
 				// fmt.Println("Loaded", r.Name)
 				// select {
 				// case ch <- syncResult{r, "ok", err}:

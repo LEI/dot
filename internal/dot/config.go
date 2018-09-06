@@ -85,20 +85,29 @@ func (c *Config) Load() error {
 	return nil
 }
 
-// ParseRoles config
-func (c *Config) ParseRoles() error {
+// PrepareRoles config
+func (c *Config) PrepareRoles() error {
 	roles := []*Role{}
 	for _, r := range c.Roles {
+		// if ok := r.Ignore(); ok {
+		// 	continue
+		// }
 		if r.Path == "" {
 			r.Path = filepath.Join(c.dirname, r.Name)
 			if !filepath.IsAbs(r.Path) {
 				r.Path = filepath.Join(c.Source, r.Path)
 			}
 		}
-		// if ok := r.Ignore(); ok {
-		// 	continue
-		// }
+		roles = append(roles, r)
+	}
+	c.Roles = roles
+	return nil
+}
 
+// ParseRoles config
+func (c *Config) ParseRoles() error {
+	roles := []*Role{}
+	for _, r := range c.Roles {
 		// if r.URL == "" { r.URL = r.Name }
 		// r.URL = git.ParseURL(r.Git.User, r.Git.Host, r.URL)
 

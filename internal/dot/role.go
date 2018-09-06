@@ -17,11 +17,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var (
-	gitHost string
-	gitUser string
-)
-
 // TODO flag
 var ignoredFilePatterns = []string{
 	// "*.json",
@@ -94,7 +89,7 @@ type Role struct {
 	Remove      []*Hook
 	PostRemove  []*Hook `mapstructure:"post_remove"`
 
-	// synced bool
+	// loadedRole bool
 	configFile string
 }
 
@@ -300,7 +295,10 @@ func roleLoadConfig(path string) (*Role, error) {
 		return rc.Role, err
 	}
 	err = decoder.Decode(data)
-	return rc.Role, err
+	if err != nil {
+		return rc.Role, err
+	}
+	return rc.Role, nil
 }
 
 // https://github.com/ernesto-jimenez/gogen/tree/master/cmd/gounmarshalmap
@@ -756,7 +754,7 @@ func preparePaths(target, src, dst string) (map[string]string, error) {
 }
 
 func prepareTarget(target, src, dst string) (string, error) {
-	//fmt.Println("+", src, dst)
+	// fmt.Printf("+ %q %q\n", src, dst)
 	_, name := filepath.Split(src)
 	if name == "" {
 		return "", fmt.Errorf("no source file name for src / dst: %s / %s", src, dst)
