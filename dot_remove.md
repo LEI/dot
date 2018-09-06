@@ -17,6 +17,7 @@ dot remove [flags]
   -d, --dry-run                do not execute tasks
   -F, --force                  force execution
   -h, --help                   help for remove
+      --https                  use HTTPS to clone repositories
   -P, --packages               manage system packages
   -r, --role-filter strings    filter roles by name
   -s, --source DOT_SOURCE      DOT_SOURCE directory (default "$HOME")

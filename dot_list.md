@@ -18,6 +18,7 @@ dot list [flags]
   -F, --force                  force execution
       --format string          Pretty-print roles using a Go template
   -h, --help                   help for list
+      --https                  use HTTPS to clone repositories
   -l, --long                   Output role tasks
   -P, --packages               manage system packages
   -r, --role-filter strings    filter roles by name

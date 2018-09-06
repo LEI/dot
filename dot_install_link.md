@@ -22,6 +22,7 @@ dot install link [flags]
   -c, --config-file DOT_FILE   main configuration DOT_FILE (default ".dotrc.yml")
   -d, --dry-run                do not execute tasks
   -F, --force                  force execution
+      --https                  use HTTPS to clone repositories
   -q, --quiet                  do not output
   -r, --role-filter strings    filter roles by name
   -s, --source DOT_SOURCE      DOT_SOURCE directory (default "$HOME")

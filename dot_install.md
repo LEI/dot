@@ -17,6 +17,7 @@ dot install [flags]
   -d, --dry-run                do not execute tasks
   -F, --force                  force execution
   -h, --help                   help for install
+      --https                  use HTTPS to clone repositories
   -P, --packages               manage system packages
   -r, --role-filter strings    filter roles by name
   -s, --source DOT_SOURCE      DOT_SOURCE directory (default "$HOME")
