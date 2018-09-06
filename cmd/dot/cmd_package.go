@@ -33,10 +33,10 @@ func init() {
 }
 
 func runPkg(cmd *cobra.Command, args []string) error {
-	action := cmd.Parent().Name()
+	// action := cmd.Parent().Name()
 	for _, r := range dotConfig.Roles {
 		for _, l := range r.Pkgs {
-			if err := runTask(action, l); err != nil {
+			if err := runTask(l); err != nil {
 				return err
 			}
 		}

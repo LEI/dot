@@ -9,8 +9,8 @@ import (
 )
 
 func preRunTask(cmd *cobra.Command, args []string) error {
-	action := cmd.Parent().Name()
-	switch action {
+	// dot.Action = cmd.Parent().Name()
+	switch dot.Action {
 	// case "list":
 	// 	return preRunList(cmd, args)
 	case "sync":
@@ -20,7 +20,7 @@ func preRunTask(cmd *cobra.Command, args []string) error {
 	case "remove":
 		return preRunRemove(cmd, args)
 	default:
-		return fmt.Errorf("%s: invalid action", action)
+		return fmt.Errorf("%s: invalid action", dot.Action)
 	}
 }
 
@@ -32,18 +32,18 @@ type actionResult struct {
 	err error
 }
 
-// Run after preRunInstall and preRunRemove
+// Check all tasks after preRunInstall and preRunRemove but before action
 func preRunAction(cmd *cobra.Command, args []string) error {
-	action := cmd.Name()
+	dot.Action = cmd.Name()
 	c := make(chan actionResult)
-	ignoreErrors := action == "list"
+	ignoreErrors := dot.Action == "list"
 	roles := dotConfig.Roles
 	go func() {
 		var wg sync.WaitGroup
 		for _, r := range roles {
 			if r.ShouldRun() {
 				wg.Add(1)
-				go checkAllTasks(action, r, c, &wg)
+				go checkAllTasks(r, c, &wg)
 			}
 		}
 		// All calls to wg.Add are done. Start a goroutine
@@ -72,7 +72,11 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		if !ignoreErrors {
-			fmt.Fprintf(dotOpts.stderr, "failed to %s %s role: %s\n", action, r.name, r.err)
+			fmt.Fprintf(
+				dotOpts.stderr,
+				"failed to %s %s role: %s\n",
+				dot.Action, r.name, r.err,
+			)
 		}
 		failed++
 	}
@@ -89,7 +93,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func checkAllTasks(action string, r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
+func checkAllTasks(r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
 	// var wg sync.WaitGroup
 	// if dotOpts.verbosity >= 1 {
 	// 	fmt.Fprintf(dotOpts.stdout, "## Checking %s...\n", r.Name)
@@ -97,55 +101,54 @@ func checkAllTasks(action string, r *dot.Role, c chan<- actionResult, wg *sync.W
 	if dotOpts.pkg {
 		for _, p := range r.Pkgs {
 			wg.Add(1)
-			go checkOneTask(action, r, p, c, wg)
+			go checkOneTask(r, p, c, wg)
 		}
 	}
 	// wg.Add(len(r.Dirs))
 	for _, d := range r.Dirs {
 		wg.Add(1)
-		go checkOneTask(action, r, d, c, wg)
+		go checkOneTask(r, d, c, wg)
 	}
 	for _, f := range r.Files {
 		wg.Add(1)
-		go checkOneTask(action, r, f, c, wg)
+		go checkOneTask(r, f, c, wg)
 	}
 	for _, l := range r.Links {
 		wg.Add(1)
-		go checkOneTask(action, r, l, c, wg)
+		go checkOneTask(r, l, c, wg)
 	}
 	for _, t := range r.Tpls {
 		wg.Add(1)
-		go checkOneTask(action, r, t, c, wg)
+		go checkOneTask(r, t, c, wg)
 	}
 	for _, l := range r.Lines {
 		wg.Add(1)
-		go checkOneTask(action, r, l, c, wg)
+		go checkOneTask(r, l, c, wg)
 	}
-	checkTaskHooks(action, r, c, wg)
+	checkTaskHooks(r, c, wg)
 	wg.Done()
 }
 
-func checkTaskHooks(action string, r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
+func checkTaskHooks(r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
 	for _, h := range r.Install {
 		wg.Add(1)
-		go checkOneTask(action, r, h, c, wg)
+		go checkOneTask(r, h, c, wg)
 	}
 	for _, h := range r.PostInstall {
 		wg.Add(1)
-		go checkOneTask(action, r, h, c, wg)
+		go checkOneTask(r, h, c, wg)
 	}
 	for _, h := range r.Remove {
 		wg.Add(1)
-		go checkOneTask(action, r, h, c, wg)
+		go checkOneTask(r, h, c, wg)
 	}
 	for _, h := range r.PostRemove {
 		wg.Add(1)
-		go checkOneTask(action, r, h, c, wg)
+		go checkOneTask(r, h, c, wg)
 	}
 }
 
-func checkOneTask(action string, r *dot.Role, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
-	t.SetAction(action)
+func checkOneTask(r *dot.Role, t dot.Tasker, c chan<- actionResult, wg *sync.WaitGroup) {
 	if err := t.Check(); err != nil {
 		c <- actionResult{r.Name, t, err}
 		wg.Done()
@@ -156,21 +159,20 @@ func checkOneTask(action string, r *dot.Role, t dot.Tasker, c chan<- actionResul
 	wg.Done()
 }
 
-// func runTask(action string, i interface{}) error {
+// func runTask(i interface{}) error {
 // 	t := i.(dot.Tasker)
-func runTask(action string, t dot.Tasker) error {
-	//t.SetAction(action)
-	switch action {
+func runTask(t dot.Tasker) error {
+	switch dot.Action {
 	case "install":
 		if err := doTask(t); err != nil && !dot.IsSkip(err) {
-			return err // fmt.Errorf("%s task: %s", action, err)
+			return err // fmt.Errorf("%s task: %s", err)
 		}
 	case "remove":
 		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
-			return err // fmt.Errorf("%s task: %s", action, err)
+			return err // fmt.Errorf("%s task: %s", err)
 		}
 	default:
-		return fmt.Errorf("%s: unknown action", action)
+		return fmt.Errorf("%s: unknown action", dot.Action)
 	}
 	return nil
 }

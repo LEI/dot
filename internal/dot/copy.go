@@ -17,7 +17,7 @@ type Copy struct {
 
 func (c *Copy) String() string {
 	s := fmt.Sprintf("%s:%s", c.Source, c.Target)
-	switch c.GetAction() {
+	switch Action {
 	case "install":
 		s = fmt.Sprintf("cp %s %s", tildify(c.Source), tildify(c.Target))
 	case "remove":

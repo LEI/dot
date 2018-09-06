@@ -23,7 +23,7 @@ func NewDir(s string) *Dir {
 
 func (d *Dir) String() string {
 	s := d.Path
-	switch d.GetAction() {
+	switch Action {
 	case "install":
 		s = fmt.Sprintf("mkdir -p %s", tildify(d.Path))
 	case "remove":
@@ -37,7 +37,7 @@ func (d *Dir) Status() error {
 	if !dirExists(d.Path) {
 		return nil
 	}
-	if d.GetAction() == "remove" {
+	if Action == "remove" {
 		empty, err := dirIsEmpty(d.Path)
 		if err != nil {
 			return err // &DirError{"remove", d.Path, err}
