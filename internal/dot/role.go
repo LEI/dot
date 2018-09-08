@@ -13,6 +13,7 @@ import (
 	"github.com/LEI/dot/internal/conf"
 	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/git"
+	"github.com/LEI/dot/internal/shell"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/mapstructure"
 )
@@ -407,8 +408,7 @@ func parseEnviron(e *Env) (*Env, error) {
 		if err != nil {
 			return m, err
 		}
-		// TODO if verbose
-		fmt.Printf("$ export %s=%q\n", k, ev)
+		// fmt.Printf("$ export %s=%q\n", k, ev)
 		(*m)[k] = ev
 	}
 	return m, nil
@@ -462,6 +462,49 @@ func parseVars(e *Env, vars *Vars, incl ...string) (*Vars, error) {
 		}
 	}
 	return data, nil
+}
+
+// ParseHooks tasks
+func (r *Role) ParseHooks(target string) error {
+	for _, h := range r.Install {
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" install hook", err)
+		}
+	}
+	for _, h := range r.PostInstall {
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" post_install hook", err)
+		}
+	}
+	for _, h := range r.Remove {
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" remove hook", err)
+		}
+	}
+	for _, h := range r.PostRemove {
+		if err := parseHook(r.Env, h); err != nil {
+			return fmt.Errorf("%s: %s", r.Name+" post_remove hook", err)
+		}
+	}
+	return nil
+}
+
+// Hook environment variables are not expanded now to allow
+// command substitution to be done at runtime
+func parseHook(e *Env, h *Hook) error {
+	if h == nil || h.Command == "" {
+		return fmt.Errorf("empty command")
+	}
+	if h.Env == nil {
+		h.Env = &Env{}
+	}
+	// Merge given environment (global role config)
+	for k, v := range *e {
+		if _, ok := (*h.Env)[k]; !ok {
+			(*h.Env)[k] = v
+		}
+	}
+	return nil
 }
 
 // ParseDirs tasks
@@ -633,49 +676,6 @@ func (r *Role) ParseLines(target string) error {
 		// if err := l.Prepare(); err != nil {
 		// 	return err
 		// }
-	}
-	return nil
-}
-
-// ParseHooks tasks
-func (r *Role) ParseHooks(target string) error {
-	for _, h := range r.Install {
-		if err := parseHook(r.Env, h); err != nil {
-			return fmt.Errorf("%s: %s", r.Name+" install hook", err)
-		}
-	}
-	for _, h := range r.PostInstall {
-		if err := parseHook(r.Env, h); err != nil {
-			return fmt.Errorf("%s: %s", r.Name+" post_install hook", err)
-		}
-	}
-	for _, h := range r.Remove {
-		if err := parseHook(r.Env, h); err != nil {
-			return fmt.Errorf("%s: %s", r.Name+" remove hook", err)
-		}
-	}
-	for _, h := range r.PostRemove {
-		if err := parseHook(r.Env, h); err != nil {
-			return fmt.Errorf("%s: %s", r.Name+" post_remove hook", err)
-		}
-	}
-	return nil
-}
-
-// Hook environment variables are not expanded now to allow
-// command substitution to be done at runtime
-func parseHook(e *Env, h *Hook) error {
-	if h == nil || h.Command == "" {
-		return fmt.Errorf("empty command")
-	}
-	if h.Env == nil {
-		h.Env = &Env{}
-	}
-	// Merge given environment (global role config)
-	for k, v := range *e {
-		if _, ok := (*h.Env)[k]; !ok {
-			(*h.Env)[k] = v
-		}
 	}
 	return nil
 }
@@ -973,5 +973,14 @@ func checkTask(t Tasker) error {
 	// default:
 	// 	return err
 	// }
+	return nil
+}
+
+// Init role before install or remove
+func (r *Role) Init() error {
+	for k, v := range *r.Env {
+		// fmt.Printf("$ export %s=%q\n", k, v)
+		fmt.Printf("$ %s=%s\n", k, shell.FormatArgs([]string{v}))
+	}
 	return nil
 }

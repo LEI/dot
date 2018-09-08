@@ -66,6 +66,10 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		if dotOpts.verbosity >= 1 {
 			fmt.Fprintf(dotOpts.stdout, "## Installing %s...\n", r.Name)
 		}
+		// Print environ
+		if err := r.Init(); err != nil {
+			return err
+		}
 		// Pre install hooks
 		for _, h := range r.Install {
 			h.ExecDir = r.Path
