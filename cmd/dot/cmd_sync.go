@@ -36,13 +36,11 @@ func runSync(cmd *cobra.Command, args []string) error {
 	ch := syncRoles(roles)
 	errs := []error{} // failed := false
 	for r := range ch {
-		// fmt.Printf("# Synced %s:\n", r.role.Name)
-		if r.out != "" {
-			fmt.Fprintln(dotOpts.stdout, r.out)
-		}
 		if r.err != nil {
 			fmt.Fprintln(dotOpts.stderr, r.err)
 			errs = append(errs, r.err) // failed = true
+		} else if r.out != "" {
+			fmt.Fprintf(dotOpts.stdout, "# Synced %s: %s\n", r.role.Name, r.out)
 		}
 	}
 	if len(errs) > 0 { // failed
