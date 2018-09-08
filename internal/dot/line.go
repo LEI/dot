@@ -86,11 +86,6 @@ func (l *Line) Undo() error {
 			return err
 		}
 	}
-	if err := l.Status(); err != nil {
-		if err != ErrExist {
-			return err
-		}
-	}
 	lines, err := getLines(l.Target)
 	if err != nil {
 		return err

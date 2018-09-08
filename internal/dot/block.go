@@ -81,11 +81,6 @@ func (t *Block) Undo() error {
 			return err
 		}
 	}
-	if err := t.Status(); err != nil {
-		if err != ErrExist {
-			return err
-		}
-	}
 	b, err := ioutil.ReadFile(t.Target)
 	if err != nil {
 		return err
