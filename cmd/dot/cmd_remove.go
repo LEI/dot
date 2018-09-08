@@ -87,6 +87,11 @@ func runRemove(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
+		for _, l := range r.Blocks {
+			if err := runTask(l); err != nil {
+				return err
+			}
+		}
 		// Remove directories last
 		for _, d := range r.Dirs {
 			if err := runTask(d); err != nil {
