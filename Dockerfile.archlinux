@@ -26,7 +26,7 @@ USER $USER
 
 WORKDIR /home/$USER
 
-COPY ./.dotrc.yml .dotrc.yml
+RUN curl -sSL https://git.io/dotfiles.config -o .dotrc.yml
 COPY --chown=docker:docker ./scripts bin/
 
 ENTRYPOINT ["/bin/bash"]
