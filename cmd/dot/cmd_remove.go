@@ -55,6 +55,10 @@ func runRemove(cmd *cobra.Command, args []string) error {
 		if dotOpts.verbosity >= 1 {
 			fmt.Fprintf(dotOpts.stdout, "## Removing %s...\n", r.Name)
 		}
+		// Print environ
+		if err := r.Init(); err != nil {
+			return err
+		}
 		// Pre remove hooks
 		for _, h := range r.Remove {
 			h.ExecDir = r.Path
