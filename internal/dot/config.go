@@ -22,10 +22,11 @@ var (
 
 // Config struct
 type Config struct {
-	Source string
-	Target string
-	Roles  []*Role
-	Git    *url.URL
+	Source    string
+	Target    string
+	Roles     []*Role
+	Platforms map[string][]*Role
+	Git       *url.URL
 
 	dirname  string // Role directory name
 	filename string // Role config file name

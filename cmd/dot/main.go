@@ -210,6 +210,15 @@ func setupGlobalConfig(cfg *dot.Config) error {
 
 func setupConfigRoles(cfg *dot.Config) (err error) {
 	roles := cfg.Roles[:0] // []*dot.Role{}
+	for platform, rs := range cfg.Platforms {
+		// if !host.HasOS(platform) {
+		// 	continue
+		// }
+		for _, r := range rs {
+			r.OS = append(r.OS, platform)
+			cfg.Roles = append(cfg.Roles, r)
+		}
+	}
 	// Filter roles by platform
 	for _, r := range cfg.Roles {
 		if len(r.OS) > 0 && !host.HasOS(r.OS...) {
