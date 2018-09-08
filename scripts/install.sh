@@ -24,11 +24,12 @@ set -e
 
 INSTALL_DIRECTORY="${INSTALL_DIRECTORY:-/usr/local/bin}"
 RELEASES_URL="https://github.com/LEI/dot/releases"
+test -z "$TMPDIR" && TMPDIR="$(mktemp -d)"
 
 downloadJSON() {
   url="$2"
 
-  echo "Fetching $url.."
+  echo "Fetching $url..."
   if test -x "$(command -v curl)"; then
     response=$(curl -s -L -w 'HTTPSTATUS:%{http_code}' -H 'Accept: application/json' "$url")
     body=$(echo "$response" | sed -e 's/HTTPSTATUS\:.*//g')
@@ -54,8 +55,9 @@ downloadFile() {
   url="$1"
   destination="$2"
 
-  echo "Fetching $url.."
+  echo "Fetching $url..."
   if test -x "$(command -v curl)"; then
+    echo curl -s -w '%{http_code}' -L "$url" -o "$destination"
     code=$(curl -s -w '%{http_code}' -L "$url" -o "$destination")
   elif test -x "$(command -v wget)"; then
     code=$(wget -q -O "$destination" --server-response "$url" 2>&1 | awk '/^  HTTP/{print $2}' | tail -1)
@@ -68,6 +70,30 @@ downloadFile() {
     echo >&2 "Request failed with code $code"
     exit 1
   fi
+}
+
+downloadArchive() {
+  url="$1"
+  destination="$2"
+
+  echo "Fetching $url..."
+  if test -x "$(command -v curl)"; then
+    code=$(curl -s -w '%{http_code}' -L "$url" -o "$destination/archive.tar.gz")
+    # elif test -x "$(command -v wget)"; then
+    #   code=$(wget -q -O "$destination" --server-response "$url" 2>&1 | awk '/^  HTTP/{print $2}' | tail -1)
+  else
+    echo >&2 "Neither curl nor wget was available to perform http requests."
+    exit 1
+  fi
+
+  if [ "$code" != 200 ]; then
+    echo >&2 "Request failed with code $code"
+    exit 1
+  fi
+
+  # echo "Extracting archive..."
+  tar -xf "$destination/archive.tar.gz" -C "$destination"
+  rm "$destination/archive.tar.gz"
 }
 
 # TODO: use $(brew --prefix) to find install directory?
@@ -143,10 +169,10 @@ else
   BINARY="dot-${OS}-${ARCH}"
 fi
 
-# add .exe if on windows
-if [ "$OS" = "windows" ]; then
-  BINARY="$BINARY.exe"
-fi
+# # add .exe if on windows
+# if [ "$OS" = "windows" ]; then
+#   BINARY="$BINARY.exe"
+# fi
 
 # if DOT_RELEASE_TAG was not provided, assume latest
 if [ -z "$DOT_RELEASE_TAG" ]; then
@@ -158,13 +184,21 @@ echo "Release Tag = $DOT_RELEASE_TAG"
 # fetch the real release data to make sure it exists before we attempt a download
 downloadJSON RELEASE_DATA "$RELEASES_URL/tag/$DOT_RELEASE_TAG"
 
-BINARY_URL="$RELEASES_URL/download/$DOT_RELEASE_TAG/$BINARY"
-DOWNLOAD_FILE=$(mktemp)
+# BINARY_URL="$RELEASES_URL/download/$DOT_RELEASE_TAG/$BINARY"
+# DOWNLOAD_FILE=$(mktemp)
 
-downloadFile "$BINARY_URL" "$DOWNLOAD_FILE"
+# downloadFile "$BINARY_URL" "$DOWNLOAD_FILE"
+
+# echo "Setting executable permissions."
+# chmod +x "$DOWNLOAD_FILE"
+
+ARCHIVE_URL="$RELEASES_URL/download/$DOT_RELEASE_TAG/$BINARY.tar.gz"
+DOWNLOAD_DIR=$(mktemp -d)
+
+downloadArchive "$ARCHIVE_URL" "$DOWNLOAD_DIR"
 
 echo "Setting executable permissions."
-chmod +x "$DOWNLOAD_FILE"
+chmod +x "$DOWNLOAD_DIR/dot"
 
 INSTALL_NAME="dot"
 
@@ -173,4 +207,4 @@ if [ "$OS" = "windows" ]; then
 fi
 
 echo "Moving executable to $INSTALL_DIRECTORY/$INSTALL_NAME"
-mv "$DOWNLOAD_FILE" "$INSTALL_DIRECTORY/$INSTALL_NAME"
+mv "$DOWNLOAD_DIR/dot" "$INSTALL_DIRECTORY/$INSTALL_NAME"
