@@ -22,9 +22,7 @@ dot
 ## License
 -->
 
-<!--
-[Git](https://git-scm.com/)
--->
+Requires [git](https://git-scm.com/).
 
 ## Installation
 
@@ -45,10 +43,7 @@ curl -sSL https://git.io/dot.lei.sh | sh
 
 ### From Source
 
-Prerequisite:
-
-- [curl](https://curl.haxx.se/)
-- [git](https://git-scm.com/)
+Requires [go](https://golang.org/dl).
 
 ```sh
 go get -u github.com/LEI/dot
