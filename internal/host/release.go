@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -59,6 +60,9 @@ func (r *Release) Parse() (s []string) {
 		s = append(s, name+id)
 	} else if id != "" {
 		s = append(s, id)
+		if !isNum(id) && isNum(r.VersionID) {
+			s = append(s, id+r.VersionID)
+		}
 	} else if name != "" {
 		s = append(s, name)
 	}
@@ -67,8 +71,24 @@ func (r *Release) Parse() (s []string) {
 			s = append(s, id)
 		}
 	}
+	if !isNum(r.Version) {
+		re := regexp.MustCompile(`\((\w+)\)`)
+		if matches := re.FindStringSubmatch(r.Version); len(matches) > 1 {
+			// s = append(s, strings.ToLower(matches[1]))
+			s = append(s, matches[1:]...)
+		}
+	}
 	if r.DistribCodename != "" {
 		s = append(s, r.DistribCodename)
+	}
+	if r.DistribID != "" {
+		did := strings.ToLower(r.DistribID)
+		if r.DistribRelease != "" {
+			parts := strings.Split(r.DistribRelease, ".")
+			if isNum(parts[0]) {
+				s = append(s, did+parts[0])
+			}
+		}
 	}
 	return s
 }

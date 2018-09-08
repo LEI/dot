@@ -2,35 +2,6 @@ package host
 
 // https://github.com/shirou/gopsutil/blob/master/host/host.go
 
-// /etc/os-release
-
-// PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
-// NAME="Debian GNU/Linux"
-// VERSION_ID="9"
-// VERSION="9 (stretch)"
-// ID=debian
-
-// NAME="Ubuntu"
-// VERSION="14.04.5 LTS, Trusty Tahr"
-// ID=ubuntu
-// ID_LIKE=debian
-// PRETTY_NAME="Ubuntu 14.04.5 LTS"
-// VERSION_ID="14.04"
-
-// /etc/lsb-release
-
-// DISTRIB_ID=Ubuntu
-// DISTRIB_RELEASE=14.04
-// DISTRIB_CODENAME=trusty
-// DISTRIB_DESCRIPTION="Ubuntu 14.04.5 LTS"
-
-// NAME="CentOS Linux"
-// VERSION="7 (Core)"
-// ID="centos"
-// ID_LIKE="rhel fedora"
-// VERSION_ID="7"
-// PRETTY_NAME="CentOS Linux 7 (Core)"
-
 import (
 	"fmt"
 	"os"
