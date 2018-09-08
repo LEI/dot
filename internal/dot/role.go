@@ -2,7 +2,6 @@ package dot
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/LEI/dot/internal/conf"
-	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/git"
 	"github.com/LEI/dot/internal/shell"
 	"github.com/imdario/mergo"
@@ -26,30 +24,6 @@ var ignoredFilePatterns = []string{
 	"*.yml",
 	".git",
 }
-
-// Env map
-type Env map[string]string
-
-// NewEnv vars
-func NewEnv(i interface{}) *Env {
-	e := &Env{}
-	switch in := i.(type) {
-	case string:
-		k, v := env.Split(in)
-		(*e)[k] = v
-	case []string:
-		for _, n := range in {
-			k, v := env.Split(n)
-			(*e)[k] = v
-		}
-	default:
-		log.Fatalf("invalid env: %s\n", i)
-	}
-	return e
-}
-
-// Vars map
-type Vars map[string]interface{}
 
 // RoleConfig struct
 type RoleConfig struct {
@@ -427,20 +401,6 @@ func (r *Role) ParseEnv() error {
 	return nil
 }
 
-func parseEnviron(e *Env) (*Env, error) {
-	m := &Env{}
-	for k, v := range *e {
-		k = strings.ToUpper(k)
-		ev, err := buildTplEnv(k, v, *e)
-		if err != nil {
-			return m, err
-		}
-		// fmt.Printf("$ export %s=%q\n", k, ev)
-		(*m)[k] = ev
-	}
-	return m, nil
-}
-
 // ParseVars role
 func (r *Role) ParseVars() error {
 	if r.Vars == nil {
@@ -454,62 +414,25 @@ func (r *Role) ParseVars() error {
 	return nil
 }
 
-func parseVars(e *Env, vars *Vars, incl ...string) (*Vars, error) {
-	data := &Vars{}
-	// Parse extra variables, already merged with role vars
-	for k, v := range *vars {
-		// if k == "Env" ...
-		if val, ok := v.(string); ok && val != "" {
-			// Parse go template
-			ev, err := buildTplEnv(k, val, *e)
-			if err != nil {
-				return data, err
-			}
-			// Expand resulting environment variables
-			v = env.ExpandEnvVar(k, ev, *e)
-			// expand := func(s string) string {
-			// 	if v, ok := e[s]; ok {
-			// 		return v
-			// 	}
-			// 	return env.Get(s) // os.ExpandEnv(s)
-			// }
-			// v = os.Expand(ev, expand)
-		}
-		// fmt.Printf("# var %s = %+v\n", k, v)
-		(*data)[k] = v
-	}
-	// Included variables override existing vars
-	for _, v := range incl {
-		inclVars, err := includeVars(v) // os.ExpandEnv?
-		if err != nil {
-			return data, err
-		}
-		for k, v := range inclVars {
-			(*data)[k] = v
-		}
-	}
-	return data, nil
-}
-
 // ParseHooks tasks
 func (r *Role) ParseHooks(target string) error {
 	for _, h := range r.Install {
-		if err := parseHook(r.Env, h); err != nil {
+		if err := parseRoleHook(r.Env, h); err != nil {
 			return fmt.Errorf("%s: %s", r.Name+" install hook", err)
 		}
 	}
 	for _, h := range r.PostInstall {
-		if err := parseHook(r.Env, h); err != nil {
+		if err := parseRoleHook(r.Env, h); err != nil {
 			return fmt.Errorf("%s: %s", r.Name+" post_install hook", err)
 		}
 	}
 	for _, h := range r.Remove {
-		if err := parseHook(r.Env, h); err != nil {
+		if err := parseRoleHook(r.Env, h); err != nil {
 			return fmt.Errorf("%s: %s", r.Name+" remove hook", err)
 		}
 	}
 	for _, h := range r.PostRemove {
-		if err := parseHook(r.Env, h); err != nil {
+		if err := parseRoleHook(r.Env, h); err != nil {
 			return fmt.Errorf("%s: %s", r.Name+" post_remove hook", err)
 		}
 	}
@@ -518,7 +441,7 @@ func (r *Role) ParseHooks(target string) error {
 
 // Hook environment variables are not expanded now to allow
 // command substitution to be done at runtime
-func parseHook(e *Env, h *Hook) error {
+func parseRoleHook(e *Env, h *Hook) error {
 	if h == nil || h.Command == "" {
 		return fmt.Errorf("empty command")
 	}
