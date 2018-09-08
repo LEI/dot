@@ -76,6 +76,7 @@ func shouldLoadConfig(cmd *cobra.Command) bool {
 	// Conditions
 	not := []bool{
 		cmd.Name() == "version",
+		cmd.Name() == "doc",
 		flagVersion,
 		flagRelease,
 	}
@@ -234,11 +235,11 @@ func setupConfigRoles(cfg *dot.Config) (err error) {
 		// roles = tmp
 	}
 	if len(roles) == 0 {
-		msg := "nothing to do"
-		msg += fmt.Sprintf(" with %d roles", len(roles))
+		msg := fmt.Sprintf("nothing to do with %d roles", len(cfg.Roles))
 		if len(dotOpts.RoleFilter) > 0 {
-			msg += fmt.Sprintf(" and filter %s", dotOpts.RoleFilter)
+			msg += fmt.Sprintf(" and filter: %s", dotOpts.RoleFilter)
 		}
+		// fmt.Fprintln(os.Stderr, msg)
 		return fmt.Errorf(msg)
 	}
 	cfg.Roles = roles

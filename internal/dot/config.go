@@ -2,7 +2,6 @@ package dot
 
 import (
 	"bytes"
-	"fmt"
 	"net/url"
 	"path/filepath"
 	"reflect"
@@ -41,7 +40,7 @@ func NewConfig(path, dirname string) (*Config, error) {
 		file:    path,
 	}
 	if err := cfg.Load(); err != nil {
-		return cfg, fmt.Errorf("error loading config: %s", err)
+		return cfg, err // fmt.Errorf("error loading config: %s", err)
 	}
 	return cfg, nil
 }

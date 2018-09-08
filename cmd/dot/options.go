@@ -278,7 +278,11 @@ func OpenConfig(opts DotOptions) (*dot.Config, error) {
 
 	cfg, err := dot.NewConfig(opts.ConfigFile, opts.RoleDir)
 	if err != nil {
+		// if os.IsNotExist(err) {
+		// 	fmt.Fprintf(dotOpts.stderr, "Could not load config: %s\n", err)
+		// } else {
 		return nil, err
+		// }
 	}
 	if opts.DryRun && opts.Verbose >= 0 {
 		fmt.Fprintf(dotOpts.stderr, "DRY-RUN enabled\n")
