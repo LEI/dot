@@ -31,7 +31,7 @@ var listOpts listOptions
 
 var (
 	// List templates
-	okTpl          = "{{if .ShouldRun}}{{if .Ok}}✓{{else}}×{{end}}{{end}}"
+	okTpl          = "{{if .ShouldRun}}{{if .Ok}}✓{{else}}×{{end}}{{else}}-{{end}}"
 	defaultListTpl = "{{.Name}}\t" + okTpl + "\t[{{.Path}}]({{.URL}})"
 	quietListTpl   = "{{.Name}}\t" + okTpl
 	longListTpl    = "{{.}}"

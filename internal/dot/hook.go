@@ -36,12 +36,23 @@ func NewHook(s string) *Hook {
 
 // Init hook: set default shell for next commands
 // and return arguments to be executed
-func (h *Hook) build() (string, []string) {
-	if h.Shell == "" {
-		h.Shell = defaultShell
+func (h *Hook) buildCmd() *exec.Cmd {
+	bin := h.Shell
+	if bin == "" {
+		bin = defaultShell
 	}
 	args := []string{"-c", "set -e; " + h.Command}
-	return h.Shell, args
+	// fmt.Printf("EXEC HOOK: %q\n", h.Command)
+	cmd := exec.Command(bin, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = h.ExecDir
+	for k, v := range *h.Env {
+		v = env.ExpandEnvVar(k, v, *h.Env)
+		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
+	return cmd
 }
 
 func (h *Hook) String() string {
@@ -77,18 +88,7 @@ func (h *Hook) Do() error {
 			return err
 		}
 	}
-	// fmt.Printf("EXEC DO HOOK: %q\n", h.Command)
-	bin, args := h.build()
-	cmd := exec.Command(bin, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = h.ExecDir
-	cmd.Env = os.Environ()
-	for k, v := range *h.Env {
-		v = env.ExpandEnvVar(k, v, *h.Env)
-		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
-		cmd.Env = append(cmd.Env, k+"="+v)
-	}
+	cmd := h.buildCmd()
 	return cmd.Run()
 }
 
@@ -104,16 +104,6 @@ func (h *Hook) Undo() error {
 			return err
 		}
 	}
-	bin, args := h.build()
-	// fmt.Printf("EXEC UNDO HOOK: %q\n", h.Command)
-	cmd := exec.Command(bin, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = h.ExecDir
-	for k, v := range *h.Env {
-		v = env.ExpandEnvVar(k, v, *h.Env)
-		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
-		cmd.Env = append(cmd.Env, k+"="+v)
-	}
+	cmd := h.buildCmd()
 	return cmd.Run()
 }
