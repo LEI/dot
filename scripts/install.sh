@@ -3,6 +3,7 @@
 set -e
 
 DOWNLOAD_URL="https://github.com/LEI/dot/releases/download"
+PREFIX="${PREFIX:-/usr/local}"
 # test -z "$TMPDIR" && TMPDIR="$(mktemp -d)"
 
 last_version() {
@@ -30,6 +31,7 @@ extract() {
 }
 
 download
-extract || true
-sudo mv -f "$TMPDIR"/dot /usr/local/bin/dot
+extract # || true
+# sudo mv -f "$TMPDIR"/dot /usr/local/bin/dot
+mv -f "$TMPDIR"/dot "$PREFIX"/bin/dot
 command -v dot

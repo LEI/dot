@@ -37,13 +37,11 @@ Release binaries are available on the
 brew install lei/dot/dot
 ```
 
-<!--
 ### Other platforms
 
 ```sh
-curl https://raw.githubusercontent.com/LEI/dot/master/install.sh | sh
+curl -sSL https://git.io/dot.lei.sh | sh
 ```
--->
 
 ### From Source
 
@@ -59,6 +57,7 @@ go run build.go vendor check install # or `make`
 ```
 
 ![deps](https://dot.lei.sh/deps.png)
+[Dependency tree generated with graphviz](https://golang.github.io/dep/docs/daily-dep.html#visualizing-dependencies)
 
 <!--
 ## Feedback
