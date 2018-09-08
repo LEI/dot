@@ -1,4 +1,4 @@
-#!bin/sh
+#!/bin/sh
 
 set -e
 
@@ -22,8 +22,9 @@ download() {
   }
   echo "Downloading dot $version for $(uname -s)_$(uname -m)..."
   rm -f /tmp/dot.tar.gz
-  curl -s -L -o /tmp/dot.tar.gz \
-    "$DOWNLOAD_URL/$version/dot-$(uname -s)_$(uname -m).tar.gz"
+  dot_url="$DOWNLOAD_URL/$version/dot-$(uname -s)_$(uname -m).tar.gz"
+  echo "$dot_url"
+  curl -s -L -o /tmp/dot.tar.gz "$dot_url"
 }
 
 extract() {
