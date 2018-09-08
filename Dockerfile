@@ -31,4 +31,4 @@ ENV LC_ALL en_GB.UTF-8
 
 RUN go run build.go vendor install
 
-RUN cp .dotrc.yml $HOME/
+RUN curl -sSL https://git.io/dotfiles.config -o $HOME/.dotrc.yml

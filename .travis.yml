@@ -94,7 +94,7 @@ jobs:
         - make # go run build.go vendor check install
           # - go run build.go build:darwin
         # - cp dist/darwin_amd64/dot /usr/local/bin/dot
-        - cp .dotrc.yml $HOME/
+        - curl -sSL https://git.io/dotfiles.config -o $HOME/.dotrc.yml
         - scripts/e2e-test.sh
       env: OS=darwin
       os: osx
