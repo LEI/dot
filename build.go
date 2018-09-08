@@ -759,6 +759,7 @@ func Docs() error {
 			return err
 		}
 	}
+	fmt.Println("dot", "doc", "--markdown", docsPath)
 	return run("dot", "doc", "--markdown", docsPath)
 }
 
