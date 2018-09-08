@@ -111,6 +111,11 @@ func runInstall(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
+		for _, l := range r.Blocks {
+			if err := runTask(l); err != nil {
+				return err
+			}
+		}
 		// Post install hooks
 		for _, h := range r.PostInstall {
 			h.ExecDir = r.Path

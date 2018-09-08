@@ -79,11 +79,12 @@ type Role struct {
 	Deps []string `mapstructure:"depends"`
 	Pkgs []*Pkg   `mapstructure:"pkg"`
 
-	Dirs  []*Dir  `mapstructure:"dir"`
-	Files []*Copy `mapstructure:"copy"`
-	Links []*Link `mapstructure:"link"`
-	Tpls  []*Tpl  `mapstructure:"template"`
-	Lines []*Line `mapstructure:"line"`
+	Dirs   []*Dir   `mapstructure:"dir"`
+	Files  []*Copy  `mapstructure:"copy"`
+	Links  []*Link  `mapstructure:"link"`
+	Tpls   []*Tpl   `mapstructure:"template"`
+	Lines  []*Line  `mapstructure:"line"`
+	Blocks []*Block `mapstructure:"block"`
 
 	Install     []*Hook
 	PostInstall []*Hook `mapstructure:"post_install"`
@@ -156,6 +157,13 @@ func formatRole(prefix string, r *Role) (s string) {
 		// s += formatRoleTasks(prefix+prefix, r.Lines)
 		for _, l := range r.Lines {
 			s += formatTask(prefix+prefix, l)
+		}
+	}
+	if len(r.Blocks) > 0 { // r.Blocks != nil
+		s += fmt.Sprintf("%sBlocks:\n", prefix)
+		// s += formatRoleTasks(prefix+prefix, r.Blocks)
+		for _, b := range r.Blocks {
+			s += formatTask(prefix+prefix, b)
 		}
 	}
 	if len(r.Install) > 0 {
@@ -310,6 +318,8 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 		case reflect.TypeOf((*Env)(nil)),
 			reflect.TypeOf((Env)(nil)):
 			i = NewEnv(val)
+		case reflect.TypeOf((*Hook)(nil)):
+			i = NewHook(val)
 		case reflect.TypeOf((*Pkg)(nil)):
 			i = NewPkg(val) // &Pkg{Name: []string{val}}
 		case reflect.TypeOf((*Dir)(nil)):
@@ -318,11 +328,11 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 			i = NewLink(val)
 		case reflect.TypeOf((*Tpl)(nil)):
 			i = NewTpl(val)
-		case reflect.TypeOf((*Line)(nil)):
-			i = NewTpl(val)
-		case reflect.TypeOf((*Hook)(nil)):
-			i = NewHook(val)
-			// default:
+		// case reflect.TypeOf((*Line)(nil)):
+		// 	i = NewLine(val)
+		// case reflect.TypeOf((*Block)(nil)):
+		// 	i = NewBlock(val)
+		default:
 			// 	fmt.Println("FROM", f)
 			// 	fmt.Printf("%+v (%T)\n", val, val)
 			// 	fmt.Println("TO", t)
@@ -336,6 +346,8 @@ func roleDecodeHook(f reflect.Type, t reflect.Type, i interface{}) (interface{},
 		switch t {
 		case reflect.TypeOf(([]*Line)(nil)):
 			i = decodeLines(val)
+		case reflect.TypeOf(([]*Block)(nil)):
+			i = decodeBlocks(val)
 		}
 	}
 	// default:
@@ -353,6 +365,18 @@ func decodeLines(in map[interface{}]interface{}) []*Line {
 		})
 	}
 	return lines
+}
+
+// Transform map[i{}]i{} to []*Block
+func decodeBlocks(in map[interface{}]interface{}) []*Block {
+	blocks := []*Block{}
+	for k, v := range in {
+		blocks = append(blocks, &Block{
+			Target: k.(string),
+			Data:   v.(string),
+		})
+	}
+	return blocks
 }
 
 // Parse all role tasks
@@ -379,6 +403,9 @@ func (r *Role) Parse(target string) error {
 		return err
 	}
 	if err := r.ParseLines(target); err != nil {
+		return err
+	}
+	if err := r.ParseBlocks(target); err != nil {
 		return err
 	}
 	if err := r.ParseHooks(target); err != nil {
@@ -680,6 +707,20 @@ func (r *Role) ParseLines(target string) error {
 	return nil
 }
 
+// ParseBlocks tasks
+func (r *Role) ParseBlocks(target string) error {
+	for _, b := range r.Blocks {
+		b.Target = os.ExpandEnv(b.Target)
+		if !filepath.IsAbs(b.Target) {
+			b.Target = filepath.Join(target, b.Target)
+		}
+		// if err := b.Prepare(); err != nil {
+		// 	return err
+		// }
+	}
+	return nil
+}
+
 // Parse src:dst paths
 func parsePaths(p string) (src, dst string, err error) {
 	parts := filepath.SplitList(p)
@@ -813,12 +854,13 @@ func (r *Role) Status() error {
 	// } else if err == nil {
 	// 	return nil
 	// }
-
+	if err := r.StatusHooks(); err != nil { // !IsExist(err)
+		return err
+	}
 	/* // Skip packages check to speed up the listing
 	if err := r.StatusPkgs(); !IsExist(err) {
 		return err
 	} */
-
 	if err := r.StatusDirs(); !IsExist(err) {
 		return err
 	}
@@ -834,7 +876,7 @@ func (r *Role) Status() error {
 	if err := r.StatusLines(); !IsExist(err) {
 		return err
 	}
-	if err := r.StatusHooks(); err != nil { // !IsExist(err)
+	if err := r.StatusBlocks(); !IsExist(err) {
 		return err
 	}
 	return ErrExist
@@ -925,6 +967,21 @@ func (r *Role) StatusLines() error {
 		c++
 	}
 	if c == len(r.Lines) {
+		return ErrExist
+	}
+	return nil
+}
+
+// StatusBlocks ...
+func (r *Role) StatusBlocks() error {
+	c := 0
+	for _, t := range r.Blocks {
+		if err := checkTask(t); err != nil {
+			return err
+		}
+		c++
+	}
+	if c == len(r.Blocks) {
 		return ErrExist
 	}
 	return nil
