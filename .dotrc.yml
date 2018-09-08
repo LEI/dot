@@ -14,7 +14,7 @@ roles:
   - name: zsh
     url: LEI/dot-zsh
     depends: ["sh"]
-    disabled: true
+    # disabled: true
 
   - name: gpg
     url: LEI/dot-gpg
