@@ -22,7 +22,7 @@ dot
 ## License
 -->
 
-Requires [git](https://git-scm.com/) 2.11.0 or greater.
+Requires [git](https://git-scm.com/) >= 2.
 
 ## Installation
 
