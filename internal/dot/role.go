@@ -22,6 +22,7 @@ var ignoredFilePatterns = []string{
 	"*.md",
 	"*.toml",
 	"*.yml",
+	"*.DS_Store",
 	".git",
 }
 
@@ -442,7 +443,7 @@ func (r *Role) ParseHooks(target string) error {
 // Hook environment variables are not expanded now to allow
 // command substitution to be done at runtime
 func parseRoleHook(e *Env, h *Hook) error {
-	if h == nil || h.Command == "" {
+	if h == nil || h.Command == "" && (h.URL == "" || h.Dest == "") {
 		return fmt.Errorf("empty command")
 	}
 	if h.Env == nil {
@@ -453,6 +454,21 @@ func parseRoleHook(e *Env, h *Hook) error {
 		if _, ok := (*h.Env)[k]; !ok {
 			(*h.Env)[k] = v
 		}
+	}
+	// if h.Command != "" {
+	// 	h.Command = os.Expand(h.Command, func(s string) string {
+	// 		return (*h.Env)[s]
+	// 	})
+	// }
+	if h.URL != "" {
+		h.URL = os.Expand(h.URL, func(s string) string {
+			return (*h.Env)[s]
+		})
+	}
+	if h.Dest != "" {
+		h.Dest = os.Expand(h.Dest, func(s string) string {
+			return (*h.Env)[s]
+		})
 	}
 	return nil
 }
