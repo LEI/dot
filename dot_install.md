@@ -34,7 +34,7 @@ dot install [flags]
 
 ### SEE ALSO
 
-* [dot](dot.md)	 - Manage files
+* [dot](dot.md)	 - dot files manager
 * [dot install copy](dot_install_copy.md)	 - File tasks
 * [dot install directory](dot_install_directory.md)	 - Directory tasks
 * [dot install line](dot_install_line.md)	 - Line in file tasks

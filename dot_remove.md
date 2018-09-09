@@ -33,7 +33,7 @@ dot remove [flags]
 
 ### SEE ALSO
 
-* [dot](dot.md)	 - Manage files
+* [dot](dot.md)	 - dot files manager
 * [dot remove copy](dot_remove_copy.md)	 - File tasks
 * [dot remove directory](dot_remove_directory.md)	 - Directory tasks
 * [dot remove line](dot_remove_line.md)	 - Line in file tasks

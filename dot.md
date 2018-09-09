@@ -1,10 +1,10 @@
 ## dot
 
-Manage files
+dot files manager
 
 ### Synopsis
 
-dot is yet another file manager program.
+dot is yet another dot files manager program.
 
 ```
 dot [flags]

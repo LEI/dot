@@ -4,7 +4,7 @@ File tasks
 
 ### Synopsis
 
-The "copy" task installs or removes files.
+The "copy" task installs or removes local or remote files.
 
 ```
 dot remove copy [flags]

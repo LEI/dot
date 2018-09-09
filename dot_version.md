@@ -26,5 +26,5 @@ dot version [flags]
 
 ### SEE ALSO
 
-* [dot](dot.md)	 - Manage files
+* [dot](dot.md)	 - dot files manager
 
