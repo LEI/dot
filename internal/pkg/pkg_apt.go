@@ -48,6 +48,7 @@ var aptGet = &Pm{
 			return false, nil // err
 		}
 		if err := c2.Wait(); err != nil {
+			// fmt.Println("grep run failed:", err)
 			// if exiterr, ok := err.(*exec.ExitError); ok {
 			// 	if status, ok := exiterr.Sys().(syscall.WaitStatus); ok && status.ExitStatus() == 1 {
 			// 		return false, nil
