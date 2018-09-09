@@ -9,7 +9,10 @@ import (
 )
 
 func preRunTask(cmd *cobra.Command, args []string) error {
-	// dot.Action = cmd.Parent().Name()
+	if dot.Action == "" {
+		// fmt.Printf("preRunTask set dot.Action %q to %s\n", dot.Action, cmd.Parent().Name())
+		dot.Action = cmd.Parent().Name()
+	}
 	switch dot.Action {
 	// case "list":
 	// 	return preRunList(cmd, args)
@@ -34,7 +37,10 @@ type actionResult struct {
 
 // Check all tasks after preRunInstall and preRunRemove but before action
 func preRunAction(cmd *cobra.Command, args []string) error {
-	dot.Action = cmd.Name()
+	if dot.Action == "" {
+		// fmt.Printf("preRunAction set dot.Action %q to %s\n", dot.Action, cmd.Name())
+		dot.Action = cmd.Name()
+	}
 	c := make(chan actionResult)
 	ignoreErrors := dot.Action == "list"
 	// Parse roles config

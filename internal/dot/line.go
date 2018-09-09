@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-var (
-	defaultFileMode os.FileMode = 0644
-)
-
 // Line task
 type Line struct {
 	Task   `mapstructure:",squash"` // Action, If, OS

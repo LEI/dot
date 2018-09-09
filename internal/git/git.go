@@ -16,7 +16,9 @@ import (
 )
 
 var (
-	min = &Version{2, 11}
+	min = &Version{2, 0}
+	// >= 2.0 for -C flag
+	// >= 2.11 for status --porcelain=v2
 )
 
 // Version semantic
