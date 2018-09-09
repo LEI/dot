@@ -25,7 +25,7 @@ func getURL(url, dst string, perm os.FileMode) error {
 	if fi != nil && !os.IsNotExist(err) {
 		return nil // fmt.Errorf("already exists: %s", dst)
 	}
-	fmt.Printf("Downloading %s to %s...\n", url, dst)
+	fmt.Printf("Downloading %q...\n", url)
 	output, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
 		return fmt.Errorf("error while creating %s: %s", dst, err)
@@ -42,6 +42,6 @@ func getURL(url, dst string, perm os.FileMode) error {
 	if err != nil {
 		return fmt.Errorf("error while copying to %s: %s", dst, err)
 	}
-	fmt.Printf("%d bytes downloaded.\n", n)
+	fmt.Printf("%d bytes downloaded into %s\n", n, dst)
 	return nil
 }

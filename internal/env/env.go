@@ -177,6 +177,12 @@ func removeSurroundingQuotes(s string) string {
 	return s
 }
 
+// ExpandEnv variable
+func ExpandEnv(s string, env map[string]string) string {
+	v := ExpandEnvVar("", s, env)
+	return v
+}
+
 // ExpandEnvVar variables and execute commands, or fallback to global env
 func ExpandEnvVar(key, val string, env map[string]string) string {
 	// FIXME: should already be unquoted on hook decode with env.Split
