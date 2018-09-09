@@ -21,6 +21,7 @@ func init() {
 }
 
 // Hook command to execute
+// FIXME: fmt.Println(h) -> stack exceeds limit
 type Hook struct {
 	Task      `mapstructure:",squash"` // Action, If, OS
 	Command   string

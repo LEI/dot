@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/LEI/dot/internal/conf"
+	"github.com/LEI/dot/internal/env"
 	"github.com/LEI/dot/internal/git"
 	"github.com/LEI/dot/internal/shell"
 	"github.com/imdario/mergo"
@@ -456,19 +457,13 @@ func parseRoleHook(e *Env, h *Hook) error {
 		}
 	}
 	// if h.Command != "" {
-	// 	h.Command = os.Expand(h.Command, func(s string) string {
-	// 		return (*h.Env)[s]
-	// 	})
+	// 	h.Command = env.ExpanVard(h.Command, *h.Env)
 	// }
 	if h.URL != "" {
-		h.URL = os.Expand(h.URL, func(s string) string {
-			return (*h.Env)[s]
-		})
+		h.URL = env.ExpandEnv(h.URL, *h.Env)
 	}
 	if h.Dest != "" {
-		h.Dest = os.Expand(h.Dest, func(s string) string {
-			return (*h.Env)[s]
-		})
+		h.Dest = env.ExpandEnv(h.Dest, *h.Env)
 	}
 	return nil
 }
