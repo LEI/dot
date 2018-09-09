@@ -54,18 +54,7 @@ func NewRelease() *Release {
 
 // Parse release information into a slice of strings.
 func (r *Release) Parse() (s []string) {
-	name := strings.ToLower(r.Name)
-	id := strings.ToLower(r.ID)
-	if name != "" && id != "" && isNum(id) {
-		s = append(s, name+id)
-	} else if id != "" {
-		s = append(s, id)
-		if !isNum(id) && isNum(r.VersionID) {
-			s = append(s, id+r.VersionID)
-		}
-	} else if name != "" {
-		s = append(s, name)
-	}
+	s = append(s, parseRelease(r)...)
 	if r.IDLike != "" {
 		for _, id := range strings.Fields(r.IDLike) {
 			s = append(s, id)
@@ -78,6 +67,27 @@ func (r *Release) Parse() (s []string) {
 			s = append(s, matches[1:]...)
 		}
 	}
+	s = append(s, parseDistrib(r)...)
+	return s
+}
+
+func parseRelease(r *Release) (s []string) {
+	name := strings.ToLower(r.Name)
+	id := strings.ToLower(r.ID)
+	if name != "" && id != "" && isNum(id) {
+		s = append(s, name+id)
+	} else if id != "" {
+		s = append(s, id)
+		if !isNum(id) && isNum(r.VersionID) {
+			s = append(s, id+r.VersionID)
+		}
+	} else if name != "" {
+		s = append(s, name)
+	}
+	return s
+}
+
+func parseDistrib(r *Release) (s []string) {
 	if r.DistribCodename != "" {
 		s = append(s, r.DistribCodename)
 	}
