@@ -15,9 +15,20 @@ import (
 	"github.com/LEI/dot/internal/shell"
 )
 
-const (
-	minVer = 2
+var (
+	min = &Version{2, 11}
 )
+
+// Version semantic
+type Version struct {
+	major int
+	minor int
+	// patch string
+}
+
+func (v *Version) String() string {
+	return fmt.Sprintf("%d.%d", v.major, v.minor)
+}
 
 var (
 	// // ErrDirtyRepo ...
@@ -73,8 +84,12 @@ func checkGitVersion() error {
 	if err != nil {
 		return err
 	}
-	if major < minVer {
-		return fmt.Errorf("git version %s is required", string(minVer))
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return err
+	}
+	if major < min.major || (major == min.major && minor < min.minor) {
+		return fmt.Errorf("git version %s is required", min)
 	}
 	return nil
 }
