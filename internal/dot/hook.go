@@ -94,6 +94,12 @@ func (h *Hook) String() string {
 
 // Status check task
 func (h *Hook) Status() error {
+	// h.Command == "" &&
+	if h.URL != "" && h.Dest != "" {
+		if exists(h.Dest) {
+			return ErrExist
+		}
+	}
 	// Always run hooks
 	switch Action {
 	case "install":
@@ -140,6 +146,10 @@ func (h *Hook) Undo() error {
 			return err
 		}
 	}
+	// if h.URL != "" && h.Dest != "" {
+	// 	// TODO: check remote file?
+	// 	return os.Remove(h.Dest)
+	// }
 	// cmd, err := h.buildCmd()
 	// if err != nil {
 	// 	return err
