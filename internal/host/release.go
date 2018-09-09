@@ -94,7 +94,7 @@ func parseDistrib(r *Release) (s []string) {
 	if r.DistribID != "" {
 		did := strings.ToLower(r.DistribID)
 		if r.DistribRelease != "" {
-			s = append(s, r.DistribRelease)
+			s = append(s, did+r.DistribRelease)
 			parts := strings.Split(r.DistribRelease, ".")
 			if len(parts) > 1 && isNum(parts[0]) {
 				s = append(s, did+parts[0])
