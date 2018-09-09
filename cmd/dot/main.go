@@ -46,8 +46,8 @@ var dotConfig = &dot.Config{}
 // cmdRoot is the base command when no other command has been specified.
 var cmdRoot = &cobra.Command{
 	Use:   binary,
-	Short: "Manage files",
-	Long:  binary + ` is yet another file manager program.`,
+	Short: "dot files manager",
+	Long:  binary + ` is yet another dot files manager program.`,
 	Args:  cobra.NoArgs,
 	// Cannot be overriden
 	PersistentPreRunE: persistentPreRunDot,

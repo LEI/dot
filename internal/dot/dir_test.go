@@ -46,7 +46,8 @@ func TestDoDir(t *testing.T) {
 				&Dir{Path: tc.in},
 			},
 		}
-		if err := r.ParseDirs(tc.target); err != nil {
+		// ParseDirs needs ParseEnv
+		if err := r.Parse(tc.target); err != nil {
 			t.Fatal(err)
 		}
 		// d := r.Dirs[0]
@@ -94,7 +95,8 @@ func TestUndoDir(t *testing.T) {
 				&Dir{Path: tc.in},
 			},
 		}
-		if err := r.ParseDirs(tc.target); err != nil {
+		// ParseDirs needs ParseEnv
+		if err := r.Parse(tc.target); err != nil {
 			t.Fatal(err)
 		}
 		for _, d := range r.Dirs {

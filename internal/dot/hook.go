@@ -23,33 +23,16 @@ func init() {
 // Hook command to execute
 // FIXME: fmt.Println(h) -> stack exceeds limit
 type Hook struct {
-	Task      `mapstructure:",squash"` // Action, If, OS
-	Command   string
-	URL, Dest string
-	Mode      uint32 // os.FileMode
-	Shell     string
-	Env       *Env
-	ExecDir   string
+	Task    `mapstructure:",squash"` // Action, If, OS
+	Command string
+	Shell   string
+	Env     *Env
+	ExecDir string
 }
 
 // NewHook task
 func NewHook(s string) *Hook {
 	return &Hook{Command: s}
-}
-
-func (h *Hook) buildCommandString() error {
-	if h.Command != "" && (h.URL != "" || h.Dest != "") {
-		return fmt.Errorf("%+v: invalid hook", h)
-	}
-	if h.Command == "" && h.URL != "" && h.Dest != "" {
-		// if h.Mode
-		h.Command = fmt.Sprintf("curl %q -o %s", h.URL, h.Dest)
-		if h.Mode == 0 {
-			h.Mode = uint32(defaultFileMode)
-		}
-		h.Command += fmt.Sprintf("\nchmod %o %q", h.Mode, h.Dest)
-	}
-	return nil
 }
 
 // Init hook: set default shell for next commands
@@ -58,10 +41,6 @@ func (h *Hook) buildCmd() (*exec.Cmd, error) {
 	bin := h.Shell
 	if bin == "" {
 		bin = defaultShell
-	}
-	err := h.buildCommandString()
-	if err != nil {
-		return nil, err
 	}
 	c := h.Command
 	args := []string{"-c", "set -e; " + c}
@@ -82,10 +61,6 @@ func (h *Hook) String() string {
 	// TODO: verbosity >= 2?
 	// bin, args := h.build()
 	// s := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
-	err := h.buildCommandString()
-	if err != nil {
-		panic(err)
-	}
 	s := strings.TrimRight(h.Command, "\n")
 	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
 		s = fmt.Sprintf("(%s)", s)
@@ -96,11 +71,11 @@ func (h *Hook) String() string {
 // Status check task
 func (h *Hook) Status() error {
 	// h.Command == "" &&
-	if h.URL != "" && h.Dest != "" {
-		if exists(h.Dest) {
-			return ErrExist
-		}
-	}
+	// if h.URL != "" && h.Dest != "" {
+	// 	if exists(h.Dest) {
+	// 		return ErrExist
+	// 	}
+	// }
 	// Always run hooks
 	switch Action {
 	case "install":
@@ -120,13 +95,6 @@ func (h *Hook) Do() error {
 		default:
 			return err
 		}
-	}
-	if h.URL != "" && h.Dest != "" {
-		err := getURL(h.URL, h.Dest, os.FileMode(h.Mode))
-		if err != nil {
-			return err
-		}
-		return nil
 	}
 	cmd, err := h.buildCmd()
 	if err != nil {

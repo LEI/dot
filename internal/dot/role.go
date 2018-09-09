@@ -390,7 +390,7 @@ func (r *Role) Parse(target string) error {
 	return nil
 }
 
-// ParseEnv role
+// ParseEnv must be executed before all tasks using it.
 func (r *Role) ParseEnv() error {
 	if r.Env == nil {
 		r.Env = &Env{}
@@ -399,7 +399,9 @@ func (r *Role) ParseEnv() error {
 	if err != nil {
 		return err
 	}
+	// if e != nil {
 	r.Env = e
+	// }
 	return nil
 }
 
@@ -444,7 +446,7 @@ func (r *Role) ParseHooks(target string) error {
 // Hook environment variables are not expanded now to allow
 // command substitution to be done at runtime
 func parseRoleHook(e *Env, h *Hook) error {
-	if h == nil || h.Command == "" && (h.URL == "" || h.Dest == "") {
+	if h == nil || h.Command == "" {
 		return fmt.Errorf("empty command")
 	}
 	if h.Env == nil {
@@ -459,19 +461,13 @@ func parseRoleHook(e *Env, h *Hook) error {
 	// if h.Command != "" {
 	// 	h.Command = env.ExpanVard(h.Command, *h.Env)
 	// }
-	if h.URL != "" {
-		h.URL = env.ExpandEnv(h.URL, *h.Env)
-	}
-	if h.Dest != "" {
-		h.Dest = env.ExpandEnv(h.Dest, *h.Env)
-	}
 	return nil
 }
 
 // ParseDirs tasks
 func (r *Role) ParseDirs(target string) error {
 	for _, d := range r.Dirs {
-		d.Path = os.ExpandEnv(d.Path)
+		d.Path = env.ExpandEnv(d.Path, *r.Env)
 		if !filepath.IsAbs(d.Path) {
 			d.Path = filepath.Join(target, d.Path)
 		}
@@ -486,8 +482,8 @@ func (r *Role) ParseDirs(target string) error {
 func (r *Role) ParseFiles(target string) error {
 	files := []*Copy{}
 	for _, c := range r.Files {
-		c.Source = os.ExpandEnv(c.Source)
-		c.Target = os.ExpandEnv(c.Target)
+		c.Source = env.ExpandEnv(c.Source, *r.Env)
+		c.Target = env.ExpandEnv(c.Target, *r.Env)
 		if c.Target == "" {
 			src, dst, err := parsePaths(c.Source)
 			if err != nil {
@@ -496,11 +492,17 @@ func (r *Role) ParseFiles(target string) error {
 			c.Source = src
 			c.Target = dst
 		}
-		if !filepath.IsAbs(c.Source) {
-			c.Source = filepath.Join(r.Path, c.Source)
-		}
 		if !filepath.IsAbs(c.Target) {
 			c.Target = filepath.Join(target, c.Target)
+		}
+		if isRemote(c.Source) {
+			cc := *c
+			files = append(files, &cc)
+
+			continue
+		}
+		if !filepath.IsAbs(c.Source) {
+			c.Source = filepath.Join(r.Path, c.Source)
 		}
 		paths, err := preparePaths(target, c.Source, c.Target)
 		if err != nil {
@@ -524,8 +526,8 @@ func (r *Role) ParseFiles(target string) error {
 func (r *Role) ParseLinks(target string) error {
 	links := []*Link{}
 	for _, l := range r.Links {
-		l.Source = os.ExpandEnv(l.Source)
-		l.Target = os.ExpandEnv(l.Target)
+		l.Source = env.ExpandEnv(l.Source, *r.Env)
+		l.Target = env.ExpandEnv(l.Target, *r.Env)
 		if l.Target == "" {
 			src, dst, err := parsePaths(l.Source)
 			if err != nil {
@@ -562,8 +564,8 @@ func (r *Role) ParseLinks(target string) error {
 func (r *Role) ParseTpls(target string) error {
 	templates := []*Tpl{}
 	for _, t := range r.Tpls {
-		t.Source = os.ExpandEnv(t.Source)
-		t.Target = os.ExpandEnv(t.Target)
+		t.Source = env.ExpandEnv(t.Source, *r.Env)
+		t.Target = env.ExpandEnv(t.Target, *r.Env)
 		if t.Target == "" {
 			src, dst, err := parsePaths(t.Source)
 			if err != nil {
@@ -630,7 +632,7 @@ func (r *Role) ParseTpls(target string) error {
 // ParseLines tasks
 func (r *Role) ParseLines(target string) error {
 	for _, l := range r.Lines {
-		l.Target = os.ExpandEnv(l.Target)
+		l.Target = env.ExpandEnv(l.Target, *r.Env)
 		if !filepath.IsAbs(l.Target) {
 			l.Target = filepath.Join(target, l.Target)
 		}
@@ -644,7 +646,7 @@ func (r *Role) ParseLines(target string) error {
 // ParseBlocks tasks
 func (r *Role) ParseBlocks(target string) error {
 	for _, b := range r.Blocks {
-		b.Target = os.ExpandEnv(b.Target)
+		b.Target = env.ExpandEnv(b.Target, *r.Env)
 		if !filepath.IsAbs(b.Target) {
 			b.Target = filepath.Join(target, b.Target)
 		}
