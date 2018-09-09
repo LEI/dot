@@ -44,7 +44,7 @@ func (h *Hook) buildCommandString() error {
 	if h.Command == "" && h.URL != "" && h.Dest != "" {
 		// if h.Mode
 		h.Command = fmt.Sprintf("curl %q -o %s", h.URL, h.Dest)
-		if h.Mode != 0 {
+		if h.Mode == 0 {
 			h.Mode = uint32(defaultFileMode)
 		}
 		h.Command += fmt.Sprintf("\nchmod %o %q", h.Mode, h.Dest)

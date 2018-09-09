@@ -37,7 +37,19 @@ brew install lei/dot/dot
 
 ### Other platforms
 
+#### Archlinux
+
 ```sh
+sudo pacman -Syu --noconfirm
+sudo pacman -S --noconfirm ca-certificates git
+curl -sSL https://git.io/dot.lei.sh | sh
+```
+
+#### Debian
+
+```sh
+sudo apt-get update -yq
+sudo apt-get install -yyq ca-certificates curl git
 curl -sSL https://git.io/dot.lei.sh | sh
 ```
 
