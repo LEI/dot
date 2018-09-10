@@ -35,9 +35,9 @@ var choco = &Pm{
 		var buf bytes.Buffer
 		cmd := exec.Command(m.Bin, opts...)
 		cmd.Stdout = &buf
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
+		// cmd.Stdout = Stdout
+		// cmd.Stderr = Stderr
+		// cmd.Stdin = Stdin
 		if err := cmd.Run(); err != nil {
 			return false, err
 		}
@@ -71,13 +71,13 @@ var aptCyg = &Pm{
 		// fmt.Println("$ apt-cyg --version")
 		cmd := exec.Command(shell.Get(), "-c", "apt-cyg --version")
 		// cmd := exec.Command("apt-cyg", "--version")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
+		cmd.Stdout = Stdout
+		cmd.Stderr = Stderr
+		cmd.Stdin = Stdin
 		// if err := cmd.Run(); err != nil {
 		// 	// Not in %PATH%
 		// 	fmt.Printf("apt-cyg --version: error")
-		// 	fmt.Fprintln(os.Stderr, err)
+		// 	fmt.Fprintln(Stderr, err)
 		// 	// return err
 		// }
 		return cmd.Run()
@@ -90,12 +90,12 @@ var aptCyg = &Pm{
 		fmt.Printf("$ %s %s\n", m.Bin, shell.FormatArgs(opts))
 		err := execManagerCommand(m, m.Bin, opts...)
 		// cmd := exec.Command(shell.Get(), "-c", m.Bin + opts...)
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
+		// cmd.Stdout = Stdout
+		// cmd.Stderr = Stderr
+		// cmd.Stdin = Stdin
 		// if err := cmd.Run(); err != nil {
 		// 	fmt.Printf("$ %s %s\n", m.Bin, strings.Join(opts, " "))
-		// 	fmt.Fprintln(os.Stderr, err)
+		// 	fmt.Fprintln(Stderr, err)
 		// 	return false, nil // err
 		// // }
 		// return true, nil

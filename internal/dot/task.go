@@ -14,8 +14,6 @@ import (
 var (
 	// Action contains the running command name
 	Action string
-
-	defaultFileMode os.FileMode = 0644
 )
 
 // Tasker interface

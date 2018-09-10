@@ -18,9 +18,9 @@ var yum = &Pm{
 		// sudo yum info
 		// yum -C list installed
 		cmd := exec.Command("rpm", append([]string{"-q"}, pkgs...)...) // --quiet
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
+		// cmd.Stdout = Stdout
+		// cmd.Stderr = Stderr
+		// cmd.Stdin = Stdin
 		err := cmd.Run()
 		return err == nil, nil
 	},

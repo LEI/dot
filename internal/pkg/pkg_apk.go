@@ -23,7 +23,7 @@ var apk = &Pm{
 		// c2 := exec.Command("grep", append([]string{"-q"}, pkgs...)...)
 
 		// c2.Stdin, _ = c1.StdoutPipe()
-		// c2.Stdout = os.Stdout
+		// c2.Stdout = Stdout
 
 		// if err := c2.Start(); err != nil {
 		// 	fmt.Println("grep start failed:", err)

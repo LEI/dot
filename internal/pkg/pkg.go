@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"runtime"
@@ -46,6 +47,13 @@ var (
 		"yaourt": yaourt, // arch user repository
 		"yum":    yum,    // centos
 	}
+
+	// Stdout writer
+	Stdout io.Writer = os.Stdout
+	// Stderr writer
+	Stderr io.Writer = os.Stderr
+	// Stdin reader
+	Stdin io.Reader = os.Stdin
 )
 
 type hasFunc func(*Pm, []string) (bool, error)
@@ -315,9 +323,9 @@ func execManagerCommand(m *Pm, bin string, args ...string) error {
 
 // Run a command with custom env vars, even if DryRun is enabled.
 func execWithEnv(env map[string]string, cmd *exec.Cmd) error {
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+	cmd.Stdout = Stdout
+	cmd.Stderr = Stderr
+	cmd.Stdin = Stdin
 	cmd.Env = os.Environ()
 	for k, v := range env {
 		// o := os.Getenv(k)
@@ -337,7 +345,7 @@ func execWithEnv(env map[string]string, cmd *exec.Cmd) error {
 	// 	if !m.AllowFailure {
 	// 		return err
 	// 	}
-	// 	fmt.Fprintf(os.Stderr, "$ %s %s: %s", bin, shell.FormatArgs(args), err) // return err
+	// 	fmt.Fprintf(Stderr, "$ %s %s: %s", bin, shell.FormatArgs(args), err) // return err
 	// }
 	return cmd.Run()
 }
@@ -348,9 +356,9 @@ func execCommand(name string, args ...string) error {
 		return nil
 	}
 	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+	cmd.Stdout = Stdout
+	cmd.Stderr = Stderr
+	cmd.Stdin = Stdin
 	return cmd.Run()
 }
 

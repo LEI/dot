@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 )
 
@@ -37,7 +36,7 @@ var aptGet = &Pm{
 		c2 := exec.Command("grep", "-q", "^i")
 
 		c2.Stdin, _ = c1.StdoutPipe()
-		c2.Stdout = os.Stdout
+		c2.Stdout = Stdout
 
 		if err := c2.Start(); err != nil {
 			fmt.Println("grep start failed:", err)
@@ -73,9 +72,9 @@ func init() {
 	termux.Has = func(m *Pm, pkgs []string) (bool, error) {
 		opts := append([]string{"-Wf'${db:Status-abbrev}'"}, pkgs...)
 		cmd := exec.Command("dpkg-query", opts...)
-		// cmd.Stdout = os.Stdout
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdin = os.Stdin
+		// cmd.Stdout = Stdout
+		// cmd.Stderr = Stderr
+		// cmd.Stdin = Stdin
 		err := cmd.Run()
 		return err == nil, nil
 	}

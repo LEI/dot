@@ -2,7 +2,9 @@ package dot
 
 import (
 	"bytes"
+	"io"
 	"net/url"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -18,6 +20,13 @@ var (
 
 	// DecodeWeaklyTypedInput mapstructure decode option
 	DecodeWeaklyTypedInput = true
+
+	// Stdout writer
+	Stdout io.Writer = os.Stdout
+	// Stderr writer
+	Stderr io.Writer = os.Stderr
+	// Stdin reader
+	Stdin io.Reader = os.Stdin
 )
 
 // Config struct

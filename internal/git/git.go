@@ -51,10 +51,12 @@ var (
 	// GitBin path
 	GitBin = "git"
 
-	// Stdout ...
+	// Stdout writer
 	Stdout io.Writer = os.Stdout
-	// Stderr ...
+	// Stderr writer
 	Stderr io.Writer = os.Stderr
+	// Stdin reader
+	Stdin io.Reader = os.Stdin
 
 	cloneDepth    = 1
 	defaultBranch = "master"
@@ -102,7 +104,7 @@ func git(args ...string) (string, string, error) {
 	cmd := exec.Command(GitBin, args...)
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
-	cmd.Stdin = os.Stdin
+	cmd.Stdin = Stdin
 	if Verbose > 0 {
 		fmt.Fprintln(Stdout, "exec:", GitBin, shell.FormatArgs(args))
 	}

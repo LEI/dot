@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"runtime"
@@ -89,6 +90,8 @@ func shouldLoadConfig(cmd *cobra.Command) bool {
 }
 
 func persistentPreRunDot(cmd *cobra.Command, args []string) error {
+	log.SetOutput(dotOpts.stdout)
+
 	// set verbosity, default is one
 	dotOpts.verbosity = 1
 	if dotOpts.Quiet && dotOpts.Verbose > 1 {
@@ -171,6 +174,9 @@ func runDot(cmd *cobra.Command, args []string) error {
 
 func setupGlobalOptions(opts *DotOptions) error {
 	dot.DecodeErrorUnused = !opts.Force
+	dot.Stdout = opts.stdout
+	dot.Stderr = opts.stderr
+	// dot.Stdin = os.Stdin
 	if !opts.HTTPS {
 		git.Scheme = "ssh"
 		git.User = url.User("git")
@@ -179,6 +185,9 @@ func setupGlobalOptions(opts *DotOptions) error {
 	git.Quiet = opts.verbosity == 0
 	git.Verbose = opts.Verbose
 	pkg.DryRun = opts.DryRun
+	pkg.Stdout = opts.stdout
+	pkg.Stderr = opts.stderr
+	// dot.Stdin = os.Stdin
 	// pkg.Update = true
 	return nil
 }

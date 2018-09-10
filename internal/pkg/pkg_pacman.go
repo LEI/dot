@@ -34,9 +34,9 @@ var pacman = &Pm{
 		//fmt.Printf("pacman -Qqi %s\n", name)
 		// Search locally installed packages
 		cmd := exec.Command("pacman", append([]string{"-Qqi", "--noconfirm"}, pkgs...)...)
-		//cmd.Stdout = os.Stdout
-		//cmd.Stderr = os.Stderr
-		//cmd.Stdin = os.Stdin
+		//cmd.Stdout = Stdout
+		//cmd.Stderr = Stderr
+		//cmd.Stdin = Stdin
 		err := cmd.Run()
 		if err == nil {
 			return true, nil
@@ -44,14 +44,14 @@ var pacman = &Pm{
 		// Search installed groups
 		//fmt.Printf("pacman -Qqg %s\n", name)
 		cmd = exec.Command("pacman", append([]string{"-Qqg", "--noconfirm"}, pkgs...)...)
-		//cmd.Stdout = os.Stdout
-		//cmd.Stderr = os.Stderr
-		//cmd.Stdin = os.Stdin
+		//cmd.Stdout = Stdout
+		//cmd.Stderr = Stderr
+		//cmd.Stdin = Stdin
 		if errg := cmd.Run(); errg == nil {
-			// fmt.Fprintf(os.Stderr, "%s\n", err)
+			// fmt.Fprintf(Stderr, "%s\n", err)
 			return false, nil
 		}
-		// fmt.Fprintf(os.Stderr, "%s\n", err)
+		// fmt.Fprintf(Stderr, "%s\n", err)
 		return false, nil
 	},
 }
@@ -70,11 +70,11 @@ var yaourt = &Pm{
 		//fmt.Printf("> yaourt -Qqi %s\n", name)
 		// Search locally installed packages
 		cmd := exec.Command("yaourt", append([]string{"-Qqi", "--noconfirm"}, pkgs...)...)
-		//cmd.Stdout = os.Stdout
-		//cmd.Stderr = os.Stderr
-		//cmd.Stdin = os.Stdin
+		//cmd.Stdout = Stdout
+		//cmd.Stderr = Stderr
+		//cmd.Stdin = Stdin
 		if err := cmd.Run(); err != nil {
-			// fmt.Fprintf(os.Stderr, "%s\n", err)
+			// fmt.Fprintf(Stderr, "%s\n", err)
 			return false, nil
 		}
 		return true, nil
