@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Copy task
@@ -125,23 +127,27 @@ func isRemote(s string) bool {
 // copyExists returns true if the file source and target have the same content.
 func copyExists(src, dst string) (bool, error) {
 	if isRemote(src) {
-		ok, err := remoteFileExists(src)
+		rf, err := newRemoteFile(src)
+		// ok, err := remoteFileExists(src, dst)
 		if err != nil {
+			return false, err
+		}
+		if !exists(dst) {
+			// Stop here if the target does not exist
 			return false, nil
 		}
-		if !ok {
-			return false, &url.Error{Op: "copy", URL: src, Err: ErrNotExist}
-		}
-	} else if !exists(src) {
+		// if !ok {
+		// 	return false, &url.Error{Op: "copy", URL: src, Err: ErrNotExist}
+		// }
+		return rf.Compare(dst)
+	}
+	if !exists(src) {
 		// fmt.Errorf("%s: no such file to copy to %s", src, dst)
 		return false, &os.PathError{Op: "copy", Path: src, Err: ErrNotExist}
 	}
 	if !exists(dst) {
 		// Stop here if the target does not exist
 		return false, nil
-	}
-	if isRemote(src) {
-		return remoteFileCompare(src, dst)
 	}
 	return fileCompare(src, dst)
 }
@@ -160,11 +166,6 @@ func fileExists(name string) bool {
 	return !fi.IsDir()
 }
 
-// remoteFileExists returns true if the HEAD request is successful.
-func remoteFileExists(url string) (bool, error) {
-	return true, nil
-}
-
 // fileCompare TODO read in chunks
 func fileCompare(p1, p2 string) (bool, error) {
 	a, err := ioutil.ReadFile(p1)
@@ -179,7 +180,72 @@ func fileCompare(p1, p2 string) (bool, error) {
 	// return bytes.Compare(a, b) == 0, nil
 }
 
-// remoteFileCompare TODO not implemented
-func remoteFileCompare(src, dst string) (bool, error) {
+type remoteFile struct {
+	URL string
+	// Length of the file contents
+	Length int64
+	// Date last modified time
+	Date time.Time
+	// ETag or entity tag, is an opaque token that identifies a version of
+	// the component served by a particular URL. The token can be anything
+	// enclosed in quotes; often it's an md5 hash of the content, or the content's
+	// VCS version number.
+	Etag string
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
+func (r *remoteFile) Compare(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	// b, err := ioutil.ReadFile(name) // size := len(b)
+	if err != nil {
+		return false, err
+	}
+	if fi.Size() != r.Length || fi.ModTime().After(r.Date) {
+		// TODO: confirm overwrite
+		// fmt.Println("mismatch size", fi.Size() != r.Length, fi.Size(), r.Length)
+		// fmt.Println("mismatch date", fi.ModTime().After(r.Date), fi.ModTime(), r.Date)
+		return false, nil
+	}
+	// fmt.Println("Etag", r.Etag)
+	// h := sha1.New()
+	// if _, err = io.Copy(h, f); err != nil {
+	// 	return false, err
+	// }
+	// hash := hex.EncodeToString(h.Sum(nil))
+	// fmt.Println("SHA1", hash)
 	return true, nil
 }
+
+func newRemoteFile(url string) (*remoteFile, error) {
+	r := &remoteFile{URL: url}
+	timeout := time.Duration(3 * time.Second)
+	client := http.Client{
+		Timeout: timeout,
+	}
+	resp, err := client.Head(r.URL)
+	if err != nil {
+		return r, err
+	}
+	if r.Length, err = strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64); err != nil {
+		return r, err
+	}
+	r.Date, err = time.Parse(time.RFC1123, resp.Header.Get("Date"))
+	if err != nil {
+		return r, err
+	}
+	r.Etag = resp.Header.Get("Etag")
+	if resp.StatusCode != 200 {
+		return r, fmt.Errorf("%s: head request returned %+v", r.URL, resp.Status)
+	}
+	return r, nil
+}
+
+// remoteFileCompare TODO not implemented
+// func remoteFileCompare(src, dst string) (bool, error) {
+// 	return true, nil
+// }
