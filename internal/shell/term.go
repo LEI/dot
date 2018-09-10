@@ -1,5 +1,19 @@
 package shell
 
+import (
+	"io"
+	"os"
+)
+
+var (
+	// Stdout writer
+	Stdout io.Writer = os.Stdout
+	// Stderr writer
+	Stderr io.Writer = os.Stderr
+	// Stdin reader
+	Stdin io.Reader = os.Stdin
+)
+
 /*
 // import "github.com/mattn/go-isatty"
 

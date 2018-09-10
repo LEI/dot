@@ -46,7 +46,7 @@ func (h *Hook) buildCmd() (*exec.Cmd, error) {
 	args := []string{"-c", "set -e; " + c}
 	// fmt.Printf("EXEC HOOK: %q\n", h.Command)
 	cmd := exec.Command(bin, args...)
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = h.ExecDir
 	for k, v := range *h.Env {

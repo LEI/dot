@@ -14,13 +14,13 @@ func AskConfirmation(s string) (ret bool) {
 		fmt.Println(s)
 		return true
 	}
-	reader := bufio.NewReader(os.Stdin)
+	reader := bufio.NewReader(Stdin)
 	for {
 		// fmt.Printf("%s [y/n]: ", s)
 		fmt.Printf("%s [y/n]:\n", s)
 		res, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not read input from stdin: %s\n", err)
+			fmt.Fprintf(Stderr, "Could not read input from stdin: %s\n", err)
 			os.Exit(1)
 		}
 		res = strings.ToLower(strings.TrimSpace(res))
@@ -42,7 +42,7 @@ func noConfirm() bool {
 	_, err := os.Stat(ncfile)
 	exists := err == nil || os.IsExist(err)
 	if exists {
-		fmt.Fprintln(os.Stderr, "[Confirmation disabled because ~/.dotnc exists]")
+		fmt.Fprintln(Stderr, "[Confirmation disabled because ~/.dotnc exists]")
 	}
 	return exists
 }

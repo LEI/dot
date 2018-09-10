@@ -6,10 +6,6 @@ import (
 	"os"
 )
 
-var (
-	defaultDirMode os.FileMode = 0755
-)
-
 // Dir task
 type Dir struct {
 	Task `mapstructure:",squash"` // Action, If, OS

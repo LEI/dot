@@ -14,7 +14,7 @@ import (
 // Run command without specifying any environment variables.
 func Run(cmd string, args ...string) error {
 	// return RunWith(nil, cmd, args...)
-	_, err := Exec(nil, os.Stdout, os.Stderr, cmd, args...)
+	_, err := Exec(nil, Stdout, Stderr, cmd, args...)
 	return err
 }
 
@@ -29,16 +29,16 @@ func RunCmd(cmd string, args ...string) func(args ...string) error {
 func RunWith(env map[string]string, cmd string, args ...string) error {
 	// var output io.Writer
 	// if Verbose {
-	// 	output = os.Stdout
+	// 	output = Stdout
 	// }
-	_, err := Exec(env, os.Stdout, os.Stderr, cmd, args...)
+	_, err := Exec(env, Stdout, Stderr, cmd, args...)
 	return err
 }
 
 // Output runs the command and returns the text from stdout.
 func Output(cmd string, args ...string) (string, error) {
 	buf := &bytes.Buffer{}
-	_, err := Exec(nil, buf, os.Stderr, cmd, args...)
+	_, err := Exec(nil, buf, Stderr, cmd, args...)
 	return strings.TrimSuffix(buf.String(), "\n"), err
 }
 
@@ -52,7 +52,7 @@ func OutputCmd(cmd string, args ...string) func(args ...string) (string, error) 
 // OutputWith is like RunWith, ubt returns what is written to stdout.
 func OutputWith(env map[string]string, cmd string, args ...string) (string, error) {
 	buf := &bytes.Buffer{}
-	_, err := Exec(env, buf, os.Stderr, cmd, args...)
+	_, err := Exec(env, buf, Stderr, cmd, args...)
 	return strings.TrimSuffix(buf.String(), "\n"), err
 }
 
@@ -109,7 +109,7 @@ func run(env map[string]string, stdout, stderr io.Writer, cmd string, args ...st
 	}
 	c.Stderr = stderr
 	c.Stdout = stdout
-	c.Stdin = os.Stdin
+	c.Stdin = Stdin
 	fmt.Println("exec:", cmd, strings.Join(args, " "))
 	err = c.Run() // FIXME: stdout, stderr *bytes.Buffer
 	return cmdRan(err), ExitStatus(err), err
@@ -147,15 +147,6 @@ func ExitStatus(err error) int {
 	}
 	return 1
 }
-
-// var (
-// 	// Stdout ...
-// 	Stdout = os.Stdout
-// 	// Stderr ...
-// 	Stderr = os.Stderr
-
-// 	defaultStatusFailed = 1
-// )
 
 // // Run a command
 // func Run(cmd *exec.Cmd) (status int) {
