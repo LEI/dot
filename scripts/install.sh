@@ -120,6 +120,7 @@ initArch() {
     i386) ARCH="386" ;;
     ppc64) ARCH="ppc64" ;;
     ppc64le) ARCH="ppc64le" ;;
+    aarch64) ARCH="arm64" ;;
     *)
       echo >&2 "Architecture ${ARCH} is not supported by this installation script"
       exit 1

@@ -25,6 +25,7 @@ var ignoredFilePatterns = []string{
 	"*.yml",
 	"*.DS_Store",
 	".git",
+	".gitkeep",
 }
 
 // RoleConfig struct
@@ -95,11 +96,19 @@ func (r *Role) String() (s string) {
 	if len(r.Pkgs) > 0 {
 		s += fmt.Sprintf("%sPkgs: %s\n", prefix, r.Pkgs)
 	}
-	s += formatRole(prefix, r)
+	s += formatRoleTasks(prefix, r)
 	return strings.TrimRight(s, "\n")
 }
 
-func formatRole(prefix string, r *Role) (s string) {
+func formatRoleTasks(prefix string, r *Role) (s string) {
+	if len(r.Install) > 0 {
+		s += fmt.Sprintf("%sInstall:\n", prefix)
+		s += formatHooks(prefix+prefix, r.Install)
+	}
+	if len(r.Remove) > 0 {
+		s += fmt.Sprintf("%sRemove:\n", prefix)
+		s += formatHooks(prefix+prefix, r.Remove)
+	}
 	if len(r.Dirs) > 0 {
 		s += fmt.Sprintf("%sDirs:\n", prefix)
 		// s += formatRoleTasks(prefix+prefix, r.Dirs)
@@ -142,26 +151,18 @@ func formatRole(prefix string, r *Role) (s string) {
 			s += formatTask(prefix+prefix, b)
 		}
 	}
-	if len(r.Install) > 0 {
-		s += fmt.Sprintf("%sInstall:\n", prefix)
-		s += formatRoleHooks(prefix+prefix, r.Install)
-	}
 	if len(r.PostInstall) > 0 {
 		s += fmt.Sprintf("%sPostInstall:\n", prefix)
-		s += formatRoleHooks(prefix+prefix, r.PostInstall)
-	}
-	if len(r.Remove) > 0 {
-		s += fmt.Sprintf("%sRemove:\n", prefix)
-		s += formatRoleHooks(prefix+prefix, r.Remove)
+		s += formatHooks(prefix+prefix, r.PostInstall)
 	}
 	if len(r.PostRemove) > 0 {
 		s += fmt.Sprintf("%sPostRemove:\n", prefix)
-		s += formatRoleHooks(prefix+prefix, r.PostRemove)
+		s += formatHooks(prefix+prefix, r.PostRemove)
 	}
 	return s
 }
 
-func formatRoleHooks(prefix string, hooks []*Hook) (s string) {
+func formatHooks(prefix string, hooks []*Hook) (s string) {
 	for _, h := range hooks {
 		s += fmt.Sprintf("%s→ %s\n", prefix, h.String())
 	}
