@@ -284,8 +284,9 @@ func OpenConfig(opts DotOptions) (*dot.Config, error) {
 		return nil, err
 		// }
 	}
-	if opts.DryRun && opts.Verbose >= 0 {
-		fmt.Fprintf(dotOpts.stderr, "DRY-RUN enabled\n")
+	if opts.DryRun { // && opts.Verbose >= 0
+		// fmt.Fprintf(dotOpts.stderr, "DRY-RUN enabled\n")
+		Debug.Println("DRY RUN ENABLED")
 	}
 	if cf := cfg.FileUsed(); cf != "" && dotOpts.verbosity >= 2 {
 		fmt.Fprintf(dotOpts.stdout, "Using config file: %s\n", cf)

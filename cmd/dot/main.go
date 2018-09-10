@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -40,6 +41,15 @@ var (
 		"OS": runtime.GOOS,
 		// DOT_...
 	}
+
+	// Debug level
+	Debug *log.Logger
+	// Info level
+	Info *log.Logger
+	// Warn level
+	Warn *log.Logger
+	// Error level
+	Error *log.Logger
 )
 
 var dotConfig = &dot.Config{}
@@ -90,7 +100,7 @@ func shouldLoadConfig(cmd *cobra.Command) bool {
 }
 
 func persistentPreRunDot(cmd *cobra.Command, args []string) error {
-	log.SetOutput(dotOpts.stdout)
+	// log.SetOutput(dotOpts.stdout)
 
 	// set verbosity, default is one
 	dotOpts.verbosity = 1
@@ -98,13 +108,22 @@ func persistentPreRunDot(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--quiet and --verbose cannot be specified at the same time")
 	}
 
+	logFlag := 0 // log.Ldate|log.Ltime|log.Lshortfile
+	Debug = log.New(ioutil.Discard, "DEBUG: ", logFlag)
+	Info = log.New(dotOpts.stdout, "INFO: ", logFlag)
+	Warn = log.New(dotOpts.stderr, "WARN: ", logFlag)
+	Error = log.New(dotOpts.stderr, "ERROR: ", logFlag)
+
 	switch {
 	case dotOpts.Verbose >= 2:
 		dotOpts.verbosity = 3
+		Debug.SetOutput(dotOpts.stderr)
 	case dotOpts.Verbose > 0:
 		dotOpts.verbosity = 2
+		Debug.SetOutput(dotOpts.stderr)
 	case dotOpts.Quiet:
 		dotOpts.verbosity = 0
+		Info.SetOutput(ioutil.Discard)
 	}
 	// if dotOps.DryRun {
 	// 	os.Setenv("DOT_DRY_RUN", "1")
@@ -182,7 +201,7 @@ func setupGlobalOptions(opts *DotOptions) error {
 		git.User = url.User("git")
 	}
 	git.DryRun = opts.DryRun
-	git.Quiet = opts.verbosity == 0
+	git.Quiet = opts.Quiet // opts.verbosity == 0
 	git.Verbose = opts.Verbose
 	pkg.DryRun = opts.DryRun
 	pkg.Stdout = opts.stdout
@@ -307,7 +326,11 @@ func main() {
 	// case errors.IsFatal(errors.Cause(err)):
 	// 	fmt.Fprintf(os.Stderr, "%v\n", err)
 	case err != nil:
-		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		if Error != nil {
+			Error.Println(err)
+		} else {
+			fmt.Fprintf(os.Stderr, "err: %+v\n", err)
+		}
 
 		// if logBuffer.Len() > 0 {
 		// 	fmt.Fprintf(os.Stderr, "also, the following messages were logged by a library:\n")
