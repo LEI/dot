@@ -11,15 +11,15 @@ builds:
     env:
       - CGO_ENABLED=0
     goos: # https://golang.org/doc/install/source#environment
-      - windows
       - darwin
-      - linux
       # - freebsd
+      - linux
+      - windows
     goarch:
       - 386
       - amd64
-    #   - arm
-    #   - arm64
+      - arm
+      - arm64
     # goarm:
     #   - 6
     #   - 7
@@ -44,11 +44,13 @@ archive:
   #   - none* # https://github.com/goreleaser/goreleaser/issues/602
   # hooks: {}
 changelog:
-  # sort: asc
+  sort: asc
   filters:
     exclude:
       - '^docs:'
       - '^test:'
+      - Merge pull request
+      - Merge branch
 # sign:
 #   signature: "${artifact}.sig"
 #   cmd: gpg
