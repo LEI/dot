@@ -22,7 +22,7 @@ set -e
 
 set -e
 
-INSTALL_DIRECTORY="${INSTALL_DIRECTORY:-/usr/local/bin}"
+INSTALL_DIRECTORY="${INSTALL_DIRECTORY:-${PREFIX:-/usr/local}/bin}"
 RELEASES_URL="https://github.com/LEI/dot/releases"
 test -z "$TMPDIR" && TMPDIR="$(mktemp -d)"
 
@@ -121,6 +121,7 @@ initArch() {
     ppc64) ARCH="ppc64" ;;
     ppc64le) ARCH="ppc64le" ;;
     aarch64) ARCH="arm64" ;;
+    # ?) ARCH="armv6" ;;
     *)
       echo >&2 "Architecture ${ARCH} is not supported by this installation script"
       exit 1
