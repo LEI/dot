@@ -2,6 +2,7 @@ package dot
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -116,15 +117,17 @@ func (c *Config) PrepareRoles() error {
 // ParseRoles config
 func (c *Config) ParseRoles() error {
 	roles := []*Role{}
+	// Clone repository, load config and parse it
 	for _, r := range c.Roles {
 		// if r.URL == "" { r.URL = r.Name }
 		// r.URL = git.ParseURL(r.Git.User, r.Git.Host, r.URL)
-
+		// Verify repository state
+		if err := git.CheckRemote(r.Path, r.URL); err != nil {
+			return err
+		}
 		r.SetConfigFile(c.filename)
+		// Load role config if found
 		if f := r.GetConfigFile(); exists(f) {
-			if err := git.CheckRemote(r.Path, r.URL); err != nil {
-				return err
-			}
 			if err := r.Load(); err != nil {
 				return err
 			}
@@ -134,7 +137,30 @@ func (c *Config) ParseRoles() error {
 		}
 		roles = append(roles, r)
 	}
+	if err := checkDeps(roles); err != nil {
+		return err
+	}
+	// Update config
 	c.Roles = roles
+	return nil
+}
+
+// Verify role dependencies
+func checkDeps(roles []*Role) error {
+	for i, ro := range roles {
+	DEPS:
+		for _, name := range ro.Deps {
+			for j, r := range roles {
+				if name == r.Name {
+					if j > i {
+						return fmt.Errorf("%s: should be loaded before %s", ro.Name, r.Name)
+					}
+					continue DEPS
+				}
+			}
+			return fmt.Errorf("%s: requires %s", ro.Name, name)
+		}
+	}
 	return nil
 }
 
