@@ -257,7 +257,7 @@ func newRemoteFile(url string) (*remoteFile, error) {
 		return r, err
 	}
 
-	// req, err := http.NewRequest("HEAD", url, http.NoBody)
+	// req, err := http.NewRequest("HEAD", url, nil) // http.NoBody
 	// if err != nil {
 	// 	return r, err
 	// }
