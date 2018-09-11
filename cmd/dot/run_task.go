@@ -42,15 +42,14 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 		dot.Action = cmd.Name()
 	}
 	c := make(chan actionResult)
-	ignoreErrors := dot.Action == "list"
 	// Parse roles config
 	if err := dotConfig.ParseRoles(); err != nil {
 		return err
 	}
-	roles := dotConfig.Roles
+	// roles := dotConfig.Roles
 	go func() {
 		var wg sync.WaitGroup
-		for _, r := range roles {
+		for _, r := range dotConfig.Roles {
 			if !r.ShouldRun() {
 				continue
 			}
@@ -64,44 +63,7 @@ func preRunAction(cmd *cobra.Command, args []string) error {
 			close(c)
 		}()
 	}()
-	// Check all tasks result
-	exists := 0
-	failed := 0
-	skipped := 0
-	total := 0
-	for r := range c {
-		total++
-		if r.err == nil {
-			continue
-		}
-		if dot.IsExist(r.err) {
-			exists++
-			continue
-		}
-		if dot.IsSkip(r.err) {
-			skipped++
-			continue
-		}
-		if !ignoreErrors {
-			fmt.Fprintf(
-				dotOpts.stderr,
-				"failed to %s %s role: %s\n",
-				dot.Action, r.name, r.err,
-			)
-		}
-		failed++
-	}
-	// if total == exists+skipped && !dotOpts.Force {
-	// 	return &appError{
-	// 		Err:  nil, // dot.ErrExist
-	// 		Msg:  "nothing to do",
-	// 		Code: 0,
-	// 	}
-	// }
-	if failed > 0 && !ignoreErrors {
-		return fmt.Errorf("%d error(s) occurred while checking %d roles", failed, len(roles))
-	}
-	return nil
+	return checkResults(c)
 }
 
 func checkAllTasks(r *dot.Role, c chan<- actionResult, wg *sync.WaitGroup) {
@@ -168,6 +130,47 @@ func checkOneTask(r *dot.Role, t dot.Tasker, c chan<- actionResult, wg *sync.Wai
 	err := t.Status()
 	c <- actionResult{r.Name, t, err}
 	wg.Done()
+}
+
+// Check all tasks result
+func checkResults(c chan actionResult) error {
+	var exists, failed, skipped, total int
+	showErrors := dot.Action != "list"
+	for r := range c {
+		total++
+		if r.err == nil {
+			continue
+		}
+		if dot.IsExist(r.err) {
+			exists++
+			continue
+		}
+		if dot.IsSkip(r.err) {
+			skipped++
+			continue
+		}
+		if showErrors {
+			fmt.Fprintf(
+				dotOpts.stderr,
+				"failed to %s %s role: %s\n",
+				dot.Action, r.name, r.err,
+			)
+		}
+		failed++
+	}
+	// if total == exists+skipped && !dotOpts.Force {
+	// 	return &appError{
+	// 		Err:  nil, // dot.ErrExist
+	// 		Msg:  "nothing to do",
+	// 		Code: 0,
+	// 	}
+	// }
+	if failed > 0 && showErrors {
+		return fmt.Errorf("%d error(s) occurred while checking %d roles",
+			failed,
+			len(dotConfig.Roles))
+	}
+	return nil
 }
 
 // func runTask(i interface{}) error {
