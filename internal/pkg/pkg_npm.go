@@ -7,7 +7,8 @@ import (
 // https://docs.npmjs.com/misc/config
 // https://docs.npmjs.com/cli
 var npm = &Pm{
-	Bin:     "npm",
+	Bin: "npm",
+	// Shell:   shell.Get(),
 	Install: "install",   // https://docs.npmjs.com/cli/install
 	Remove:  "uninstall", // https://docs.npmjs.com/cli/uninstall
 	Opts: []string{
