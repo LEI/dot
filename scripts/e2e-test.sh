@@ -23,8 +23,7 @@ main() {
     --https \
     --sync \
     --packages \
-    --verbose \
-    -r bash,gpg,git,node,php,python,ruby,vim,tmux
+    --verbose
 
   # for f in "$HOME"/.gitconfig; do run test -f "$f"; done
   run test -f "$HOME/.gitconfig"
