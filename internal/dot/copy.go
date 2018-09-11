@@ -7,9 +7,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
+)
+
+var (
+	// TODO: allow custom duration
+	timeout = time.Duration(8 * time.Second)
 )
 
 // Copy task
@@ -82,6 +86,17 @@ func (c *Copy) Do() error {
 		if err != nil {
 			return err
 		}
+		// tmpfile, err := ioutil.TempFile("", filepath.Basename(c.Source))
+		// if err != nil {
+		// 	return err
+		// }
+		// defer os.Remove(tmpfile.Name())
+		// if _, err := tmpfile.Write(content); err != nil {
+		// 	log.Fatal(err)
+		// }
+		// if err := tmpfile.Close(); err != nil {
+		// 	log.Fatal(err)
+		// }
 		return nil
 	}
 	return copyFile(c.Source, c.Target)
@@ -205,10 +220,15 @@ func (r *remoteFile) Compare(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if fi.Size() != r.Length || fi.ModTime().After(r.Date) {
-		// TODO: confirm overwrite
+	// TODO: confirm overwrite
+	if fi.Size() != r.Length {
+		// fmt.Println("DIFFERENT SIZE", fi.Size(), r.Length)
 		// fmt.Println("mismatch size", fi.Size() != r.Length, fi.Size(), r.Length)
-		// fmt.Println("mismatch date", fi.ModTime().After(r.Date), fi.ModTime(), r.Date)
+		return false, nil
+	}
+	if fi.ModTime().After(r.Date) {
+		// fmt.Println("DIFFERENT DATE", fi.ModTime(), r.Date)
+		// fmt.Println("mismatch size", fi.Size() != r.Length, fi.Size(), r.Length)
 		return false, nil
 	}
 	// fmt.Println("Etag", r.Etag)
@@ -223,25 +243,55 @@ func (r *remoteFile) Compare(name string) (bool, error) {
 
 func newRemoteFile(url string) (*remoteFile, error) {
 	r := &remoteFile{URL: url}
-	timeout := time.Duration(3 * time.Second)
 	client := http.Client{
 		Timeout: timeout,
+		// Fixes 403 forbidden for some github raw files
+		// https://stackoverflow.com/a/42185713/7796750
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
+
 	resp, err := client.Head(r.URL)
 	if err != nil {
 		return r, err
 	}
-	if r.Length, err = strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64); err != nil {
-		return r, err
+
+	// req, err := http.NewRequest("HEAD", url, http.NoBody)
+	// if err != nil {
+	// 	return r, err
+	// }
+	// /*
+	// req.Header.Set("Accept", "*/*")
+	// req.Header.Set("Content-Type", "text/plain; charset=utf-8")
+	// req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0")
+	// */
+	// resp, err := client.Do(req)
+	// if err != nil {
+	// 	return r, err
+	// }
+	// defer resp.Body.Close()
+	// body, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return r, err
+	// }
+
+	if resp.StatusCode != 200 && resp.StatusCode != 302 {
+		fmt.Printf("HTTP %s: %+v\n%+v\n", resp.Status, url, resp)
 	}
+	if resp.StatusCode >= 400 {
+		return r, fmt.Errorf("%s: head request returned %+v", r.URL, resp.Status)
+	}
+	r.Length = resp.ContentLength
+	// // contentLen := resp.Header.Get("Content-Length")
+	// if r.Length, err = strconv.ParseInt(contentLen, 10, 64); err != nil {
+	// 	return r, err
+	// }
 	r.Date, err = time.Parse(time.RFC1123, resp.Header.Get("Date"))
 	if err != nil {
 		return r, err
 	}
 	r.Etag = resp.Header.Get("Etag")
-	if resp.StatusCode != 200 {
-		return r, fmt.Errorf("%s: head request returned %+v", r.URL, resp.Status)
-	}
 	return r, nil
 }
 
