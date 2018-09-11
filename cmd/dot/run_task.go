@@ -135,6 +135,7 @@ func checkOneTask(r *dot.Role, t dot.Tasker, c chan<- actionResult, wg *sync.Wai
 // Check all tasks result
 func checkResults(c chan actionResult) error {
 	var exists, failed, skipped, total int
+	// Suppress errors when listing only
 	showErrors := dot.Action != "list"
 	for r := range c {
 		total++

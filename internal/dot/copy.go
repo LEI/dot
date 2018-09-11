@@ -220,15 +220,13 @@ func (r *remoteFile) Compare(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// TODO: confirm overwrite
+	// TODO: ask overwrite confirmation
 	if fi.Size() != r.Length {
-		// fmt.Println("DIFFERENT SIZE", fi.Size(), r.Length)
-		// fmt.Println("mismatch size", fi.Size() != r.Length, fi.Size(), r.Length)
+		fmt.Println("DIFFERENT SIZE", fi.Size(), "->", r.Length)
 		return false, nil
 	}
 	if fi.ModTime().After(r.Date) {
-		// fmt.Println("DIFFERENT DATE", fi.ModTime(), r.Date)
-		// fmt.Println("mismatch size", fi.Size() != r.Length, fi.Size(), r.Length)
+		fmt.Println("DIFFERENT DATE", fi.ModTime(), "->", r.Date)
 		return false, nil
 	}
 	// fmt.Println("Etag", r.Etag)
