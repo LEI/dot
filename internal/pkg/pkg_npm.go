@@ -2,13 +2,15 @@ package pkg
 
 import (
 	"os/exec"
+
+	"github.com/LEI/dot/internal/shell"
 )
 
 // https://docs.npmjs.com/misc/config
 // https://docs.npmjs.com/cli
 var npm = &Pm{
-	Bin: "npm",
-	// Shell:   shell.Get(),
+	Bin:     "npm",
+	Shell:   shell.Get(),
 	Install: "install",   // https://docs.npmjs.com/cli/install
 	Remove:  "uninstall", // https://docs.npmjs.com/cli/uninstall
 	Opts: []string{
