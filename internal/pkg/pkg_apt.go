@@ -66,6 +66,8 @@ func init() {
 	*termux = *aptGet
 	termux.Sudo = false
 	// termux.Bin = "pkg"
+	// termux.Install = "install"
+	// termux.Remove = "uninstall"
 	// termux.Init = func(m *Pm) error {
 	// 	return nil
 	// }
