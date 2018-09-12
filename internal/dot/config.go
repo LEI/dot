@@ -156,14 +156,13 @@ func (c *Config) ParseRoles() error {
 
 // Verify role dependencies
 func checkDeps(roles []*Role) error {
-	/* for i, ro := range roles {
+	for i, ro := range roles {
 	DEPS:
 		for _, name := range ro.Deps {
 			for j, r := range roles {
 				if name == r.Name {
-					// fmt.Println("i", i, ro.Name)
-					// fmt.Println("j", j, r.Name)
-					if i > j { // FIXME
+					// fmt.Printf("-- %s (%d) depends on %s (%d)\n", ro.Name, i, name, j)
+					if i < j {
 						return fmt.Errorf("%s: should be loaded before %s", ro.Name, r.Name)
 					}
 					continue DEPS
@@ -171,7 +170,7 @@ func checkDeps(roles []*Role) error {
 			}
 			return fmt.Errorf("%s: requires %s", ro.Name, name)
 		}
-	} */
+	}
 	return nil
 }
 
