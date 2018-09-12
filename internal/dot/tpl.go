@@ -86,6 +86,12 @@ func (t *Tpl) String() string {
 	return s
 }
 
+// Init task
+func (t *Tpl) Init() error {
+	// ...
+	return nil
+}
+
 // Prepare template task
 func (t *Tpl) Prepare() error {
 	if t.Ext == "" {

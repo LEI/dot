@@ -24,27 +24,33 @@ type Copy struct {
 	Mode   os.FileMode
 }
 
-func (c *Copy) String() string {
-	s := fmt.Sprintf("%s:%s", c.Source, c.Target)
+func (t *Copy) String() string {
+	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
 	switch Action {
 	case "install":
-		if isRemote(c.Source) {
-			s = fmt.Sprintf("curl -sSL %q -o %q", c.Source, tildify(c.Target))
+		if isRemote(t.Source) {
+			s = fmt.Sprintf("curl -sSL %q -o %q", t.Source, tildify(t.Target))
 		} else {
-			s = fmt.Sprintf("cp %s %s", tildify(c.Source), tildify(c.Target))
+			s = fmt.Sprintf("cp %s %s", tildify(t.Source), tildify(t.Target))
 		}
 	case "remove":
-		s = fmt.Sprintf("rm %s", tildify(c.Target))
+		s = fmt.Sprintf("rm %s", tildify(t.Target))
 	}
 	return s
 }
 
+// Init task
+func (t *Copy) Init() error {
+	// ...
+	return nil
+}
+
 // RemoteString command
-func (c *Copy) RemoteString() string {
-	s := fmt.Sprintf("curl -sSL %q -o %s", c.Source, tildify(c.Target))
-	if c.Mode != 0 {
-		// s += fmt.Sprintf("\nchmod %o %q", c.Mode, c.Dest)
-		s += fmt.Sprintf("; chmod %o $_", c.Mode)
+func (t *Copy) RemoteString() string {
+	s := fmt.Sprintf("curl -sSL %q -o %s", t.Source, tildify(t.Target))
+	if t.Mode != 0 {
+		// s += fmt.Sprintf("\nchmod %o %q", t.Mode, t.Dest)
+		s += fmt.Sprintf("; chmod %o $_", t.Mode)
 	}
 	return s
 }
@@ -57,8 +63,8 @@ func (c *Copy) RemoteString() string {
 // }
 
 // Status check task
-func (c *Copy) Status() error {
-	exists, err := copyExists(c.Source, c.Target)
+func (t *Copy) Status() error {
+	exists, err := copyExists(t.Source, t.Target)
 	if err != nil {
 		return err
 	}
@@ -69,8 +75,8 @@ func (c *Copy) Status() error {
 }
 
 // Do task
-func (c *Copy) Do() error {
-	if err := c.Status(); err != nil {
+func (t *Copy) Do() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
@@ -78,15 +84,15 @@ func (c *Copy) Do() error {
 			return err
 		}
 	}
-	if isRemote(c.Source) {
-		if c.Mode == 0 {
-			c.Mode = defaultFileMode
+	if isRemote(t.Source) {
+		if t.Mode == 0 {
+			t.Mode = defaultFileMode
 		}
-		err := getURL(c.Source, c.Target, c.Mode)
+		err := getURL(t.Source, t.Target, t.Mode)
 		if err != nil {
 			return err
 		}
-		// tmpfile, err := ioutil.TempFile("", filepath.Basename(c.Source))
+		// tmpfile, err := ioutil.TempFile("", filepath.Basename(t.Source))
 		// if err != nil {
 		// 	return err
 		// }
@@ -99,7 +105,7 @@ func (c *Copy) Do() error {
 		// }
 		return nil
 	}
-	return copyFile(c.Source, c.Target)
+	return copyFile(t.Source, t.Target)
 }
 
 func copyFile(src, dst string) error {
@@ -120,8 +126,8 @@ func copyFile(src, dst string) error {
 }
 
 // Undo task
-func (c *Copy) Undo() error {
-	if err := c.Status(); err != nil {
+func (t *Copy) Undo() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist:
 			// continue
@@ -131,7 +137,7 @@ func (c *Copy) Undo() error {
 			return err
 		}
 	}
-	return os.Remove(c.Target)
+	return os.Remove(t.Target)
 }
 
 func isRemote(s string) bool {

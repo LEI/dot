@@ -17,46 +17,52 @@ func NewDir(s string) *Dir {
 	return &Dir{Path: s}
 }
 
-func (d *Dir) String() string {
-	s := d.Path
+func (t *Dir) String() string {
+	s := t.Path
 	switch Action {
 	case "install":
-		s = fmt.Sprintf("mkdir -p %s", tildify(d.Path))
+		s = fmt.Sprintf("mkdir -p %s", tildify(t.Path))
 	case "remove":
-		s = fmt.Sprintf("rmdir %s", tildify(d.Path))
+		s = fmt.Sprintf("rmdir %s", tildify(t.Path))
 	}
-	return s // d.Path
+	return s // t.Path
+}
+
+// Init task
+func (t *Dir) Init() error {
+	// ...
+	return nil
 }
 
 // Status check task
-func (d *Dir) Status() error {
-	if !dirExists(d.Path) {
+func (t *Dir) Status() error {
+	if !dirExists(t.Path) {
 		return nil
 	}
 	if Action == "remove" {
-		empty, err := dirIsEmpty(d.Path)
+		empty, err := dirIsEmpty(t.Path)
 		if err != nil {
-			return err // &DirError{"remove", d.Path, err}
+			return err // &DirError{"remove", t.Path, err}
 		}
 		if !empty {
 			// ErrExist would indicate that the directory should be removed
-			return &os.PathError{Op: "rmdir", Path: d.Path, Err: ErrDirNotEmpty}
+			return &os.PathError{Op: "rmdir", Path: t.Path, Err: ErrDirNotEmpty}
 		}
 	}
-	return ErrExist // &OpError{"check dir", d, ErrExist}
-	// fi, err := os.Stat(d.Path)
+	return ErrExist // &OpError{"check dir", t, ErrExist}
+	// fi, err := os.Stat(t.Path)
 	// if err != nil && os.IsExist(err) {
 	// 	return err
 	// }
 	// if fi != nil && fi.IsDir() {
-	// 	return ErrExist // fmt.Errorf("%s: directory exists", d.Path)
+	// 	return ErrExist // fmt.Errorf("%s: directory exists", t.Path)
 	// }
 	// return nil
 }
 
 // Do task
-func (d *Dir) Do() error {
-	if err := d.Status(); err != nil {
+func (t *Dir) Do() error {
+	if err := t.Status(); err != nil {
 		// terr, ok := err.(*OpError)
 		// if !ok {
 		// 	return err
@@ -69,15 +75,15 @@ func (d *Dir) Do() error {
 			return err
 		}
 	}
-	if err := os.MkdirAll(d.Path, defaultDirMode); err != nil {
-		return err // &OpError{"mkdir", d, err}
+	if err := os.MkdirAll(t.Path, defaultDirMode); err != nil {
+		return err // &OpError{"mkdir", t, err}
 	}
 	return nil
 }
 
 // Undo task unless the directory is not empty.
-func (d *Dir) Undo() error {
-	if err := d.Status(); err != nil {
+func (t *Dir) Undo() error {
+	if err := t.Status(); err != nil {
 		// terr, ok := err.(*OpError)
 		// if !ok {
 		// 	return err
@@ -92,7 +98,7 @@ func (d *Dir) Undo() error {
 			return err
 		}
 	}
-	if err := os.Remove(d.Path); err != nil {
+	if err := os.Remove(t.Path); err != nil {
 		return err
 	}
 	return nil

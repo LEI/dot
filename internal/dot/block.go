@@ -30,6 +30,12 @@ func (t *Block) String() string {
 	return s
 }
 
+// Init task
+func (t *Block) Init() error {
+	// ...
+	return nil
+}
+
 // Status check task
 func (t *Block) Status() error {
 	exists, err := blockExists(t.Target, t.Data)

@@ -32,20 +32,26 @@ func NewLink(s string) *Link {
 	return &Link{Source: s}
 }
 
-func (l *Link) String() string {
-	s := fmt.Sprintf("%s:%s", l.Source, l.Target)
+func (t *Link) String() string {
+	s := fmt.Sprintf("%s:%s", t.Source, t.Target)
 	switch Action {
 	case "install":
-		s = fmt.Sprintf("ln -s %s %s", tildify(l.Source), tildify(l.Target))
+		s = fmt.Sprintf("ln -s %s %s", tildify(t.Source), tildify(t.Target))
 	case "remove":
-		s = fmt.Sprintf("rm %s", tildify(l.Target))
+		s = fmt.Sprintf("rm %s", tildify(t.Target))
 	}
 	return s
 }
 
+// Init task
+func (t *Link) Init() error {
+	// ...
+	return nil
+}
+
 // Status check task
-func (l *Link) Status() error {
-	exists, err := linkExists(l.Source, l.Target)
+func (t *Link) Status() error {
+	exists, err := linkExists(t.Source, t.Target)
 	if err != nil {
 		perr, ok := err.(*os.PathError)
 		// if ok {
@@ -59,12 +65,12 @@ func (l *Link) Status() error {
 		// TODO os.LinkError Err: ErrExist
 		case ErrFileExist, ErrLinkExist:
 			if Action != "install" {
-				fmt.Println("Skip", Action, l.Target, "("+perr.Err.Error()+")")
+				fmt.Println("Skip", Action, t.Target, "("+perr.Err.Error()+")")
 				return ErrSkip
 			}
 			// Confirm override
-			if shell.AskConfirmation("Remove existing " + l.Target + "?") {
-				if err := os.Remove(l.Target); err != nil {
+			if shell.AskConfirmation("Remove existing " + t.Target + "?") {
+				if err := os.Remove(t.Target); err != nil {
 					return err
 				}
 				return nil
@@ -81,29 +87,29 @@ func (l *Link) Status() error {
 }
 
 // Do task
-func (l *Link) Do() error {
-	if err := l.Status(); err != nil {
+func (t *Link) Do() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
 		// case ErrFileExist, ErrLinkExist:
 		// 	// Confirm override
-		// 	if !shell.AskConfirmation("Remove existing " + l.Target + "?") {
+		// 	if !shell.AskConfirmation("Remove existing " + t.Target + "?") {
 		// 		return ErrSkip
 		// 	}
-		// 	if rmerr := os.Remove(l.Target); rmerr != nil {
+		// 	if rmerr := os.Remove(t.Target); rmerr != nil {
 		// 		return rmerr
 		// 	}
 		default:
 			return err
 		}
 	}
-	return os.Symlink(l.Source, l.Target)
+	return os.Symlink(t.Source, t.Target)
 }
 
 // Undo task
-func (l *Link) Undo() error {
-	if err := l.Status(); err != nil {
+func (t *Link) Undo() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist:
 			// continue
@@ -113,7 +119,7 @@ func (l *Link) Undo() error {
 			return err
 		}
 	}
-	return os.Remove(l.Target)
+	return os.Remove(t.Target)
 }
 
 // linkExists returns true if the link has the same target.

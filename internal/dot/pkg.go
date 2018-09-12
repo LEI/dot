@@ -21,34 +21,48 @@ func NewPkg(s string) *Pkg {
 	return &Pkg{Name: []string{s}}
 }
 
-func (p *Pkg) String() string {
+func (t *Pkg) String() string {
 	// switch Action {
 	// case "install":
 	// case "remove":
 	// }
-	m, err := pkg.NewPm(p.Manager)
+	m, err := pkg.NewPm(t.Manager)
 	if err != nil || Action == "" {
-		a := []string{}
-		if p.Manager != "" {
-			a = append(a, p.Manager)
+		s := []string{} // m.Bin
+		if t.Manager != "" {
+			s = append(s, t.Manager)
 		}
-		a = append(a, p.Name...)
-		a = append(a, p.Args...)
-		return fmt.Sprint(shell.FormatArgs(a))
+		s = append(s, t.Name...)
+		s = append(s, t.Args...)
+		return fmt.Sprint(shell.FormatArgs(s))
 	}
-	bin, opts, err := m.Build(Action, p.Name, p.Args...)
+	opts, err := m.BuildOptions(Action, t.Name, t.Args...)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "err pkg do: %s\n", err)
-		return ""
+		fmt.Fprintf(os.Stderr, "pkg: m.BuildOptions errored with: %s\n", err)
+		return "<err>"
 	}
-	return fmt.Sprintf("%s %s", bin, shell.FormatArgs(opts))
+	opts = m.ParseOpts(opts)
+	return fmt.Sprintf("%s %s", m.Bin, shell.FormatArgs(opts))
+}
+
+// Init task
+func (t *Pkg) Init() error {
+	switch Action {
+	case "install":
+		// Update or upgrade package manager before installation
+		if err := pkg.Init(t.Manager); err != nil {
+			return err
+		}
+	case "remove":
+	}
+	return nil
 }
 
 // Status check task
-func (p *Pkg) Status() error {
+func (t *Pkg) Status() error {
 	// TODO: upgrade flag (this will prevent any pkg.Pm.Install
 	// function to execute even if it can upgrade the package
-	exists, err := pkg.Has(p.Manager, p.Name, p.Args...)
+	exists, err := pkg.Has(t.Manager, t.Name, t.Args...)
 	if err != nil {
 		return err
 	}
@@ -59,8 +73,8 @@ func (p *Pkg) Status() error {
 }
 
 // Do task
-func (p *Pkg) Do() error {
-	if err := p.Status(); err != nil {
+func (t *Pkg) Do() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
@@ -68,9 +82,9 @@ func (p *Pkg) Do() error {
 			return err
 		}
 	}
-	// fmt.Println("pkg.Install", p.Manager, p.Name, p.Args)
-	err := pkg.Install(p.Manager, p.Name, p.Args...)
-	// fmt.Println(p.Name, "=======>", err)
+	// fmt.Println("pkg.Install", t.Manager, t.Name, t.Args)
+	err := pkg.Install(t.Manager, t.Name, t.Args...)
+	// fmt.Println(t.Name, "=======>", err)
 	switch err {
 	// case nil:
 	case pkg.ErrExist:
@@ -81,8 +95,8 @@ func (p *Pkg) Do() error {
 }
 
 // Undo task
-func (p *Pkg) Undo() error {
-	if err := p.Status(); err != nil {
+func (t *Pkg) Undo() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist:
 			// continue
@@ -92,7 +106,7 @@ func (p *Pkg) Undo() error {
 			return err
 		}
 	}
-	err := pkg.Remove(p.Manager, p.Name, p.Args...)
+	err := pkg.Remove(t.Manager, t.Name, t.Args...)
 	switch err {
 	// case nil:
 	case pkg.ErrExist:

@@ -21,7 +21,7 @@ func init() {
 }
 
 // Hook command to execute
-// FIXME: fmt.Println(h) -> stack exceeds limit
+// FIXME: fmt.Println(t) -> stack exceeds limit
 type Hook struct {
 	Task    `mapstructure:",squash"` // Action, If, OS
 	Command string
@@ -37,42 +37,48 @@ func NewHook(s string) *Hook {
 
 // Init hook: set default shell for next commands
 // and return arguments to be executed
-func (h *Hook) buildCmd() (*exec.Cmd, error) {
-	bin := h.Shell
+func (t *Hook) buildCmd() (*exec.Cmd, error) {
+	bin := t.Shell
 	if bin == "" {
 		bin = defaultShell
 	}
-	c := h.Command
+	c := t.Command
 	args := []string{"-c", "set -e; " + c}
-	// fmt.Printf("EXEC HOOK: %q\n", h.Command)
+	// fmt.Printf("EXEC HOOK: %q\n", t.Command)
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = h.ExecDir
-	for k, v := range *h.Env {
-		v = env.ExpandEnvVar(k, v, *h.Env)
+	cmd.Dir = t.ExecDir
+	for k, v := range *t.Env {
+		v = env.ExpandEnvVar(k, v, *t.Env)
 		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	return cmd, nil
 }
 
-func (h *Hook) String() string {
+func (t *Hook) String() string {
 	// TODO: verbosity >= 2?
-	// bin, args := h.build()
+	// bin, args := t.build()
 	// s := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
-	s := strings.TrimRight(h.Command, "\n")
+	s := strings.TrimRight(t.Command, "\n")
 	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
 		s = fmt.Sprintf("(%s)", s)
 	}
 	return s
 }
 
+// Init task
+func (t *Hook) Init() error {
+	// ...
+	return nil
+}
+
 // Status check task
-func (h *Hook) Status() error {
-	// h.Command == "" &&
-	// if h.URL != "" && h.Dest != "" {
-	// 	if exists(h.Dest) {
+func (t *Hook) Status() error {
+	// t.Command == "" &&
+	// if t.URL != "" && t.Dest != "" {
+	// 	if exists(t.Dest) {
 	// 		return ErrExist
 	// 	}
 	// }
@@ -87,8 +93,8 @@ func (h *Hook) Status() error {
 }
 
 // Do task
-func (h *Hook) Do() error {
-	if err := h.Status(); err != nil {
+func (t *Hook) Do() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
@@ -96,7 +102,7 @@ func (h *Hook) Do() error {
 			return err
 		}
 	}
-	cmd, err := h.buildCmd()
+	cmd, err := t.buildCmd()
 	if err != nil {
 		return err
 	}
@@ -104,8 +110,8 @@ func (h *Hook) Do() error {
 }
 
 // Undo task (non applicable)
-func (h *Hook) Undo() error {
-	if err := h.Status(); err != nil {
+func (t *Hook) Undo() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist:
 			// continue
@@ -115,11 +121,11 @@ func (h *Hook) Undo() error {
 			return err
 		}
 	}
-	// if h.URL != "" && h.Dest != "" {
+	// if t.URL != "" && t.Dest != "" {
 	// 	// TODO: check remote file?
-	// 	return os.Remove(h.Dest)
+	// 	return os.Remove(t.Dest)
 	// }
-	// cmd, err := h.buildCmd()
+	// cmd, err := t.buildCmd()
 	// if err != nil {
 	// 	return err
 	// }

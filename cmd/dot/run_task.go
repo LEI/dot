@@ -177,14 +177,17 @@ func checkResults(c chan actionResult) error {
 // func runTask(i interface{}) error {
 // 	t := i.(dot.Tasker)
 func runTask(t dot.Tasker) error {
+	if err := t.Init(); err != nil {
+		return err
+	}
 	switch dot.Action {
 	case "install":
 		if err := doTask(t); err != nil && !dot.IsSkip(err) {
-			return err // fmt.Errorf("%s task: %s", err)
+			return err
 		}
 	case "remove":
 		if err := undoTask(t); err != nil && !dot.IsSkip(err) {
-			return err // fmt.Errorf("%s task: %s", err)
+			return err
 		}
 	default:
 		return fmt.Errorf("%s: unknown action", dot.Action)

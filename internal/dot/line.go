@@ -19,20 +19,26 @@ func NewLine(s, d string) *Line {
 	return &Line{Target: s, Data: d}
 }
 
-func (l *Line) String() string {
-	s := fmt.Sprintf("%s:%s", l.Target, l.Data)
+func (t *Line) String() string {
+	s := fmt.Sprintf("%s:%s", t.Target, t.Data)
 	switch Action {
 	case "install":
-		s = fmt.Sprintf("echo '%s' >> %s", l.Data, tildify(l.Target))
+		s = fmt.Sprintf("echo '%s' >> %s", t.Data, tildify(t.Target))
 	case "remove":
-		s = fmt.Sprintf("sed -i '#^%s$#d' %s", l.Data, tildify(l.Target))
+		s = fmt.Sprintf("sed -i '#^%s$#d' %s", t.Data, tildify(t.Target))
 	}
 	return s
 }
 
+// Init task
+func (t *Line) Init() error {
+	// ...
+	return nil
+}
+
 // Status check task
-func (l *Line) Status() error {
-	exists, err := lineExists(l.Target, l.Data)
+func (t *Line) Status() error {
+	exists, err := lineExists(t.Target, t.Data)
 	if err != nil {
 		return err
 	}
@@ -43,8 +49,8 @@ func (l *Line) Status() error {
 }
 
 // Do task
-func (l *Line) Do() error {
-	if err := l.Status(); err != nil {
+func (t *Line) Do() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist, ErrSkip:
 			return nil
@@ -54,25 +60,25 @@ func (l *Line) Do() error {
 	}
 	var err error
 	lines := []string{}
-	if exists(l.Target) {
-		lines, err = getLines(l.Target)
+	if exists(t.Target) {
+		lines, err = getLines(t.Target)
 		if err != nil {
 			return err
 		}
 	}
 	// Add line
-	lines = append(lines, l.Data) // +"\n"
+	lines = append(lines, t.Data) // +"\n"
 	output := strings.Join(lines, "\n")
 	// Write target file
-	if err := ioutil.WriteFile(l.Target, []byte(output), defaultFileMode); err != nil {
+	if err := ioutil.WriteFile(t.Target, []byte(output), defaultFileMode); err != nil {
 		return err
 	}
 	return nil
 }
 
 // Undo task
-func (l *Line) Undo() error {
-	if err := l.Status(); err != nil {
+func (t *Line) Undo() error {
+	if err := t.Status(); err != nil {
 		switch err {
 		case ErrExist:
 			// continue
@@ -82,7 +88,7 @@ func (l *Line) Undo() error {
 			return err
 		}
 	}
-	lines, err := getLines(l.Target)
+	lines, err := getLines(t.Target)
 	if err != nil {
 		return err
 	}
@@ -91,20 +97,20 @@ func (l *Line) Undo() error {
 	// }
 	index := -1 // First match
 	for i, s := range lines {
-		if strings.Contains(s, l.Data) {
+		if strings.Contains(s, t.Data) {
 			index = i
 			break
 		}
 	}
 	if index < 0 {
-		return fmt.Errorf("%s: line '%v' not found", l.Target, l.Data)
-		// return &os.PathError{Op: "line", Path: l.Target, Err: ErrNotExist}
+		return fmt.Errorf("%s: line '%v' not found", t.Target, t.Data)
+		// return &os.PathError{Op: "line", Path: t.Target, Err: ErrNotExist}
 	}
 	// Remove line
 	lines = append(lines[:index], lines[index+1:]...)
 	output := strings.Join(lines, "\n")
 	// Write target file
-	if err := ioutil.WriteFile(l.Target, []byte(output), defaultFileMode); err != nil {
+	if err := ioutil.WriteFile(t.Target, []byte(output), defaultFileMode); err != nil {
 		return err
 	}
 	return nil
@@ -119,8 +125,8 @@ func lineExists(target, data string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, l := range lines {
-		if strings.Contains(l, data) {
+	for _, t := range lines {
+		if strings.Contains(t, data) {
 			return true, nil
 		}
 	}

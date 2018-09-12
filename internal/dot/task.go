@@ -19,6 +19,7 @@ var (
 // Tasker interface
 type Tasker interface {
 	String() string
+	Init() error
 	Status() error
 	// Sync() error
 	Do() error
