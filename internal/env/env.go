@@ -186,9 +186,8 @@ func ExpandEnv(s string, env map[string]string) string {
 
 // ExpandEnvVar variables and execute commands, or fallback to global env
 func ExpandEnvVar(key, val string, env map[string]string) string {
-	// FIXME: should already be unquoted on hook decode with env.Split
-	val = removeSurroundingQuotes(val)
-
+	// String should already be unquoted on hook decode with env.Split
+	// val = removeSurroundingQuotes(val)
 	if matches := substituteCommandRe.FindAllStringSubmatch(val, -1); len(matches) > 0 {
 		for i := 0; i < len(matches); i++ {
 			cmd := exec.Command(shell.Get(), "-c", matches[i][1])
@@ -228,9 +227,13 @@ func ExpandEnvVar(key, val string, env map[string]string) string {
 			v := ExpandEnvVar(key, matches[2], GetAll())
 			return v
 		}
-		if v, ok := env[k]; ok && k != key {
-			return v
+		// Check for value in given env unless we are already resolving this key
+		if k != key {
+			if v, ok := env[k]; ok {
+				return v
+			}
 		}
+		// Fallback to global env value
 		v := Get(k)
 		return v
 	}
