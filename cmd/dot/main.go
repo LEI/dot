@@ -286,18 +286,43 @@ func setupConfigRoles(cfg *dot.Config) (err error) {
 // filterRoles by name
 func filterRoles(roles []*dot.Role, names []string) ([]*dot.Role, error) {
 	matched := []*dot.Role{} // FIXME roles[:0]
+
+	// First match the indexes
+	matchedIndexes := []int{}
 	for _, s := range names {
-		c := len(matched)
-		for _, r := range roles {
+		c := len(matchedIndexes)
+		for i, r := range roles {
 			if s == r.Name {
-				matched = append(matched, r)
+				matchedIndexes = append(matchedIndexes, i)
 				break
 			}
 		}
-		if c == len(matched) {
+		if c == len(matchedIndexes) {
 			return roles, fmt.Errorf("%s: role not found", s)
 		}
 	}
+	// Apppend matches in the original order
+	for i, r := range roles {
+		for _, j := range matchedIndexes {
+			if i == j {
+				matched = append(matched, r)
+			}
+		}
+	}
+
+	// for _, s := range names {
+	// 	c := len(matched)
+	// 	for _, r := range roles {
+	// 		if s == r.Name {
+	// 			matched = append(matched, r)
+	// 			break
+	// 		}
+	// 	}
+	// 	if c == len(matched) {
+	// 		return roles, fmt.Errorf("%s: role not found", s)
+	// 	}
+	// }
+
 	return matched, nil
 }
 
