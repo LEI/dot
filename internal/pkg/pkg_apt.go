@@ -56,17 +56,17 @@ func init() {
 }
 
 // https://wiki.termux.com/wiki/Package_Management
-var termux = &Pm{}
+var termux *Pm
 
 func init() {
-	*termux = *aptGet
+	termux = aptGet
 	termux.Sudo = false
 	termux.Bin = "pkg"
 	termux.Install = "install"
 	termux.Remove = "uninstall"
-	// termux.Init = func() error {
-	// 	return nil
-	// }
+	termux.Init = func() error {
+		return termux.Exec([]string{"update", "--quiet"}...)
+	}
 	// termux.Has = func(pkgs []string) (bool, error) {
 	// 	opts := append([]string{"-Wf'${db:Status-abbrev}'"}, pkgs...)
 	// 	cmd := exec.Command("dpkg-query", opts...)
