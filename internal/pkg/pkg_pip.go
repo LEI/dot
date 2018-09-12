@@ -41,15 +41,6 @@ func init() {
 			}
 			return pip.Exec(opts...)
 		}, */
-		// FIXME: python2 -c 'import neovim' did not work until
-		// pip2 uninstall neovim && pip2 install neovim
-		Has: func(pkgs []string) (bool, error) {
-			opts := []string{"show"}
-			opts = append(opts, pkgs...)
-			cmd := exec.Command(pip.Bin, opts...)
-			err := cmd.Run()
-			return err == nil, nil
-		},
 	}
 	// if runtime.GOOS != "darwin" {
 	// 	// brew install python
@@ -61,7 +52,23 @@ func init() {
 
 	pip2 = pip
 	pip2.Bin = "pip2"
+	// FIXME: python2 -c 'import neovim' did not work until
+	// pip2 uninstall neovim && pip2 install neovim
+	pip2.Has = func(pkgs []string) (bool, error) {
+		opts := []string{"show"}
+		opts = append(opts, pkgs...)
+		cmd := exec.Command(pip2.Bin, opts...)
+		err := cmd.Run()
+		return err == nil, nil
+	}
 
 	pip3 = pip
 	pip3.Bin = "pip3"
+	pip3.Has = func(pkgs []string) (bool, error) {
+		opts := []string{"show"}
+		opts = append(opts, pkgs...)
+		cmd := exec.Command(pip3.Bin, opts...)
+		err := cmd.Run()
+		return err == nil, nil
+	}
 }
