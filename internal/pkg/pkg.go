@@ -26,27 +26,8 @@ var (
 	// ErrExist ...
 	ErrExist = fmt.Errorf("package already present")
 
-	// Manager pkg
-	Manager *Pm
-
-	managers = map[string]*Pm{
-		"apk":     apk,      // alpine
-		"apt-cyg": aptCyg,   // cygwin
-		"apt-get": aptGet,   // debian
-		"brew":    brew,     // homebrew
-		"cask":    brewCask, // darwin
-		"choco":   choco,    // windows
-		// "cpan":    cpan,     // perl
-		"gem":    gem,    // ruby
-		"npm":    npm,    // node
-		"pacman": pacman, // archlinux
-		"pip":    pip,    // python
-		"pip2":   pip2,
-		"pip3":   pip3,
-		"termux": termux, // android pkg
-		"yaourt": yaourt, // arch user repository
-		"yum":    yum,    // centos
-	}
+	// Manager *Pm
+	managers map[string]*Pm
 
 	// Stdout writer
 	Stdout io.Writer = os.Stdout
@@ -56,7 +37,7 @@ var (
 	Stdin io.Reader = os.Stdin
 )
 
-type hasFunc func(*Pm, []string) (bool, error)
+type hasFunc func([]string) (bool, error)
 
 // Pm package manager
 type Pm struct {
@@ -74,9 +55,10 @@ type Pm struct {
 	// types.HasOS `mapstructure:",squash"` // OS   map[string][]string // Platform options
 	// types.HasIf `mapstructure:",squash"` // If   map[string][]string // Conditional opts
 	Env  map[string]string // Execution environment variables
-	Init func(*Pm) error   // Install manager or prepare bin
+	Init func() error      // Install manager or prepare bin
 	Has  hasFunc           // Search local packages
-	done bool              // Initialized (TODO: use sync.Once instead?)
+	// once sync.Once         // Guard the Init function
+	done bool
 }
 
 // NewPm ...
@@ -87,6 +69,9 @@ func NewPm(name string) (m *Pm, err error) {
 		if err != nil {
 			return m, err
 		}
+	}
+	if managers == nil {
+		managers = getManagers()
 	}
 	var ok bool
 	m, ok = managers[name]
@@ -99,21 +84,25 @@ func NewPm(name string) (m *Pm, err error) {
 	return m, nil
 }
 
-// Build can return ErrExist if the package is already installed
-func (m *Pm) Build(action string, pkgs []string, opts ...string) (string, []string, error) {
-	// input := strings.Fields(name)
-	// if len(input) == 0 { ... }
-	//opts = append(pkgs, opts...)
-	opts, err := m.BuildOptions(action, pkgs, opts...)
-	if err != nil {
-		return m.Bin, opts, err
+func getManagers() map[string]*Pm {
+	return map[string]*Pm{
+		"apk":     apk,      // alpine
+		"apt-cyg": aptCyg,   // cygwin
+		"apt-get": aptGet,   // debian
+		"brew":    brew,     // homebrew
+		"cask":    brewCask, // darwin
+		"choco":   choco,    // windows
+		// "cpan":    cpan,     // perl
+		"gem":    gem,    // ruby
+		"npm":    npm,    // node
+		"pacman": pacman, // archlinux
+		"pip":    pip,    // python
+		"pip2":   pip2,
+		"pip3":   pip3,
+		"termux": termux, // android pkg
+		"yaourt": yaourt, // arch user repository
+		"yum":    yum,    // centos
 	}
-	bin, args, err := getBin(m, opts)
-	if err != nil {
-		return bin, args, err
-	}
-	// m.Init(m)
-	return bin, args, nil
 }
 
 // BuildOptions constructs the command arguments.
@@ -172,19 +161,34 @@ func (m *Pm) GetAction(name string, input ...string) (string, error) {
 	case string:
 		name = a
 	// case []string:
-	case func(*Pm, ...string) string:
+	case func(...string) string:
 		pkgs := pkgOnly(input)
 		if len(pkgs) == 0 {
 			return name, fmt.Errorf("empty name %+v", input)
 		}
-		name = a(m, pkgs...)
+		name = a(pkgs...)
 	default:
-		return name, fmt.Errorf("%s: unknown pkg manager", a)
+		if a != nil {
+			return name, fmt.Errorf("%s: invalid package manager, action type: %T", a, a)
+		}
+		return name, fmt.Errorf("%s: invalid package manager, mission action", a)
 	}
 	if name == "" {
 		return name, fmt.Errorf("empty action for package manager %+v", m)
 	}
 	return name, nil
+}
+
+// ParseOpts replaces bin with sudo if needed and prepend options with it.
+func (m *Pm) ParseOpts(opts []string) []string {
+	bin := m.Bin
+	// Switch binary for sudo
+	if m.Sudo && bin != "sudo" && !isRoot() {
+		opts = append([]string{bin}, opts...)
+		bin = "sudo"
+	}
+	m.Bin = bin
+	return opts
 }
 
 func pkgOnly(input []string) []string {
@@ -237,23 +241,64 @@ func executable(name string) bool {
 	return err == nil && len(out) > 0
 }
 
-// Has ...
+// Init manager only before install
+func Init(manager string) error {
+	m, err := NewPm(manager)
+	if err != nil {
+		return err
+	}
+	// m.once.Do(func() {
+	// 	err = m.Init()
+	// })
+	// return err
+	if !m.done && m.Init != nil {
+		return m.Init()
+	}
+	return nil
+}
+
+// Has package
 func Has(manager string, pkgs []string, opts ...string) (bool, error) {
 	m, err := NewPm(manager)
 	if err != nil {
 		return false, err
 	}
-	if m == nil {
-		return false, fmt.Errorf(manager, "no pkg manager", manager)
-	}
 	if m.Has == nil {
 		return false, nil
 		// ErrUnknown = fmt.Errorf("unable to determine if package is present")
 	}
-	return m.Has(m, pkgs)
+	return m.Has(pkgs)
 }
 
-// Install ...
+// Exec TODO: return *exec.Cmd
+func (m *Pm) Exec(args ...string) error {
+	// Bin is not sudo until ParseOpts is called
+	printCmd(m.Bin, args...)
+	return m.exec(args...)
+}
+
+func (m *Pm) exec(args ...string) error {
+	args = m.ParseOpts(args)
+	if DryRun {
+		if len(m.DryRunOpts) == 0 {
+			return nil
+		}
+		// Append check mode options and run
+		args = append(args, m.DryRunOpts...)
+	}
+	var cmd *exec.Cmd
+	if m.Shell != "" {
+		s := shell.Get()
+		// if Verbose { fmt.Println("Using shell:", s) }
+		c := fmt.Sprintf("%s %s", m.Bin, shell.FormatArgs(args))
+		cmd = exec.Command(s, "-c", c)
+	} else {
+		cmd = exec.Command(m.Bin, args...)
+	}
+	return execWithEnv(m.Env, cmd)
+}
+
+// Install package
 func Install(manager string, pkgs []string, opts ...string) error {
 	// fmt.Printf("%s %s\n", cmd.Bin, shell.FormatArgs(cmdArgs))
 	// stdout, stderr, status := ExecCommand(cmd.Bin, cmdArgs...)
@@ -268,57 +313,29 @@ func Install(manager string, pkgs []string, opts ...string) error {
 	return execute(manager, "install", pkgs, opts...)
 }
 
-// Remove ...
+// Remove package
 func Remove(manager string, pkgs []string, opts ...string) error {
 	return execute(manager, "remove", pkgs, opts...)
 }
 
-// Exec ...
+// Exec package manager command
 func execute(manager, action string, pkgs []string, opts ...string) error {
 	m, err := NewPm(manager)
 	if err != nil {
 		return err
 	}
-	if m == nil {
-		return fmt.Errorf(manager, "no pkg manager", manager)
-	}
-	bin, args, err := m.Build(action, pkgs, opts...)
+	// input := strings.Fields(name)
+	// if len(input) == 0 { ... }
+	//opts = append(pkgs, opts...)
+	opts, err = m.BuildOptions(action, pkgs, opts...)
 	if err != nil {
 		return err
-	}
-	// First run initialisation
-	// TODO: before execute
-	if !m.done && m.Init != nil {
-		if err := m.Init(m); err != nil {
-			return err
-		}
-		m.done = true
 	}
 	if err := m.checkIfExist(pkgs); err != nil {
 		return err
 	}
-	return execManagerCommand(m, bin, args...)
-}
-
-// TODO: return *exec.Cmd
-func execManagerCommand(m *Pm, bin string, args ...string) error {
-	if DryRun {
-		if len(m.DryRunOpts) == 0 {
-			return nil
-		}
-		// Append check mode options and run
-		args = append(args, m.DryRunOpts...)
-	}
-	var cmd *exec.Cmd
-	if m.Shell != "" {
-		s := shell.Get()
-		// if Verbose { fmt.Println("Using shell:", s) }
-		c := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
-		cmd = exec.Command(s, "-c", c)
-	} else {
-		cmd = exec.Command(bin, args...)
-	}
-	return execWithEnv(m.Env, cmd)
+	// Do not print the command?
+	return m.exec(opts...)
 }
 
 // Run a command with custom env vars, even if DryRun is enabled.
@@ -351,7 +368,7 @@ func execWithEnv(env map[string]string, cmd *exec.Cmd) error {
 }
 
 func execCommand(name string, args ...string) error {
-	fmt.Printf("$ %s %s\n", name, shell.FormatArgs(args))
+	printCmd(name, args...)
 	if DryRun {
 		return nil
 	}
@@ -362,7 +379,7 @@ func execCommand(name string, args ...string) error {
 	return cmd.Run()
 }
 
-// Return ErrExist if packages are present (installed)
+// checkIfExist returns ErrExist if the package is already installed.
 func (m *Pm) checkIfExist(pkgs []string) error {
 	// Abort if not check function is available
 	if m.Has != nil {
@@ -372,7 +389,7 @@ func (m *Pm) checkIfExist(pkgs []string) error {
 	// if _, ok := m.Install.(hasFunc); ok {
 	// 	return nil
 	// }
-	ok, err := m.Has(m, pkgs)
+	ok, err := m.Has(pkgs)
 	if err != nil {
 		return err
 	}
@@ -382,16 +399,10 @@ func (m *Pm) checkIfExist(pkgs []string) error {
 	return nil
 }
 
-func getBin(m *Pm, opts []string) (string, []string, error) {
-	bin := m.Bin
-	// Switch binary for sudo
-	if m.Sudo && bin != "sudo" && !isRoot() {
-		opts = append([]string{bin}, opts...)
-		bin = "sudo"
-	}
-	return bin, opts, nil
-}
-
 func isRoot() bool {
 	return os.Geteuid() == 0
+}
+
+func printCmd(bin string, args ...string) {
+	fmt.Printf("$ %s %s\n", bin, shell.FormatArgs(args))
 }
