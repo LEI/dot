@@ -252,7 +252,10 @@ func Init(manager string) error {
 	// })
 	// return err
 	if !m.done && m.Init != nil {
-		return m.Init()
+		if err := m.Init(); err != nil {
+			return err
+		}
+		m.done = true
 	}
 	return nil
 }
