@@ -153,6 +153,10 @@ func copyExists(src, dst string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+		if rf.Length == -1 {
+			// Ignore failed HEAD request
+			return false, nil
+		}
 		if !exists(dst) {
 			// Stop here if the target does not exist
 			return false, nil
@@ -214,6 +218,7 @@ type remoteFile struct {
 	Etag string
 }
 
+// TODO: ask overwrite confirmation if remote file changed
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
 func (r *remoteFile) Compare(name string) (bool, error) {
 	f, err := os.Open(name)
@@ -226,13 +231,15 @@ func (r *remoteFile) Compare(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// TODO: ask overwrite confirmation
+	// if r.Length == -1 {
+	// 	return false, fmt.Errorf("%s: no content length", r.URL)
+	// }
 	if fi.Size() != r.Length {
-		fmt.Println("DIFFERENT SIZE", fi.Size(), "->", r.Length)
+		// fmt.Println("DIFFERENT SIZE", fi.Size(), "->", r.Length)
 		return false, nil
 	}
 	if fi.ModTime().After(r.Date) {
-		fmt.Println("DIFFERENT DATE", fi.ModTime(), "->", r.Date)
+		// fmt.Println("DIFFERENT DATE", fi.ModTime(), "->", r.Date)
 		return false, nil
 	}
 	// fmt.Println("Etag", r.Etag)
@@ -256,6 +263,7 @@ func newRemoteFile(url string) (*remoteFile, error) {
 		},
 	}
 
+	//fmt.Println("> HEAD", r.URL)
 	resp, err := client.Head(r.URL)
 	if err != nil {
 		return r, err
@@ -275,18 +283,21 @@ func newRemoteFile(url string) (*remoteFile, error) {
 	// 	return r, err
 	// }
 	// defer resp.Body.Close()
-	// body, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	return r, err
-	// }
-
-	if resp.StatusCode != 200 && resp.StatusCode != 302 {
-		fmt.Printf("HTTP %s: %+v\n%+v\n", resp.Status, url, resp)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return r, err
 	}
+	content := string(body)
+
 	if resp.StatusCode >= 400 {
-		return r, fmt.Errorf("%s: head request returned %+v", r.URL, resp.Status)
+		return r, fmt.Errorf("HEAD %s %s (%+v)", r.URL, resp.Status, content)
+	} else if resp.StatusCode != 200 && resp.StatusCode != 302 {
+		fmt.Fprintf(os.Stderr, "HEAD %s %s (%+v)\n", r.URL, resp.Status, content)
 	}
 	r.Length = resp.ContentLength
+	if resp.ContentLength == -1 && content != "" {
+		fmt.Fprintf(os.Stderr, "HEAD %s %s: no content length but got: %+v\n", r.URL, resp.Status, content)
+	}
 	// // contentLen := resp.Header.Get("Content-Length")
 	// if r.Length, err = strconv.ParseInt(contentLen, 10, 64); err != nil {
 	// 	return r, err
