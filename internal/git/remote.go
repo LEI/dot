@@ -162,7 +162,11 @@ func CheckRemote(dir, url string) error {
 	args := []string{"-C", dir, "config", "--local", "--get", "remote.origin.url"}
 	buf, err := gitCombined(args...)
 	if err != nil {
-		return fmt.Errorf("remote check: %s", err)
+		if err.Error() == "exit status 128" {
+			// Not a git repository, or not yet cloned?
+			return nil
+		}
+		return fmt.Errorf("%s: remote check failed: %s", dir, err)
 	}
 	actual := string(buf)
 	// TODO: check domain and `user/repo`

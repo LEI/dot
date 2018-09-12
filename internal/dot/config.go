@@ -12,6 +12,7 @@ import (
 
 	"github.com/LEI/dot/internal/conf"
 	"github.com/LEI/dot/internal/git"
+	"github.com/LEI/dot/internal/host"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -108,6 +109,10 @@ func (c *Config) PrepareRoles() error {
 				r.Path = filepath.Join(c.Source, r.Path)
 			}
 		}
+		if len(r.OS) > 0 && !host.HasOS(r.OS...) {
+			fmt.Fprintf(os.Stderr, "## Skip load %s (OS: %+v)", r.Name, r.OS)
+			continue
+		}
 		roles = append(roles, r)
 	}
 	c.Roles = roles
@@ -131,6 +136,10 @@ func (c *Config) ParseRoles() error {
 			if err := r.Load(); err != nil {
 				return err
 			}
+		}
+		if len(r.OS) > 0 && !host.HasOS(r.OS...) {
+			fmt.Fprintf(os.Stderr, "## Skip parse %s (OS: %+v)", r.Name, r.OS)
+			continue
 		}
 		if err := r.Parse(c.Target); err != nil {
 			return err

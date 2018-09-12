@@ -20,6 +20,7 @@ var (
 	// Command subsitutions with backticks are not supported
 	// Example: $(command substitution)
 	// substituteCommandRe = regexp.MustCompile(`^\$\((.*)\)$`)
+	// FIXME: ($(echo example)) matches $(echo example))
 	substituteCommandRe = regexp.MustCompile(`\$\(([^)]+)\)`)
 	// Used to handle quoted values
 	quotedRe       = regexp.MustCompile(`^"(.*)"$`)
@@ -188,10 +189,20 @@ func ExpandEnvVar(key, val string, env map[string]string) string {
 	// FIXME: should already be unquoted on hook decode with env.Split
 	val = removeSurroundingQuotes(val)
 
-	if matches := substituteCommandRe.FindAllStringSubmatch(val, -1); len(matches) >= 2 {
+	if matches := substituteCommandRe.FindAllStringSubmatch(val, -1); len(matches) > 0 {
 		for i := 0; i < len(matches); i++ {
 			cmd := exec.Command(shell.Get(), "-c", matches[i][1])
-			// cmd.Env = os.Environ()
+
+			// Warning: this may result in non expanded vars
+			cmd.Env = os.Environ()
+			for k, v := range env {
+				// Skip itself
+				if k == key {
+					continue
+				}
+				cmd.Env = append(cmd.Env, k+"="+v)
+			}
+
 			out, err := cmd.Output()
 			if err != nil {
 				// fmt.Fprintf(os.Stderr, "failed to execute `%s`: %s\n", c, err)
