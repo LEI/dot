@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-var pip, pip2, pip3 *Pm
+var pip, pip2, pip3 = &Pm{}, &Pm{}, &Pm{}
 
 // https://pip.pypa.io/en/stable/reference
 func init() {
@@ -50,7 +50,7 @@ func init() {
 	}
 	// windows: python -m pip ...
 
-	pip2 = pip
+	*pip2 = *pip
 	pip2.Bin = "pip2"
 	// FIXME: python2 -c 'import neovim' did not work until
 	// pip2 uninstall neovim && pip2 install neovim
@@ -62,7 +62,7 @@ func init() {
 		return err == nil, nil
 	}
 
-	pip3 = pip
+	*pip3 = *pip
 	pip3.Bin = "pip3"
 	pip3.Has = func(pkgs []string) (bool, error) {
 		opts := []string{"show"}
