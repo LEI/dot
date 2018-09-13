@@ -92,7 +92,7 @@ func (t *Hook) Status() error {
 	return nil
 }
 
-// Do task
+// Do task (install, post_install)
 func (t *Hook) Do() error {
 	if err := t.Status(); err != nil {
 		switch err {
@@ -109,7 +109,7 @@ func (t *Hook) Do() error {
 	return cmd.Run()
 }
 
-// Undo task (non applicable)
+// Undo task (remove, post_remove)
 func (t *Hook) Undo() error {
 	if err := t.Status(); err != nil {
 		switch err {
@@ -121,14 +121,9 @@ func (t *Hook) Undo() error {
 			return err
 		}
 	}
-	// if t.URL != "" && t.Dest != "" {
-	// 	// TODO: check remote file?
-	// 	return os.Remove(t.Dest)
-	// }
-	// cmd, err := t.buildCmd()
-	// if err != nil {
-	// 	return err
-	// }
-	// return cmd.Run()
-	return fmt.Errorf("not implemented")
+	cmd, err := t.buildCmd()
+	if err != nil {
+		return err
+	}
+	return cmd.Run()
 }
