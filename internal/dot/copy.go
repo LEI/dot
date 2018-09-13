@@ -309,8 +309,3 @@ func newRemoteFile(url string) (*remoteFile, error) {
 	r.Etag = resp.Header.Get("Etag")
 	return r, nil
 }
-
-// remoteFileCompare TODO not implemented
-// func remoteFileCompare(src, dst string) (bool, error) {
-// 	return true, nil
-// }
