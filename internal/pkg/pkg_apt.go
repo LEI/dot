@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-var aptGet *Pm
+var aptGet = &Pm{}
 
 // https://manpages.debian.org/stretch/apt/apt-get.8.en.html
 func init() {
@@ -56,10 +56,10 @@ func init() {
 }
 
 // https://wiki.termux.com/wiki/Package_Management
-var termux *Pm
+var termux = &Pm{}
 
 func init() {
-	termux = aptGet
+	*termux = *aptGet
 	termux.Sudo = false
 	termux.Bin = "pkg"
 	termux.Install = "install"

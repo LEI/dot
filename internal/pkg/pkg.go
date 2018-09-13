@@ -180,15 +180,14 @@ func (m *Pm) GetAction(name string, input ...string) (string, error) {
 }
 
 // ParseOpts replaces bin with sudo if needed and prepend options with it.
-func (m *Pm) ParseOpts(opts []string) []string {
+func (m *Pm) ParseOpts(opts []string) (string, []string) {
 	bin := m.Bin
 	// Switch binary for sudo
 	if m.Sudo && bin != "sudo" && !isRoot() {
 		opts = append([]string{bin}, opts...)
 		bin = "sudo"
 	}
-	m.Bin = bin
-	return opts
+	return bin, opts
 }
 
 func pkgOnly(input []string) []string {
@@ -281,7 +280,7 @@ func (m *Pm) Exec(args ...string) error {
 }
 
 func (m *Pm) exec(args ...string) error {
-	args = m.ParseOpts(args)
+	bin, args := m.ParseOpts(args)
 	if DryRun {
 		if len(m.DryRunOpts) == 0 {
 			return nil
@@ -293,10 +292,10 @@ func (m *Pm) exec(args ...string) error {
 	if m.Shell != "" {
 		s := shell.Get()
 		// if Verbose { fmt.Println("Using shell:", s) }
-		c := fmt.Sprintf("%s %s", m.Bin, shell.FormatArgs(args))
+		c := fmt.Sprintf("%s %s", bin, shell.FormatArgs(args))
 		cmd = exec.Command(s, "-c", c)
 	} else {
-		cmd = exec.Command(m.Bin, args...)
+		cmd = exec.Command(bin, args...)
 	}
 	return execWithEnv(m.Env, cmd)
 }

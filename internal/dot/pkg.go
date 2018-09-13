@@ -41,8 +41,8 @@ func (t *Pkg) String() string {
 		fmt.Fprintf(os.Stderr, "pkg: m.BuildOptions errored with: %s\n", err)
 		return "<err>"
 	}
-	opts = m.ParseOpts(opts)
-	return fmt.Sprintf("%s %s", m.Bin, shell.FormatArgs(opts))
+	bin, opts := m.ParseOpts(opts)
+	return fmt.Sprintf("%s %s", bin, shell.FormatArgs(opts))
 }
 
 // Init task
