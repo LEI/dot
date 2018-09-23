@@ -65,7 +65,7 @@ func (t *Hook) String() string {
 	if strings.Contains(s, "\n") && !strings.HasPrefix(s, "(") {
 		s = fmt.Sprintf("(%s)", s)
 	}
-	return s
+	return s // TODO env.Expand(s)
 }
 
 // Init task
