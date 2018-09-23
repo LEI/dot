@@ -23,9 +23,9 @@ func getURL(url, dst string, perm os.FileMode) error {
 		return err
 	}
 	if fi != nil && !os.IsNotExist(err) {
-		// fmt.Fprintf(os.Stderr, "%s: already exists!\n", fi.Name())
-		// return nil
-		return fmt.Errorf("%s: destination is already a file", dst)
+		// return fmt.Errorf fi.Name
+		fmt.Fprintf(os.Stderr, "%s: already exists, skipping %s download", url, dst)
+		return nil
 	}
 	fmt.Printf("Downloading %q...\n", url)
 	output, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)

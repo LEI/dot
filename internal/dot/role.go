@@ -26,6 +26,9 @@ var ignoredFilePatterns = []string{
 	"*.DS_Store",
 	".git",
 	".gitkeep",
+	".svn",
+	".hg",
+	"CVS",
 }
 
 // RoleConfig struct
