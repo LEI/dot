@@ -130,8 +130,13 @@ func (t *Task) CheckIf() error {
 		// if status == 0 {
 		// 	return true
 		// }
-		// fmt.Printf("EXEC COND: %q\n", c)
 		cmd := exec.Command(shell.Get(), "-c", c)
+		cmd.Env = os.Environ()
+		// TODO: override with role and task envs
+		// for k, v := range *t.Env {
+		// 	v = env.ExpandEnvVar(k, v, *t.Env)
+		// 	cmd.Env = append(cmd.Env, k+"="+v)
+		// }
 
 		// cmd.Stdout = os.Stdout
 		// cmd.Stderr = os.Stderr

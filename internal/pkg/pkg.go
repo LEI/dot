@@ -1,5 +1,7 @@
 package pkg
 
+// https://www.pkgsrc.org/
+
 import (
 	"fmt"
 	"io"
