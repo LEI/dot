@@ -49,6 +49,7 @@ func (t *Hook) buildCmd() (*exec.Cmd, error) {
 	cmd.Stdout = Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = t.ExecDir
+	cmd.Env = os.Environ()
 	for k, v := range *t.Env {
 		v = env.ExpandEnvVar(k, v, *t.Env)
 		// fmt.Printf("%s %s=%q\n", hookEnvPrefix, k, v)
