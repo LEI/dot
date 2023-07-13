@@ -8,11 +8,11 @@ RUN := go run build.go
 # go build -o bin/$(BINARY) cmd/dot
 .PHONY: dot
 dot:
-	$(RUN) vendor check install
+	$(RUN) check install
 
-.PHONY: vendor
-vendor:
-	$(RUN) vendor -only
+# .PHONY: vendor
+# vendor:
+# 	$(RUN) vendor -only
 
 .PHONY: test
 test:

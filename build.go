@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -68,8 +69,8 @@ var (
 
 	// docMap map[string]string
 	funcMap = map[string]TargetFunc{
-		"vendor":           Vendor,
-		"dep":              dep,
+		// "vendor":           Vendor,
+		// "dep":              dep,
 		"check":            Check,
 		"test":             Test,
 		"test:coverage":    Test_Coverage,
@@ -105,7 +106,7 @@ func init() {
 	// testFlag = flag.String("test", "./...", "test packages")
 	flag.BoolVar(&listFlag, "l", listFlag, "list targets")
 	// flag.BoolVar(&testFlag, "t", testFlag, "only test packages")
-	flag.BoolVar(&vendorOnlyFlag, "only", vendorOnlyFlag, "dep ensure -vendor-only")
+	// flag.BoolVar(&vendorOnlyFlag, "only", vendorOnlyFlag, "dep ensure -vendor-only")
 	flag.BoolVar(&verboseFlag, "v", verboseFlag, "verbose mode")
 	flag.BoolVar(&versionFlag, "version", versionFlag, "print version")
 }
@@ -363,37 +364,37 @@ func parse() ([]Target, error) {
 	return ts, nil
 }
 
-// Vendor run dep ensure to install dependencies specified in Gopkg.toml
-func Vendor() error {
-	if err := dep(); err != nil {
-		return err
-	}
-	env := map[string]string{}
-	if runtime.GOOS == "android" {
-		env["DEPNOLOCK"] = "1"
-	}
-	args := []string{"ensure"}
-	if vendorOnlyFlag {
-		args = append(args, "-vendor-only")
-	}
-	return runWith(env, "dep", args...)
-}
+// // Vendor run dep ensure to install dependencies specified in Gopkg.toml
+// func Vendor() error {
+// 	if err := dep(); err != nil {
+// 		return err
+// 	}
+// 	env := map[string]string{}
+// 	if runtime.GOOS == "android" {
+// 		env["DEPNOLOCK"] = "1"
+// 	}
+// 	args := []string{"ensure"}
+// 	if vendorOnlyFlag {
+// 		args = append(args, "-vendor-only")
+// 	}
+// 	return runWith(env, "dep", args...)
+// }
 
-// Dep install go dep
-func dep() error {
-	if executable("dep") {
-		// Nothing to be done for 'dep'
-		return nil
-	}
-	if runtime.GOOS == "darwin" {
-		return run("brew", "install", "dep")
-	}
-	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-	if err := run("go", "get", "-u", "github.com/golang/dep/cmd/dep"); err != nil {
-		return err
-	}
-	return run("go", "install", "github.com/golang/dep/cmd/dep")
-}
+// // Dep install go dep
+// func dep() error {
+// 	if executable("dep") {
+// 		// Nothing to be done for 'dep'
+// 		return nil
+// 	}
+// 	if runtime.GOOS == "darwin" {
+// 		return run("brew", "install", "dep")
+// 	}
+// 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+// 	if err := run("go", "get", "-u", "github.com/golang/dep/cmd/dep"); err != nil {
+// 		return err
+// 	}
+// 	return run("go", "install", "github.com/golang/dep/cmd/dep")
+// }
 
 // Check run tests and linters
 func Check() error {
@@ -742,7 +743,7 @@ func Clean() error {
 func Docs() error {
 	// os.Setenv("DOT_BUILD_TAGS", "doc")
 	defaultBuildTags = []string{"doc"}
-	serialFunc(Vendor, Install)
+	serialFunc( /*Vendor, */ Install)
 	if _, err := os.Stat(docsPath); err != nil && os.IsNotExist(err) {
 		if err := os.Mkdir(docsPath, 0755); err != nil {
 			return err
@@ -961,19 +962,19 @@ func goreleaser() error {
 	if runtime.GOOS == "darwin" {
 		return run("brew", "install", "goreleaser/tap/goreleaser")
 	}
-	if err := dep(); err != nil {
-		return err
-	}
+	// if err := dep(); err != nil {
+	// 	return err
+	// }
 	repo := "github.com/goreleaser/goreleaser"
 	// curl -sSL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	if err := run("go", "get", "-d", repo); err != nil {
 		return err
 	}
 	// Installation command
-	c := "dep ensure -vendor-only && make setup build"
-	if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
-		return err
-	}
+	// c := "dep ensure -vendor-only && make setup build"
+	// if err := run("sh", "-c", "cd $GOPATH/src/"+repo+"; "+c); err != nil {
+	// 	return err
+	// }
 	return run("go", "install", repo)
 }
 

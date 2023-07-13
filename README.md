@@ -1,11 +1,11 @@
-dot
-===
+# dot
 
 <!--
 `dot` is a configuration based file manager. It requires Go 1.8 to compile.
 -->
 
 [Documentation](https://dot.lei.sh/dot)
+
 <!-- [Contribution Guide](CONTRIBUTING.md) -->
 
 [![GoDoc](https://godoc.org/github.com/LEI/dot?status.svg)](https://godoc.org/github.com/LEI/dot)
@@ -60,7 +60,7 @@ Requires [go](https://golang.org/dl).
 ```sh
 go get -u github.com/LEI/dot
 cd $GOPATH/src/github.com/LEI/dot
-go run build.go vendor check install # or `make`
+go run build.go check install # or `make`
 ```
 
 ![deps](https://dot.lei.sh/deps.png)
