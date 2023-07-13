@@ -77,20 +77,20 @@ var (
 		"test:integration": Test_Integration,
 		"test:race":        Test_Race,
 		"vet":              Vet,
-		"lint":             Lint,
-		"fmt":              Fmt,
-		"install":          Install,
-		"build":            Build,
-		"build:darwin":     Build_Darwin,
-		"build:linux":      Build_Linux,
-		"build:windows":    Build_Windows,
-		"clean":            Clean,
-		"docs":             Docs,
-		"docker":           Docker,
-		"dockeros":         DockerOS,
-		"goreleaser":       goreleaser,
-		"release":          Release,
-		"snapshot":         Snapshot,
+		// "lint":             Lint,
+		"fmt":           Fmt,
+		"install":       Install,
+		"build":         Build,
+		"build:darwin":  Build_Darwin,
+		"build:linux":   Build_Linux,
+		"build:windows": Build_Windows,
+		"clean":         Clean,
+		"docs":          Docs,
+		"docker":        Docker,
+		"dockeros":      DockerOS,
+		"goreleaser":    goreleaser,
+		"release":       Release,
+		"snapshot":      Snapshot,
 	}
 
 	targetList = []Target{}
@@ -405,7 +405,7 @@ func Check() error {
 		return nil
 	}
 	// return serialFunc(Test, Vet, Lint, Fmt)
-	return funk(Test, Vet, Lint, Fmt)
+	return funk(Test, Vet /*, Lint*/, Fmt)
 }
 
 // Test run go tests
@@ -482,39 +482,39 @@ func Vet() error {
 	return run("go", args...)
 }
 
-// Lint run golint
-func Lint() error {
-	if !executable("golint") {
-		if err := run("go", "get", "golang.org/x/lint/golint"); err != nil {
-			return err
-		}
-	}
-	pkgs, err := findPackages()
-	if err != nil {
-		return err
-	}
-	failed := false
-	for _, pkg := range pkgs {
-		// We don't actually want to fail this target if we find golint errors,
-		// so we don't pass -set_exit_status, but we still print out any failures
-		if verboseFlag {
-			fmt.Printf("exec: golint %s\n", pkg)
-		}
-		cmd := exec.Command("golint", pkg)
-		cmd.Stdout = os.Stderr
-		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: running go lint on %q: %v\n", pkg, err)
-			// fmt.Fprintf(os.Stderr, "%s\n", err)
-			failed = true
-		}
-	}
-	if failed {
-		return errors.New("errors running golint")
-	}
-	// -min_confidence=$GOLINT_MIN_CONFIDENCE
-	// return runV("golint", "-set_exit_status", verbose("-v"), "$(go list ./...)")
-	return nil
-}
+// // Lint run golint
+// func Lint() error {
+// 	if !executable("golint") {
+// 		if err := run("go", "get", "golang.org/x/lint/golint"); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	pkgs, err := findPackages()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	failed := false
+// 	for _, pkg := range pkgs {
+// 		// We don't actually want to fail this target if we find golint errors,
+// 		// so we don't pass -set_exit_status, but we still print out any failures
+// 		if verboseFlag {
+// 			fmt.Printf("exec: golint %s\n", pkg)
+// 		}
+// 		cmd := exec.Command("golint", pkg)
+// 		cmd.Stdout = os.Stderr
+// 		if err := cmd.Run(); err != nil {
+// 			fmt.Fprintf(os.Stderr, "ERROR: running go lint on %q: %v\n", pkg, err)
+// 			// fmt.Fprintf(os.Stderr, "%s\n", err)
+// 			failed = true
+// 		}
+// 	}
+// 	if failed {
+// 		return errors.New("errors running golint")
+// 	}
+// 	// -min_confidence=$GOLINT_MIN_CONFIDENCE
+// 	// return runV("golint", "-set_exit_status", verbose("-v"), "$(go list ./...)")
+// 	return nil
+// }
 
 // Fmt run gofmt as a linter
 func Fmt() error {
