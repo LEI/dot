@@ -896,8 +896,8 @@ func isGoLatest() bool {
 	ver := runtime.Version()
 	ver = strings.TrimPrefix(ver, "go")
 	parts := strings.SplitN(ver, ".", 3)
-	if len(parts) != 3 {
-		panic("fatal: invalid go version " + ver)
+	if len(parts) < 2 {
+		panic("invalid go version " + ver)
 	}
 	major, err := strconv.Atoi(parts[0])
 	if err != nil {
