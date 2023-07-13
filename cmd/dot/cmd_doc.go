@@ -1,3 +1,4 @@
+//go:build doc
 // +build doc
 
 // This package contains the code for the dot executable.

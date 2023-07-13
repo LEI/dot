@@ -174,8 +174,8 @@ func checkResults(c chan actionResult) error {
 	return nil
 }
 
-// func runTask(i interface{}) error {
-// 	t := i.(dot.Tasker)
+//	func runTask(i interface{}) error {
+//		t := i.(dot.Tasker)
 func runTask(t dot.Tasker) error {
 	if err := t.Init(); err != nil {
 		return err
