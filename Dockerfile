@@ -1,4 +1,4 @@
-FROM golang AS base
+FROM golang:1.22rc2-bookworm AS base
 
 RUN apt-get update -qqy && \
 apt-get install --no-install-suggests --no-install-recommends -qqy \
